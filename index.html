@@ -149,7 +149,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:480px;max-height:92%;border-radius:24px 24px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(4,6,10,.6)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh-head h2{margin:0;font-family:var(--display);font-size:20px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
@@ -261,7 +261,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .g-pos{fill:var(--at)}
 .g-neg{fill:var(--danger)}
 .g-zero{stroke:var(--muted);stroke-width:1}
-#mform .stepper input,#tform .stepper input{text-align:left;padding-left:16px}
+#mform .stepper input,#tform .stepper input,#vform #g-amt{text-align:left;padding-left:16px}
 
 /* Training */
 .card-head .eyebrow{margin:0}
@@ -342,7 +342,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .kset input[type="text"]{padding:8px 8px;font-size:16px;font-weight:600;text-align:center}
 .kset button,.x.sm{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:20px;line-height:1;display:grid;place-items:center;padding:0}
 .x.sm svg{width:12px;height:12px}
-#kform .stepper input,#lform .stepper input,#pform .stepper input{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
+#kform .stepper input,#lform .stepper input,#pform .stepper input,#vform #v-new{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
 .entries .xrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;font-size:15px}
 .entries b.up{color:var(--good)}
 .entries b.down{color:var(--danger)}
@@ -527,6 +527,16 @@ button.lastx:active{background:var(--fill)}
 .lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr}
 .lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
+/* Vermögen: Stand je Konto eintragen */
+#v-body{display:flex;flex-direction:column;gap:16px}
+.vrows{display:flex;flex-direction:column;gap:6px}
+.vrow{display:grid;grid-template-columns:minmax(0,1fr) 116px auto 36px;gap:8px;align-items:center}
+.vrow b{font-size:14.5px;font-weight:500;overflow-wrap:anywhere}
+.vrow input[type="text"]{text-align:right;padding:9px 12px;font-family:var(--round);font-weight:600}
+.vrow em{font-style:normal;color:var(--muted);font-size:13px}
+.vrows .err{margin:-2px 0 4px}
+.rows .goal .streak b{font-size:19px}
+
 /* Budget: Rest mitnehmen */
 .tog{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;position:relative}
 .tog[hidden]{display:none}
@@ -615,9 +625,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 
 /* Blätter mit Griff wie in iOS */
 dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-radius:3px;background:var(--fill);margin:8px auto 0}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform{padding-top:10px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{padding-top:10px}
 .cs-top{padding-top:6px}
-@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform{padding-top:20px}}
+@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
   dialog[open],dialog[open]::backdrop,.view:not([hidden]){animation:none}
@@ -656,7 +666,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v37</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v38</span></footer>
 </div>
 </div>
 
@@ -945,6 +955,21 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <p class="err" id="l-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="l-save">Training beenden und speichern</button>
     <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
+  </form>
+</dialog>
+
+<dialog tabindex="-1" id="vsheet" aria-labelledby="vs-title">
+  <form id="vform" novalidate>
+    <div class="sh-head">
+      <h2 id="vs-title">Stand eintragen</h2>
+      <button type="button" class="x" id="vs-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div id="v-body"></div>
+    <p class="err" id="v-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="v-save">Speichern</button>
+    <button type="button" class="ghost danger" id="v-del" hidden>Sparziel löschen</button>
   </form>
 </dialog>
 
@@ -1282,7 +1307,7 @@ $('#main').addEventListener('click', e => {
     saveLocal(); render();
   }
 });
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') openM('tx'); else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else openSheet(null); });
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else openSheet(null); });
 
 /* ---------- sheet ---------- */
 const dlg = $('#sheet');
@@ -1631,6 +1656,7 @@ const isYM = s => typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
 const ymIdx = ym => (+ym.slice(0, 4)) * 12 + (+ym.slice(5)) - 1;
 const ymOfIdx = i => Math.floor(i / 12) + '-' + pad(i % 12 + 1);
 const okCents = n => typeof n === 'number' && isFinite(n) && n > 0 && n <= 1e9;
+const okBal = n => typeof n === 'number' && isFinite(n) && Math.abs(n) <= 1e12;   // Kontostand in Cent, darf 0 oder negativ sein
 
 function normMF(o) {
   const out = { fixed: {} }, f = o && o.fixed;
@@ -1646,6 +1672,16 @@ function normMF(o) {
   out.roll = {};                            // Rest mitnehmen: { Kategorie: { from: Startmonat, base: Übertrag zu Beginn in Cent } }
   const rl = o && o.roll;
   if (rl && typeof rl === 'object') for (const c in rl) { const r = rl[c]; out.roll[c] = r && typeof r === 'object' && isYM(r.from) ? { from: r.from, base: okCents(r.base) ? Math.round(r.base) : 0 } : null; }
+  /* Vermögen: Konten { id: { n } }, Stände { 'YYYY-MM': { kontoId: Cent } } (ein Stand je Konto und Monat), Sparziele { id: { n, amount, acc } } (acc = Konto oder null für alles) */
+  out.acc = {}; out.bal = {}; out.goals = {};
+  const ac = o && o.acc, bl = o && o.bal, gl = o && o.goals;
+  if (ac && typeof ac === 'object') for (const id in ac) out.acc[id] = ac[id] && typeof ac[id] === 'object' && ac[id].n ? { n: String(ac[id].n).slice(0, 30) } : null;
+  if (bl && typeof bl === 'object') for (const ym in bl) {
+    if (!isYM(ym) || !bl[ym] || typeof bl[ym] !== 'object') continue;
+    out.bal[ym] = {};
+    for (const id in bl[ym]) out.bal[ym][id] = okBal(bl[ym][id]) ? Math.round(bl[ym][id]) : null;
+  }
+  if (gl && typeof gl === 'object') for (const id in gl) { const g = gl[id]; out.goals[id] = g && typeof g === 'object' && g.n && okCents(g.amount) ? { n: String(g.n).slice(0, 30), amount: Math.round(g.amount), acc: g.acc ? String(g.acc) : null } : null; }
   return out;
 }
 function normMY(o) {
@@ -1668,7 +1704,6 @@ const mdoc = y => mdocs[y] || (mdocs[y] = patchDoc(() => MY[y] || { tx: {} }, v 
 const eur0 = c => Math.round(Math.abs(c) / 100).toLocaleString('de-DE');
 const eur = c => (Math.abs(c) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 const minus = c => Math.round(c / 100) < 0 ? '−' : '';
-const pct = (a, b) => { const v = Math.round(a / b * 100); return (v < 0 ? '−' : '') + Math.abs(v) + ' %'; };
 function parseEur(v) {
   let s = String(v).replace(/[^0-9.,]/g, '');
   if (s.indexOf(',') >= 0) s = s.replace(/\./g, '').replace(',', '.');
@@ -1731,10 +1766,17 @@ function barHTML(s) {
   const den = Math.max(s.inc, s.fix + s.flex) || 1;
   return '<div class="mbar" role="img" aria-label="Anteil der Fixkosten und der flexiblen Kosten an den Einnahmen"><i class="fx" style="width:' + (s.fix / den * 100).toFixed(1) + '%"></i><i class="fl" style="width:' + (s.flex / den * 100).toFixed(1) + '%"></i></div>';
 }
+/* Sparquote: Anteil der Einnahmen, der übrig bleibt, mit Plus oder Minus zum Zeitraum davor (p). Im laufenden Monat ohne Vergleich, weil er noch nicht fertig ist. */
+function rateHTML(s, p, label) {
+  if (!(s.inc > 0)) return '';
+  const q = Math.round(s.bal / s.inc * 100); let d = '', cls = '';
+  if (p && p.inc > 0) { const df = q - Math.round(p.bal / p.inc * 100); d = df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte'; cls = df > 0 ? 'up' : df < 0 ? 'down' : ''; }
+  return '<div class="card last" style="padding-top:2px">' + kvRow(label, (q < 0 ? '−' : '') + Math.abs(q) + ' %', '', d, cls) + '</div>';
+}
 const heroM = (label, bal, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1' + (minus(bal) ? ' class="neg"' : '') + '><span class="num">' + minus(bal) + eur0(bal) + '</span><span class="unit">€</span></h1>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</section>';
 
 const fixedRow = x => '<li><button type="button" class="two" data-m="fixed" data-id="' + esc(x.id) + '" aria-label="' + esc(x.f.name) + ' ändern">' +
-  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
+  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
   '<b' + (x.due ? '' : ' class="dim"') + '>' + eur(x.f.amount) + '</b></button></li>';
 function fixedListHTML(ym) {
   const rows = fixedIn(ym).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount);
@@ -1754,11 +1796,11 @@ function monthHTML(curYM) {
   if (isCur) {
     const now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     sub = s.bal > 0 ? 'Das sind ' + eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende.' : s.bal < 0 ? 'Deine Ausgaben liegen über deinen Einnahmen.' : '';
-  } else if (s.inc > 0) sub = 'Sparquote ' + pct(s.bal, s.inc);
+  }
   let h = navHTML(name + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
   h += heroM((s.bal < 0 ? 'Minus im ' : 'Übrig im ') + name, s.bal, sub);
   h += DUO;
-  h += barHTML(s) + sumTiles(s);
+  h += barHTML(s) + sumTiles(s) + rateHTML(s, isCur ? null : mSum(ymOfIdx(ymIdx(mYM) - 1)), isCur ? 'Sparquote bisher' : 'Sparquote');
 
   const tx = txIn(mYM).filter(x => x.t.k !== 'in'), shown = mAll ? tx : tx.slice(0, 7);
   const bud = MF.budgets || {};
@@ -1774,7 +1816,8 @@ function monthHTML(curYM) {
     if (tx.length > 7) h += '<button type="button" class="linkbtn" data-m="more">' + (mAll ? 'Weniger zeigen' : 'Alle ' + tx.length + ' Einträge zeigen') + '</button>';
   }
   h += '<h2 class="sec">Einnahmen</h2>' + incomeHTML(mYM) + '<button type="button" class="linkbtn" data-m="newin">+ Feste Einnahme hinzufügen</button>';
-  h += '<h2 class="sec">Fixkosten</h2>' + fixedListHTML(mYM) + '<button type="button" class="linkbtn" data-m="newfix">+ Fixkosten hinzufügen</button>';
+  const fixYear = fixedIn(mYM).filter(x => x.f.kind === 'fix').reduce((t, x) => t + x.f.amount * 12 / x.f.every, 0);
+  h += '<h2 class="sec">Fixkosten' + (fixYear ? '<small>' + eur0(fixYear) + ' € im Jahr</small>' : '') + '</h2>' + fixedListHTML(mYM) + '<button type="button" class="linkbtn" data-m="newfix">+ Fixkosten hinzufügen</button>';
   return h;
 }
 
@@ -1796,8 +1839,8 @@ function yearSVG(ms) {
   return s + '</svg>';
 }
 
-function yearHTML(curYM) {
-  const y = mYear, curY = +curYM.slice(0, 4), lastM = y < curY ? 12 : y > curY ? 0 : +curYM.slice(5);
+/* Summen eines Jahres bis einschließlich Monat lastM: ms = Monate mit Einträgen (sonst null), tot = Jahressumme */
+function ySum(y, lastM) {
   const ms = [], tot = { inc: 0, fix: 0, flex: 0, bal: 0, cats: {} };
   let first = 0, last = 0;
   for (let m = 1; m <= 12; m++) {
@@ -1808,11 +1851,16 @@ function yearHTML(curYM) {
     for (const c in s.cats) tot.cats[c] = (tot.cats[c] || 0) + s.cats[c];
     if (!first) first = m; last = m;
   }
+  return { ms, tot, first, last };
+}
+function yearHTML(curYM) {
+  const y = mYear, curY = +curYM.slice(0, 4), lastM = y < curY ? 12 : y > curY ? 0 : +curYM.slice(5);
+  const Y = ySum(y, lastM), ms = Y.ms, tot = Y.tot, first = Y.first, last = Y.last;
   let h = navHTML(String(y), y < curY, 'Ein Jahr');
   const span = !first ? '' : first === last ? MONTHS[first - 1] : MONTHS[first - 1] + ' bis ' + MONTHS[last - 1];
-  h += heroM('Bilanz ' + y, tot.bal, first ? span + (tot.inc > 0 ? ' · Sparquote ' + pct(tot.bal, tot.inc) : '') : 'Keine Einträge in diesem Jahr.');
+  h += heroM('Bilanz ' + y, tot.bal, first ? span : 'Keine Einträge in diesem Jahr.');
   if (!first) return h;
-  h += barHTML(tot) + sumTiles(tot);
+  h += barHTML(tot) + sumTiles(tot) + rateHTML(tot, ySum(y - 1, 12).tot, 'Sparquote');
   h += '<div class="card chart"><p class="note">Bilanz pro Monat in €</p>' + yearSVG(ms) + '</div>';
   h += '<h2 class="sec">Monate</h2><ul class="entries">' + ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + eur0(s.inc) + ' € ein · ' + eur0(s.fix + s.flex) + ' € aus</small></span>' +
@@ -1821,20 +1869,95 @@ function yearHTML(curYM) {
   return h;
 }
 
+/* ---------- Finanzen: Vermögen und Sparziele ---------- */
+const accList = () => Object.keys(MF.acc || {}).filter(id => MF.acc[id]).map(id => ({ id, n: MF.acc[id].n })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+/* Monate, in denen mindestens ein Konto einen Stand hat, alt nach neu */
+const balMonths = () => Object.keys(MF.bal || {}).filter(ym => MF.bal[ym] && Object.keys(MF.bal[ym]).some(id => typeof MF.bal[ym][id] === 'number' && (MF.acc || {})[id])).sort();
+/* Stand eines Kontos in einem Monat: der letzte Eintrag bis einschließlich dieses Monats, sonst null. Ein Konto ohne neuen Eintrag behält also seinen Stand. */
+function accAt(id, ym) { let v = null; balMonths().forEach(m => { if (m <= ym && typeof MF.bal[m][id] === 'number') v = MF.bal[m][id]; }); return v; }
+/* Vermögen in einem Monat: Summe aller Konten, mit acc nur dieses Konto. null, solange es keinen Stand gibt */
+function wealthAt(ym, acc) { let t = null; accList().forEach(a => { if (acc && a.id !== acc) return; const v = accAt(a.id, ym); if (v != null) t = (t || 0) + v; }); return t; }
+const hasWealth = () => balMonths().length > 0;
+const eurS = c => (Math.round(c / 100) > 0 ? '+' : Math.round(c / 100) < 0 ? '−' : '±') + eur0(c) + ' €';
+const signCls = c => Math.round(c / 100) > 0 ? 'up' : Math.round(c / 100) < 0 ? 'down' : '';
+const ymName = ym => MONTHS[+ym.slice(5) - 1];
+/* Veränderung in einem Zeitraum ('YYYY-MM' oder 'YYYY'): Stand am Ende gegenüber dem Stand davor, im ersten Zeitraum gegenüber dem ersten Stand.
+   endYM begrenzt ein Jahr auf einen Monat („seit Jahresbeginn“). Liefert { end, d, p, n } (d in Cent, p als Anteil, n = Monate) oder null ohne Stand; d = null ohne Vergleich. */
+function wealthDelta(pre, acc, endYM) {
+  const cur = todayKey().slice(0, 7), end = endYM || (pre.length === 7 ? pre : pre + '-12' > cur ? cur : pre + '-12'), ev = wealthAt(end, acc);
+  if (ev == null) return null;
+  let from = pre.length === 7 ? ymOfIdx(ymIdx(pre) - 1) : (+pre - 1) + '-12', sv = wealthAt(from, acc);
+  if (sv == null) { from = balMonths().find(m => m.slice(0, pre.length) === pre && m <= end && wealthAt(m, acc) != null); sv = from && from !== end ? wealthAt(from, acc) : null; }
+  return sv == null ? { end: ev, d: null, p: null, n: 0 } : { end: ev, d: ev - sv, p: sv > 0 ? (ev - sv) / sv : null, n: ymIdx(end) - ymIdx(from) };
+}
+const dTile = (w, label) => fig(w && w.d != null ? '<span class="' + signCls(w.d) + '">' + eurS(w.d) + '</span>' : '–', '', label);
+function goalsHTML(curYM) {
+  const gs = Object.keys(MF.goals || {}).filter(id => MF.goals[id]).map(id => ({ id, g: MF.goals[id] })).sort((a, b) => a.g.n.localeCompare(b.g.n, 'de'));
+  return '<h2 class="sec">Sparziele</h2>' + (gs.length ? '<ul class="rows">' + gs.map(x => {
+    const g = x.g, acc = g.acc && (MF.acc || {})[g.acc] ? g.acc : null, have = wealthAt(curYM, acc) || 0, p = clamp(have / g.amount, 0, 1), reached = have >= g.amount;
+    /* Tempo: Schnitt der letzten drei Monate */
+    const back = wealthAt(ymOfIdx(ymIdx(curYM) - 3), acc), rate = back != null ? (have - back) / 3 : null;
+    let meta = reached ? 'Erreicht' : 'noch ' + eur0(g.amount - have) + ' €';
+    if (!reached && rate > 0) { const n = Math.ceil((g.amount - have) / rate), t = ymOfIdx(ymIdx(curYM) + n); if (n <= 600) meta += ' · bei diesem Tempo etwa ' + ymName(t) + ' ' + t.slice(0, 4); }
+    else if (!reached && rate != null) meta += ' · zuletzt kein Zuwachs';
+    return '<li class="row goal ' + (reached ? 'is-done' : 'is-idle') + '"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div>' +
+      '<button type="button" class="go" data-m="goal" data-id="' + esc(x.id) + '" aria-label="Sparziel ' + esc(g.n) + ' ändern">' +
+        '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
+        '<span class="txt"><span class="name">' + esc(g.n) + ' · ' + eur0(g.amount) + ' €</span><span class="meta">' + meta + (acc ? ' · ' + esc(MF.acc[acc].n) : '') + '</span></span></button>' +
+      '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(p * 100) + '</b><span>%</span></span></div></li>';
+  }).join('') + '</ul>' : '') + '<button type="button" class="linkbtn" data-m="newgoal">+ Sparziel</button>';
+}
+function wealthHTML(curYM) {
+  if (!hasWealth()) return '<section class="hero"><p class="date">Vermögen</p><h1>Noch kein Stand</h1></section>' +
+    '<div class="empty"><p>Trag einmal im Monat ein, wie viel auf deinen Konten liegt. Du siehst dann, wie dein Vermögen wächst, pro Monat und pro Jahr.</p>' +
+    '<button type="button" class="primary" data-m="bal">Ersten Stand eintragen</button></div>';
+  const year = mMode === 'year', pre = year ? String(mYear) : mYM, w = wealthDelta(pre), curY = +curYM.slice(0, 4);
+  const end = year ? (pre + '-12' > curYM ? curYM : pre + '-12') : mYM;
+  let h = year ? navHTML(pre, mYear < curY, 'Ein Jahr') : navHTML(ymName(mYM) + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
+  const entered = !year && accList().some(a => typeof ((MF.bal || {})[mYM] || {})[a.id] === 'number');
+  const btn = year ? '' : '<button type="button" class="' + (entered ? 'ghost center' : 'primary') + '" data-m="bal">' + (entered ? 'Stand ändern' : 'Stand eintragen') + '</button>';
+  if (!w) return h + '<section class="hero w-hero"><p class="date">Vermögen</p><h1>Noch kein Stand</h1><p class="sub">' + (year ? 'In diesem Jahr gab es noch keinen Eintrag.' : 'Vor diesem Monat gibt es noch keinen Eintrag.') + '</p></section>' + btn;
+  h += heroM(year ? 'Vermögen ' + pre : 'Vermögen im ' + ymName(mYM), w.end, year || entered ? '' : 'Für diesen Monat ist noch kein Stand eingetragen.') + btn;
+  const pTile = fig(w.p != null ? '<span class="' + signCls(w.d) + '">' + (w.p > 0 ? '+' : w.p < 0 ? '−' : '±') + kg(Math.abs(w.p * 100)) + ' %</span>' : '–', '', 'in Prozent');
+  if (year) h += '<div class="figs on-bg">' + dTile(w, 'im Jahr') + pTile + fig(w.d != null && w.n > 0 ? '<span class="' + signCls(w.d / w.n) + '">' + eurS(w.d / w.n) + '</span>' : '–', '', 'pro Monat') + '</div>';
+  else h += '<div class="figs on-bg">' + dTile(w, 'im Monat') + pTile + dTile(wealthDelta(mYM.slice(0, 4), null, mYM), 'seit Jahresbeginn') + '</div>';
+  /* Verlauf: im Monat die zwölf Monate bis hierher, im Jahr die Monate des Jahres */
+  const pts = [];
+  for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
+  if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
+  h += '<h2 class="sec">Konten</h2><ul class="entries">' + accList().map(a => {
+    const v = accAt(a.id, end), d = wealthDelta(pre, a.id); if (v == null) return '';
+    return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span></span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
+  }).join('') + '</ul>';
+  if (!year) return h + goalsHTML(curYM);
+  /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
+  let rows = '';
+  for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue;
+    rows += '<li><button type="button" class="two" data-m="goto" data-ym="' + ym + '" aria-label="' + MONTHS[m - 1] + ' öffnen"><span class="l"><span>' + MONTHS[m - 1] + '</span><small>Stand ' + minus(x.end) + eur0(x.end) + ' €</small></span>' + (x.d != null ? '<b class="' + signCls(x.d) + '">' + eurS(x.d) + '</b>' : '') + '</button></li>'; }
+  return h + '<h2 class="sec">Monate</h2><ul class="entries">' + rows + '</ul>';
+}
+
+let fSub = '';   // vom Nutzer gewählter Bereich: 'verm' = Vermögen, 'budget' = Einnahmen und Ausgaben
+/* Ohne Wahl: Budget, wenn es nur Budget-Daten gibt, sonst Vermögen */
+const finSub = () => fSub || (hasMoney() && !hasWealth() ? 'budget' : 'verm');
 function renderMoney() {
   const el = $('#v-haushalt'), curYM = todayKey().slice(0, 7);
   if (!isYM(mYM)) mYM = curYM;
   if (!mYear) mYear = +curYM.slice(0, 4);
+  const sub = finSub();
+  const subs = '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
+  const seg = '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-m="mode" data-v="month" aria-pressed="' + (mMode === 'month') + '">Monat</button>' +
+    '<button type="button" data-m="mode" data-v="year" aria-pressed="' + (mMode === 'year') + '">Jahr</button></div>';
+  if (sub === 'verm') { el.innerHTML = subs + (hasWealth() ? seg : '') + wealthHTML(curYM); return; }
   if (!hasMoney()) {
-    el.innerHTML = '<section class="hero"><p class="date">Finanzen</p><h1>Noch nichts eingetragen</h1></section>' +
+    el.innerHTML = subs + '<section class="hero"><p class="date">Budget</p><h1>Noch nichts eingetragen</h1></section>' +
       '<div class="empty"><p>Trag deine Einnahmen und deine festen Kosten ein. Danach erfasst du nur noch deine laufenden Ausgaben und siehst, was übrig bleibt.</p>' +
       DUO +
       '<button type="button" class="ghost center" data-m="newfix">Fixkosten hinzufügen</button>' +
       '<button type="button" class="ghost center" data-m="newin">Feste Einnahme hinzufügen</button></div>';
     return;
   }
-  el.innerHTML = weekStripHTML('money') + '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-m="mode" data-v="month" aria-pressed="' + (mMode === 'month') + '">Monat</button>' +
-    '<button type="button" data-m="mode" data-v="year" aria-pressed="' + (mMode === 'year') + '">Jahr</button></div>' + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
+  el.innerHTML = subs + weekStripHTML('money') + seg + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
 }
 
 $('#v-haushalt').addEventListener('click', e => {
@@ -1847,7 +1970,11 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'income') return openM('tx', null, 'in');
   if (a === 'budget') return openM('budget', t.dataset.c || null);
   if (a === 'fixed') return openM('fixed', t.dataset.id);
-  if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
+  if (a === 'bal') return openV('bal');
+  if (a === 'goal') return openV('goal', t.dataset.id);
+  if (a === 'newgoal') return openV('goal');
+  if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
+  else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
   else if (a === 'more') mAll = !mAll;
   else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; mAll = false; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
@@ -1856,6 +1983,97 @@ $('#v-haushalt').addEventListener('click', e => {
     else { mYM = ymOfIdx(ymIdx(mYM) + d); mAll = false; }
   }
   renderMoney();
+});
+
+const vdlg = $('#vsheet');
+let vS = { mode: 'bal' };
+/* Eingabe mit optionalem Minus davor in Cent; leer = null, keine Zahl = NaN */
+function parseBal(v) { const s = String(v).trim(); if (!s) return null; const n = parseEur(s); return isFinite(n) ? (/^[-−–]/.test(s) ? -n : n) : NaN; }
+const balText = c => (c < 0 ? '-' : '') + eur(c).replace(' €', '');
+function loadVals(ym) { const o = {}, b = (MF.bal || {})[ym] || {}; accList().forEach(a => { if (typeof b[a.id] === 'number') o[a.id] = balText(b[a.id]); }); return o; }
+function paintV() {
+  const accs = accList(), cur = todayKey().slice(0, 7);
+  if (vS.mode === 'goal') {
+    $('#v-body').innerHTML = '<label class="fld" for="g-name"><span>Name</span><input id="g-name" type="text" maxlength="30" autocomplete="off" placeholder="z. B. Notgroschen" value="' + esc(vS.name) + '"></label>' +
+      '<div class="fld"><span id="lbl-g-amt">Zielbetrag</span><div class="stepper"><input id="g-amt" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-labelledby="lbl-g-amt" value="' + esc(vS.amt) + '"><span class="unit">€</span></div></div>' +
+      '<div class="fld"><span>Gemessen an</span><div class="chips" id="g-acc" role="group" aria-label="Gemessen an">' + [['', 'Gesamtes Vermögen']].concat(accs.map(a => [a.id, a.n])).map(c =>
+        '<button type="button" class="chip" data-gacc="' + esc(c[0]) + '" aria-pressed="' + (vS.acc === c[0]) + '">' + esc(c[1]) + '</button>').join('') + '</div></div>';
+    return;
+  }
+  const prev = ymOfIdx(ymIdx(vS.ym) - 1);
+  $('#v-body').innerHTML = '<label class="fld" for="v-month"><span>Monat</span><input id="v-month" type="month" max="' + cur + '" value="' + vS.ym + '" placeholder="JJJJ-MM"></label>' +
+    (accs.length ? '<div class="fld"><span>Stand je Konto</span><div class="vrows">' + accs.map(a => { const last = accAt(a.id, prev);
+      return '<div class="vrow"><b>' + esc(a.n) + '</b><input type="text" inputmode="decimal" autocomplete="off" data-acc="' + esc(a.id) + '" value="' + esc(vS.vals[a.id] || '') + '" placeholder="' + (last != null ? 'zuletzt ' + minus(last) + eur0(last) : '0') + '" aria-label="Stand ' + esc(a.n) + ' in Euro"><em>€</em>' +
+        '<button type="button" class="x sm" data-vdel="' + esc(a.id) + '" aria-label="' + esc(a.n) + ' löschen">' + XSVG + '</button></div>' +
+        (vS.arm === a.id ? '<p class="err">Noch einmal auf das Kreuz tippen löscht ' + esc(a.n) + ' mit allen Ständen.</p>' : ''); }).join('') + '</div></div>' : '') +
+    '<div class="fld"><span>Konto hinzufügen</span><div class="stepper"><input id="v-new" type="text" maxlength="30" autocomplete="off" placeholder="z. B. Girokonto" aria-label="Name des Kontos"><button type="button" id="v-new-add" aria-label="Konto hinzufügen">+</button></div></div>';
+}
+function openV(mode, id) {
+  const cur = todayKey().slice(0, 7), g = mode === 'goal' && id ? (MF.goals || {})[id] : null;
+  if (mode === 'goal') vS = { mode: 'goal', id: g ? id : null, name: g ? g.n : '', amt: g ? eur(g.amount).replace(' €', '') : '', acc: g && g.acc && (MF.acc || {})[g.acc] ? g.acc : '', arm: false };
+  else { vS = { mode: 'bal', ym: isYM(mYM) && mYM <= cur ? mYM : cur, arm: null }; vS.vals = loadVals(vS.ym); }
+  $('#vs-title').textContent = mode === 'goal' ? 'Sparziel' : 'Stand eintragen';
+  $('#v-err').hidden = true; $('#v-del').hidden = !g; $('#v-del').textContent = 'Sparziel löschen';
+  paintV();
+  openDlg(vdlg);
+  vdlg.scrollTop = 0;
+}
+function closeV() { if (vdlg.open) vdlg.close(); }
+function addAcc() {
+  const i = $('#v-new'), name = i.value.trim().slice(0, 30); if (!name) return i.focus();
+  if (accList().some(a => a.n.toLowerCase() === name.toLowerCase())) { const x = $('#v-err'); x.textContent = 'Ein Konto mit diesem Namen gibt es schon.'; x.hidden = false; return; }
+  const id = newId(), p = { acc: {} }; p.acc[id] = { n: name }; mfdoc.patch(p);
+  $('#v-err').hidden = true; vS.arm = null; paintV(); renderMoney();
+  const f = vdlg.querySelector('[data-acc="' + CSS.escape(id) + '"]'); if (f) f.focus();
+}
+$('#vs-close').addEventListener('click', closeV);
+vdlg.addEventListener('click', e => {
+  if (e.target === vdlg) return closeV();
+  if (e.target.closest('#v-new-add')) return addAcc();
+  const c = e.target.closest('[data-gacc]');
+  if (c) { vS.acc = c.dataset.gacc; vdlg.querySelectorAll('[data-gacc]').forEach(b => b.setAttribute('aria-pressed', String(b === c))); return; }
+  const d = e.target.closest('[data-vdel]'); if (!d) return;
+  const id = d.dataset.vdel;
+  if (vS.arm !== id) { vS.arm = id; return paintV(); }
+  /* Konto löschen: das Konto und seine Stände in allen Monaten */
+  const p = { acc: {}, bal: {} }; p.acc[id] = null;
+  Object.keys(MF.bal || {}).forEach(ym => { if (MF.bal[ym] && id in MF.bal[ym]) { p.bal[ym] = {}; p.bal[ym][id] = null; } });
+  mfdoc.patch(p); delete vS.vals[id]; vS.arm = null; paintV(); renderMoney();
+});
+$('#vform').addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.acc) vS.vals[t.dataset.acc] = t.value; });
+$('#vform').addEventListener('change', e => {
+  if (e.target.id !== 'v-month') return;
+  const ym = e.target.value.trim();
+  if (isYM(ym) && ym <= todayKey().slice(0, 7)) { vS.ym = ym; vS.vals = loadVals(ym); vS.arm = null; paintV(); }
+});
+$('#vform').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'v-new') { e.preventDefault(); addAcc(); } });
+$('#vform').addEventListener('submit', e => {
+  e.preventDefault();
+  const err = m => { const x = $('#v-err'); x.textContent = m; x.hidden = false; };
+  if (vS.mode === 'goal') {
+    const name = $('#g-name').value.trim(), a = parseEur($('#g-amt').value);
+    if (!name) return err('Gib dem Sparziel einen Namen.');
+    if (!okCents(a)) return err('Gib einen Zielbetrag über 0 ein, zum Beispiel 3.000.');
+    const p = { goals: {} }; p.goals[vS.id || newId()] = { n: name.slice(0, 30), amount: a, acc: vS.acc || null };
+    mfdoc.patch(p); fSub = 'verm'; closeV(); renderMoney(); return;
+  }
+  const ym = $('#v-month').value.trim(), accs = accList();
+  if (!isYM(ym) || ym > todayKey().slice(0, 7)) return err('Wähle diesen oder einen früheren Monat.');
+  if (!accs.length) return err('Lege zuerst ein Konto an, zum Beispiel Girokonto, und tippe auf das Plus.');
+  const p = { bal: {} }; p.bal[ym] = {}; let n = 0;
+  for (const a of accs) {
+    const v = parseBal(vS.vals[a.id] || '');
+    if (v === null) { p.bal[ym][a.id] = null; continue; }
+    if (!okBal(v)) return err('Der Stand von ' + a.n + ' ist keine Zahl. Beispiel: 1.250,00');
+    p.bal[ym][a.id] = v; n++;
+  }
+  if (!n) return err('Trag bei mindestens einem Konto einen Stand ein.');
+  mfdoc.patch(p); fSub = 'verm'; mYM = ym; closeV(); renderMoney();
+});
+$('#v-del').addEventListener('click', () => {
+  if (vS.mode !== 'goal' || !vS.id) return;
+  if (!vS.arm) { vS.arm = true; $('#v-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
+  const p = { goals: {} }; p.goals[vS.id] = null; mfdoc.patch(p); closeV(); renderMoney();
 });
 
 const mdlg = $('#msheet');
@@ -2661,7 +2879,8 @@ $('#k-del').addEventListener('click', () => {
   closeK(); renderTraining();
 });
 
-function seriesSVG(pts, fmtV, steps, label) {
+function seriesSVG(pts, fmtV, steps, label, fmtD) {
+  const fd = fmtD || dRow;
   const VW = 360, VH = 160, L = 8, R = 44, T0 = 12, B = 26;
   let lo = Infinity, hi = -Infinity;
   pts.forEach(q => { lo = Math.min(lo, q.v); hi = Math.max(hi, q.v); });
@@ -2675,7 +2894,7 @@ function seriesSVG(pts, fmtV, steps, label) {
   const line = pts.map((q, i) => (i ? 'L' : 'M') + f(X(i)) + ' ' + f(Y(q.v))).join(' ');
   s += '<path class="g-area" d="' + line + ' L' + f(X(pts.length - 1)) + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-trend" d="' + line + '"/>';
   s += pts.map((q, i) => i === pts.length - 1 ? '<circle class="g-end" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="5"/>' : pts.length > 24 ? '' : '<circle class="g-pos" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="2.6"/>').join('');
-  s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
+  s += '<text x="' + L + '" y="' + (VH - 6) + '">' + fd(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + fd(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
 /* Verlauf einer Übung als Bausteine: Kennzahlen (auch im laufenden Training), Graph und Einheiten (im Blatt der Übung). full = Einheiten, alt nach neu */
@@ -3087,7 +3306,7 @@ function backupDue() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
   const today = dayNum(todayKey());
   if (t) { const n = today - dayNum(keyOf(new Date(t))); return n >= BK_DAYS ? 'Letzte Sicherung vor ' + n + ' Tagen' : ''; }
-  const first = [calFirst('all'), calFirst('weight'), calFirst('money')].filter(Boolean).sort()[0];
+  const first = [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : ''].filter(Boolean).sort()[0];
   return first && today - dayNum(first) >= BK_DAYS ? 'Noch keine Sicherung gespeichert' : '';
 }
 
@@ -3115,6 +3334,13 @@ function renderHome() {
     const s = mSum(curYM), now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     mv = minus(s.bal) + eur0(s.bal) + ' € ' + (minus(s.bal) ? 'im Minus' : 'übrig'); mc = minus(s.bal) ? 'neg' : '';
     ms = s.bal > 0 ? eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende' : eur0(s.flex) + ' € flexible Ausgaben im ' + mName;
+  }
+  /* Mit Vermögen steht dessen Stand vorn, darunter die Veränderung im Monat und, wenn ein Budget geführt wird, was übrig ist */
+  const wNow = wealthDelta(curYM);
+  if (wNow) {
+    const left = hasMoney() ? mSum(curYM).bal : null;
+    mv = minus(wNow.end) + eur0(wNow.end) + ' €'; mc = minus(wNow.end) ? 'neg' : '';
+    ms = [wNow.d != null ? eurS(wNow.d) + ' im ' + mName : '', left != null ? minus(left) + eur0(left) + ' € ' + (minus(left) ? 'im Minus' : 'übrig') : ''].filter(Boolean).join(' · ') || 'Vermögen';
   }
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
   let tv = '', ts = 'Tippe, um zu starten';
@@ -3202,7 +3428,7 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? 'Ausgabe eintragen' : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : 'Neue Routine anlegen');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
 function show(v, user) {

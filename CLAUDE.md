@@ -1,11 +1,11 @@
-# Track. – Alltags-Tracker (v37)
+# Track. – Alltags-Tracker (v38)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Finanzen mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - Die App heißt „Track.“ (mit Punkt), früher „Takt“. Der alte Name bleibt absichtlich in allen internen Kennungen: `localStorage`-Schlüssel `takt.v1`, `takt.backup`, `takt.view`, Cache-Name `takt-vN` und `app: 'takt'` in der Sicherungsdatei. Diese nie umbenennen, sonst sind die Daten des Nutzers weg oder alte Sicherungen unlesbar.
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v37` → `takt-v38`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v37</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v38` → `takt-v39`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v38</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -13,7 +13,7 @@ Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Finanzen mit B
 - Alles liegt lokal in `localStorage` unter `takt.v1` als `{ S, LY, W, MF, MY, T, K }`:
   - `S` Routinen und laufender Timer, `LY` Tagesprotokoll der Routinen je Jahr
   - `W` Gewicht (`entries` je Datum, Ziel)
-  - `MF` feste Posten, Budgets, `roll` (Rest mitnehmen je Kategorie), `MY` Buchungen je Jahr
+  - `MF` feste Posten, Budgets, `roll` (Rest mitnehmen je Kategorie), dazu Vermögen: `acc` Konten, `bal` Stände je Monat und Konto (`{ 'YYYY-MM': { kontoId: Cent } }`, darf negativ sein), `goals` Sparziele; `MY` Buchungen je Jahr
   - `T` Läufe, `K` Gym: `ex` Übungen, `plans`, `log` je Datum, `meta`, `live` (laufendes Training)
 - Jede Datengruppe läuft beim Laden durch eine `norm…`-Funktion. **Neue Felder dort eintragen, sonst gehen sie beim Laden verloren.**
 - Datumsschlüssel sind `YYYY-MM-DD` in Ortszeit, Geldbeträge in Cent.
@@ -30,6 +30,9 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Verlauf einer Übung: Im laufenden Training stehen unter den Sätzen die Karte „Letztes Mal“ und die Kennzahlen (`exFigsHTML()`). Ein Tipp auf die Karte öffnet das Blatt der Übung nur zum Ansehen (`openX(id, true)`) mit Graph (`exChartHTML()`) und dem Recap, dessen Einheiten als Karten mit Satz-Tabelle (`exCard()`) erscheinen, so vom Nutzer nach dem Vorbild Alpha Progression gewünscht. Aus der Übungsliste (`openX(id)`) kommen Umbenennen und Löschen dazu.
 - Recap im Gym-Bereich (Monat/Jahr wie Cardio, gemeinsamer Zeitraum `tMode`, `tYM`, `tYear`): `kPeriod('YYYY-MM' oder 'YYYY')` liefert Einheiten, bewegtes Gewicht, Zeit und die Verbesserung = Schnitt über alle Übungen. Je Übung rechnet `exDelta(hist, zeitraum)`: bester Stand am Ende gegenüber dem Stand davor, im ersten Monat gegenüber der ersten Einheit. Die Übungsliste (`kExFoldHTML()`) zeigt die Verbesserung im gewählten Zeitraum.
 - Recap je Übung im Blatt der Übung (`exRecapHTML()`, Zustand `xMode`, `xYM`, `xYear`): dieselben Knöpfe Monat/Jahr und Pfeile, Verbesserung, bester Stand, Einheiten; im Monat die Einheiten als Karten, im Jahr die Monate.
+- Finanzen (im Code `haushalt`) hat zwei Bereiche, Umschalter wie Cardio/Gym: „Vermögen“ (`wealthHTML()`) und „Budget“ (`monthHTML()`, `yearHTML()`); `finSub()` wählt den Bereich, beide teilen sich `mMode`, `mYM`, `mYear`.
+  - Vermögen: einmal im Monat Stand je Konto eintragen (Blatt `vsheet`, `openV('bal')`). `accAt()` trägt den letzten Stand eines Kontos weiter, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert das Plus oder Minus für Monat oder Jahr. Sparziele (`goalsHTML()`, `openV('goal')`) messen am ganzen Vermögen oder an einem Konto und schätzen das Datum aus dem Schnitt der letzten drei Monate.
+  - Budget: `rateHTML()` zeigt die Sparquote mit Vergleich zum Zeitraum davor, Fixkosten stehen zusätzlich aufs Jahr gerechnet da.
 - Blätter immer mit `openDlg(dialog)` öffnen, nie direkt mit `showModal()`: sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 
 ## Design-Regeln (verbindlich)
@@ -63,6 +66,7 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Farbe als Detail, nicht als Fläche: Bereichs-Symbole, Punkte, ein blauer Hauptknopf.
 - Ruhig: keine Töne, keine Ränder um Karten, keine Großbuchstaben-Labels, keine erklärenden Texte ohne Nutzen.
 - Im Zweifel die schlichtere Lösung wählen und lieber etwas weglassen.
+- Finanzen sollen den Nutzer weiterbringen, nicht nur Ausgaben zählen: Vermögen, Sparquote und Sparziele stehen vorn, das Haushaltsbuch (Budget) ist freiwillig.
 - Überall ein Plus oder Minus zum Zeitraum davor zeigen (Monat, Jahr, je Übung), grün oder rot. Zahlen ohne Vergleich sagen dem Nutzer wenig.
 - Listen, die mit der Zeit wachsen, dürfen nie unübersichtlich werden: zuerst nur die letzten drei zeigen, aufgeklappt nach Monaten gruppieren und jeden Monat einklappbar machen. Dafür gibt es `monthsHTML()` und `monToggle()`; so gebaut sind die Einträge beim Gewicht. Läufe, Gym-Einheiten und Ausgaben zeigen nur den oben gewählten Monat. Im Gym-Bereich sind „Übungen“ und „Einheiten“ je eine eingeklappte Zeile mit Anzahl, die ein Tipp aufklappt; diese Form mag der Nutzer.
 - Klein wirkt edler: neue Ansichten von Anfang an kompakt bauen, nie groß. Eine Ansicht darf dafür lang sein und scrollen (z. B. laufendes Training mit Verlauf darunter).
