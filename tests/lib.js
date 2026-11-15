@@ -14,7 +14,7 @@ const zahl = n => Math.round(n).toLocaleString('de-DE');
    Nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich und überschreibt dann die Daten der App. */
 async function oeffnen(o = {}) {
   const browser = await chromium.launch(o.start || {});
-  const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true });
+  const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger });
   const page = await ctx.newPage(), fehler = [];
   page.on('pageerror', e => fehler.push('Seitenfehler: ' + e.message));
   await page.goto(o.url || APP); await page.waitForTimeout(300);
@@ -28,6 +28,14 @@ const blaetterZu = page => page.evaluate(() => document.querySelectorAll('dialog
 const nachOben = page => page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; });
 const nachUnten = page => page.evaluate(() => { const s = document.querySelector('#scroll'); s.scrollTop = s.scrollHeight; });
 
+/* Fingerzug von (x0, y0) nach (x1, y1) in ms Millisekunden, als echte Berührung (braucht oeffnen({ finger: true })) */
+async function wischen(ctx, page, x0, y0, x1, y1, ms = 120) {
+  const c = await ctx.newCDPSession(page), n = 6;
+  await c.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: x0, y: y0 }] });
+  for (let i = 1; i <= n; i++) { await page.waitForTimeout(ms / n); await c.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: x0 + (x1 - x0) * i / n, y: y0 + (y1 - y0) * i / n }] }); }
+  await c.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
+  await c.detach(); await page.waitForTimeout(350);
+}
 /* Sammelt Prüfungen und beendet den Test mit Fehlercode, wenn eine nicht stimmt */
 function pruefer(name) {
   let n = 0, falsch = 0;
@@ -47,4 +55,4 @@ function pruefer(name) {
 /* Fängt Abbrüche ab (z. B. Knopf nicht gefunden), damit der Test eine lesbare Meldung liefert */
 function lauf(fn) { fn().catch(e => { console.log('  ABBRUCH ' + String(e.message).split('\n')[0]); process.exit(1); }); }
 
-module.exports = { APP, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, nachOben, nachUnten, pruefer, lauf };
+module.exports = { APP, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, nachOben, nachUnten, wischen, pruefer, lauf };

@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v43)
+# Track. – Projektwissen (App-Stand v44)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -37,8 +37,9 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
 - Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
+- Wochenleiste nur auf Heute und Routinen (v44); in Gewicht, Finanzen und Training öffnet der Knopf `#calbtn` in der Kopfzeile den Kalender des Bereichs (`calOf()`). Warum: Der Inhalt soll oben stehen, nicht die Bedienung.
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`; Modi `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
-- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
+- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML(titel, vor, was, seg)` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`) und mit `seg` (`m`, `t`, `x`) der Umschalter Monat/Jahr in derselben Reihe (`.period`), `INFO(id)` kleines „i“, das den Text `#info-id` zeigt, `scrubAttr()` macht einen Graphen ablesbar, `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
   - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
   - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `defAcc()`: zuletzt benutztes Konto, sonst das einzige; bei mehreren ohne Vorgeschichte muss gewählt werden) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
@@ -70,6 +71,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Selbst-Aktualisierung (v24): Beim Öffnen sucht die App nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt, aber nie bei offenem Blatt. Warum: Der Nutzer soll Updates ohne Zutun bekommen und keine Eingabe verlieren.
 - Versionshinweis in der Fußzeile: Der Nutzer prüft daran, ob ein Update angekommen ist.
 - Kopfzeile deckend, kein `backdrop-filter` (v37): Der Milchglas-Effekt machte auf dem iPhone beim Scrollen den Kopf selbst unscharf.
+- Wischgesten (v44, Abschnitt „Wischgesten“): Blatt nach unten wegziehen (nur wenn alles unter dem Finger ganz oben steht; schließt über denselben Weg wie ein Tipp neben das Blatt) und waagerecht zwischen Monaten, Jahren, Wochen wischen (klickt den Pfeil; nicht vom Bildschirmrand, nicht auf Graphen).
+- Graphen ablesen (v44, Abschnitt „Graphen ablesen“): Jeder Graph trägt seine Punkte in `data-pts`; Tipp oder Zug zeigt Linie, Punkt und Schild (`scrubShow()`), ein Tipp daneben blendet es aus.
 - Blätter nur über `openDlg()`: Sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 - Gym nach Vorbild Alpha Progression: Im laufenden Training stehen unter den Sätzen „Letztes Mal“ und Kennzahlen; ein Tipp auf „Letztes Mal“ öffnet das Blatt der Übung mit Graph und Recap. Einheiten erscheinen dort als Karten mit Satz-Tabelle.
 - Vergleichswert im Gym ist das geschätzte Maximum für eine Wiederholung (Gewicht × (1 + Wdh/30)), ohne Gewicht die meisten Wiederholungen. Kein 10RM: Die App rechnete schon immer so, der Nutzer hat es so belassen.
@@ -102,6 +105,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
 - Kennfarben der Bereiche (Routinen blau, Gewicht lila, Finanzen orange, Training grün) nur am Symbol in der Übersicht auf Heute.
 - Systemschrift, große Zahlen mit `var(--round)`. Abschnittstitel fett und normal geschrieben.
+- Inhalt zuerst: höchstens zwei Reihen Bedienung über der großen Zahl (Bereichs-Umschalter, Zeitraum). Erklärungen nie dauerhaft, sondern hinter `INFO()`.
 - Nur was nötig ist: keine erklärenden Texte ohne Nutzen, keine Töne, keine ungefragten Einstellungen, lange Listen einklappen.
 - Hell, dunkel und 320 px Breite müssen funktionieren. Nichts darf seitlich wischbar oder abgeschnitten sein.
 
@@ -132,12 +136,12 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v43` → `takt-v44`), `<span class="ver">v43</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v44` → `takt-v45`), `<span class="ver">v44</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
-- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Finanzen, Gym, Speichern, Aktualisierung. Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
+- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
 - Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.

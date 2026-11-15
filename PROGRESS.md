@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v43 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v44 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -18,6 +18,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v44: Aus der Durchsicht, Punkte 1, 2, 4, 5: Zeitraum in einer Reihe und Wochenleiste nur auf Heute und Routinen (Kalender über Knopf in der Kopfzeile); Blätter nach unten wegziehen, zwischen Monaten wischen; Graphen ablesbar; Erklärungen hinter „i“; „kg“/„Wdh“ normal geschrieben.
 - v43: Zeile „Ohne Konto“ im Bereich Vermögen: zeigt eingeklappt, was ohne Konto gebucht ist und deshalb nicht mitrechnet; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen.
 
 ## Offene Probleme

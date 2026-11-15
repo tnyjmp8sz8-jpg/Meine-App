@@ -162,6 +162,7 @@ input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 input[type="date"],input[type="month"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-height:46px}
 input::-webkit-date-and-time-value{text-align:left;margin:0;min-width:0}
 dialog,.scroll{overflow-x:hidden}
+dialog{overscroll-behavior:contain}
 .fld{min-width:0}
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
@@ -221,6 +222,12 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .g-raw{fill:var(--muted);opacity:.55}
 .g-goal{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 4;opacity:.55}
 .g-end{fill:var(--at);stroke:var(--surface);stroke-width:2.5}
+svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
+.g-scrub{pointer-events:none}
+.g-scrub line{stroke:var(--mid);stroke-width:1}
+.g-scrub circle{fill:var(--at);stroke:var(--surface);stroke-width:2}
+.g-scrub rect{fill:var(--sel)}
+.chart .g-scrub text{fill:var(--ink);font-weight:600}
 .note{margin:0;color:var(--muted);font-size:14px}
 .entries{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
 .entries li+li{border-top:1px solid var(--line)}
@@ -613,6 +620,10 @@ button{transition:transform .12s ease,background-color .15s ease,border-color .1
 dialog[open]{animation:sheet .26s cubic-bezier(.16,1,.3,1)}
 dialog[open]::backdrop{animation:dim .2s ease}
 .view:not([hidden]){animation:fade .22s cubic-bezier(.16,1,.3,1)}
+@keyframes goN{from{opacity:.3;transform:translateX(26px)}to{opacity:1;transform:none}}
+@keyframes goP{from{opacity:.3;transform:translateX(-26px)}to{opacity:1;transform:none}}
+.view.go-n:not([hidden]){animation:goN .24s cubic-bezier(.16,1,.3,1)}
+.view.go-p:not([hidden]){animation:goP .24s cubic-bezier(.16,1,.3,1)}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
@@ -656,7 +667,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
-  dialog[open],dialog[open]::backdrop,.view:not([hidden]){animation:none}
+  dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg{transition:none}
   .fill,.glyph{transition:none}
   .just-done .fill,.just-done .streak b{animation:none}
@@ -697,7 +708,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v43</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v44</span></footer>
 </div>
 </div>
 
@@ -1533,7 +1544,8 @@ function chartSVG(pts, t0) {
   lo = Math.floor(lo / step + 1e-9) * step; hi = Math.ceil(hi / step - 1e-9) * step;
   const X = t => L + (t - tMin) / (tMax - tMin) * (VW - L - R), Y = v => T + (hi - v) / (hi - lo) * (VH - T - B);
   const f = n => n.toFixed(1), base = VH - B;
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Gewichtsverlauf mit 7-Tage-Schnitt">';
+  const tip = e => (e.t === t0 ? 'Heute' : DF_SHORT.format(dayDate(e.t))) + ' · ' + kg(e.w, 1) + ' kg · Schnitt ' + kg(e.m, 1);
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Gewichtsverlauf mit 7-Tage-Schnitt"' + scrubAttr(pts.map(e => [X(e.t), Y(e.m), tip(e)])) + '>';
   const steps = Math.round((hi - lo) / step);
   for (let i = 0; i <= steps; i++) {
     const v = lo + i * step;
@@ -1895,7 +1907,7 @@ function yearSVG(ms) {
   const step = [2500, 5000, 10000, 20000, 50000, 100000, 200000, 500000, 1000000, 2000000, 5000000].find(x => x >= (hi - lo) / 3) || 10000000;
   lo = Math.floor(lo / step) * step; hi = Math.ceil(hi / step) * step;
   const Y = v => T + (hi - v) / (hi - lo) * (VH - T - B), slot = (VW - L - R) / 12, bw = slot * 0.62, f = n => n.toFixed(1);
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Bilanz pro Monat">';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Bilanz pro Monat"' + scrubAttr(ms.map((m, i) => m ? [L + slot * (i + 0.5), Math.min(Y(m.bal), Y(0)), MONTHS[i] + ' · ' + (m.bal < 0 ? '−' : '+') + eur0(m.bal) + ' €'] : null).filter(Boolean)) + '>';
   for (let v = lo; v <= hi; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + (v < 0 ? '−' : '') + eur0(v) + '</text>';
   ms.forEach((m, i) => {
     const cx = L + slot * (i + 0.5);
@@ -2041,7 +2053,7 @@ function wealthHTML(curYM) {
   /* Verlauf: im Monat die zwölf Monate bis hierher, im Jahr die Monate des Jahres */
   const pts = [];
   for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
-  if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
+  if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', '€', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
   h += '<h2 class="sec">Konten</h2><ul class="entries">' + accList().map(a => {
     const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id);
     if (v == null) return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' eintragen"><span class="l"><span>' + esc(a.n) + '</span><small>noch kein Stand eingetragen</small></span><b class="dim">–</b></button></li>';
@@ -2448,7 +2460,8 @@ function runSVG(runs, metric) {
   const step = steps.find(s => s >= (hi - lo) / 3) || steps[steps.length - 1];
   lo = Math.floor(lo / step + 1e-9) * step; hi = Math.ceil(hi / step - 1e-9) * step;
   const X = i => L + i / (pts.length - 1) * (VW - L - R), Y = v => T0 + (hi - v) / (hi - lo) * (VH - T0 - B), f = n => n.toFixed(1), base = VH - B;
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (metric === 'pace' ? 'Pace' : 'Effizienz') + ' der letzten ' + pts.length + ' Läufe">';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (metric === 'pace' ? 'Pace' : 'Effizienz') + ' der letzten ' + pts.length + ' Läufe"' +
+    scrubAttr(pts.map((r, i) => [X(i), Y(val(r)), dRow(r.d) + ' · ' + (metric === 'pace' ? fmtPace(r.pace) + ' /km' : kg(r.eff, 2) + ' m pro Schlag')])) + '>';
   const n = Math.round((hi - lo) / step);
   for (let i = 0; i <= n; i++) {
     const v = lo + i * step;
@@ -2466,7 +2479,8 @@ function kmBarsSVG(vals, label) {
   const step = [2, 5, 10, 20, 25, 50, 100, 200, 500].find(x => x >= hi / 3) || 1000;
   hi = Math.ceil(hi / step - 1e-9) * step;
   const Y = v => T0 + (hi - v) / hi * (VH - T0 - B), slot = (VW - L - R) / 12, bw = slot * 0.62, f = n => n.toFixed(1);
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (label || 'Kilometer pro Monat') + '">';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (label || 'Kilometer pro Monat') + '"' +
+    scrubAttr(vals.map((v, i) => v > 0 ? [L + slot * (i + 0.5), Y(v), MONTHS[i] + ' · ' + (label ? v + (v === 1 ? ' Einheit' : ' Einheiten') : kg(v, 1) + ' km')] : null).filter(Boolean)) + '>';
   for (let v = 0; v <= hi + 1e-9; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + v + '</text>';
   vals.forEach((v, i) => {
     const cx = L + slot * (i + 0.5);
@@ -3055,7 +3069,7 @@ $('#k-del').addEventListener('click', () => {
   closeK(); renderTraining();
 });
 
-function seriesSVG(pts, fmtV, steps, label, fmtD) {
+function seriesSVG(pts, fmtV, steps, label, unit, fmtD) {
   const fd = fmtD || dRow;
   const VW = 360, VH = 160, L = 8, R = 44, T0 = 12, B = 26;
   let lo = Infinity, hi = -Infinity;
@@ -3064,7 +3078,7 @@ function seriesSVG(pts, fmtV, steps, label, fmtD) {
   const step = steps.find(s => s >= (hi - lo) / 3) || steps[steps.length - 1];
   lo = Math.floor(lo / step + 1e-9) * step; hi = Math.ceil(hi / step - 1e-9) * step;
   const X = i => L + i / (pts.length - 1) * (VW - L - R), Y = v => T0 + (hi - v) / (hi - lo) * (VH - T0 - B), f = n => n.toFixed(1), base = VH - B;
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + label + '">';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + label + '"' + scrubAttr(pts.map((q, i) => [X(i), Y(q.v), fd(q.d) + ' · ' + fmtV(q.v) + ' ' + unit])) + '>';
   const n = Math.round((hi - lo) / step);
   for (let i = 0; i <= n; i++) { const v = lo + i * step; s += '<line class="g-grid" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 8) + '" y="' + f(Y(v) + 4) + '">' + fmtV(v) + '</text>'; }
   const line = pts.map((q, i) => (i ? 'L' : 'M') + f(X(i)) + ' ' + f(Y(q.v))).join(' ');
@@ -3092,7 +3106,7 @@ function exChartHTML(full, all) {
   return '<div class="card chart">' +
     (i.same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-x="last" aria-pressed="' + !all + '">Letzte 12</button><button type="button" class="chip" data-x="all" aria-pressed="' + !!all + '">Alle ' + i.same.length + '</button></div>' : '') +
     '<p class="note">' + (i.wt ? 'Geschätztes Maximum (1RM) in kg' + (i.dS ? ' · seit Start ' + i.dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
-    seriesSVG(pts, i.wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), i.wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
+    seriesSVG(pts, i.wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), i.wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung', i.wt ? 'kg' : 'Wdh') + '</div>';
 }
 /* Tabelle der Sätze einer Einheit, wie in „Letztes Mal“ */
 const setsTable = sets => '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
@@ -3631,6 +3645,93 @@ document.querySelector('.tabs').addEventListener('click', e => { const b = e.tar
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWS.indexOf(v) >= 0) show(v); });
 
 function render() { renderRoutines(); renderWeight(); renderMoney(); renderTraining(); ensureLiveTick(); renderHome(); }
+
+/* ---------- Graphen ablesen ---------- */
+/* Jeder Graph trägt seine Punkte in data-pts: [x, y, Text] in den Koordinaten seiner viewBox. Ein Tipp oder ein Zug mit dem Finger zeigt
+   den nächsten Punkt mit Linie und Wert; ein Tipp daneben blendet ihn aus. Senkrecht scrollt die Seite weiter (touch-action: pan-y). */
+function scrubAttr(a) { return ' class="scrub" data-pts="' + esc(JSON.stringify(a.map(p => [Math.round(p[0] * 10) / 10, Math.round(p[1] * 10) / 10, p[2]]))) + '"'; }
+let scrubOn = null;
+function scrubShow(svg, clientX) {
+  let pts; try { pts = JSON.parse(svg.dataset.pts); } catch (e) { return; }
+  if (!pts.length) return;
+  const r = svg.getBoundingClientRect(), vw = svg.viewBox.baseVal.width, x = (clientX - r.left) / r.width * vw;
+  let p = pts[0]; pts.forEach(q => { if (Math.abs(q[0] - x) < Math.abs(p[0] - x)) p = q; });
+  let g = svg.querySelector('.g-scrub');
+  if (!g) { g = document.createElementNS('http://www.w3.org/2000/svg', 'g'); g.setAttribute('class', 'g-scrub'); svg.appendChild(g); }
+  g.innerHTML = '<line x1="' + p[0] + '" x2="' + p[0] + '" y1="17" y2="' + p[1] + '"/><circle cx="' + p[0] + '" cy="' + p[1] + '" r="4.5"/><rect rx="8"/><text text-anchor="middle" x="' + p[0] + '" y="11">' + esc(p[2]) + '</text>';
+  /* Schild mit dem Wert: über dem Punkt, aber immer ganz im Bild */
+  const t = g.querySelector('text'), w = t.getBBox().width + 14, cx = clamp(p[0], w / 2 + 1, vw - w / 2 - 1), bx = g.querySelector('rect');
+  t.setAttribute('x', cx);
+  bx.setAttribute('x', cx - w / 2); bx.setAttribute('y', -1); bx.setAttribute('width', w); bx.setAttribute('height', 17);
+}
+function scrubHide() { document.querySelectorAll('.g-scrub').forEach(g => g.remove()); }
+document.addEventListener('pointerdown', e => {
+  const svg = e.target.closest && e.target.closest('svg.scrub');
+  scrubHide(); scrubOn = svg || null;
+  if (svg) scrubShow(svg, e.clientX);
+});
+document.addEventListener('pointermove', e => { if (scrubOn && scrubOn.isConnected && (e.pointerType !== 'mouse' || e.buttons)) scrubShow(scrubOn, e.clientX); });
+['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, () => { scrubOn = null; }));
+
+/* ---------- Wischgesten ---------- */
+/* Blatt nach unten wegziehen. Nur wenn das Blatt und alles Scrollbare unter dem Finger ganz oben steht, sonst scrollt es wie gewohnt.
+   Losgelassen nach genug Weg oder Schwung schließt es wie ein Tipp neben das Blatt (derselbe Weg im Code), sonst federt es zurück. */
+(function () {
+  let d = null, x0 = 0, y0 = 0, t0 = 0, dy = 0, on = false;
+  const clear = dl => { dl.style.transform = ''; dl.style.transition = ''; dl.style.animation = ''; };
+  document.querySelectorAll('dialog').forEach(dl => dl.addEventListener('close', () => clear(dl)));
+  document.addEventListener('touchstart', e => {
+    d = null; on = false;
+    const el = e.target, dl = el.closest && el.closest('dialog[open]');
+    if (!dl || e.touches.length !== 1 || el.closest('input[type="range"], svg.scrub')) return;
+    for (let n = el; n && n !== dl.parentNode; n = n.parentNode) if (n.scrollTop > 0) return;
+    d = dl; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = e.timeStamp; dy = 0;
+  }, { passive: true });
+  document.addEventListener('touchmove', e => {
+    if (!d) return;
+    const t = e.touches[0]; dy = t.clientY - y0;
+    if (!on) {
+      /* Die erste Bewegung entscheidet: nach unten = ziehen, alles andere bleibt dem Browser (scrollen, Chips seitlich schieben) */
+      if (dy <= 0 || Math.abs(t.clientX - x0) > dy) { d = null; return; }
+      on = true; d.style.animation = 'none'; d.style.transition = 'none';
+    }
+    if (e.cancelable) e.preventDefault();
+    d.style.transform = 'translateY(' + Math.max(0, dy) + 'px)';
+  }, { passive: false });
+  const end = e => {
+    const dl = d; d = null;
+    if (!dl || !on) return;
+    on = false;
+    const go = e.type === 'touchend' && (dy > Math.min(140, dl.offsetHeight * 0.3) || (dy > 30 && dy / Math.max(1, e.timeStamp - t0) > 0.6));
+    dl.style.transition = 'transform .2s ease';
+    dl.style.transform = go ? 'translateY(100%)' : '';
+    if (go) setTimeout(() => { if (dl.open) dl.dispatchEvent(new MouseEvent('click', { bubbles: true })); if (dl.open) dl.style.transform = ''; }, 190);
+  };
+  document.addEventListener('touchend', end);
+  document.addEventListener('touchcancel', end);
+})();
+/* Zwischen Monaten, Jahren und Wochen wischen: waagerecht über die Ansicht, wirkt wie ein Tipp auf den Pfeil.
+   Nicht vom Bildschirmrand (dort wischt iOS zurück), nicht auf Graphen und nicht in Reihen, die sich selbst seitlich schieben lassen. */
+(function () {
+  let s0 = null;
+  document.addEventListener('touchstart', e => {
+    s0 = null;
+    const t = e.touches[0], el = e.target, v = el.closest && el.closest('.view');
+    if (!v || e.touches.length !== 1 || t.clientX < 24 || t.clientX > innerWidth - 24 || el.closest('svg.scrub, input')) return;
+    for (let n = el; n && n !== v; n = n.parentNode) if (n.scrollWidth > n.clientWidth + 1 && /auto|scroll/.test(getComputedStyle(n).overflowX)) return;
+    s0 = { x: t.clientX, y: t.clientY, t: e.timeStamp, v };
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    const a = s0; s0 = null; if (!a) return;
+    const t = e.changedTouches[0], dx = t.clientX - a.x;
+    if (Math.abs(dx) < 60 || Math.abs(t.clientY - a.y) > 36 || e.timeStamp - a.t > 700) return;
+    const b = a.v.querySelector('.mnav [data-m="' + (dx > 0 ? 'prev' : 'next') + '"]');
+    if (!b || b.disabled) return;
+    b.click();
+    a.v.classList.remove('go-p', 'go-n'); void a.v.offsetWidth; a.v.classList.add(dx > 0 ? 'go-p' : 'go-n');
+  }, { passive: true });
+  document.querySelectorAll('.view').forEach(v => v.addEventListener('animationend', () => v.classList.remove('go-p', 'go-n')));
+})();
 
 /* ---------- boot ---------- */
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { ensureTicker(); render(); if (ldlg.open) wakeOn(); } });

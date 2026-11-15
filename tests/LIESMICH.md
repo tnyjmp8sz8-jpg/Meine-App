@@ -4,6 +4,8 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 
 - `node tests/alle.js`: alle Tests nacheinander. Vor jeder Veröffentlichung laufen lassen.
 - `ablauf.js`: Sicherung einlesen, in jedem Bereich etwas eintragen, Neuladen.
+- `aufbau.js`: Inhalt steht oben, Zeitraum in einer Reihe, Kalender-Knopf, Erklärungen hinter „i“ (390 und 320 px).
+- `gesten.js`: Blatt wegziehen, zwischen Monaten wischen, Wert im Graphen ablesen (echte Berührungen).
 - `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote.
 - `gym.js`: Recap für Monat und Jahr, Verbesserung, Blatt der Übung, laufendes Training.
 - `speicher.js`: 25-mal Neuladen, Sicherung speichern und einlesen.
