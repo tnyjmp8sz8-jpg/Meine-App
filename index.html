@@ -666,7 +666,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v38</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v39</span></footer>
 </div>
 </div>
 
@@ -801,6 +801,14 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span id="lbl-m-cat">Kategorie</span>
       <div class="chips" id="m-cat" role="group" aria-labelledby="lbl-m-cat"></div>
     </div>
+    <div class="fld" id="m-acc-fld" hidden>
+      <span id="lbl-m-acc">Konto</span>
+      <div class="chips" id="m-acc" role="group" aria-labelledby="lbl-m-acc"></div>
+    </div>
+    <div class="fld" id="m-to-fld" hidden>
+      <span id="lbl-m-to">Nach</span>
+      <div class="chips" id="m-to" role="group" aria-labelledby="lbl-m-to"></div>
+    </div>
     <label class="tog" id="m-roll-fld" hidden>
       <input type="checkbox" id="m-roll">
       <span class="tt"><b>Rest mitnehmen</b><small id="m-roll-s"></small></span>
@@ -821,6 +829,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <label class="fld" for="m-from" id="m-from-fld">
       <span>Gilt ab Monat</span>
       <input id="m-from" name="from" type="month" placeholder="JJJJ-MM">
+    </label>
+    <label class="fld" for="m-day" id="m-day-fld" hidden>
+      <span>Tag im Monat</span>
+      <input id="m-day" name="day" type="number" inputmode="numeric" min="1" max="28" placeholder="1">
     </label>
     <p class="err" id="m-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="m-save">Speichern</button>
@@ -1665,6 +1677,8 @@ function normMF(o) {
     if (!x || typeof x !== 'object' || !okCents(x.amount) || !isYM(x.from)) { out.fixed[id] = null; continue; }
     out.fixed[id] = { name: String(x.name || 'Posten').slice(0, 40), amount: Math.round(x.amount), kind: x.kind === 'in' ? 'in' : 'fix',
       every: [1, 3, 6, 12].indexOf(x.every) >= 0 ? x.every : 1, from: x.from, to: isYM(x.to) ? x.to : null };
+    /* Konto, von dem der Posten abgeht oder auf das er eingeht, und der Tag im Monat (1 bis 28) */
+    if (x.acc) { out.fixed[id].acc = String(x.acc).slice(0, 24); out.fixed[id].day = clamp(Math.round(Number(x.day)) || 1, 1, 28); }
   }
   out.budgets = {};
   const bd = o && o.budgets;
@@ -1673,8 +1687,10 @@ function normMF(o) {
   const rl = o && o.roll;
   if (rl && typeof rl === 'object') for (const c in rl) { const r = rl[c]; out.roll[c] = r && typeof r === 'object' && isYM(r.from) ? { from: r.from, base: okCents(r.base) ? Math.round(r.base) : 0 } : null; }
   /* Vermögen: Konten { id: { n } }, Stände { 'YYYY-MM': { kontoId: Cent } } (ein Stand je Konto und Monat), Sparziele { id: { n, amount, acc } } (acc = Konto oder null für alles) */
-  out.acc = {}; out.bal = {}; out.goals = {};
-  const ac = o && o.acc, bl = o && o.bal, gl = o && o.goals;
+  out.acc = {}; out.bal = {}; out.goals = {}; out.balT = {};
+  const ac = o && o.acc, bl = o && o.bal, gl = o && o.goals, bt = o && o.balT;
+  /* balT: Zeitpunkt (ms), zu dem ein Stand eingetragen wurde. Fehlt er, gilt der Stand zum Monatsende. */
+  if (bt && typeof bt === 'object') for (const ym in bt) { if (!isYM(ym) || !bt[ym] || typeof bt[ym] !== 'object') continue; out.balT[ym] = {}; for (const id in bt[ym]) out.balT[ym][id] = typeof bt[ym][id] === 'number' && isFinite(bt[ym][id]) ? bt[ym][id] : null; }
   if (ac && typeof ac === 'object') for (const id in ac) out.acc[id] = ac[id] && typeof ac[id] === 'object' && ac[id].n ? { n: String(ac[id].n).slice(0, 30) } : null;
   if (bl && typeof bl === 'object') for (const ym in bl) {
     if (!isYM(ym) || !bl[ym] || typeof bl[ym] !== 'object') continue;
@@ -1689,7 +1705,11 @@ function normMY(o) {
   if (t && typeof t === 'object') for (const id in t) {
     const x = t[id];
     if (!x || typeof x !== 'object' || !okCents(x.a) || !isKey(x.d)) { out.tx[id] = null; continue; }
-    out.tx[id] = { d: x.d, a: Math.round(x.a), k: x.k === 'in' ? 'in' : 'out', c: String(x.c || 'sonst').slice(0, 12), n: String(x.n || '').slice(0, 60) };
+    out.tx[id] = { d: x.d, a: Math.round(x.a), k: x.k === 'in' ? 'in' : x.k === 'tr' ? 'tr' : 'out', c: String(x.c || 'sonst').slice(0, 12), n: String(x.n || '').slice(0, 60) };
+    /* acc = Konto der Buchung, bei Umbuchungen (k 'tr') von acc nach to; t = Zeitpunkt des Eintragens (ms) */
+    if (x.acc) out.tx[id].acc = String(x.acc).slice(0, 24);
+    if (x.to) out.tx[id].to = String(x.to).slice(0, 24);
+    if (typeof x.t === 'number' && isFinite(x.t)) out.tx[id].t = x.t;
   }
   return out;
 }
@@ -1714,9 +1734,10 @@ function parseEur(v) {
 
 const fixedIn = ym => Object.keys(MF.fixed).map(id => ({ id, f: MF.fixed[id] })).filter(x => x.f && x.f.from <= ym && (!x.f.to || x.f.to >= ym))
   .map(x => ({ id: x.id, f: x.f, due: (ymIdx(ym) - ymIdx(x.f.from)) % x.f.every === 0 }));
-function txIn(ym) {
+/* Buchungen eines Monats, neueste zuerst. Umbuchungen zwischen Konten sind weder Einnahme noch Ausgabe und kommen nur mit tr = true */
+function txIn(ym, tr) {
   const y = MY[ym.slice(0, 4)], out = [];
-  if (y) for (const id in y.tx) { const t = y.tx[id]; if (t && t.d.slice(0, 7) === ym) out.push({ id, t }); }
+  if (y) for (const id in y.tx) { const t = y.tx[id]; if (t && t.d.slice(0, 7) === ym && (t.k === 'tr') === !!tr) out.push({ id, t }); }
   return out.sort((a, b) => a.t.d < b.t.d ? 1 : a.t.d > b.t.d ? -1 : a.id < b.id ? 1 : -1);
 }
 function mSum(ym) {
@@ -1776,7 +1797,7 @@ function rateHTML(s, p, label) {
 const heroM = (label, bal, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1' + (minus(bal) ? ' class="neg"' : '') + '><span class="num">' + minus(bal) + eur0(bal) + '</span><span class="unit">€</span></h1>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</section>';
 
 const fixedRow = x => '<li><button type="button" class="two" data-m="fixed" data-id="' + esc(x.id) + '" aria-label="' + esc(x.f.name) + ' ändern">' +
-  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
+  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + accTag(x.f.acc) + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
   '<b' + (x.due ? '' : ' class="dim"') + '>' + eur(x.f.amount) + '</b></button></li>';
 function fixedListHTML(ym) {
   const rows = fixedIn(ym).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount);
@@ -1787,7 +1808,7 @@ function incomeHTML(ym) {
   const one = txIn(ym).filter(x => x.t.k === 'in'), fx = fixedIn(ym).filter(x => x.f.kind === 'in').sort((a, b) => b.f.amount - a.f.amount);
   if (!one.length && !fx.length) return '<p class="note">Noch keine Einnahmen in diesem Monat.</p>';
   return '<ul class="entries">' + one.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Einnahme ändern">' +
-    '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + fx.map(fixedRow).join('') + '</ul>';
+    '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig' + accTag(x.t.acc) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + fx.map(fixedRow).join('') + '</ul>';
 }
 
 function monthHTML(curYM) {
@@ -1811,7 +1832,7 @@ function monthHTML(curYM) {
   else {
     h += '<ul class="entries">' + shown.map(x => {
       const t = x.t, title = (t.k === 'in' ? 'Einnahme' : catName(t.c)) + (t.n ? ' · ' + esc(t.n) : '');
-      return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
+      return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + accTag(t.acc) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
     }).join('') + '</ul>';
     if (tx.length > 7) h += '<button type="button" class="linkbtn" data-m="more">' + (mAll ? 'Weniger zeigen' : 'Alle ' + tx.length + ' Einträge zeigen') + '</button>';
   }
@@ -1873,8 +1894,41 @@ function yearHTML(curYM) {
 const accList = () => Object.keys(MF.acc || {}).filter(id => MF.acc[id]).map(id => ({ id, n: MF.acc[id].n })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
 /* Monate, in denen mindestens ein Konto einen Stand hat, alt nach neu */
 const balMonths = () => Object.keys(MF.bal || {}).filter(ym => MF.bal[ym] && Object.keys(MF.bal[ym]).some(id => typeof MF.bal[ym][id] === 'number' && (MF.acc || {})[id])).sort();
-/* Stand eines Kontos in einem Monat: der letzte Eintrag bis einschließlich dieses Monats, sonst null. Ein Konto ohne neuen Eintrag behält also seinen Stand. */
-function accAt(id, ym) { let v = null; balMonths().forEach(m => { if (m <= ym && typeof MF.bal[m][id] === 'number') v = MF.bal[m][id]; }); return v; }
+const accName = id => id && (MF.acc || {})[id] ? MF.acc[id].n : '';
+const accTag = id => accName(id) ? ' · ' + esc(accName(id)) : '';
+const monthEnd = ym => keyOf(new Date(+ym.slice(0, 4), +ym.slice(5), 0, 12));
+/* Bewegungen eines Kontos nach einem Stichtag (Datum aD, Zeitpunkt aT in ms) bis einschließlich Datum bis:
+   Buchungen und Umbuchungen mit diesem Konto und feste Posten, die ihm zugeordnet sind. Am Stichtag selbst zählt nur, was danach eingetragen wurde. */
+function accFlow(id, aD, aT, bis) {
+  let sum = 0, n = 0;
+  const add = v => { sum += v; n++; };
+  for (let y = +aD.slice(0, 4); y <= +bis.slice(0, 4); y++) {
+    const Y = MY[y]; if (!Y) continue;
+    for (const tid in Y.tx) {
+      const t = Y.tx[tid]; if (!t || t.d > bis || t.d < aD || (t.d === aD && (t.t || 0) <= aT)) continue;
+      if (t.k === 'tr') { if (t.acc === id) add(-t.a); if (t.to === id) add(t.a); }
+      else if (t.acc === id) add(t.k === 'in' ? t.a : -t.a);
+    }
+  }
+  for (const fid in MF.fixed) {
+    const f = MF.fixed[fid]; if (!f || f.acc !== id) continue;
+    for (let i = Math.max(ymIdx(f.from), ymIdx(aD.slice(0, 7))); i <= ymIdx(bis.slice(0, 7)) && (!f.to || i <= ymIdx(f.to)); i++) {
+      if ((i - ymIdx(f.from)) % f.every) continue;
+      const d = ymOfIdx(i) + '-' + pad(f.day || 1); if (d > aD && d <= bis) add(f.kind === 'in' ? f.amount : -f.amount);
+    }
+  }
+  return { sum, n };
+}
+/* Stand eines Kontos in einem Monat (laufender Monat: bis heute, sonst zum Monatsende): der letzte eingetragene Stand bis dahin plus die Bewegungen seitdem.
+   Liefert { v: Stand, aD: Datum des eingetragenen Stands, n: Zahl der Bewegungen } oder null ohne Stand. Ein neuer Stand korrigiert alles, was davor fehlte. */
+function accState(id, ym) {
+  const cur = todayKey(), bis = ym >= cur.slice(0, 7) ? cur : monthEnd(ym);
+  let A = null; balMonths().forEach(m => { if (m <= ym && typeof MF.bal[m][id] === 'number') A = m; });
+  if (!A) return null;
+  const ts = ((MF.balT || {})[A] || {})[id] || 0, aD = ts ? keyOf(new Date(ts)) : monthEnd(A), f = accFlow(id, aD, ts || Infinity, bis);
+  return { v: MF.bal[A][id] + f.sum, aD, n: f.n };
+}
+function accAt(id, ym) { const s = accState(id, ym); return s ? s.v : null; }
 /* Vermögen in einem Monat: Summe aller Konten, mit acc nur dieses Konto. null, solange es keinen Stand gibt */
 function wealthAt(ym, acc) { let t = null; accList().forEach(a => { if (acc && a.id !== acc) return; const v = accAt(a.id, ym); if (v != null) t = (t || 0) + v; }); return t; }
 const hasWealth = () => balMonths().length > 0;
@@ -1926,10 +1980,16 @@ function wealthHTML(curYM) {
   for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
   if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
   h += '<h2 class="sec">Konten</h2><ul class="entries">' + accList().map(a => {
-    const v = accAt(a.id, end), d = wealthDelta(pre, a.id); if (v == null) return '';
-    return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span></span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
+    const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id); if (v == null) return '';
+    return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span>' + (st.n ? '<small>gerechnet seit ' + dRow(st.aD) + '</small>' : '') + '</span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
   }).join('') + '</ul>';
-  if (!year) return h + goalsHTML(curYM);
+  if (!year) {
+    /* Umbuchungen des Monats, z. B. Geld abheben: vom Girokonto zum Bargeld */
+    const trs = txIn(mYM, true);
+    if (trs.length) h += '<ul class="entries">' + trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + ' · Umbuchung</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + '</ul>';
+    if (accList().length > 1) h += '<button type="button" class="linkbtn" data-m="newtr">+ Umbuchung</button>';
+    return h + goalsHTML(curYM);
+  }
   /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
   let rows = '';
   for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue;
@@ -1973,6 +2033,7 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'bal') return openV('bal');
   if (a === 'goal') return openV('goal', t.dataset.id);
   if (a === 'newgoal') return openV('goal');
+  if (a === 'newtr') return openM('tx', null, 'tr');
   if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
   else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
   else if (a === 'more') mAll = !mAll;
@@ -1990,7 +2051,8 @@ let vS = { mode: 'bal' };
 /* Eingabe mit optionalem Minus davor in Cent; leer = null, keine Zahl = NaN */
 function parseBal(v) { const s = String(v).trim(); if (!s) return null; const n = parseEur(s); return isFinite(n) ? (/^[-−–]/.test(s) ? -n : n) : NaN; }
 const balText = c => (c < 0 ? '-' : '') + eur(c).replace(' €', '');
-function loadVals(ym) { const o = {}, b = (MF.bal || {})[ym] || {}; accList().forEach(a => { if (typeof b[a.id] === 'number') o[a.id] = balText(b[a.id]); }); return o; }
+/* Vorbelegung: im laufenden Monat der aktuelle (gerechnete) Stand, in früheren Monaten der dort eingetragene */
+function loadVals(ym) { const o = {}, b = (MF.bal || {})[ym] || {}, now = ym === todayKey().slice(0, 7); accList().forEach(a => { const v = now ? accAt(a.id, ym) : typeof b[a.id] === 'number' ? b[a.id] : null; if (v != null) o[a.id] = balText(v); }); return o; }
 function paintV() {
   const accs = accList(), cur = todayKey().slice(0, 7);
   if (vS.mode === 'goal') {
@@ -2011,7 +2073,7 @@ function paintV() {
 function openV(mode, id) {
   const cur = todayKey().slice(0, 7), g = mode === 'goal' && id ? (MF.goals || {})[id] : null;
   if (mode === 'goal') vS = { mode: 'goal', id: g ? id : null, name: g ? g.n : '', amt: g ? eur(g.amount).replace(' €', '') : '', acc: g && g.acc && (MF.acc || {})[g.acc] ? g.acc : '', arm: false };
-  else { vS = { mode: 'bal', ym: isYM(mYM) && mYM <= cur ? mYM : cur, arm: null }; vS.vals = loadVals(vS.ym); }
+  else { vS = { mode: 'bal', ym: isYM(mYM) && mYM <= cur ? mYM : cur, arm: null }; vS.vals = loadVals(vS.ym); vS.orig = Object.assign({}, vS.vals); }
   $('#vs-title').textContent = mode === 'goal' ? 'Sparziel' : 'Stand eintragen';
   $('#v-err').hidden = true; $('#v-del').hidden = !g; $('#v-del').textContent = 'Sparziel löschen';
   paintV();
@@ -2036,15 +2098,15 @@ vdlg.addEventListener('click', e => {
   const id = d.dataset.vdel;
   if (vS.arm !== id) { vS.arm = id; return paintV(); }
   /* Konto löschen: das Konto und seine Stände in allen Monaten */
-  const p = { acc: {}, bal: {} }; p.acc[id] = null;
-  Object.keys(MF.bal || {}).forEach(ym => { if (MF.bal[ym] && id in MF.bal[ym]) { p.bal[ym] = {}; p.bal[ym][id] = null; } });
-  mfdoc.patch(p); delete vS.vals[id]; vS.arm = null; paintV(); renderMoney();
+  const p = { acc: {}, bal: {}, balT: {} }; p.acc[id] = null;
+  Object.keys(MF.bal || {}).forEach(ym => { if (MF.bal[ym] && id in MF.bal[ym]) { p.bal[ym] = {}; p.bal[ym][id] = null; p.balT[ym] = {}; p.balT[ym][id] = null; } });
+  mfdoc.patch(p); delete vS.vals[id]; delete vS.orig[id]; vS.arm = null; paintV(); renderMoney();
 });
 $('#vform').addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.acc) vS.vals[t.dataset.acc] = t.value; });
 $('#vform').addEventListener('change', e => {
   if (e.target.id !== 'v-month') return;
   const ym = e.target.value.trim();
-  if (isYM(ym) && ym <= todayKey().slice(0, 7)) { vS.ym = ym; vS.vals = loadVals(ym); vS.arm = null; paintV(); }
+  if (isYM(ym) && ym <= todayKey().slice(0, 7)) { vS.ym = ym; vS.vals = loadVals(ym); vS.orig = Object.assign({}, vS.vals); vS.arm = null; paintV(); }
 });
 $('#vform').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'v-new') { e.preventDefault(); addAcc(); } });
 $('#vform').addEventListener('submit', e => {
@@ -2060,15 +2122,17 @@ $('#vform').addEventListener('submit', e => {
   const ym = $('#v-month').value.trim(), accs = accList();
   if (!isYM(ym) || ym > todayKey().slice(0, 7)) return err('Wähle diesen oder einen früheren Monat.');
   if (!accs.length) return err('Lege zuerst ein Konto an, zum Beispiel Girokonto, und tippe auf das Plus.');
-  const p = { bal: {} }; p.bal[ym] = {}; let n = 0;
+  /* Nur geänderte Felder speichern: Ein neuer Stand gilt ab jetzt (laufender Monat) bzw. zum Monatsende, alles Spätere rechnet die App weiter */
+  const p = { bal: {}, balT: {} }, now = ym === todayKey().slice(0, 7); p.bal[ym] = {}; p.balT[ym] = {}; let n = 0, any = false;
   for (const a of accs) {
-    const v = parseBal(vS.vals[a.id] || '');
-    if (v === null) { p.bal[ym][a.id] = null; continue; }
-    if (!okBal(v)) return err('Der Stand von ' + a.n + ' ist keine Zahl. Beispiel: 1.250,00');
-    p.bal[ym][a.id] = v; n++;
+    const raw = (vS.vals[a.id] || '').trim(), v = parseBal(raw);
+    if (v !== null) { if (!okBal(v)) return err('Der Stand von ' + a.n + ' ist keine Zahl. Beispiel: 1.250,00'); any = true; }
+    if (raw === (vS.orig[a.id] || '')) continue;
+    p.bal[ym][a.id] = v; p.balT[ym][a.id] = v !== null && now ? Date.now() : null; n++;
   }
-  if (!n) return err('Trag bei mindestens einem Konto einen Stand ein.');
-  mfdoc.patch(p); fSub = 'verm'; mYM = ym; closeV(); renderMoney();
+  if (!any && !n) return err('Trag bei mindestens einem Konto einen Stand ein.');
+  if (n) mfdoc.patch(p);
+  fSub = 'verm'; mYM = ym; closeV(); renderMoney();
 });
 $('#v-del').addEventListener('click', () => {
   if (vS.mode !== 'goal' || !vS.id) return;
@@ -2079,10 +2143,18 @@ $('#v-del').addEventListener('click', () => {
 const mdlg = $('#msheet');
 let mE = { mode: 'tx', id: null, kind: 'out', cat: 'essen', every: 1 };
 $('#m-every').innerHTML = EVERY.map(c => '<button type="button" class="chip" data-e="' + c[0] + '" aria-pressed="false">' + c[1] + '</button>').join('');
+/* Zuletzt benutztes Konto: Vorbelegung für die nächste Buchung */
+function lastAcc() { let best = null; for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k !== 'tr' && t.t && accName(t.acc) && (!best || t.t > best.t)) best = t; } return best ? best.acc : ''; }
 const findTx = id => { for (const y in MY) if (MY[y].tx[id]) return { y, t: MY[y].tx[id] }; return null; };
 function paintM() {
-  const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget';
-  $('#m-note-fld').hidden = !tx; $('#m-date-fld').hidden = !tx;
+  const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget', tr = tx && mE.kind === 'tr', accs = accList();
+  const chip = (attr, id, name, on) => '<button type="button" class="chip" ' + attr + '="' + esc(id) + '" aria-pressed="' + on + '">' + esc(name) + '</button>';
+  $('#m-note-fld').hidden = !tx || tr; $('#m-date-fld').hidden = !tx;
+  /* Konto: nur wenn es Konten gibt. Die Buchung verändert dann den Stand dieses Kontos. */
+  $('#m-acc-fld').hidden = !(accs.length && (tx || fx)); $('#m-to-fld').hidden = !tr; $('#m-day-fld').hidden = !(fx && mE.acc);
+  $('#lbl-m-acc').textContent = tr ? 'Von' : 'Konto';
+  $('#m-acc').innerHTML = (tr ? '' : chip('data-a', '', 'Kein Konto', !mE.acc)) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('');
+  $('#m-to').innerHTML = accs.filter(a => a.id !== mE.acc).map(a => chip('data-to', a.id, a.n, mE.to === a.id)).join('');
   $('#m-cat-fld').hidden = !(bg || (tx && mE.kind === 'out'));
   $('#m-name-fld').hidden = !fx; $('#m-every-fld').hidden = !fx; $('#m-from-fld').hidden = !fx;
   $('#m-roll-fld').hidden = !bg;
@@ -2097,7 +2169,7 @@ function paintM() {
     const cur = (MF.budgets || {})[mE.cat];
     $('#ms-title').textContent = 'Budget';
     $('#m-del').hidden = !cur; $('#m-del').textContent = 'Budget entfernen';
-  } else if (tx) $('#ms-title').textContent = (mE.kind === 'in' ? 'Einnahme' : 'Ausgabe') + (mE.id ? ' ändern' : ' eintragen');
+  } else if (tx) $('#ms-title').textContent = tr ? 'Umbuchung' + (mE.id ? ' ändern' : '') : (mE.kind === 'in' ? 'Einnahme' : 'Ausgabe') + (mE.id ? ' ändern' : ' eintragen');
   else $('#ms-title').textContent = (mE.kind === 'in' ? 'Feste Einnahme' : 'Fixkosten') + (mE.id ? ' ändern' : '');
 }
 function openM(mode, id, kind, date) {
@@ -2117,7 +2189,9 @@ function openM(mode, id, kind, date) {
   }
   if (mode === 'tx') {
     const hit = id ? findTx(id) : null;
-    mE = { mode: 'tx', id: hit ? id : null, oldY: hit ? hit.y : null, kind: hit ? hit.t.k : kind === 'in' ? 'in' : 'out', cat: hit && hit.t.c ? hit.t.c : 'essen', every: 1, more: false };
+    const k = hit ? hit.t.k : kind === 'in' || kind === 'tr' ? kind : 'out', accs = accList();
+    mE = { mode: 'tx', id: hit ? id : null, oldY: hit ? hit.y : null, kind: k, cat: hit && hit.t.c ? hit.t.c : 'essen', every: 1, more: false, t: hit ? hit.t.t || 0 : 0,
+      acc: hit ? (accName(hit.t.acc) ? hit.t.acc : '') : k === 'tr' ? (accs[0] || {}).id || '' : lastAcc(), to: hit ? (accName(hit.t.to) ? hit.t.to : '') : '' };
     $('#m-amt').value = hit ? eur(hit.t.a).replace(' €', '') : '';
     $('#m-note').value = hit ? hit.t.n : '';
     $('#m-date').max = tk;
@@ -2125,7 +2199,8 @@ function openM(mode, id, kind, date) {
     $('#m-del').hidden = !hit; $('#m-del').textContent = 'Eintrag löschen';
   } else {
     const f = id ? MF.fixed[id] : null;
-    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null };
+    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null, acc: f && accName(f.acc) ? f.acc : '' };
+    $('#m-day').value = f && f.acc && f.day ? f.day : '';
     $('#m-name').value = f ? f.name : '';
     $('#m-name').placeholder = mE.kind === 'in' ? 'z. B. Gehalt' : 'z. B. Miete';
     $('#m-amt').value = f ? eur(f.amount).replace(' €', '') : '';
@@ -2149,6 +2224,8 @@ $('#m-cat').addEventListener('click', e => {
   if (mE.mode === 'budget' && b.dataset.c !== '__more') { const cur = (MF.budgets || {})[mE.cat]; $('#m-amt').value = cur ? eur(cur).replace(' €', '') : ''; $('#m-roll').checked = !!(cur && (MF.roll || {})[mE.cat]); }
   paintM();
 });
+$('#m-acc').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.acc = b.dataset.a; if (mE.to === mE.acc) mE.to = ''; paintM(); } });
+$('#m-to').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.to = b.dataset.to; paintM(); } });
 $('#m-every').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.every = +b.dataset.e; paintM(); } });
 $('#mform').addEventListener('submit', e => {
   e.preventDefault();
@@ -2166,8 +2243,10 @@ $('#mform').addEventListener('submit', e => {
   if (mE.mode === 'tx') {
     const d = $('#m-date').value;
     if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
+    const tr = mE.kind === 'tr';
+    if (tr && (!accName(mE.acc) || !accName(mE.to) || mE.acc === mE.to)) return err('Wähle zwei verschiedene Konten: von welchem und auf welches.');
     const id = mE.id || newId(), y = d.slice(0, 4), p = { tx: {} };
-    p.tx[id] = { d, a, k: mE.kind, c: mE.kind === 'in' ? '' : mE.cat, n: $('#m-note').value.trim().slice(0, 60) };
+    p.tx[id] = { d, a, k: mE.kind, c: mE.kind === 'out' ? mE.cat : '', n: tr ? '' : $('#m-note').value.trim().slice(0, 60), acc: mE.acc || null, to: tr ? mE.to : null, t: mE.t || Date.now() };
     if (mE.oldY && mE.oldY !== y) { const q = { tx: {} }; q.tx[id] = null; mdoc(mE.oldY).patch(q); }
     mdoc(y).patch(p);
   } else {
@@ -2175,7 +2254,8 @@ $('#mform').addEventListener('submit', e => {
     if (!name) return err('Gib dem Posten einen Namen.');
     if (!isYM(from)) return err('Gib den Startmonat als JJJJ-MM an, zum Beispiel ' + todayKey().slice(0, 7) + '.');
     const p = { fixed: {} };
-    p.fixed[mE.id || newId()] = { name: name.slice(0, 40), amount: a, kind: mE.kind, every: mE.every, from, to: mE.to && mE.to >= from ? mE.to : null };
+    p.fixed[mE.id || newId()] = { name: name.slice(0, 40), amount: a, kind: mE.kind, every: mE.every, from, to: mE.to && mE.to >= from ? mE.to : null,
+      acc: mE.acc || null, day: mE.acc ? clamp(Math.round(Number($('#m-day').value)) || 1, 1, 28) : null };
     mfdoc.patch(p);
   }
   closeM(); renderMoney();

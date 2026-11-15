@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v38)
+# Track. – Projektwissen (App-Stand v39)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -38,7 +38,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`; Modi `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
 - Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
-  - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accAt()` trägt den letzten Stand eines Kontos weiter, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
+  - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
+  - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (nur wenn Konten existieren, Vorbelegung `lastAcc()`), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
   - Budget: `monthHTML()`, `yearHTML()`, `mSum()`, `ySum()`, `rateHTML()` Sparquote, Blatt `msheet` mit `openM('tx'|'fixed'|'budget')`.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
@@ -49,7 +50,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K }`.
   - `S` Routinen und laufender Timer; `LY` Tagesprotokoll der Routinen je Jahr.
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
-  - `MF`: `fixed` feste Posten, `budgets`, `roll` (Rest mitnehmen), `acc` Konten, `bal` Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `goals` Sparziele. `MY` Buchungen je Jahr.
+  - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
+  - `MY` Buchungen je Jahr: `d` Datum, `a` Betrag, `k` (`in`, `out`, `tr` = Umbuchung), `c` Kategorie, `n` Notiz, optional `acc` Konto, `to` Zielkonto der Umbuchung, `t` Zeitpunkt des Eintragens in ms.
   - `T` Läufe. `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
 - Datumsschlüssel `YYYY-MM-DD` in Ortszeit, Monate `YYYY-MM`, Geld in Cent.
@@ -72,7 +74,11 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - „Letztes Mal“ zählt auch Einheiten vom selben Tag: Der Nutzer testet am selben Tag und sah sonst nichts.
 - Cardio, Gym-Einheiten und Budget zeigen nur den oben gewählten Monat; wachsende Listen ohne Monatswahl (Gewicht) werden nach Monaten gruppiert. Warum: Nichts darf mit der Zeit unübersichtlich werden.
 - Finanzen: Vermögen, Sparquote und Sparziele stehen vorn, das Haushaltsbuch ist freiwillig. Warum: Das bringt den Nutzer weiter als Ausgaben zählen. Keine Bankanbindung, keine Kurse, keine Anlagetipps (bräuchte Server bzw. gehört nicht in die App).
-- Konten behalten ohne neuen Eintrag ihren letzten Stand: Man muss nicht jeden Monat jedes Konto eintragen.
+- Kontostand = letzter eingetragener Stand plus alle Buchungen, Umbuchungen und festen Posten dieses Kontos danach (v39, Wunsch des Nutzers: Stand nur einmal eintragen). Warum so: Die Rechnung stimmt nur, wenn alles gebucht wird; ein neu eingetragener Stand korrigiert deshalb jederzeit alles davor.
+  - Was „danach“ heißt: Buchungen mit späterem Datum; am Tag des Stands nur, was später eingetragen wurde (`t` gegen `balT`). Rückdatierte Buchungen waren im Stand schon enthalten und zählen nicht.
+  - Feste Posten zählen an ihrem Tag im Monat, wenn dieser nach dem Stand liegt.
+  - Das Blatt „Stand eintragen“ zeigt im laufenden Monat den gerechneten Stand und speichert nur geänderte Felder, damit unverändertes Speichern nichts verschiebt.
+  - Buchungen ohne Konto verändern kein Konto; Konten ohne Buchungen (z. B. Depot) behalten ihren letzten Stand.
 
 ## Code-Konventionen
 - HTML wird als String gebaut: Nutzertexte immer durch `esc()`.
@@ -119,7 +125,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v38` → `takt-v39`), `<span class="ver">v38</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v39` → `takt-v40`), `<span class="ver">v39</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

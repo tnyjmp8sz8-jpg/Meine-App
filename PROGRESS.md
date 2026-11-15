@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v38 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v39 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -17,10 +17,13 @@
 - v37: Kopfzeile deckend, damit sie auf dem iPhone beim Scrollen nicht unscharf wird.
 - v38: Finanzen mit „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Graph), Sparzielen, Sparquote und Fixkosten aufs Jahr.
 - Danach: `CLAUDE.md` neu aufgebaut und diese Datei angelegt.
+- v39: Konten an Buchungen. Ausgaben, Einnahmen und feste Posten bekommen ein Konto; der Kontostand rechnet ab dem eingetragenen Stand von selbst weiter. Dazu Umbuchungen zwischen Konten und „Tag im Monat“ bei festen Posten.
 
 ## Offene Probleme
 - Nichts ist auf einem echten iPhone getestet; alle Prüfungen laufen im Test-Browser.
 - Negative Kontostände lassen sich speichern, aber auf dem iPhone nicht eintippen (Zahlentastatur ohne Minus).
+- Konten lassen sich nur im Blatt „Stand eintragen“ anlegen und löschen, nicht umbenennen.
+- Feste Posten, deren Tag im Monat des eingetragenen Stands schon vorbei ist, zählen erst ab dem Folgemonat (gewollt: Sie stecken schon im Stand).
 - Unter dem Symbol auf dem Home-Bildschirm steht noch „Takt“, bis der Nutzer die App neu hinzufügt (vorher Sicherung speichern, danach einlesen, erst dann das alte Symbol löschen).
 - Testskripte liegen nur im Arbeitsordner der Sitzung und gehen mit ihr verloren.
 
@@ -29,6 +32,7 @@
 - Kasten um „Schließen“ im Kalender: ist er weg?
 - Kopfzeile beim Scrollen: bleibt sie scharf (v37)?
 - Monatsfeld im Blatt „Stand eintragen“ (v38).
+- Konto-Chips im Blatt für Ausgaben und Einnahmen (v39): passen sie bei mehreren Konten?
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
