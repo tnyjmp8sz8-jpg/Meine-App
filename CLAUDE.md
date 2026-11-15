@@ -1,10 +1,10 @@
-# Takt – Alltags-Tracker (v34)
+# Takt – Alltags-Tracker (v35)
 
-Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
+Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Finanzen mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v34` → `takt-v35`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v34</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v35` → `takt-v36`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v35</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -37,12 +37,12 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Kompakt: Fließtext 15 px, Listen 14 px, Nebentexte 12–13 px, große Zahl höchstens 44 px. Tippflächen mindestens 40 px (kleinere Knöpfe bekommen per `::after` eine größere Tippfläche), Eingabefelder mindestens 16 px Schrift, sonst zoomt iOS beim Antippen hinein.
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Grün = Training/erledigt/besser, Rot = schlechter/löschen.
 - Pro Ansicht nur ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
-- Kennfarben der Bereiche (Routinen blau, Gewicht lila `--c-weight`, Haushalt orange `--c-money`, Training grün) stehen nur am Symbol in der Übersicht auf Heute, nicht in den Bereichen selbst.
+- Kennfarben der Bereiche (Routinen blau, Gewicht lila `--c-weight`, Finanzen orange `--c-money`, Training grün) stehen nur am Symbol in der Übersicht auf Heute, nicht in den Bereichen selbst.
 - Systemschrift des Geräts (auf Apple-Geräten San Francisco), große Zahlen mit `var(--round)`.
 - Abschnittstitel fett und normal geschrieben, keine kleinen Großbuchstaben-Labels.
 - Nur was nötig ist und etwas bringt: keine erklärenden Überschriften ohne Nutzen, keine Beispiel-Chips, lange Listen einklappen, lieber ein Tipp weniger.
 - Keine Töne, keine Countdowns mit Signal, keine Einstellungen, die niemand verlangt hat.
-- Wortwahl in der Oberfläche: „Gym“, nicht „Kraft“.
+- Wortwahl in der Oberfläche: „Gym“, nicht „Kraft“; „Finanzen“, nicht „Haushalt“ (im Code heißt der Bereich weiter `haushalt`).
 - Hell und dunkel folgen der Systemeinstellung; beide prüfen, ebenso 320 px Breite.
 - HTML wird per String gebaut: Nutzertexte immer durch `esc()` schicken.
 - Nichts darf seitlich wischbar oder abgeschnitten sein. Datumsfelder brauchen auf dem iPhone `appearance:none` (steht im CSS), sonst werden sie breiter als ihr Platz. Das lässt sich im Test-Browser nicht nachstellen: nach Änderungen an Blättern den Nutzer bitten, am iPhone zu prüfen.

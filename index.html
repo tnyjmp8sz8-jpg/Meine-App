@@ -231,7 +231,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .ghost.center{text-align:center}
 .goal .streak b{font-size:24px}
 
-/* Haushalt */
+/* Finanzen (im Code „haushalt“) */
 .tabs-in{grid-template-columns:repeat(5,1fr);padding-left:4px;padding-right:4px}
 .chips[hidden]{display:none}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
@@ -656,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v34</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v35</span></footer>
 </div>
 </div>
 
@@ -676,7 +676,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </button>
     <button type="button" class="tab" data-view="haushalt">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/></svg>
-      <span>Haushalt</span>
+      <span>Finanzen</span>
     </button>
     <button type="button" class="tab" data-view="training">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/></svg>
@@ -1619,7 +1619,7 @@ $('#w-del').addEventListener('click', () => {
   closeW(); renderWeight();
 });
 
-/* ---------- Haushalt ---------- */
+/* ---------- Haushalt (in der Oberfläche „Finanzen“) ---------- */
 const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
 const CATS = [['essen', 'Lebensmittel'], ['drog', 'Drogerie'], ['aus', 'Essen gehen'], ['shop', 'Kleidung'], ['frei', 'Spaß'],
   ['mobil', 'Mobilität'], ['gesund', 'Gesundheit'], ['uni', 'Studium'], ['reise', 'Reisen'], ['gesch', 'Geschenke'], ['sonst', 'Sonstiges']];
@@ -1826,7 +1826,7 @@ function renderMoney() {
   if (!isYM(mYM)) mYM = curYM;
   if (!mYear) mYear = +curYM.slice(0, 4);
   if (!hasMoney()) {
-    el.innerHTML = '<section class="hero"><p class="date">Haushalt</p><h1>Noch nichts eingetragen</h1></section>' +
+    el.innerHTML = '<section class="hero"><p class="date">Finanzen</p><h1>Noch nichts eingetragen</h1></section>' +
       '<div class="empty"><p>Trag deine Einnahmen und deine festen Kosten ein. Danach erfasst du nur noch deine laufenden Ausgaben und siehst, was übrig bleibt.</p>' +
       DUO +
       '<button type="button" class="ghost center" data-m="newfix">Fixkosten hinzufügen</button>' +
@@ -3122,7 +3122,7 @@ function renderHome() {
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false)).join('') + '</ul>';
-  h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Haushalt', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
+  h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   h += '<h2 class="sec">Daten</h2><div class="links"><button type="button" class="linkbtn" data-h="export">Sicherung speichern</button><button type="button" class="linkbtn" data-h="import">Sicherung einlesen</button></div>' +
     '<p class="note" id="bk-msg">' + esc(bkMsg || lastBackupText()) + '</p>';
   el.innerHTML = h;
