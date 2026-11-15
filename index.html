@@ -13,12 +13,9 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: Systemschrift (San Francisco, sonst Inter), große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
+  /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -38,9 +35,9 @@
   --c-weight:#AF52DE;
   --c-money:#F08C00;
   --head:rgba(242,242,247,.82);
-  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;
-  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,system-ui,sans-serif;
-  --round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",system-ui,sans-serif;
+  --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
+  --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
+  --round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
@@ -141,7 +138,6 @@ button:disabled{cursor:default;opacity:.4}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:500;min-height:40px}
 .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-line);font-weight:600}
-.skel{height:80px;border-radius:20px;background:var(--surface);border:1px solid var(--line);opacity:.6}
 
 .primary{border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px}
 .ghost{border:1px solid var(--line);border-radius:14px;background:var(--fill);font-weight:500;font-size:15px;padding:12px 16px;min-height:46px;text-align:left}
@@ -312,6 +308,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .quick::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
 .quick svg{width:9px;height:9px;color:var(--at)}
+.remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:40px;padding:8px 14px;border:0;border-radius:14px;background:var(--surface);font-size:13px;color:var(--muted);text-align:left}
+.remind b{flex:none;color:var(--at);font-weight:600}
+.remind:active{background:var(--fill)}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
 .ins+.ins{border-top:1px solid var(--line)}
 .ins b{font-size:14px;font-weight:600}
@@ -529,7 +528,7 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
 /* Weicher: rundere Formen, sanfte Übergänge */
-.row,.card,.entries,.empty,.skel{border-radius:20px}
+.row,.card,.entries,.empty{border-radius:20px}
 .primary,.ghost,.fig,.stepper button{border-radius:14px}
 .seg2{border-radius:14px;padding:3px}
 .seg2 button{border-radius:11px}
@@ -553,7 +552,7 @@ dialog[open]::backdrop{animation:dim .2s ease}
 .view:not([hidden]){animation:fade .22s cubic-bezier(.16,1,.3,1)}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
-.row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.skel,.x,.ghost,.chip,.lx-tab{border-color:transparent}
+.row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-color:transparent}
 .is-off{box-shadow:inset 0 0 0 1px var(--line)}
 .chip,.lx-tab{background:var(--surface)}
@@ -606,7 +605,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="app">
   <header class="top">
     <span class="mark">Takt</span>
-    <button class="add" id="add" type="button" aria-label="Neue Routine anlegen" disabled>
+    <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
   </header>
@@ -630,7 +629,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot"></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.</footer>
 </div>
 </div>
 
@@ -999,7 +998,6 @@ const ICON = {
 /* ---------- state ---------- */
 let S = { routines: [], running: null };   // Routinen + laufender Timer
 let LY = {};                               // Jahr -> { Datum: { routineId: { s: Sekunden, d: 0|1 } } }
-let sync = 'connecting';
 let lastDay = '', lastClock = '', justDone = null;
 let W = { goal: null, goalFrom: null, entries: {} };   // Gewicht: Ziel + { Datum: kg }
 let view = 'routinen', wRange = '28', wAll = false;
@@ -1108,36 +1106,7 @@ function disarmChime() {
   chime = null;
 }
 
-/* ---------- persistence (db, mit lokalem Spiegel) ---------- */
-const store = { db: null, base: '', appRef: null, appSeen: false, logRef: {}, logSeen: {}, logExists: {}, settled: false, years: [] };
-const dirty = { routines: false, running: false };
-const logPending = {}, logBusy = {};
-let appBusy = false, retries = 0, hadLocal = false, loadTimer = null;
-
-function noteSync(ok) { if (ok) { retries = 0; sync = 'synced'; } else sync = 'error'; paintFoot(); }
-function retryLater(fn) { if (retries >= 3) return; retries++; setTimeout(fn, 1500 * retries + Math.random() * 1000); }
-const retryable = e => !e || !e.code || e.code === 'unavailable';
-
-function markDirty(part) { dirty[part] = true; saveLocal(); pumpApp(); }
-
-async function pumpApp() {
-  if (!store.appRef || !store.appSeen || appBusy || !(dirty.routines || dirty.running)) return;
-  appBusy = true;
-  const was = { routines: dirty.routines, running: dirty.running };
-  dirty.routines = dirty.running = false;
-  try {
-    await store.appRef.set({ v: 1, routines: clone(S.routines), running: S.running ? { id: S.running.id, startedAt: S.running.startedAt, date: S.running.date } : null });
-    appBusy = false; noteSync(true);
-  } catch (e) {
-    appBusy = false;
-    dirty.routines = dirty.routines || was.routines; dirty.running = dirty.running || was.running;
-    noteSync(false);
-    if (retryable(e)) retryLater(pumpApp);
-    return;
-  }
-  if (dirty.routines || dirty.running) pumpApp();
-}
-
+/* ---------- persistence (alles liegt in localStorage, siehe loadLocal und saveLocal) ---------- */
 function mergeInto(base, over) {
   if (!over) return base;
   for (const date in over) { base[date] = base[date] || {}; for (const rid in over[date]) base[date][rid] = over[date][rid]; }
@@ -1146,96 +1115,7 @@ function mergeInto(base, over) {
 function setEntry(date, rid, e) {
   const y = date.slice(0, 4);
   LY[y] = LY[y] || {}; LY[y][date] = LY[y][date] || {}; LY[y][date][rid] = e;
-  logPending[y] = logPending[y] || {}; logPending[y][date] = logPending[y][date] || {}; logPending[y][date][rid] = e;
   saveLocal();
-  if (store.db && !store.logRef[y]) subscribeYear(y);
-  pumpLog(y);
-}
-async function pumpLog(y) {
-  const ref = store.logRef[y];
-  if (!ref || !store.logSeen[y] || logBusy[y] || !logPending[y]) return;
-  const patch = logPending[y]; logPending[y] = null; logBusy[y] = patch;
-  try {
-    if (store.logExists[y]) await ref.update({ days: patch });
-    else { await ref.set({ days: clone(LY[y] || {}) }); store.logExists[y] = true; }
-    logBusy[y] = null; noteSync(true);
-  } catch (e) {
-    logBusy[y] = null;
-    logPending[y] = mergeInto(patch, logPending[y]);
-    noteSync(false);
-    if (retryable(e)) retryLater(() => pumpLog(y));
-    return;
-  }
-  if (logPending[y]) pumpLog(y);
-}
-
-function onApp(snap) {
-  const cached = !!(snap.metadata && snap.metadata.fromCache);
-  if (cached && !store.appSeen) {
-    if (snap.exists && !hadLocal && !dirty.routines && !dirty.running) { S = normApp(snap.data()); render(); }
-    return;
-  }
-  const first = !store.appSeen;
-  store.appSeen = true;
-  if (snap.exists) {
-    if (!appBusy) {
-      const R = normApp(snap.data());
-      if (!dirty.routines) S.routines = R.routines;
-      if (!dirty.running) S.running = R.running;
-      if (S.running && !byId(S.running.id)) S.running = null;
-    }
-  } else if (first && S.routines.length) { dirty.routines = dirty.running = true; }
-  saveLocal(); checkSettled(); pumpApp(); ensureTicker(); render();
-}
-function onLog(y, snap) {
-  const cached = !!(snap.metadata && snap.metadata.fromCache);
-  const read = () => { const d = snap.data(); return clone((d && d.days) || {}); };
-  if (cached && !store.logSeen[y]) {
-    if (snap.exists && !hadLocal) { LY[y] = mergeInto(mergeInto(read(), logBusy[y]), logPending[y]); render(); }
-    return;
-  }
-  store.logSeen[y] = true; store.logExists[y] = snap.exists;
-  if (snap.exists) LY[y] = mergeInto(mergeInto(read(), logBusy[y]), logPending[y]);
-  else if (LY[y] && Object.keys(LY[y]).length && !logPending[y] && !logBusy[y]) logPending[y] = {};
-  saveLocal(); checkSettled(); pumpLog(y); render();
-}
-function onDbError() { if (!store.settled) settle('local'); else { sync = 'error'; paintFoot(); } }
-function subscribeYear(y) {
-  try {
-    store.logRef[y] = store.db.doc(store.base + 'log-' + y);
-    store.logRef[y].onSnapshot(s => onLog(y, s), onDbError);
-  } catch (e) {}
-}
-function checkSettled() {
-  if (!store.appSeen || !wdoc.seen || !mfdoc.seen || !tdoc.seen || !kdoc.seen || !store.years.every(y => store.logSeen[y] && mdoc(y).seen)) return;
-  clearTimeout(loadTimer);
-  const was = store.settled; store.settled = true;
-  if (sync === 'connecting' || sync === 'stale') sync = 'synced';
-  if (!was) ensureTicker();
-}
-function settle(mode) { clearTimeout(loadTimer); store.settled = true; sync = mode; ensureTicker(); render(); }
-
-async function connect() {
-  let tries = 0;
-  while (!(window.claude && window.claude.use) && tries++ < 15) await new Promise(r => setTimeout(r, 100));
-  if (!(window.claude && window.claude.use)) return settle('local');
-  let db = null, uid = null;
-  try {
-    const got = await Promise.all([window.claude.use('db'), window.claude.use('user')]);
-    db = got[0]; uid = got[1] ? await got[1].id() : null;
-  } catch (e) {}
-  if (!db || !uid) return settle('local');
-  try {
-    store.db = db; store.base = 'data/users/' + uid + '/';
-    store.appRef = db.doc(store.base + 'app');
-  } catch (e) { store.db = null; store.appRef = null; return settle('local'); }
-  const y = new Date().getFullYear();
-  store.years = [String(y - 1), String(y)];
-  loadTimer = setTimeout(() => { if (!store.settled) settle('stale'); }, 10000);
-  store.appRef.onSnapshot(onApp, onDbError);
-  store.years.forEach(subscribeYear);
-  try { wdoc.ref = db.doc(store.base + 'weight'); wdoc.ref.onSnapshot(onW, onDbError); } catch (e) { wdoc.seen = true; }
-  mfdoc.sub(); tdoc.sub(); kdoc.sub(); store.years.forEach(y => mdoc(y).sub());
 }
 
 /* ---------- actions ---------- */
@@ -1245,7 +1125,7 @@ function start(r) {
   if (doneOn(tk, r.id)) return;
   if (secsOf(tk, r.id) >= goal(r)) return finish(r, tk);
   S.running = { id: r.id, startedAt: Date.now(), date: tk };
-  markDirty('running');
+  saveLocal();
   armChime(goal(r) - secsOf(tk, r.id));
   ensureTicker(); render();
 }
@@ -1253,7 +1133,7 @@ function pause(silent) {
   const ru = S.running; if (!ru) return;
   const r = byId(ru.id);
   disarmChime();
-  S.running = null; markDirty('running');
+  S.running = null; saveLocal();
   if (r) {
     const s = Math.min(goal(r), secsOf(ru.date, r.id) + Math.max(0, (Date.now() - ru.startedAt) / 1000));
     setEntry(ru.date, r.id, { s: Math.round(s), d: (s >= goal(r) || doneOn(ru.date, r.id)) ? 1 : 0 });
@@ -1261,7 +1141,7 @@ function pause(silent) {
   if (!silent) render();
 }
 function finish(r, date) {
-  if (isRunning(r)) { S.running = null; markDirty('running'); }
+  if (isRunning(r)) { S.running = null; saveLocal(); }
   setEntry(date, r.id, { s: Math.max(goal(r), secsOf(date, r.id)), d: 1 });
   justDone = r.id;
   try { if (navigator.vibrate) navigator.vibrate([60, 60, 120]); } catch (e) {}
@@ -1280,7 +1160,7 @@ function tick() {
   if (!S.running) { clearInterval(tickId); tickId = null; document.title = TITLE; return; }
   const r = byId(S.running.id);
   if (!r) return;
-  if (liveSecs(r) >= goal(r) && store.settled) return finish(r, S.running.date);
+  if (liveSecs(r) >= goal(r)) return finish(r, S.running.date);
   paintLive(r);
 }
 
@@ -1324,7 +1204,6 @@ function rowHTML(r, tk, now, off) {
 
 function paintHero() {
   const hero = $('#hero'), sub = $('#sub');
-  if (!hadLocal && !store.settled) { hero.textContent = ''; sub.textContent = 'Lade deine Routinen …'; return; }
   if (!S.routines.length) { hero.textContent = 'Dein Tag in festen Blöcken'; sub.textContent = ''; return; }
   const tk = todayKey(), wi = wd(new Date()), now = Date.now();
   const due = S.routines.filter(r => r.days[wi]);
@@ -1344,17 +1223,6 @@ function paintHero() {
     hero.innerHTML = '<span class="num">' + Math.ceil(open / 60) + '</span><span class="unit">min offen</span>';
     sub.textContent = done + ' von ' + due.length + (due.length === 1 ? ' Routine' : ' Routinen') + ' erledigt';
   }
-}
-
-function paintFoot() {
-  const t = {
-    connecting: 'Verbinde …',
-    synced: 'Gespeichert. Auf all deinen Geräten gleich.',
-    local: 'Gespeichert auf diesem Gerät.',
-    stale: 'Speicher gerade nicht erreichbar. Änderungen bleiben vorerst auf diesem Gerät.',
-    error: 'Speichern fehlgeschlagen. Der nächste Versuch läuft bei der nächsten Änderung.'
-  };
-  $('#foot').textContent = t[sync] || '';
 }
 
 function paintLive(r) {
@@ -1379,12 +1247,11 @@ function renderRoutines() {
   const ae = document.activeElement, keepId = ae && ae.closest && ae.closest('.row') ? ae.closest('.row').dataset.id : null, keepAct = ae && ae.dataset ? ae.dataset.act : null;
   $('#date').textContent = 'Heute';
   paintTop();
-  paintHero(); paintFoot();
+  paintHero();
   if (!S.running) { document.title = TITLE; $('#tab-r').textContent = 'Routinen'; }
-  const strip = $('#r-strip'), showStrip = (hadLocal || store.settled) && S.routines.length > 0;
+  const strip = $('#r-strip'), showStrip = S.routines.length > 0;
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
 
-  if (!hadLocal && !store.settled) { main.innerHTML = '<div class="rows"><div class="skel"></div><div class="skel"></div></div>'; return; }
   if (!S.routines.length) {
     main.innerHTML = '<div class="empty"><h2>Noch keine Routine</h2>' +
       '<p>Lege fest, was du regelmäßig machst, wie lange und an welchen Tagen. Ein Tipp startet den Timer.</p>' +
@@ -1414,9 +1281,9 @@ $('#main').addEventListener('click', e => {
   if (act === 'toggle' && r) toggle(r);
   else if (act === 'edit' && r) openSheet(r.id);
   else if (act === 'new') openSheet(null);
-  else if (act === 'suggest' && store.settled) {
+  else if (act === 'suggest') {
     S.routines.push({ id: newId(), name: t.dataset.name, minutes: Number(t.dataset.min) || 30, days: Array(7).fill(true), created: todayKey() });
-    markDirty('routines'); render();
+    saveLocal(); render();
   }
 });
 $('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') openM('tx'); else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else openSheet(null); });
@@ -1455,7 +1322,6 @@ function paintStats(r) {
 }
 
 function openSheet(id) {
-  if (!store.settled) return;
   const r = id ? byId(id) : null;
   editId = r ? r.id : null; delArmed = false;
   $('#sh-title').textContent = r ? 'Routine bearbeiten' : 'Neue Routine';
@@ -1509,20 +1375,20 @@ $('#form').addEventListener('submit', e => {
   } else {
     S.routines.push({ id: newId(), name, minutes: min, days: formDays.slice(), created: todayKey() });
   }
-  markDirty('routines'); closeSheet(); render();
+  saveLocal(); closeSheet(); render();
 });
 $('#act-done').addEventListener('click', () => { const r = byId(editId); closeSheet(); if (r) { disarmChime(); finish(r, todayKey()); } });
 $('#act-reset').addEventListener('click', () => {
   const r = byId(editId); closeSheet(); if (!r) return;
-  if (isRunning(r)) { disarmChime(); S.running = null; markDirty('running'); }
+  if (isRunning(r)) { disarmChime(); S.running = null; saveLocal(); }
   setEntry(todayKey(), r.id, { s: 0, d: 0 }); render();
 });
 $('#act-del').addEventListener('click', () => {
   if (!delArmed) { delArmed = true; $('#act-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
   const id = editId; closeSheet();
-  if (S.running && S.running.id === id) { disarmChime(); S.running = null; dirty.running = true; }
+  if (S.running && S.running.id === id) { disarmChime(); S.running = null; }
   S.routines = S.routines.filter(r => r.id !== id);
-  markDirty('routines'); render();
+  saveLocal(); render();
 });
 
 /* ---------- Gewicht ---------- */
@@ -1545,35 +1411,7 @@ function deep(base, over) {
   }
   return base;
 }
-const wdoc = { ref: null, seen: false, exists: false, pending: null, busy: null };
-function patchW(p) {
-  W = normW(deep(W, clone(p)));
-  wdoc.pending = deep(wdoc.pending || {}, clone(p));
-  saveLocal(); pumpW();
-}
-async function pumpW() {
-  if (!wdoc.ref || !wdoc.seen || wdoc.busy || !wdoc.pending) return;
-  const p = wdoc.pending; wdoc.pending = null; wdoc.busy = p;
-  try {
-    if (wdoc.exists) await wdoc.ref.update(p);
-    else { await wdoc.ref.set(clone(W)); wdoc.exists = true; }
-    wdoc.busy = null; noteSync(true);
-  } catch (e) {
-    wdoc.busy = null; wdoc.pending = deep(p, wdoc.pending); noteSync(false);
-    if (retryable(e)) retryLater(pumpW);
-    return;
-  }
-  if (wdoc.pending) pumpW();
-}
-function onW(snap) {
-  const cached = !!(snap.metadata && snap.metadata.fromCache);
-  const read = () => normW(deep(deep(clone(snap.data() || {}), wdoc.busy), wdoc.pending));
-  if (cached && !wdoc.seen) { if (snap.exists && !hadLocal) { W = read(); render(); } return; }
-  wdoc.seen = true; wdoc.exists = snap.exists;
-  if (snap.exists) W = read();
-  else if ((Object.keys(W.entries).length || W.goal != null) && !wdoc.pending && !wdoc.busy) wdoc.pending = {};
-  saveLocal(); checkSettled(); pumpW(); render();
-}
+function patchW(p) { W = normW(deep(W, clone(p))); saveLocal(); }
 
 const kg = (n, d) => n.toLocaleString('de-DE', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d });
 const kg2 = n => n.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
@@ -1653,10 +1491,6 @@ const fig = (val, unit, label) => '<div class="fig"><b>' + val + (unit ? '<small
 
 function renderWeight() {
   const el = $('#v-gewicht');
-  if (!hadLocal && !store.settled) {
-    el.innerHTML = '<section class="hero"><p class="date">Gewicht</p><h1></h1><p class="sub">Lade deine Einträge …</p></section><div class="skel"></div>';
-    return;
-  }
   const all = withTrend(wList()), tk = todayKey(), t0 = dayNum(tk);
   if (!all.length) {
     el.innerHTML = '<section class="hero"><p class="date">Gewicht</p><h1>Noch kein Eintrag</h1></section>' +
@@ -1826,43 +1660,12 @@ function normMY(o) {
   return out;
 }
 
-/* Dokument mit Teil-Updates: lokale Änderung sofort, Abgleich im Hintergrund */
-function patchDoc(name, get, set, hasData) {
-  const d = { ref: null, seen: false, exists: false, pending: null, busy: null };
-  d.patch = p => { set(deep(clone(get()), clone(p))); d.pending = deep(d.pending || {}, clone(p)); saveLocal(); d.pump(); };
-  d.pump = async () => {
-    if (!d.ref || !d.seen || d.busy || !d.pending) return;
-    const p = d.pending; d.pending = null; d.busy = p;
-    try {
-      if (d.exists) await d.ref.update(p);
-      else { await d.ref.set(clone(get())); d.exists = true; }
-      d.busy = null; noteSync(true);
-    } catch (e) {
-      d.busy = null; d.pending = deep(p, d.pending); noteSync(false);
-      if (retryable(e)) retryLater(d.pump);
-      return;
-    }
-    if (d.pending) d.pump();
-  };
-  d.onSnap = snap => {
-    const cached = !!(snap.metadata && snap.metadata.fromCache);
-    const read = () => deep(deep(clone(snap.data() || {}), d.busy), d.pending);
-    if (cached && !d.seen) { if (snap.exists && !hadLocal) { set(read()); render(); } return; }
-    d.seen = true; d.exists = snap.exists;
-    if (snap.exists) set(read());
-    else if (hasData() && !d.pending && !d.busy) d.pending = {};
-    saveLocal(); checkSettled(); d.pump(); render();
-  };
-  d.sub = () => {
-    if (d.ref || !store.db) return;
-    try { d.ref = store.db.doc(store.base + name); d.ref.onSnapshot(d.onSnap, onDbError); } catch (e) { d.seen = true; }
-  };
-  return d;
-}
+/* Datengruppe mit Teil-Updates: patch() mischt die Änderung ein (null löscht einen Eintrag) und speichert */
+const patchDoc = (get, set) => ({ patch: p => { set(deep(clone(get()), clone(p))); saveLocal(); } });
 const live = o => Object.keys(o).some(k => o[k]);
-const mfdoc = patchDoc('money', () => MF, v => { MF = normMF(v); }, () => live(MF.fixed) || live(MF.budgets || {}));
+const mfdoc = patchDoc(() => MF, v => { MF = normMF(v); });
 const mdocs = {};
-const mdoc = y => mdocs[y] || (mdocs[y] = patchDoc('money-' + y, () => MY[y] || { tx: {} }, v => { MY[y] = normMY(v); }, () => !!MY[y] && live(MY[y].tx)));
+const mdoc = y => mdocs[y] || (mdocs[y] = patchDoc(() => MY[y] || { tx: {} }, v => { MY[y] = normMY(v); }));
 
 const eur0 = c => Math.round(Math.abs(c) / 100).toLocaleString('de-DE');
 const eur = c => (Math.abs(c) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
@@ -2024,10 +1827,6 @@ function renderMoney() {
   const el = $('#v-haushalt'), curYM = todayKey().slice(0, 7);
   if (!isYM(mYM)) mYM = curYM;
   if (!mYear) mYear = +curYM.slice(0, 4);
-  if (!hadLocal && !store.settled) {
-    el.innerHTML = '<section class="hero"><p class="date">Haushalt</p><h1></h1><p class="sub">Lade deine Einträge …</p></section><div class="skel"></div>';
-    return;
-  }
   if (!hasMoney()) {
     el.innerHTML = '<section class="hero"><p class="date">Haushalt</p><h1>Noch nichts eingetragen</h1></section>' +
       '<div class="empty"><p>Trag deine Einnahmen und deine festen Kosten ein. Danach erfasst du nur noch deine laufenden Ausgaben und siehst, was übrig bleibt.</p>' +
@@ -2055,8 +1854,8 @@ $('#v-haushalt').addEventListener('click', e => {
   else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; mAll = false; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
     const d = a === 'prev' ? -1 : 1;
-    if (mMode === 'year') { mYear += d; mdoc(String(mYear)).sub(); }
-    else { mYM = ymOfIdx(ymIdx(mYM) + d); mAll = false; mdoc(mYM.slice(0, 4)).sub(); }
+    if (mMode === 'year') mYear += d;
+    else { mYM = ymOfIdx(ymIdx(mYM) + d); mAll = false; }
   }
   renderMoney();
 });
@@ -2154,7 +1953,7 @@ $('#mform').addEventListener('submit', e => {
     const id = mE.id || newId(), y = d.slice(0, 4), p = { tx: {} };
     p.tx[id] = { d, a, k: mE.kind, c: mE.kind === 'in' ? '' : mE.cat, n: $('#m-note').value.trim().slice(0, 60) };
     if (mE.oldY && mE.oldY !== y) { const q = { tx: {} }; q.tx[id] = null; mdoc(mE.oldY).patch(q); }
-    mdoc(y).sub(); mdoc(y).patch(p);
+    mdoc(y).patch(p);
   } else {
     const name = $('#m-name').value.trim(), from = $('#m-from').value.trim();
     if (!name) return err('Gib dem Posten einen Namen.');
@@ -2190,7 +1989,7 @@ function normT(o) {
   }
   return out;
 }
-const tdoc = patchDoc('cardio', () => T, v => { T = normT(v); }, () => live(T.runs));
+const tdoc = patchDoc(() => T, v => { T = normT(v); });
 let tKind = null;                           // 'out' | 'in' (Laufband) | 'all'; null = Art des letzten Laufs
 
 const fmtPace = sk => { const t = Math.round(sk); return Math.floor(t / 60) + ':' + pad(t % 60); };
@@ -2337,10 +2136,6 @@ function renderTraining() {
   if (!isYM(tYM)) tYM = curYM;
   if (!tYear) tYear = +curYM.slice(0, 4);
   const subs = '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['cardio', 'Cardio'], ['kraft', 'Gym']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
-  if (!hadLocal && !store.settled) {
-    el.innerHTML = '<div class="card-head">' + subs + '</div><section class="hero"><h1></h1><p class="sub">Lade dein Training …</p></section><div class="skel"></div>';
-    return;
-  }
   if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + '</div>' + kraftHTML(curYM); return; }
   const all = tRuns();
   if (!all.length) {
@@ -2471,7 +2266,7 @@ function normK(o) {
   } : null;
   return out;
 }
-const kdoc = patchDoc('kraft', () => K, v => { K = normK(v); }, () => live(K.ex) || live(K.plans || {}) || Object.keys(K.log).some(d => live(K.log[d])));
+const kdoc = patchDoc(() => K, v => { K = normK(v); });
 const kgn = n => n.toLocaleString('de-DE', { maximumFractionDigits: 2 });
 const kExs = () => Object.keys(K.ex).filter(id => K.ex[id]).map(id => ({ id, n: K.ex[id].n })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
 const kDay = d => { const day = K.log[d] || {}, out = []; for (const id in day) if (day[id] && K.ex[id]) out.push({ id, sets: day[id] }); return out; };
@@ -3170,13 +2965,18 @@ function lastBackupText() {
   try { const t = Number(localStorage.getItem('takt.backup')); return t ? 'Letzte Sicherung: ' + DF_LONG.format(new Date(t)) + '.' : 'Noch keine Sicherung gespeichert.'; } catch (e) { return ''; }
 }
 function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
+/* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer */
+const BK_DAYS = 14;
+function backupDue() {
+  let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
+  const today = dayNum(todayKey());
+  if (t) { const n = today - dayNum(keyOf(new Date(t))); return n >= BK_DAYS ? 'Letzte Sicherung vor ' + n + ' Tagen' : ''; }
+  const first = [calFirst('all'), calFirst('weight'), calFirst('money')].filter(Boolean).sort()[0];
+  return first && today - dayNum(first) >= BK_DAYS ? 'Noch keine Sicherung gespeichert' : '';
+}
 
 function renderHome() {
   const el = $('#v-heute'), today = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
-  if (!hadLocal && !store.settled) {
-    el.innerHTML = '<p class="date">' + today + '</p><div class="skel"></div>';
-    return;
-  }
   const seg = '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-h="mode" data-v="day" aria-pressed="' + (hMode === 'day') + '">Heute</button>' +
     '<button type="button" data-h="mode" data-v="week" aria-pressed="' + (hMode === 'week') + '">Woche</button></div>';
   if (hMode === 'week') { el.innerHTML = seg + weekHTML(); return; }
@@ -3184,6 +2984,8 @@ function renderHome() {
   let h = seg + weekStripHTML('all');
   h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme'], ['lauf', 'Lauf']]
     .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
+  const bkDue = backupDue();
+  if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
   const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
   const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
@@ -3221,7 +3023,7 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'go') show(v, true);
   else if (a === 'q') { if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx'); else if (v === 'einnahme') openM('tx', null, 'in'); else if (v === 'lauf') openT(); }
   else if (a === 'export') exportData();
-  else if (a === 'import') { if (store.settled) $('#bk-file').click(); }
+  else if (a === 'import') $('#bk-file').click();
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
 
@@ -3229,14 +3031,7 @@ document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () 
 async function exportData() {
   const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K });
   const name = 'takt-sicherung-' + todayKey() + '.json';
-  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); };
-  if (window.claude && window.claude.use) {
-    try { const dl = await window.claude.use('downloads'); if (dl) { await dl.save({ filename: name, data: text }); return ok(); } }
-    catch (e) { if (e && e.code === 'declined') return setBk('Sicherung abgebrochen.'); }
-    try { await navigator.clipboard.writeText(text); setBk('Als Datei speichern geht hier gerade nicht. Die Sicherung liegt in der Zwischenablage, füge sie in eine Notiz ein.'); }
-    catch (e) { setBk('Die Sicherung konnte hier nicht gespeichert werden.'); }
-    return;
-  }
+  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); };
   try {
     const f = new File([text], name, { type: 'application/json' });
     if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Takt Sicherung' }); return ok(); }
@@ -3252,9 +3047,7 @@ const stripNull = o => { if (Array.isArray(o) || !o || typeof o !== 'object') re
 /* Einlesen ergänzt: vorhandene Einträge bleiben, gleiche Einträge werden überschrieben */
 function importData(d) {
   if (!d || d.app !== 'takt') throw new Error('format');
-  let added = 0;
-  (Array.isArray(d.routines) ? d.routines : []).map(normRoutine).filter(Boolean).forEach(r => { if (!byId(r.id)) { S.routines.push(r); added++; } });
-  if (added) markDirty('routines');
+  (Array.isArray(d.routines) ? d.routines : []).map(normRoutine).filter(Boolean).forEach(r => { if (!byId(r.id)) S.routines.push(r); });
   if (d.LY && typeof d.LY === 'object') for (const y in d.LY) {
     if (!/^\d{4}$/.test(y) || !d.LY[y] || typeof d.LY[y] !== 'object') continue;
     const patch = {};
@@ -3263,17 +3056,18 @@ function importData(d) {
       if (!isKey(date) || !day || typeof day !== 'object') continue;
       for (const rid in day) { const e = day[rid]; if (e && typeof e === 'object') { patch[date] = patch[date] || {}; patch[date][rid] = { s: Math.max(0, Math.round(Number(e.s) || 0)), d: e.d ? 1 : 0 }; } }
     }
-    LY[y] = mergeInto(LY[y] || {}, clone(patch)); logPending[y] = mergeInto(logPending[y] || {}, patch);
-    if (store.db && !store.logRef[y]) subscribeYear(y);
-    pumpLog(y);
+    LY[y] = mergeInto(LY[y] || {}, patch);
   }
   const w = stripNull(normW(d.W)); if (W.goal != null) { delete w.goal; delete w.goalFrom; }
   patchW(w);
   mfdoc.patch(stripNull(normMF(d.MF)));
-  if (d.MY && typeof d.MY === 'object') for (const y in d.MY) if (/^\d{4}$/.test(y)) { mdoc(y).sub(); mdoc(y).patch(stripNull(normMY(d.MY[y]))); }
+  if (d.MY && typeof d.MY === 'object') for (const y in d.MY) if (/^\d{4}$/.test(y)) mdoc(y).patch(stripNull(normMY(d.MY[y])));
   tdoc.patch(stripNull(normT(d.T)));
   const kk = stripNull(normK(d.K)); delete kk.live;
   kdoc.patch(kk);
+  /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
+  const ex = Date.parse(d.exported);
+  try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
   saveLocal(); render();
 }
 $('#bk-file').addEventListener('change', e => {
@@ -3291,7 +3085,6 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.disabled = view === 'routinen' && !store.settled;
   add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? 'Ausgabe eintragen' : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
@@ -3315,13 +3108,10 @@ function render() { renderRoutines(); renderWeight(); renderMoney(); renderTrain
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { ensureTicker(); render(); if (ldlg.open) wakeOn(); } });
 setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 
-hadLocal = loadLocal();
-{
-  show(location.hash.slice(1));
-}
+loadLocal();
+show(location.hash.slice(1));
 render();
 ensureTicker();
-settle('local');
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
 })();
