@@ -424,6 +424,12 @@ body{font-size:15px}
   .period .mnav button{width:32px;height:32px}
   .period .seg2 button{padding:6px 8px}
 }
+.info{border:0;background:none;padding:0;margin-left:5px;color:var(--muted);vertical-align:-2px;position:relative;display:inline-grid}
+.info svg{width:14px;height:14px}
+.info::after{content:"";position:absolute;inset:-13px}
+.info[aria-expanded="true"]{color:var(--accent)}
+.sec .info{vertical-align:-1px;margin-left:6px}
+.sec .info svg{width:15px;height:15px}
 .tools{display:flex;align-items:center;gap:10px}
 .tool{width:34px;height:34px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;position:relative}
 .tool[hidden]{display:none}
@@ -523,7 +529,7 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .lx h3{margin:0;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
 .lt{display:flex;flex-direction:column;gap:3px}
 .lt-h,.lt-r{display:grid;grid-template-columns:36px 1fr 1fr 46px;gap:6px;align-items:center;text-align:center}
-.lt-h span{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
+.lt-h span{font-size:11.5px;font-weight:600;color:var(--mid)}
 .lt-r{min-height:38px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .lt-r.act{color:var(--ink)}
 .lt-r.act .n{background:var(--fill);border-radius:12px;height:40px;display:grid;place-items:center}
@@ -1549,6 +1555,8 @@ function chartSVG(pts, t0) {
   return s + '</svg>';
 }
 
+/* Kleines „i“: zeigt auf Tipp den Erklärtext mit der id info-… darunter. Erklärungen stehen nie dauerhaft da. */
+const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.4v3.8"/><circle cx="8" cy="4.9" r=".6" fill="currentColor"/></svg></button>';
 const fig = (val, unit, label) => '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
 function renderWeight() {
@@ -1856,7 +1864,7 @@ function monthHTML(curYM) {
   let sub = '';
   if (isCur) {
     const now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
-    sub = s.bal > 0 ? 'Das sind ' + eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende.' : s.bal < 0 ? 'Deine Ausgaben liegen über deinen Einnahmen.' : '';
+    sub = s.bal > 0 ? eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende' : s.bal < 0 ? 'Deine Ausgaben liegen über deinen Einnahmen.' : '';
   }
   let h = navHTML(name + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat', 'm');
   h += heroM((s.bal < 0 ? 'Minus im ' : 'Übrig im ') + name, s.bal, sub);
@@ -2698,8 +2706,8 @@ function kPeriod(pre) {
   return { n: ds.length, vol, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
 const volText = v => v >= 1000 ? [kg(v / 1000), 't'] : [String(Math.round(v)), 'kg'];
-const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung') + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
-const kNote = s => s.p ? '<p class="note">Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
+const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+const kNote = s => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
 const kHero = (label, n, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1><p class="sub">' + sub + '</p></section>';
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
@@ -3418,7 +3426,7 @@ function insightsHTML(c) {
     else if (r.flat) h += '<div class="ins"><b>' + d[0] + '</b><span>Die Wochen sind sich zu ähnlich für einen Vergleich.</span></div>';
   });
   if (!h) return '<p class="note">Zusammenhänge erscheinen, sobald es 6 abgeschlossene Wochen mit Daten aus zwei Bereichen gibt. Bisher: ' + maxN + '.</p>';
-  return '<div class="card" style="gap:0;padding-top:4px;padding-bottom:4px">' + h + '</div><p class="note">Das sind Auffälligkeiten aus wenigen Wochen, kein Beweis für Ursache und Wirkung.</p>';
+  return '<p class="note" id="info-ins" hidden>Das sind Auffälligkeiten aus wenigen Wochen, kein Beweis für Ursache und Wirkung.</p><div class="card" style="gap:0;padding-top:4px;padding-bottom:4px">' + h + '</div>';
 }
 function weekHTML() {
   const c = weekCtx(), cur = keyOf(monOf(new Date()));
@@ -3426,7 +3434,7 @@ function weekHTML() {
   const w = weekStats(hWeek, c), p = weekStats(keyOf(addDays(parseKey(hWeek), -7)), c), isCur = hWeek === cur;
   const label = DF_SHORT.format(parseKey(hWeek)) + ' bis ' + DF_SHORT.format(parseKey(w.end));
   let h = navHTML(isCur ? 'Diese Woche' : label, !isCur, 'Eine Woche');
-  h += '<p class="note">' + (isCur ? label + ', Stand heute. ' : '') + 'Verglichen mit der Woche davor.</p>';
+  h += '<p class="note">' + (isCur ? label + ' · ' : '') + 'Vergleich mit der Woche davor</p>';
   let rows = '';
   if (w.plan) {
     const q = Math.round(w.quote * 100); let d = '', cls = '';
@@ -3451,7 +3459,8 @@ function weekHTML() {
     rows += kvRow('Gym', String(w.kraft), w.kraft === 1 ? 'Einheit' : 'Einheiten', df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df), df > 0 ? 'up' : df < 0 ? 'down' : '');
   }
   h += rows ? '<div class="card last" style="padding-top:2px">' + rows + '</div>' : '<p class="note">Für diese Woche gibt es noch keine Einträge.</p>';
-  return h + '<h2 class="sec">Zusammenhänge</h2>' + insightsHTML(c);
+  const ins = insightsHTML(c);
+  return h + '<h2 class="sec">Zusammenhänge' + (ins.indexOf('info-ins') >= 0 ? INFO('ins') : '') + '</h2>' + ins;
 }
 /* Symbole der Bereiche, dieselben wie in der Leiste unten */
 const AREA = {
@@ -3602,6 +3611,10 @@ function paintTop() {
 }
 /* Kalender des Bereichs. Heute und Routinen haben dafür die Wochenleiste, die anderen Bereiche den Knopf in der Kopfzeile. */
 const calOf = () => view === 'gewicht' ? 'weight' : view === 'haushalt' ? 'money' : view === 'training' ? (tSub === 'kraft' ? 'gym' : 'cardio') : '';
+document.addEventListener('click', e => {
+  const b = e.target.closest('[data-info]'), p = b && document.getElementById('info-' + b.dataset.info); if (!p) return;
+  p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden));
+});
 $('#calbtn').addEventListener('click', () => { if (calOf()) openCal(calOf(), todayKey()); });
 function show(v, user) {
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
