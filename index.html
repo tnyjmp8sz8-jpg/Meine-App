@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Takt</title>
+<title>Track.</title>
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Takt">
+<meta name="apple-mobile-web-app-title" content="Track.">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#0E0F13" media="(prefers-color-scheme: dark)">
@@ -631,7 +631,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="scroll" id="scroll">
 <div class="app">
   <header class="top">
-    <span class="mark">Takt</span>
+    <span class="mark">Track.</span>
     <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
@@ -656,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v35</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v36</span></footer>
 </div>
 </div>
 
@@ -991,7 +991,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
-const TITLE = 'Takt';
+const TITLE = 'Track.';
 const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 const pad = n => String(n).padStart(2, '0');
@@ -2138,7 +2138,7 @@ function renderTraining() {
   const all = tRuns();
   if (!all.length) {
     el.innerHTML = '<div class="card-head">' + subs + '</div><section class="hero"><h1>Noch kein Lauf</h1></section>' +
-      '<div class="empty"><p>Trag nach jedem Lauf Strecke, Dauer und deinen Durchschnittspuls ein. Takt rechnet daraus Pace und Effizienz aus und zeigt dir die Veränderung zum Lauf davor, getrennt für Outdoor und Laufband.</p>' +
+      '<div class="empty"><p>Trag nach jedem Lauf Strecke, Dauer und deinen Durchschnittspuls ein. Die App rechnet daraus Pace und Effizienz aus und zeigt dir die Veränderung zum Lauf davor, getrennt für Outdoor und Laufband.</p>' +
       '<button type="button" class="primary" data-t="add">Ersten Lauf eintragen</button></div>';
     return;
   }
@@ -3145,12 +3145,13 @@ document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () 
 
 /* ---------- Datensicherung ---------- */
 async function exportData() {
+  /* app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
   const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K });
-  const name = 'takt-sicherung-' + todayKey() + '.json';
+  const name = 'track-sicherung-' + todayKey() + '.json';
   const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); };
   try {
     const f = new File([text], name, { type: 'application/json' });
-    if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Takt Sicherung' }); return ok(); }
+    if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Sicherung von Track.' }); return ok(); }
   } catch (e) { if (e && e.name === 'AbortError') return setBk('Sicherung abgebrochen.'); }
   try {
     const a = document.createElement('a'), url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
@@ -3192,7 +3193,7 @@ $('#bk-file').addEventListener('change', e => {
   const rd = new FileReader();
   rd.onload = () => {
     try { const d = JSON.parse(String(rd.result)); importData(d); setBk('Sicherung eingelesen' + (d.exported ? ', Stand ' + DF_LONG.format(new Date(d.exported)) : '') + '. Vorhandene Einträge bleiben erhalten.'); }
-    catch (err) { setBk('Diese Datei ist keine Takt-Sicherung.'); }
+    catch (err) { setBk('Diese Datei ist keine Sicherung dieser App.'); }
   };
   rd.onerror = () => setBk('Die Datei konnte nicht gelesen werden.');
   rd.readAsText(f);
