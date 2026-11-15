@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Takt">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#1B1C20" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#0E0F13" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="manifest" href="manifest.webmanifest">
@@ -18,7 +18,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  /* Farben: weiches Dunkelgrau (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: Systemschrift (San Francisco, sonst Inter), große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
+  /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: Systemschrift (San Francisco, sonst Inter), große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -35,6 +35,8 @@
   --sel:#E5E5EA;
   --danger:#D70015;
   --good:#248A3D;
+  --c-weight:#AF52DE;
+  --c-money:#F08C00;
   --head:rgba(242,242,247,.82);
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Inter","Segoe UI",Roboto,system-ui,sans-serif;
   --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Inter","Segoe UI",Roboto,system-ui,sans-serif;
@@ -43,14 +45,14 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#1B1C20; --surface:#27282D; --fill:#35363C; --ink:#FFFFFF; --muted:#9A9BA3; --line:rgba(255,255,255,.09);
-    --accent:#0A84FF; --at:#2E90FF; --accent-soft:#17304F; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6B6C74; --sel:#46474E; --danger:#FF5A50; --good:#30D158; --head:rgba(27,28,32,.8);
+    --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A; --head:rgba(14,15,19,.82);
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
-  --bg:#1B1C20; --surface:#27282D; --fill:#35363C; --ink:#FFFFFF; --muted:#9A9BA3; --line:rgba(255,255,255,.09);
-  --accent:#0A84FF; --at:#2E90FF; --accent-soft:#17304F; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6B6C74; --sel:#46474E; --danger:#FF5A50; --good:#30D158; --head:rgba(27,28,32,.8);
+  --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
+  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A; --head:rgba(14,15,19,.82);
   color-scheme:dark;
 }
 
@@ -150,22 +152,22 @@ button:disabled{cursor:default;opacity:.4}
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:480px;max-height:92%;border-radius:24px 24px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(4,6,10,.6)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform{display:flex;flex-direction:column;gap:20px;padding:20px 18px 26px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.sh-head h2{margin:0;font-family:var(--display);font-size:24px;letter-spacing:-.02em}
+.sh-head h2{margin:0;font-family:var(--display);font-size:20px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
 .x svg{width:16px;height:16px}
-.fld{display:flex;flex-direction:column;gap:8px}
+.fld{display:flex;flex-direction:column;gap:6px}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"]{font:inherit;font-size:17px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:13px 14px;width:100%;min-width:0}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
 input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 .stepper{display:flex;align-items:center;gap:8px}
-.stepper button{flex:none;width:50px;height:50px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
-.stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:24px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
+.stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
+.stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
 .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .stepper .unit{flex:none;color:var(--muted);font-weight:500}
 .days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.days button{height:46px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:14px;font-weight:600;padding:0}
+.days button{height:42px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:13px;font-weight:600;padding:0}
 .days button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .err{margin:0;color:var(--danger);font-size:14px;font-weight:500}
 #sh-extra{display:flex;flex-direction:column;gap:8px}
@@ -240,9 +242,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .hero h1.neg{color:var(--danger)}
 .mbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--accent-soft);margin-bottom:-10px}
 .mbar i{display:block;height:100%}
-.mbar .fx{background:var(--ink);opacity:.85}
-.mbar .fl{background:var(--mid)}
-.fig .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px}
+.mbar .fx{background:var(--mid)}
+.mbar .fl{background:var(--accent)}
+.fig .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
 .cats{display:flex;flex-direction:column;gap:13px}
 .cat{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:15px}
 .cat b{font-weight:600;font-variant-numeric:tabular-nums}
@@ -283,24 +285,33 @@ body{display:flex;flex-direction:column;overflow:hidden}
 
 .duo{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .duo button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
-.duo svg{width:16px;height:16px;flex:none;opacity:.85}
+.duo svg{width:15px;height:15px;flex:none;opacity:.85}
+.duo .ghost{font-size:15px;font-weight:600}
 .links{display:flex;flex-wrap:wrap;gap:2px 20px;margin-top:-6px}
 .links .linkbtn{margin-top:0}
 .chip.more{width:36px;height:36px;min-height:0;align-self:center;padding:0;display:inline-grid;place-items:center;border-radius:50%}
 .chip.more svg{width:14px;height:14px}
 
 /* Übersicht, Budgets, Kraft */
-.ovs{display:flex;flex-direction:column;gap:8px}
-.ov{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:2px 10px;width:100%;text-align:left;padding:12px 12px 12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--surface)}
-.ov .k{grid-column:1/-1;font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-.ov .v{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.1;font-variant-numeric:tabular-nums}
+.ovs{background:var(--surface);border-radius:20px;overflow:hidden}
+.ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:0;background:none}
+.ov+.ov::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--line)}
+.ov:active{background:var(--fill)}
+.ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent)}
+.ov .ic svg{width:17px;height:17px}
+.ov .ic.routinen{--c:var(--accent)}
+.ov .ic.gewicht{--c:var(--c-weight)}
+.ov .ic.haushalt{--c:var(--c-money)}
+.ov .ic.training{--c:var(--good)}
+.ov .k{grid-area:1/2;font-size:14.5px;font-weight:500}
+.ov .v{grid-area:1/3;justify-self:end;font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ov .v.neg{color:var(--danger)}
-.ov .s{grid-column:1;font-size:13px;color:var(--muted)}
-.ov svg{grid-row:2/4;grid-column:2;width:16px;height:16px;color:var(--muted)}
+.ov .s{grid-area:2/2/3/4;font-size:12.5px;color:var(--muted)}
+.ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
 .quick{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .quick::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
-.quick svg{width:9px;height:9px;opacity:.6}
+.quick svg{width:9px;height:9px;color:var(--at)}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
 .ins+.ins{border-top:1px solid var(--line)}
 .ins b{font-size:14px;font-weight:600}
@@ -309,23 +320,23 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .cat b small{font-weight:500;color:var(--muted)}
 .cat.over b{color:var(--danger)}
 .cat.over .track i{background:var(--danger)}
-.subtabs{display:flex;gap:16px}
+.subtabs{display:flex;gap:14px}
 .subtabs button{border:0;background:none;padding:6px 0;font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:inset 0 -2px 0 var(--accent)}
 #k-items{display:flex;flex-direction:column;gap:10px}
 #k-items:empty{display:none}
 .kx{display:flex;flex-direction:column;gap:8px;padding:12px;border:1px solid var(--line);border-radius:14px}
 .kx-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.kx-head b{font-size:16px;overflow-wrap:anywhere}
+.kx-head b{font-size:15px;overflow-wrap:anywhere}
 .kx .note{margin:0}
 .kx .linkbtn{margin-top:0}
 .kset{display:grid;grid-template-columns:16px minmax(0,1fr) auto minmax(0,1fr) auto 36px;gap:6px;align-items:center}
 .kset span{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 .kset em{font-style:normal;color:var(--muted);font-size:13px}
-.kset input[type="text"]{padding:9px 8px;font-size:17px;font-weight:600;text-align:center}
+.kset input[type="text"]{padding:8px 8px;font-size:16px;font-weight:600;text-align:center}
 .kset button,.x.sm{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:20px;line-height:1;display:grid;place-items:center;padding:0}
 .x.sm svg{width:12px;height:12px}
-#kform .stepper input,#lform .stepper input,#pform .stepper input{text-align:left;font-family:var(--body);font-weight:400;font-size:17px;letter-spacing:0;padding:13px 14px}
+#kform .stepper input,#lform .stepper input,#pform .stepper input{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
 .entries .xrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;font-size:15px}
 .entries b.up{color:var(--good)}
 .entries b.down{color:var(--danger)}
@@ -339,71 +350,86 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .kset.done .chk{background:var(--good);border-color:var(--good);color:var(--bg)}
 .kset.done input[type="text"]{opacity:.55}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
-.prow b{flex:1;min-width:0;font-size:15px;overflow-wrap:anywhere}
+.prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
 .pst{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
 #x-stats{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty{display:none}
 
-/* Kompakt: kleinere Schrift und Abstände, mehr auf einen Blick. Tippflächen und Eingabefelder bleiben groß. */
-.app,.view{gap:16px}
-.mark{font-size:20px}
-.add{width:40px;height:40px}
-.hero{gap:2px}
-.date{font-size:14px}
-.hero h1{font-size:clamp(30px,8.5vw,36px);line-height:1}
-.hero h1 .num,.w-hero h1 .num{font-size:clamp(50px,14.5vw,62px);line-height:.95}
-.hero h1 .unit{font-size:clamp(17px,4.8vw,20px)}
-.sub{font-size:14px;margin-top:2px}
-.rows{gap:8px}
-.row{border-radius:16px}
-.go{padding:12px 6px 12px 12px;gap:12px}
-.glyph{width:40px;height:40px}
-.glyph svg{width:16px;height:16px}
-.name{font-size:16px}
-.meta{font-size:13px}
-.week{margin-top:5px}
-.streak b{font-size:22px}
-.streak span{font-size:10px}
-.more{width:36px}
-.live{padding:0 12px 14px}
-.clock{font-size:clamp(48px,15vw,64px)}
-.pill{font-size:13px;padding:6px 12px}
-.primary{min-height:46px;padding:11px 16px;font-size:15px;border-radius:12px}
-.ghost{min-height:44px;padding:10px 14px;border-radius:12px}
+/* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
+body{font-size:15px}
+.app,.view{gap:14px}
+.top{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px}
+.add{width:34px;height:34px;position:relative}
+.add::after{content:"";position:absolute;inset:-5px}
+.add svg{width:16px;height:16px}
+.hero{gap:1px}
+.date{font-size:13px}
+.hero h1{font-size:clamp(23px,6.4vw,27px);line-height:1.05}
+.hero h1 .num,.w-hero h1 .num{font-size:clamp(38px,10.6vw,44px);line-height:1}
+.hero h1 .unit{font-size:clamp(15px,4vw,17px)}
+.sub{font-size:13px;margin-top:2px}
+.rows{gap:6px}
+.go{padding:10px 4px 10px 10px;gap:10px}
+.glyph{width:34px;height:34px}
+.glyph svg{width:14px;height:14px}
+.name{font-size:15px}
+.meta{font-size:12.5px}
+.week{margin-top:4px;gap:5px}
+.week i{width:6px;height:6px}
+.streak b{font-size:19px}
+.more{width:32px;height:44px}
+.more svg{width:18px;height:18px}
+.live{padding:0 10px 12px}
+.clock{font-size:clamp(40px,12vw,50px)}
+.pill{font-size:12.5px;padding:6px 12px}
+.primary{padding:9px 16px}
+.ghost{min-height:40px;padding:9px 14px;font-size:14px}
+.chip{min-height:34px;padding:6px 12px;font-size:13px}
+.seg .chip{min-height:30px;padding:5px 11px;font-size:12.5px}
 .figs{gap:6px}
-.fig{padding:9px 10px 8px;border-radius:12px}
-.fig b{font-size:19px}
-.fig b small{font-size:12px}
-.fig span{font-size:11.5px}
-.card{border-radius:16px;padding:12px 12px 10px;gap:8px}
-.entries,.empty{border-radius:16px}
-.entries button{padding:10px 14px;font-size:15px}
-.entries .l small,.entries .r small{font-size:12.5px}
-.seg2{border-radius:12px;padding:3px}
-.seg2 button{padding:7px;font-size:14px;border-radius:9px}
+.fig{padding:8px 9px 7px}
+.fig b{font-size:17px}
+.fig b small{font-size:11.5px}
+.fig span{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card{padding:12px 12px 10px;gap:8px}
+.entries button{padding:9px 14px;font-size:14px}
+.entries .l small,.entries .r small{font-size:12px}
+.entries .xrow{padding:9px 14px;font-size:14px}
+.seg2 button{padding:6px;font-size:13.5px}
 .mnav{margin-bottom:-4px}
-.mnav b{font-size:17px}
-.mnav button{width:40px;height:40px}
-.sec,.eyebrow{font-size:12px}
-.view>.sec{margin:4px 2px -8px}
-.cats{gap:10px}
-.cat{font-size:14px}
-.kv{padding:8px 0}
-.kv b{font-size:18px}
-.kv span{font-size:14px}
+.mnav b{font-size:16px}
+.mnav button{width:34px;height:34px;position:relative}
+.mnav button::after{content:"";position:absolute;inset:-5px}
+.mnav svg{width:14px;height:14px}
+.eyebrow{font-size:12px}
+.cats{gap:9px}
+.cat,button.cat{font-size:13.5px}
+.cat .roll{font-size:11.5px}
+.kv{padding:7px 0}
+.kv b{font-size:16px}
+.kv b small{font-size:12px}
+.kv span{font-size:13.5px}
+.delta{font-size:12px}
 .last{padding:10px 14px 2px}
-.note{font-size:13px}
-.mbar{height:10px;margin-bottom:-6px}
-.tab{padding:6px 0 4px;font-size:11px}
-.tab svg{width:22px;height:22px}
-.foot{font-size:12px}
+.last h3{font-size:14px}
+.last h3 small{font-size:13px}
+.last .note{font-size:12.5px}
+.note{font-size:12.5px}
+.ins b{font-size:13.5px}
+.ins span{font-size:12.5px}
+.mbar{height:8px;margin-bottom:-6px}
+.tab{padding:5px 0 3px}
+.tab svg{width:21px;height:21px}
+.foot{font-size:11.5px}
 .empty{padding:16px 14px;gap:12px}
-.empty h2{font-size:22px}
-.linkbtn{font-size:14px;margin-top:-6px}
+.empty h2{font-size:20px}
+.empty p{font-size:14px}
+.linkbtn{font-size:13.5px;margin-top:-6px}
 .links .linkbtn{margin-top:0}
-#form .fig b{font-size:22px}
-#ls-times .fig b{font-size:26px}
+.legend{font-size:11.5px}
+#form .fig b{font-size:19px}
+#ls-times .fig b{font-size:22px}
 
 /* Heute: Routinen direkt startbar */
 .view>.date{margin:0 2px -6px}
@@ -411,68 +437,66 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 /* Wochenleiste und Kalender, in jedem Bereich. Punkte: g = Training, b = erledigt/eingetragen, p = teilweise */
 .wk{display:grid;grid-template-columns:repeat(7,1fr);padding:2px 0}
 .wk[hidden]{display:none}
-.wd{border:0;background:none;padding:6px 0 4px;border-radius:16px;display:flex;flex-direction:column;align-items:center;color:var(--mid)}
-.wd small{font-size:12px;font-weight:600}
-.wd b{font-size:17px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
+.wd{border:0;background:none;padding:4px 0 3px;border-radius:14px;display:flex;flex-direction:column;align-items:center;color:var(--mid)}
+.wd small{font-size:11px;font-weight:600}
+.wd b{font-size:15px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
 .wd.now{color:var(--ink)}
 .wd:active{background:var(--surface)}
-.wk i,.cd i{display:flex;justify-content:center;gap:3px;height:8px}
-.wk i{margin-top:5px}
-.wk u,.cd u,.cs-leg u{display:block;width:8px;height:8px;border-radius:50%;text-decoration:none}
-.cd i{height:7px}
-.cd u,.cs-leg u{width:7px;height:7px}
+.wk i,.cd i{display:flex;justify-content:center;gap:3px;height:6px}
+.wk i{margin-top:4px}
+.wk u,.cd u,.cs-leg u{display:block;width:6px;height:6px;border-radius:50%;text-decoration:none}
 u.g{background:var(--good)}
 u.b{background:var(--accent)}
 u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 #csheet{height:92%;overflow:hidden}
 #csheet[open]{display:flex;flex-direction:column}
 .cs-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 14px 2px}
-.cs-top b{font-size:16px;font-weight:700}
+.cs-top b{font-size:15px;font-weight:700}
 .cs-top .linkbtn{justify-self:start}
 .cs-top .linkbtn:last-child{justify-self:end}
-.cs-leg{display:flex;justify-content:center;gap:16px;margin:0;padding:8px 10px 0;font-size:12px;color:var(--muted)}
+.cs-leg{display:flex;justify-content:center;gap:16px;margin:0;padding:8px 10px 0;font-size:11.5px;color:var(--muted)}
 .cs-leg[hidden]{display:none}
 .cs-leg span{display:inline-flex;align-items:center;gap:6px}
 .cs-day .linkbtn{margin:0}
-.cs-top .linkbtn{margin:0;font-size:16px;padding:8px 6px}
+.cs-top .linkbtn{margin:0;font-size:15px;padding:8px 6px}
 .cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:1px solid var(--line)}
-.cs-wd span{text-align:center;font-size:12px;font-weight:600;color:var(--mid)}
+.cs-wd span{text-align:center;font-size:11px;font-weight:600;color:var(--mid)}
 .cs-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 10px 18px}
-.cm{padding-top:18px}
-.cm h3{margin:0 8px;font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em}
-.cm p{margin:2px 8px 8px;color:var(--muted);font-size:13px}
+.cm{padding-top:16px}
+.cm h3{margin:0 8px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.02em}
+.cm p{margin:1px 8px 6px;color:var(--muted);font-size:12.5px}
 .cgrid{display:grid;grid-template-columns:repeat(7,1fr);row-gap:2px}
 .cd{border:0;background:none;padding:3px 0 5px;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--ink)}
-.cd b{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-size:16px;font-weight:500;font-variant-numeric:tabular-nums}
+.cd b{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:500;font-variant-numeric:tabular-nums}
 .cd.now b{color:var(--at);font-weight:700}
 .cd.sel b{background:var(--ink);color:var(--bg)}
 .cd:disabled{opacity:.28}
 .cs-day{flex:none;max-height:42%;overflow-y:auto;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
-.cs-day h3{margin:0;font-size:16px;font-weight:700}
+.cs-day h3{margin:0;font-size:15px;font-weight:700}
 .cs-day .note{margin:0}
 .cs-day .entries .l small{white-space:pre-line;line-height:1.45;margin-top:2px}
 
 /* Laufendes Training: eine Übung im Fokus */
-#lform{gap:16px}
-.lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -18px;padding:0 18px;scrollbar-width:none}
+#lform{gap:14px}
+.lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
-.lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:9px 12px;font-size:13px;font-weight:600;color:var(--muted);min-height:40px}
+.lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:36px}
 .lx-tab[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
 .lx-tab.fin{color:var(--good)}
-.lx-tab.addx{width:44px;padding:0;font-size:20px;line-height:1;color:var(--at)}
+.lx-tab.addx{width:40px;padding:0;font-size:18px;line-height:1;color:var(--at)}
 #l-add{display:flex;flex-direction:column;gap:8px}
 #l-add[hidden]{display:none}
 .lx{display:flex;flex-direction:column;gap:12px}
-.lx h3{margin:0;font-family:var(--display);font-size:24px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
+.lx h3{margin:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
 .lt{display:flex;flex-direction:column;gap:4px}
-.lt-h,.lt-r{display:grid;grid-template-columns:44px 1fr 1fr 56px;gap:8px;align-items:center;text-align:center}
-.lt-h span{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
-.lt-r{min-height:48px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:19px;font-weight:600;font-variant-numeric:tabular-nums}
+.lt-h,.lt-r{display:grid;grid-template-columns:40px 1fr 1fr 52px;gap:8px;align-items:center;text-align:center}
+.lt-h span{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
+.lt-r{min-height:44px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
 .lt-r.act{color:var(--ink)}
-.lt-r.act .n{background:var(--fill);border-radius:12px;height:48px;display:grid;place-items:center}
-.lt-r input[type="text"]{height:48px;padding:0 6px;text-align:center;font-size:20px;font-weight:700;background:var(--fill);border-color:transparent;border-radius:12px}
-.lt-r .chk{width:56px;height:48px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
-.lt-r .chk svg{width:20px;height:20px}
+.lt-r.act .n{background:var(--fill);border-radius:12px;height:44px;display:grid;place-items:center}
+.lt-r input[type="text"]{height:44px;padding:0 6px;text-align:center;font-size:18px;font-weight:700;background:var(--fill);border-color:transparent;border-radius:12px}
+.lt-r .chk{width:52px;height:44px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
+.lt-r .chk svg{width:18px;height:18px}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
 .lt-r .st svg{width:16px;height:16px}
@@ -481,22 +505,22 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
 .lastx{gap:2px;padding:12px 14px 10px}
 .lastx .note{margin:0 0 6px}
-.lastx .lt-h,.lastx .lt-r{grid-template-columns:44px 1fr 1fr}
-.lastx .lt-r{min-height:26px;font-size:15px;font-weight:500}
+.lastx .lt-h,.lastx .lt-r{grid-template-columns:40px 1fr 1fr}
+.lastx .lt-r{min-height:24px;font-size:14px;font-weight:500}
 
 /* Budget: Rest mitnehmen */
 .tog{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;position:relative}
 .tog[hidden]{display:none}
 .tog input{position:absolute;opacity:0;width:1px;height:1px}
 .tog .tt{flex:1;display:flex;flex-direction:column;gap:2px;min-width:0}
-.tog .tt b{font-size:15px;font-weight:600}
-.tog .tt small{font-size:13px;color:var(--muted)}
+.tog .tt b{font-size:14.5px;font-weight:600}
+.tog .tt small{font-size:12.5px;color:var(--muted)}
 .tog .sw{flex:none;width:46px;height:28px;border-radius:14px;background:var(--fill);border:1px solid var(--line);position:relative;transition:background .15s}
 .tog .sw::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:var(--mid);transition:transform .15s,background .15s}
 .tog input:checked~.sw{background:var(--accent);border-color:var(--accent)}
 .tog input:checked~.sw::after{transform:translateX(18px);background:#fff}
 .tog input:focus-visible~.sw{outline:2px solid var(--at);outline-offset:2px}
-.cat .roll{grid-column:1/-1;font-size:12px;color:var(--muted)}
+.cat .roll{grid-column:1/-1;color:var(--muted)}
 .cat .ri{width:12px;height:12px;margin-left:6px;vertical-align:-1px;color:var(--muted)}
 
 /* Übungen einklappbar */
@@ -505,23 +529,22 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
 /* Weicher: rundere Formen, sanfte Übergänge */
-.row,.card,.entries,.empty,.skel{border-radius:22px}
-.ov{border-radius:20px}
-.primary,.ghost,.fig,.stepper button{border-radius:16px}
-.seg2{border-radius:16px;padding:4px}
-.seg2 button{border-radius:12px}
+.row,.card,.entries,.empty,.skel{border-radius:20px}
+.primary,.ghost,.fig,.stepper button{border-radius:14px}
+.seg2{border-radius:14px;padding:3px}
+.seg2 button{border-radius:11px}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-radius:16px}
 .days button{border-radius:14px}
-.kx,.prow,.tog{border-radius:18px}
-.lx-tab{border-radius:999px;padding:9px 14px}
-.lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:16px}
-.cat .track{height:7px;border-radius:4px}
-.cat .track i{border-radius:4px}
-.mbar{border-radius:8px}
+.kx,.prow,.tog{border-radius:16px}
+.lx-tab{border-radius:999px;padding:7px 13px}
+.lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:14px}
+.cat .track{height:5px;border-radius:3px}
+.cat .track i{border-radius:3px}
+.mbar{border-radius:4px}
 dialog{border-radius:28px 28px 0 0}
 @media (min-width:560px){dialog{border-radius:28px}}
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease}
-.primary:active,.ghost:active,.ov:active,.chip:active,.add:active,.lx-tab:active,.lt-r .chk:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lt-r .chk:active{transform:scale(.97)}
 @keyframes sheet{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
 @keyframes dim{from{opacity:0}to{opacity:1}}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
@@ -530,7 +553,7 @@ dialog[open]::backdrop{animation:dim .2s ease}
 .view:not([hidden]){animation:fade .22s cubic-bezier(.16,1,.3,1)}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
-.row,.card,.entries,.empty,.ov,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.skel,.x,.ghost,.chip,.lx-tab{border-color:transparent}
+.row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.skel,.x,.ghost,.chip,.lx-tab{border-color:transparent}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-color:transparent}
 .is-off{box-shadow:inset 0 0 0 1px var(--line)}
 .chip,.lx-tab{background:var(--surface)}
@@ -543,24 +566,23 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .seg2 button[aria-pressed="true"]{box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
 .tabs{border-top-color:var(--line)}
-.tab{font-size:10.5px;font-weight:500}
-.primary{font-size:16px;font-weight:600;min-height:50px;border-radius:14px}
+.tab{font-size:10px;font-weight:500}
+.primary{font-size:15px;font-weight:600;min-height:44px;border-radius:14px}
 .ghost{border-radius:14px}
-.x{width:34px;height:34px}
-.x svg{width:13px;height:13px}
+.x{width:32px;height:32px;position:relative}
+.x::after{content:"";position:absolute;inset:-6px}
+.x svg{width:12px;height:12px}
 
-.sec{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
-.view>.sec{margin:10px 2px -6px}
-.sec small{font-size:14px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
-.fld>span,.ov .k,.empty .lbl,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
-.fld>span{font-size:14px;font-weight:500}
-.ov .k{font-size:13px;font-weight:600}
-.ov{padding:14px 12px 14px 16px}
-.streak span{font-size:11px;font-weight:500}
-.subtabs{gap:18px}
-.subtabs button{font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
+.sec{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
+.view>.sec{margin:8px 2px -6px}
+.sec small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
+.fld>span,.empty .lbl,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
+.fld>span{font-size:13.5px;font-weight:500}
+.streak span{font-size:10.5px;font-weight:500}
+.subtabs{gap:16px}
+.subtabs button{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
-.mark{font-size:22px;font-weight:700}
+.mark{font-size:19px;font-weight:700}
 .hero h1 .num,.clock,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
@@ -1884,7 +1906,7 @@ const ROLL = '<svg class="ri" viewBox="0 0 14 14" fill="none" stroke="currentCol
 const hasMoney = () => live(MF.fixed) || Object.keys(MY).some(y => live(MY[y].tx));
 
 const CIRC = plus => '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><path d="M6.6 10h6.8' + (plus ? 'M10 6.6v6.8' : '') + '"/></svg>';
-const DUO = '<div class="duo"><button type="button" class="primary" data-m="add">Ausgabe' + CIRC(false) + '</button><button type="button" class="primary" data-m="income">Einnahme' + CIRC(true) + '</button></div>';
+const DUO = '<div class="duo"><button type="button" class="primary" data-m="add">Ausgabe' + CIRC(false) + '</button><button type="button" class="ghost center" data-m="income">Einnahme' + CIRC(true) + '</button></div>';
 const CHEV = d => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M10 3L5 8l5 5' : 'M6 3l5 5-5 5') + '"/></svg>';
 const navHTML = (label, canNext, what) => '<div class="mnav"><button type="button" data-m="prev" aria-label="' + what + ' zurück">' + CHEV(-1) + '</button><b>' + label + '</b>' +
   '<button type="button" data-m="next" aria-label="' + what + ' vor"' + (canNext ? '' : ' disabled') + '>' + CHEV(1) + '</button></div>';
@@ -1901,9 +1923,9 @@ function catsHTML(cats, budgets, ym) {
     return budgets ? '<button type="button" class="cat' + (over ? ' over' : '') + '" data-m="budget" data-c="' + r[0] + '" aria-label="Budget für ' + catName(r[0]) + ' ändern">' + inner + '</button>' : '<div class="cat">' + inner + '</div>';
   }).join('') + '</div></div>';
 }
-const sumTiles = s => '<div class="figs on-bg">' + fig(eur0(s.inc), '€', 'Einnahmen') +
-  fig(eur0(s.fix), '€', '<i class="dot" style="background:var(--ink)"></i>Fixkosten') +
-  fig(eur0(s.flex), '€', '<i class="dot" style="background:var(--mid)"></i>Flexibel') + '</div>';
+const sumTiles = s => '<div class="figs on-bg">' + fig(eur0(s.inc), '€', '<i class="dot" style="background:var(--good)"></i>Einnahmen') +
+  fig(eur0(s.fix), '€', '<i class="dot" style="background:var(--mid)"></i>Fixkosten') +
+  fig(eur0(s.flex), '€', '<i class="dot" style="background:var(--accent)"></i>Flexibel') + '</div>';
 function barHTML(s) {
   const den = Math.max(s.inc, s.fix + s.flex) || 1;
   return '<div class="mbar" role="img" aria-label="Anteil der Fixkosten und der flexiblen Kosten an den Einnahmen"><i class="fx" style="width:' + (s.fix / den * 100).toFixed(1) + '%"></i><i class="fl" style="width:' + (s.flex / den * 100).toFixed(1) + '%"></i></div>';
@@ -3049,7 +3071,7 @@ const kvRow = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label
 const monOf = d => addDays(d, -wd(d));
 const PLUS = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M1.5 7h11M7 1.5v11"/></svg>';
 function homeRoutine() {
-  if (!S.routines.length) return { v: 'Noch keine Routine', s: 'Tippe, um die erste anzulegen' };
+  if (!S.routines.length) return { v: '', s: 'Tippe, um die erste anzulegen' };
   const tk = todayKey(), wi = wd(new Date()), now = Date.now(), due = S.routines.filter(r => r.days[wi]);
   if (!due.length) return { v: 'Heute frei', s: 'Keine Routine für heute geplant' };
   let open = 0, done = 0;
@@ -3134,7 +3156,14 @@ function weekHTML() {
   h += rows ? '<div class="card last" style="padding-top:2px">' + rows + '</div>' : '<p class="note">Für diese Woche gibt es noch keine Einträge.</p>';
   return h + '<h2 class="sec">Zusammenhänge</h2>' + insightsHTML(c);
 }
-const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span>' + CHEV(1) + '<span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span></button>';
+/* Symbole der Bereiche, dieselben wie in der Leiste unten */
+const AREA = {
+  routinen: '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 4.9-5.2"/>',
+  gewicht: '<path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/>',
+  haushalt: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/>',
+  training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>'
+};
+const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
 let bkMsg = '';
 function lastBackupText() {
@@ -3157,20 +3186,20 @@ function renderHome() {
     .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
   const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
-  const wl = withTrend(wList()); let wv = 'Noch kein Eintrag', ws = 'Tippe, um dein Gewicht einzutragen';
+  const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
   if (wl.length) {
     const rate = weeklyRate(wl, dayNum(tk));
     wv = kg(wl[wl.length - 1].m) + ' kg';
     ws = (rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt') + (typeof W.entries[tk] === 'number' ? '' : ' · heute noch nicht gewogen');
   }
-  let mv = 'Noch nichts eingetragen', ms = 'Tippe, um zu starten', mc = '';
+  let mv = '', ms = 'Tippe, um zu starten', mc = '';
   if (hasMoney()) {
     const s = mSum(curYM), now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     mv = minus(s.bal) + eur0(s.bal) + ' € ' + (minus(s.bal) ? 'im Minus' : 'übrig'); mc = minus(s.bal) ? 'neg' : '';
     ms = s.bal > 0 ? eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende' : eur0(s.flex) + ' € flexible Ausgaben im ' + mName;
   }
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
-  let tv = 'Noch kein Training', ts = 'Tippe, um zu starten';
+  let tv = '', ts = 'Tippe, um zu starten';
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
