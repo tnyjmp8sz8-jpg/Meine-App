@@ -26,6 +26,12 @@ lauf(async () => {
   await page.fill('#v-new', ''); await page.fill(feld('Girokonto'), '1000'); await page.fill(feld('Bargeld'), '50'); await speichern('#v-save');
   P.enthaelt('Stand eingetragen: 1.000 + 50', await konten(), ['1.050', 'Girokonto 1.000', 'Bargeld 50']);
 
+  // Zwei Konten, noch keine Buchung: nichts ist vorbelegt, ohne Wahl wird nicht gespeichert
+  await sub('budget'); await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '30');
+  P.ok('zwei Konten ohne Vorgeschichte: kein Konto vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === '');
+  await speichern('#m-save');
+  P.enthaelt('ohne Wahl des Kontos wird nicht gespeichert', await text(page, '#m-err'), ['Wähle ein Konto']);
+  await page.click('#ms-close');
   await buchen('out', '30', 'Girokonto');
   P.enthaelt('Ausgabe 30 vom Girokonto', await konten(), ['1.020', 'gerechnet seit', '970 €']);
   await buchen('out', '10', 'Kein Konto');
@@ -118,6 +124,27 @@ lauf(async () => {
   /* Der Vergleich steht in einer eigenen Zeile unter dem Wert, nicht daneben */
   const lage = await page.evaluate(() => { const k = document.querySelector('#v-haushalt .kv'), w = k.querySelector('b').getBoundingClientRect(), d = k.querySelector('.delta').getBoundingClientRect(); return { darunter: d.top >= w.bottom - 4, rechts: Math.abs(d.right - w.right) < 2 }; });
   P.ok('Vergleich steht unter dem Wert, rechtsbündig', lage.darunter && lage.rechts, JSON.stringify(lage));
+
+  // --- Teil 6: Fall des Nutzers. Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu eine Ausgabe von 12, die ohne Konto gebucht wurde ---
+  await page.evaluate(d => {
+    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, W: {}, T: {}, K: {},
+      MF: { fixed: {}, acc: { g: { n: 'Girokonto' } }, bal: { [d.ym]: { g: 100000 } } },
+      MY: { [d.tag.slice(0, 4)]: { tx: { alt: { d: d.tag, a: 1200, k: 'out', c: 'essen', n: 'Alt', t: Date.now() - 1000 } } } } }));
+  }, { ym: monat(0), tag: tag(0) });
+  await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt');
+  P.ok('Stand ohne Zeitpunkt bekommt beim Laden einen', (((await gespeichert(page)).MF.balT || {})[monat(0)] || {}).g > 0);
+  await sub('budget'); await page.click('#v-haushalt [data-m="add"]');
+  P.ok('einziges Konto ist vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
+  await page.fill('#m-amt', '30'); await speichern('#m-save');
+  // 1.000 − 30 = 970; die Ausgabe ohne Konto zählt nicht
+  P.enthaelt('Ausgabe 30 verändert das Vermögen: 970', await konten(), ['970 €', 'gerechnet seit']);
+  await sub('budget'); await page.click('#v-haushalt [data-m="tx"]:has-text("Alt")'); await chip('#m-acc', 'Girokonto'); await speichern('#m-save');
+  // 970 − 12 = 958
+  P.enthaelt('Konto bei der alten Ausgabe nachgetragen: 958', await konten(), ['958 €']);
+  await sub('budget'); await page.click('#v-haushalt [data-m="newfix"]');
+  P.ok('Konto ist auch bei neuen Fixkosten vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
+  await page.click('#ms-close');
+
   P.ok('gespeicherte Daten sind lesbar', !!(await gespeichert(page)).MF);
   await P.ende(browser, fehler);
 });

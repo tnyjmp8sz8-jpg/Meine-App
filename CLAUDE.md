@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v41)
+# Track. – Projektwissen (App-Stand v42)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -41,7 +41,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
   - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
-  - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `lastAcc()`) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
+  - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `defAcc()`: zuletzt benutztes Konto, sonst das einzige; bei mehreren ohne Vorgeschichte muss gewählt werden) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
   - Budget: `monthHTML()`, `yearHTML()`, `mSum()`, `ySum()`, `rateHTML()` Sparquote, Blatt `msheet` mit `openM('tx'|'fixed'|'budget')`.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
@@ -81,6 +81,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Feste Posten zählen an ihrem Tag im Monat, wenn dieser nach dem Stand liegt.
   - Das Blatt „Stand eintragen“ zeigt im laufenden Monat den gerechneten Stand und speichert nur geänderte Felder, damit unverändertes Speichern nichts verschiebt.
   - Buchungen ohne Konto verändern kein Konto; Konten ohne Buchungen (z. B. Depot) behalten ihren letzten Stand.
+  - „Kein Konto“ wird nie still vorbelegt (v42). Warum: Der Nutzer buchte so, ohne es zu merken, und sein Vermögen änderte sich nicht.
+  - `healBal()` (v42) gibt einem Stand des laufenden Monats ohne Zeitpunkt (aus v38) beim Laden einen. Warum: Er galt als Stand zum Monatsende, und keine Buchung des Monats zählte.
 
 ## Code-Konventionen
 - HTML wird als String gebaut: Nutzertexte immer durch `esc()`.
@@ -129,7 +131,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v41` → `takt-v42`), `<span class="ver">v41</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v42` → `takt-v43`), `<span class="ver">v42</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
@@ -138,7 +140,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
 - Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.
-- Meldet der Nutzer einen Fehler, zuerst seinen Fall nachstellen (seine Daten sind oft sehr klein: eine Übung, wenige Einheiten, alles im selben Monat).
+- Meldet der Nutzer einen Fehler, zuerst seinen Fall nachstellen (seine Daten sind oft sehr klein: eine Übung, wenige Einheiten, alles im selben Monat). Auch an Daten denken, die mit einer älteren Version eingetragen wurden: Ihnen fehlen neuere Felder (so entstand der Fehler vor v42).
 - Beispieldaten nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich beim Neuladen und überschreibt dann die Daten. `oeffnen({ daten })` in `tests/lib.js` spielt sie einmal nach dem Laden ein.
 - Service Worker und Selbst-Aktualisierung brauchen http: `tests/update.js` liefert die Dateien selbst aus, nur für die Dauer des Tests. Ein dauerhaft laufender lokaler Server wird von der Berechtigungsprüfung abgelehnt.
 - Was Tests nicht zeigen, steht unter „iPhone-Besonderheiten“.

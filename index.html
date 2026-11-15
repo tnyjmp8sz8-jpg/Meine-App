@@ -668,7 +668,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v41</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v42</span></footer>
 </div>
 </div>
 
@@ -1934,6 +1934,17 @@ function accState(id, ym) {
   const ts = ((MF.balT || {})[A] || {})[id] || 0, aD = ts ? keyOf(new Date(ts)) : monthEnd(A), f = accFlow(id, aD, ts || Infinity, bis);
   return { v: MF.bal[A][id] + f.sum, aD, n: f.n };
 }
+/* Stand des laufenden Monats ohne Zeitpunkt (eingetragen mit v38): Er galt als Stand zum Monatsende, und keine Buchung des Monats zählte.
+   Er bekommt den Zeitpunkt kurz vor der ersten Buchung mit Zeitstempel (die gibt es erst seit v39), sonst jetzt.
+   Das geht nur im selben Monat: Später ist er von einem nachgetragenen Stand zum Monatsende nicht zu unterscheiden. */
+function healBal() {
+  const ym = todayKey().slice(0, 7), b = (MF.bal || {})[ym], bt = (MF.balT || {})[ym] || {}; if (!b) return;
+  let ts = Date.now();
+  for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.t && t.d.slice(0, 7) === ym && t.t <= ts) ts = t.t - 1; }
+  const p = { balT: {} }; p.balT[ym] = {}; let n = 0;
+  for (const id in b) if (typeof b[id] === 'number' && !bt[id]) { p.balT[ym][id] = ts; n++; }
+  if (n) mfdoc.patch(p);
+}
 function accAt(id, ym) { const s = accState(id, ym); return s ? s.v : null; }
 /* Vermögen in einem Monat: Summe aller Konten, mit acc nur dieses Konto. null, solange es keinen Stand gibt */
 function wealthAt(ym, acc) { let t = null; accList().forEach(a => { if (acc && a.id !== acc) return; const v = accAt(a.id, ym); if (v != null) t = (t || 0) + v; }); return t; }
@@ -2165,6 +2176,9 @@ let mE = { mode: 'tx', id: null, kind: 'out', cat: 'essen', every: 1 };
 $('#m-every').innerHTML = EVERY.map(c => '<button type="button" class="chip" data-e="' + c[0] + '" aria-pressed="false">' + c[1] + '</button>').join('');
 /* Zuletzt benutztes Konto: Vorbelegung für die nächste Buchung */
 function lastAcc() { let best = null; for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k !== 'tr' && t.t && accName(t.acc) && (!best || t.t > best.t)) best = t; } return best ? best.acc : ''; }
+/* Konto einer neuen Buchung: das zuletzt benutzte, sonst das einzige. Bei mehreren Konten ohne Vorgeschichte null = noch nicht gewählt;
+   dann fragt das Blatt beim Speichern nach. „Kein Konto“ ('') wird nie still vorbelegt: Die Buchung würde das Vermögen nicht verändern. */
+function defAcc() { const a = accList(); return lastAcc() || (a.length === 1 ? a[0].id : a.length ? null : ''); }
 const findTx = id => { for (const y in MY) if (MY[y].tx[id]) return { y, t: MY[y].tx[id] }; return null; };
 function paintM() {
   const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget', tr = tx && mE.kind === 'tr', accs = accList();
@@ -2173,7 +2187,7 @@ function paintM() {
   /* Konto: Die Buchung verändert den Stand dieses Kontos. Das Plus legt ein neues Konto an. */
   $('#m-acc-fld').hidden = !(tx || fx); $('#m-to-fld').hidden = !tr; $('#m-day-fld').hidden = !(fx && mE.acc);
   $('#lbl-m-acc').textContent = tr ? 'Von' : 'Konto';
-  $('#m-acc').innerHTML = (tr || !accs.length ? '' : chip('data-a', '', 'Kein Konto', !mE.acc)) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('') +
+  $('#m-acc').innerHTML = (tr || !accs.length ? '' : chip('data-a', '', 'Kein Konto', mE.acc === '')) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('') +
     (tr ? '' : '<button type="button" class="chip" data-a="__new" aria-expanded="' + !!mE.newAcc + '">' + (mE.newAcc ? 'Abbrechen' : '+ Konto') + '</button>');
   $('#m-accnew-row').hidden = !mE.newAcc || tr;
   $('#m-to').innerHTML = accs.filter(a => a.id !== mE.acc).map(a => chip('data-to', a.id, a.n, mE.to === a.id)).join('');
@@ -2213,7 +2227,7 @@ function openM(mode, id, kind, date) {
     const hit = id ? findTx(id) : null;
     const k = hit ? hit.t.k : kind === 'in' || kind === 'tr' ? kind : 'out', accs = accList();
     mE = { mode: 'tx', id: hit ? id : null, oldY: hit ? hit.y : null, kind: k, cat: hit && hit.t.c ? hit.t.c : 'essen', every: 1, more: false, t: hit ? hit.t.t || 0 : 0,
-      acc: hit ? (accName(hit.t.acc) ? hit.t.acc : '') : k === 'tr' ? (accs[0] || {}).id || '' : lastAcc(), to: hit ? (accName(hit.t.to) ? hit.t.to : '') : '' };
+      acc: hit ? (accName(hit.t.acc) ? hit.t.acc : '') : k === 'tr' ? (accs[0] || {}).id || '' : defAcc(), to: hit ? (accName(hit.t.to) ? hit.t.to : '') : '' };
     $('#m-amt').value = hit ? eur(hit.t.a).replace(' €', '') : '';
     $('#m-note').value = hit ? hit.t.n : '';
     $('#m-date').max = tk;
@@ -2221,7 +2235,7 @@ function openM(mode, id, kind, date) {
     $('#m-del').hidden = !hit; $('#m-del').textContent = 'Eintrag löschen';
   } else {
     const f = id ? MF.fixed[id] : null;
-    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null, acc: f && accName(f.acc) ? f.acc : '' };
+    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null, acc: f ? (accName(f.acc) ? f.acc : '') : defAcc() };
     $('#m-day').value = f && f.acc && f.day ? f.day : '';
     $('#m-name').value = f ? f.name : '';
     $('#m-name').placeholder = mE.kind === 'in' ? 'z. B. Gehalt' : 'z. B. Miete';
@@ -2275,6 +2289,7 @@ $('#mform').addEventListener('submit', e => {
     else if (oldB !== a) p.roll[c] = { from: curYM, base: carryIn(c, curYM) };   // neuer Betrag gilt ab jetzt, das Angesparte bleibt
     mfdoc.patch(p); closeM(); renderMoney(); return;
   }
+  if (mE.acc == null && !(mE.mode === 'tx' && mE.kind === 'tr')) return err('Wähle ein Konto oder „Kein Konto“.');
   if (mE.mode === 'tx') {
     const d = $('#m-date').value;
     if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
@@ -3526,6 +3541,7 @@ function importData(d) {
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
   const ex = Date.parse(d.exported);
   try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
+  healBal();
   saveLocal(); render();
 }
 $('#bk-file').addEventListener('change', e => {
@@ -3567,6 +3583,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { en
 setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 
 loadLocal();
+healBal();
 show(location.hash.slice(1));
 render();
 ensureTicker();
