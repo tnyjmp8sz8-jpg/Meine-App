@@ -363,7 +363,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #x-stats:empty{display:none}
 #x-more{margin-top:0}
 #x-more[hidden],.primary[hidden]{display:none}
-.xh{display:flex;flex-direction:column;gap:8px}
+.xh,.xh .mons{display:flex;flex-direction:column;gap:8px}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:15px}
@@ -652,7 +652,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v30</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v31</span></footer>
 </div>
 </div>
 
@@ -1024,7 +1024,7 @@ let S = { routines: [], running: null };   // Routinen + laufender Timer
 let LY = {};                               // Jahr -> { Datum: { routineId: { s: Sekunden, d: 0|1 } } }
 let lastDay = '', lastClock = '', justDone = null;
 let W = { goal: null, goalFrom: null, entries: {} };   // Gewicht: Ziel + { Datum: kg }
-let view = 'routinen', wRange = '28', wAll = false;
+let view = 'routinen', wRange = '28', wAll = false, wMon = {};
 let MF = { fixed: {} };                    // Haushalt: feste Posten { id: {...} }
 let MY = {};                               // Haushalt: Jahr -> { tx: { id: {...} } }
 let mMode = 'month', mYM = '', mYear = 0, mAll = false;
@@ -1542,10 +1542,11 @@ function renderWeight() {
     '</div>';
   h += goalHTML;
 
-  const rev = all.slice().reverse(), shown = wAll ? rev : rev.slice(0, 7);
-  h += '<h2 class="sec">Einträge</h2><ul class="entries">' + shown.map(e =>
-    '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>').join('') + '</ul>';
-  if (rev.length > 7) h += '<button type="button" class="linkbtn" data-w="more">' + (wAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einträge zeigen') + '</button>';
+  /* Einträge: zuerst nur die letzten drei, aufgeklappt nach Monaten (monthsHTML) */
+  const rev = all.slice().reverse();
+  const wRow = e => '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>';
+  h += '<h2 class="sec">Einträge</h2>' + (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"') : '<ul class="entries">' + rev.slice(0, 3).map(wRow).join('') + '</ul>');
+  if (rev.length > 3) h += '<button type="button" class="linkbtn" data-w="more">' + (wAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einträge zeigen') + '</button>';
   el.innerHTML = h;
 }
 
@@ -1557,6 +1558,7 @@ $('#v-gewicht').addEventListener('click', e => {
   else if (a === 'goal') openW('goal');
   else if (a === 'range') { wRange = t.dataset.r; renderWeight(); }
   else if (a === 'more') { wAll = !wAll; renderWeight(); }
+  else if (a === 'mon') { monToggle(wMon, t); renderWeight(); }
 });
 
 const wdlg = $('#wsheet');
@@ -2300,6 +2302,18 @@ function liveCardHTML() {
     '<div class="side"><span class="streak" style="padding-right:14px"><b class="lv-card-t">' + fmt((Date.now() - L.start) / 1000) + '</b><span>Gesamt</span></span></div></li></ul>';
 }
 const CHEV_D = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
+/* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt, open = Merker { 'YYYY-MM': offen }, attr = data-Attribut des Monatsknopfs.
+   Jeder Monat ist einklappbar, der jüngste ist offen. cards = Einträge sind eigene Karten statt Zeilen einer Liste. */
+function monthsHTML(items, open, attr, cards) {
+  const groups = [];
+  items.forEach(it => { const ym = it.d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.h.push(it.html); else groups.push({ ym, h: [it.html] }); });
+  return '<div class="mons">' + groups.map((g, i) => {
+    const on = open[g.ym] != null ? open[g.ym] : i === 0, body = on ? g.h.join('') : '';
+    const head = '<li><button type="button" class="two mon" ' + attr + ' data-ym="' + g.ym + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span></span><b class="dim fold">' + g.h.length + CHEV_D + '</b></button></li>';
+    return cards ? '<ul class="entries">' + head + '</ul>' + body : '<ul class="entries">' + head + body + '</ul>';
+  }).join('') + '</div>';
+}
+const monToggle = (open, t) => { open[t.dataset.ym] = t.getAttribute('aria-expanded') !== 'true'; };
 function kraftHTML(curYM) {
   const dates = kDates(), exs = kExs(), plans = kPlans();
   if (!dates.length && !exs.length && !plans.length && !K.live) return '<section class="hero"><h1>Noch kein Training</h1></section>' +
@@ -2326,7 +2340,7 @@ function kraftHTML(curYM) {
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (dS ? '<span class="r"><b class="' + dS.c + '">' + dS.t + '</b><small>seit Start' + (dL ? ' · zuletzt ' + dL.t : '') + '</small></span>' : '') + '</button></li>';
     }).join('') : '') + '</ul>';
-  /* Einheiten: zuerst nur die letzten drei. Aufgeklappt nach Monaten gruppiert, jeder Monat einklappbar, der jüngste ist offen. */
+  /* Einheiten: zuerst nur die letzten drei, aufgeklappt nach Monaten (monthsHTML) */
   const rev = dates.slice().reverse();
   const unitRow = d => {
     const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
@@ -2336,15 +2350,7 @@ function kraftHTML(curYM) {
   h += '<h2 class="sec">Einheiten</h2>';
   if (!rev.length) h += '<p class="note">Noch keine Einheit eingetragen.</p>';
   else if (!kAll) h += '<ul class="entries">' + rev.slice(0, 3).map(unitRow).join('') + '</ul>';
-  else {
-    const groups = [];
-    rev.forEach(d => { const ym = d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.ds.push(d); else groups.push({ ym, ds: [d] }); });
-    h += '<div class="mons">' + groups.map((g, i) => {
-      const open = kMon[g.ym] != null ? kMon[g.ym] : i === 0;
-      return '<ul class="entries"><li><button type="button" class="two mon" data-k="mon" data-ym="' + g.ym + '" aria-expanded="' + open + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span></span><b class="dim fold">' + g.ds.length + CHEV_D + '</b></button></li>' +
-        (open ? g.ds.map(unitRow).join('') : '') + '</ul>';
-    }).join('') + '</div>';
-  }
+  else h += monthsHTML(rev.map(d => ({ d, html: unitRow(d) })), kMon, 'data-k="mon"');
   if (rev.length > 3) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
   return h;
 }
@@ -2355,7 +2361,7 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'ex') openX(t.dataset.id);
   else if (a === 'more') { kAll = !kAll; renderTraining(); }
   else if (a === 'exs') { kExOpen = !kExOpen; renderTraining(); }
-  else if (a === 'mon') { kMon[t.dataset.ym] = t.getAttribute('aria-expanded') !== 'true'; renderTraining(); }
+  else if (a === 'mon') { monToggle(kMon, t); renderTraining(); }
   else if (a === 'start') startPlan(t.dataset.id);
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
@@ -2523,7 +2529,7 @@ function sugHTML(used, q, attr) {
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
-let kS = null, xId = null, xArm = false, xAll = false, xMore = false;
+let kS = null, xId = null, xArm = false, xAll = false, xMore = false, xMon = {};
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
@@ -2652,18 +2658,18 @@ const setsTable = sets => '<div class="lt"><div class="lt-h"><span>#</span><span
 const unitLabel = d => { const m = (K.meta || {})[d], pn = m ? planName(m.plan) : ''; return dRow(d) + (pn ? ' · ' + esc(pn) : ''); };
 /* Einheiten von neu nach alt, jede als Karte mit der Veränderung zur Einheit davor */
 const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse();
-const exCardsHTML = rows => rows.map(o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>').join('');
+const exCard = o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>';
 function paintX() {
   const full = kHist(xId), rows = exRows(full);
   $('#x-stats').innerHTML = exFigsHTML(full) + exChartHTML(full, xAll);
-  $('#x-hist').innerHTML = exCardsHTML(xMore ? rows : rows.slice(0, 5));
+  $('#x-hist').innerHTML = xMore ? monthsHTML(rows.map(o => ({ d: o.x.d, html: exCard(o) })), xMon, 'data-xm="1"', true) : rows.slice(0, 3).map(exCard).join('');
   $('#x-hist-fld').hidden = !rows.length;
-  const more = $('#x-more'); more.hidden = rows.length <= 5; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
+  const more = $('#x-more'); more.hidden = rows.length <= 3; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
 }
 /* view = nur ansehen (Tipp auf „Letztes Mal“ im laufenden Training), sonst auch umbenennen und löschen */
 function openX(id, view) {
   const ex = K.ex[id]; if (!ex) return;
-  xId = id; xArm = false; xAll = false; xMore = false;
+  xId = id; xArm = false; xAll = false; xMore = false; xMon = {};
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
   $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
@@ -2673,6 +2679,7 @@ function openX(id, view) {
 }
 $('#x-stats').addEventListener('click', e => { const t = e.target.closest('[data-x]'); if (t) { xAll = t.dataset.x === 'all'; paintX(); } });
 $('#x-more').addEventListener('click', () => { xMore = !xMore; paintX(); });
+$('#x-hist').addEventListener('click', e => { const t = e.target.closest('[data-xm]'); if (t) { monToggle(xMon, t); paintX(); } });
 function closeX() { if (xdlg.open) xdlg.close(); }
 $('#xs-close').addEventListener('click', closeX);
 xdlg.addEventListener('click', e => { if (e.target === xdlg) closeX(); });
