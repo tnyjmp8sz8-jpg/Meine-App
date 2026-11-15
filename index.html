@@ -157,10 +157,13 @@ dialog:focus,dialog:focus-visible{outline:none}
 .just-done .fill{animation:sweep .7s ease}
 .just-done .streak b{animation:pop .7s ease .2s;display:inline-block}
 
-.empty{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:22px 18px;display:flex;flex-direction:column;gap:14px}
-.empty h2{margin:0;font-family:var(--display);font-size:26px;letter-spacing:-.02em;line-height:1.05}
-.empty p{margin:0;color:var(--muted);max-width:40ch}
-.empty .lbl{font-size:12px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
+.empty .e-ic{width:60px;height:60px;border-radius:50%;background:var(--surface);color:var(--muted);display:grid;place-items:center;margin-bottom:6px}
+.empty .e-ic svg{width:28px;height:28px}
+.empty h2{margin:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em}
+.empty p{margin:0 0 10px;color:var(--muted);font-size:14px;max-width:32ch}
+.empty .primary,.empty .ghost,.empty .duo{align-self:stretch}
+.empty .chips{justify-content:center;margin-top:4px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:500;min-height:40px}
 .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-line);font-weight:600}
@@ -231,6 +234,12 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:12px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
 .tab[aria-current="page"]{color:var(--accent);font-weight:600}
+/* Aktiver Bereich: Flächen (.f) gefüllt, Details (.k, .d) in der Farbe der Leiste ausgespart, reine Linien (.b) kräftiger */
+.tab .d{display:none}
+.tab[aria-current="page"] .f{fill:currentColor}
+.tab[aria-current="page"] .k,.tab[aria-current="page"] .d{display:inline;stroke:var(--bg)}
+.tab[aria-current="page"] .d{stroke-width:3.2;stroke-linecap:butt}
+.tab[aria-current="page"] .b{stroke-width:2.7}
 
 /* Gewicht */
 .w-hero h1 .num{font-size:clamp(72px,23vw,112px)}
@@ -474,9 +483,6 @@ body{font-size:15px}
 .tab svg{width:21px;height:21px}
 .foot{font-size:11.5px}
 .ver{display:block;margin-top:2px;font-size:10px;color:var(--mid)}
-.empty{padding:16px 14px;gap:12px}
-.empty h2{font-size:20px}
-.empty p{font-size:14px}
 .linkbtn{font-size:13.5px;margin-top:-6px}
 .links .linkbtn{margin-top:0}
 .legend{font-size:11.5px}
@@ -641,15 +647,20 @@ dialog[open]::backdrop{animation:dim .2s ease}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-color:transparent}
 .is-off{box-shadow:inset 0 0 0 1px var(--line)}
 .chip,.lx-tab{background:var(--surface)}
-.card .chip,.empty .chip{background:var(--fill)}
+.card .chip{background:var(--fill)}
 .chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:var(--on-accent)}
 .stepper button,.mnav button,.days button{border-color:transparent;background:var(--surface)}
+.mnav button{background:none;color:var(--accent)}
+.mnav button:disabled{color:var(--muted)}
+.mnav svg{width:17px;height:17px}
 .kx,.prow{background:var(--surface)}
 .kx input[type="text"]{background:var(--fill)}
 .kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
 .seg2 button[aria-pressed="true"]{box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
 .tabs{border-top-color:var(--line)}
+.top{border-bottom-color:transparent;transition:border-color .2s ease}
+.top.scrolled{border-bottom-color:var(--line)}
 .tab{font-size:10px;font-weight:500}
 .primary{font-size:15px;font-weight:600;min-height:44px;border-radius:14px}
 .ghost{border-radius:14px}
@@ -660,7 +671,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .sec{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
 .view>.sec{margin:8px 2px -6px}
 .sec small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
-.fld>span,.empty .lbl,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
+.fld>span,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
 .fld>span{font-size:13.5px;font-weight:500}
 .streak span{font-size:10.5px;font-weight:500}
 .subtabs{gap:16px}
@@ -722,23 +733,23 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <nav class="tabs" aria-label="Bereiche">
   <div class="tabs-in">
     <button type="button" class="tab" data-view="heute" aria-current="page">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 11l8-6.5 8 6.5"/><path d="M6.5 9.5V19h11V9.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="f" d="M4 11l8-6.5 8 6.5"/><path class="f" d="M6.5 9.5V19h11V9.5"/><path class="d" d="M12 19.4v-4"/></svg>
       <span>Heute</span>
     </button>
     <button type="button" class="tab" data-view="routinen">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 4.9-5.2"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="f" cx="12" cy="12" r="8.5"/><path class="k" d="M8.3 12.3l2.5 2.5 4.9-5.2"/></svg>
       <span id="tab-r">Routinen</span>
     </button>
     <button type="button" class="tab" data-view="gewicht">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="b" d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path class="b" d="M15 7h5v5"/></svg>
       <span>Gewicht</span>
     </button>
     <button type="button" class="tab" data-view="haushalt">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect class="f" x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path class="k" d="M3.5 10h17M7 14.5h3.5"/></svg>
       <span>Finanzen</span>
     </button>
     <button type="button" class="tab" data-view="training">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/></svg>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="b" d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/></svg>
       <span id="tab-t">Training</span>
     </button>
   </div>
@@ -1343,12 +1354,10 @@ function renderRoutines() {
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
 
   if (!S.routines.length) {
-    main.innerHTML = '<div class="empty"><h2>Noch keine Routine</h2>' +
-      '<p>Lege fest, was du regelmäßig machst, wie lange und an welchen Tagen. Ein Tipp startet den Timer.</p>' +
-      '<span class="lbl">Vorschläge</span><div class="chips">' +
-      '<button type="button" class="chip" data-act="suggest" data-name="Doktorarbeit" data-min="30">Doktorarbeit · 30 min täglich</button>' +
-      '<button type="button" class="chip" data-act="suggest" data-name="Lesen" data-min="30">Lesen · 30 min täglich</button></div>' +
-      '<button type="button" class="primary" data-act="new">Eigene Routine anlegen</button></div>';
+    main.innerHTML = emptyHTML('routinen', 'Noch keine Routine', 'Lege fest, was du regelmäßig machst. Ein Tipp startet den Timer.',
+      '<button type="button" class="primary" data-act="new">Routine anlegen</button>' +
+      '<div class="chips"><button type="button" class="chip" data-act="suggest" data-name="Doktorarbeit" data-min="30">Doktorarbeit · 30 min</button>' +
+      '<button type="button" class="chip" data-act="suggest" data-name="Lesen" data-min="30">Lesen · 30 min</button></div>');
     return;
   }
   const wi = wd(new Date());
@@ -1579,17 +1588,18 @@ function chartSVG(pts, t0) {
 }
 
 /* Kleines „i“: zeigt auf Tipp den Erklärtext mit der id info-… darunter. Erklärungen stehen nie dauerhaft da. */
-const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.5"/><path d="M8 7.4v3.8"/><circle cx="8" cy="4.9" r=".6" fill="currentColor"/></svg></button>';
+/* Leerer Bereich: Symbol des Bereichs, Titel, ein Satz, darunter die Knöpfe (rest). Mittig und ohne Kasten. */
+const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
+const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.5v3.6"/><circle cx="8" cy="4.9" r=".5" fill="currentColor"/></svg></button>';
 const fig = (val, unit, label) => '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
 function renderWeight() {
   const el = $('#v-gewicht');
   const all = withTrend(wList()), tk = todayKey(), t0 = dayNum(tk);
   if (!all.length) {
-    el.innerHTML = '<section class="hero"><p class="date">Gewicht</p><h1>Noch kein Eintrag</h1></section>' +
-      '<div class="empty"><p>Trag dein Gewicht ein, am besten jeden Morgen zur gleichen Zeit. Ab dem zweiten Eintrag siehst du den 7-Tage-Schnitt, der die Schwankungen einzelner Tage glättet.</p>' +
-      '<button type="button" class="primary" data-w="add">Erstes Gewicht eintragen</button>' +
-      '<button type="button" class="ghost center" data-w="goal">' + (W.goal != null ? 'Ziel: ' + kg(W.goal) + ' kg ändern' : 'Ziel festlegen') + '</button></div>';
+    el.innerHTML = emptyHTML('gewicht', 'Noch kein Eintrag', 'Trag dein Gewicht ein, am besten jeden Morgen. Ab dem zweiten Eintrag siehst du deinen Verlauf.',
+      '<button type="button" class="primary" data-w="add">Gewicht eintragen</button>' +
+      '<button type="button" class="ghost center" data-w="goal">' + (W.goal != null ? 'Ziel: ' + kg(W.goal) + ' kg ändern' : 'Ziel festlegen') + '</button>');
     return;
   }
   const last = all[all.length - 1], first = all[0], rate = weeklyRate(all, t0), ago = t0 - last.t;
@@ -1831,10 +1841,10 @@ function carryIn(c, ym) {
   for (let i = Math.max(ymIdx(r.from), ymIdx(ym) - 240); i < ymIdx(ym); i++) carry = Math.max(0, b + carry - spentIn(ymOfIdx(i), c));
   return carry;
 }
-const ROLL = '<svg class="ri" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7a5 5 0 0 1 8.6-3.4L12 5M12 2v3H9M12 7a5 5 0 0 1-8.6 3.4L2 9M2 12V9h3"/></svg>';
+const ROLL = '<svg class="ri" viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 7a5 5 0 0 1 8.6-3.4L12 5M12 2v3H9M12 7a5 5 0 0 1-8.6 3.4L2 9M2 12V9h3"/></svg>';
 const hasMoney = () => live(MF.fixed) || Object.keys(MY).some(y => live(MY[y].tx));
 
-const CIRC = plus => '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><path d="M6.6 10h6.8' + (plus ? 'M10 6.6v6.8' : '') + '"/></svg>';
+const CIRC = plus => '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><path d="M6.6 10h6.8' + (plus ? 'M10 6.6v6.8' : '') + '"/></svg>';
 const DUO = '<div class="duo"><button type="button" class="primary" data-m="add">Ausgabe' + CIRC(false) + '</button><button type="button" class="ghost center" data-m="income">Einnahme' + CIRC(true) + '</button></div>';
 const CHEV = d => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M10 3L5 8l5 5' : 'M6 3l5 5-5 5') + '"/></svg>';
 const navHTML = (label, canNext, what) => '<div class="mnav"><button type="button" data-m="prev" aria-label="' + what + ' zurück">' + CHEV(-1) + '</button><b>' + label + '</b>' +
@@ -2055,9 +2065,8 @@ function goalsHTML(curYM) {
   }).join('') + '</ul>' : '') + '<button type="button" class="linkbtn" data-m="newgoal">+ Sparziel</button>';
 }
 function wealthHTML(curYM) {
-  if (!hasWealth()) return '<section class="hero"><p class="date">Vermögen</p><h1>Noch kein Stand</h1></section>' +
-    '<div class="empty"><p>Trag einmal im Monat ein, wie viel auf deinen Konten liegt. Du siehst dann, wie dein Vermögen wächst, pro Monat und pro Jahr.</p>' +
-    '<button type="button" class="primary" data-m="bal">Ersten Stand eintragen</button></div>';
+  if (!hasWealth()) return emptyHTML('haushalt', 'Noch kein Stand', 'Trag einmal ein, wie viel auf deinen Konten liegt. Danach siehst du, wie dein Vermögen wächst.',
+    '<button type="button" class="primary" data-m="bal">Stand eintragen</button>');
   const year = mMode === 'year', pre = year ? String(mYear) : mYM, w = wealthDelta(pre), curY = +curYM.slice(0, 4);
   const end = year ? (pre + '-12' > curYM ? curYM : pre + '-12') : mYM;
   let h = year ? navHTML(pre, mYear < curY, 'Ein Jahr') : navHTML(ymName(mYM) + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
@@ -2108,11 +2117,10 @@ function renderMoney() {
   const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"');
   if (sub === 'verm') { el.innerHTML = subs + (hasWealth() ? seg : '') + wealthHTML(curYM); return; }
   if (!hasMoney()) {
-    el.innerHTML = subs + '<section class="hero"><p class="date">Budget</p><h1>Noch nichts eingetragen</h1></section>' +
-      '<div class="empty"><p>Trag deine Einnahmen und deine festen Kosten ein. Danach erfasst du nur noch deine laufenden Ausgaben und siehst, was übrig bleibt.</p>' +
+    el.innerHTML = subs + emptyHTML('haushalt', 'Noch nichts eingetragen', 'Trag Einnahmen und feste Kosten ein. Dann siehst du, was im Monat übrig bleibt.',
       DUO +
       '<button type="button" class="ghost center" data-m="newfix">Fixkosten hinzufügen</button>' +
-      '<button type="button" class="ghost center" data-m="newin">Feste Einnahme hinzufügen</button></div>';
+      '<button type="button" class="ghost center" data-m="newin">Feste Einnahme hinzufügen</button>');
     return;
   }
   el.innerHTML = subs + weekStripHTML('money') + seg + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
@@ -2583,9 +2591,8 @@ function renderTraining() {
   if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + '</div>' + kraftHTML(curYM); return; }
   const all = tRuns();
   if (!all.length) {
-    el.innerHTML = '<div class="card-head">' + subs + '</div><section class="hero"><h1>Noch kein Lauf</h1></section>' +
-      '<div class="empty"><p>Trag nach jedem Lauf Strecke, Dauer und deinen Durchschnittspuls ein. Die App rechnet daraus Pace und Effizienz aus und zeigt dir die Veränderung zum Lauf davor, getrennt für Outdoor und Laufband.</p>' +
-      '<button type="button" class="primary" data-t="add">Ersten Lauf eintragen</button></div>';
+    el.innerHTML = '<div class="card-head">' + subs + '</div>' + emptyHTML('training', 'Noch kein Lauf', 'Trag Strecke, Dauer und Puls ein. Du siehst Pace und Effizienz im Vergleich zum Lauf davor.',
+      '<button type="button" class="primary" data-t="add">Lauf eintragen</button>');
     return;
   }
   const kind = tKind || all[all.length - 1].k, list0 = kind === 'all' ? all : all.filter(r => r.k === kind);
@@ -2821,9 +2828,8 @@ function kYearHTML(curYM) {
 }
 function kraftHTML(curYM) {
   const dates = kDates(), exs = kExs(), plans = kPlans();
-  if (!dates.length && !exs.length && !plans.length && !K.live) return '<section class="hero"><h1>Noch kein Training</h1></section>' +
-    '<div class="empty"><p>Lege einen Plan mit deinen Übungen an, zum Beispiel Torso. Dann startest du das Training hier, hakst jeden Satz ab und siehst bei jeder Übung, ob du dich steigerst.</p>' +
-    '<button type="button" class="primary" data-k="plan">Ersten Plan anlegen</button></div>';
+  if (!dates.length && !exs.length && !plans.length && !K.live) return emptyHTML('training', 'Noch kein Training', 'Lege einen Plan mit deinen Übungen an. Dann hakst du jeden Satz ab und siehst, ob du dich steigerst.',
+    '<button type="button" class="primary" data-k="plan">Plan anlegen</button>');
   let h = weekStripHTML('gym') + liveCardHTML() + segT();
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
@@ -3730,6 +3736,28 @@ document.addEventListener('pointerdown', e => {
 });
 document.addEventListener('pointermove', e => { if (scrubOn && scrubOn.isConnected && (e.pointerType !== 'mouse' || e.buttons)) scrubShow(scrubOn, e.clientX); });
 ['pointerup', 'pointercancel'].forEach(n => document.addEventListener(n, () => { scrubOn = null; }));
+
+/* ---------- Feinschliff ---------- */
+/* Linie unter der Kopfzeile erst, wenn Inhalt darunter durchläuft */
+$('#scroll').addEventListener('scroll', () => { document.querySelector('.top').classList.toggle('scrolled', $('#scroll').scrollTop > 2); }, { passive: true });
+/* Beim Blättern (Pfeil oder Wisch) zählt die große Zahl kurz vom alten zum neuen Wert. Nicht bei „Bewegung reduzieren“. */
+const numOf = el => { const m = el && /^(−?)([\d.]+)(?:,(\d+))?$/.exec(el.textContent.trim()); return m ? { v: (m[1] ? -1 : 1) * Number(m[2].replace(/\./g, '') + '.' + (m[3] || '0')), dec: (m[3] || '').length } : null; };
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('.mnav [data-m]'), box = b && b.closest('.view');
+  if (!box || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const from = numOf(box.querySelector('.hero .num'));
+  setTimeout(() => {
+    const el = box.querySelector('.hero .num'), to = numOf(el), end = el && el.textContent, t0 = performance.now();
+    if (!from || !to || from.v === to.v) return;
+    const step = now => {
+      if (!el.isConnected) return;
+      const k = Math.min(1, (now - t0) / 320), v = from.v + (to.v - from.v) * (1 - Math.pow(1 - k, 3));
+      el.textContent = k < 1 ? (v < 0 ? '−' : '') + Math.abs(v).toLocaleString('de-DE', { minimumFractionDigits: to.dec, maximumFractionDigits: to.dec }) : end;
+      if (k < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }, 0);
+}, true);
 
 /* ---------- Wischgesten ---------- */
 /* Blatt nach unten wegziehen. Nur wenn das Blatt und alles Scrollbare unter dem Finger ganz oben steht, sonst scrollt es wie gewohnt.

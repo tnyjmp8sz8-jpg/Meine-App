@@ -7,7 +7,7 @@ const MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'Augu
 const name = ym => MON[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4);
 
 lauf(async () => {
-  const P = pruefer('Gesten'), { browser, ctx, page, fehler } = await oeffnen({ finger: true, daten: beispiel() });
+  const P = pruefer('Gesten'), { browser, ctx, page, fehler } = await oeffnen({ finger: true, bewegung: true, daten: beispiel() });
   const titel = () => text(page, '#v-haushalt .mnav b');
   const offen = sel => page.evaluate(q => document.querySelector(q).open, sel);
 
@@ -25,6 +25,19 @@ lauf(async () => {
   await wischen(ctx, page, 5, 500, 250, 505);
   P.ok('vom linken Rand: wechselt nicht (dort wischt iOS zurück)', (await titel()) === name(monat(0)));
   await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; });
+
+  // --- Die große Zahl zählt beim Blättern kurz hoch (Vormonat und laufender Monat haben verschiedene Werte) ---
+  const zahl = () => text(page, '#v-haushalt .hero .num');
+  const ziel = await zahl();
+  await page.click('#v-haushalt .mnav [data-m="prev"]'); await page.waitForTimeout(700); const vor = await zahl();
+  await page.click('#v-haushalt .mnav [data-m="next"]'); await page.waitForTimeout(110); const mitten = await zahl();
+  await page.waitForTimeout(600);
+  P.ok('beim Blättern läuft die Zahl: unterwegs ein Zwischenwert', vor !== ziel && mitten !== ziel && mitten !== vor, JSON.stringify({ vor, mitten, ziel }));
+  P.ok('am Ende steht genau der richtige Wert', (await zahl()) === ziel);
+  await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 300; }); await page.waitForTimeout(350);
+  P.ok('Linie unter der Kopfzeile erscheint beim Scrollen', await page.evaluate(() => document.querySelector('.top').classList.contains('scrolled')));
+  await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; }); await page.waitForTimeout(350);
+  P.ok('und verschwindet ganz oben wieder', !(await page.evaluate(() => document.querySelector('.top').classList.contains('scrolled'))));
 
   // --- Blatt nach unten wegziehen ---
   await page.click('#v-haushalt [data-m="add"]'); await page.waitForTimeout(400);

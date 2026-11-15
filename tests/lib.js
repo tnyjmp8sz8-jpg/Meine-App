@@ -10,11 +10,12 @@ const tag = (n = 0) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDat
 const monat = (n = 0) => { const d = new Date(), x = new Date(d.getFullYear(), d.getMonth() - n, 1); return x.getFullYear() + '-' + pad(x.getMonth() + 1); };
 const zahl = n => Math.round(n).toLocaleString('de-DE');
 
-/* Öffnet die App. o.daten wird einmal nach dem Laden gespeichert und die Seite neu geladen.
+/* Öffnet die App. Ohne o.bewegung läuft sie mit „Bewegung reduzieren“: Dann zählen Zahlen nicht hoch, und Prüfungen lesen sofort den Endwert.
+    o.daten wird einmal nach dem Laden gespeichert und die Seite neu geladen.
    Nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich und überschreibt dann die Daten der App. */
 async function oeffnen(o = {}) {
   const browser = await chromium.launch(o.start || {});
-  const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger });
+  const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger, reducedMotion: o.bewegung ? 'no-preference' : 'reduce' });
   const page = await ctx.newPage(), fehler = [];
   page.on('pageerror', e => fehler.push('Seitenfehler: ' + e.message));
   await page.goto(o.url || APP); await page.waitForTimeout(300);
