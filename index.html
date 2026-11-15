@@ -270,13 +270,13 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .last{gap:0;padding:12px 16px 4px}
 .last h3{margin:0 0 2px;font-size:15px;font-weight:600}
 .last h3 small{font-weight:400;color:var(--muted);font-size:14px}
-.kv{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;gap:0 8px;padding:11px 0}
-.kv>span:first-child{margin-right:auto}
+/* Zeile mit Wert: der Vergleich steht in einer eigenen Zeile darunter, rechtsbündig (vom Nutzer so gewünscht, wirkt ruhiger als daneben) */
+.kv{display:grid;grid-template-columns:1fr auto;gap:1px 12px;align-items:baseline;padding:11px 0}
 .kv+.kv{border-top:1px solid var(--line)}
 .kv span{color:var(--muted);font-size:15px}
 .kv b{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
 .kv b small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:3px}
-.delta{font-size:13px;font-weight:600;color:var(--muted);text-align:right;white-space:nowrap}
+.delta{grid-column:1/-1;font-size:13px;font-weight:600;color:var(--muted);text-align:right}
 .up,.kv .delta.up{color:var(--good)}
 .down,.kv .delta.down{color:var(--danger)}
 .entries .r{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
@@ -415,7 +415,7 @@ body{font-size:15px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
 .cat .roll{font-size:11.5px}
-.kv{padding:8px 0}
+.kv{padding:7px 0}
 .kv b{font-size:16px}
 .kv b small{font-size:12px}
 .kv span{font-size:13.5px}
@@ -668,7 +668,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v40</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v41</span></footer>
 </div>
 </div>
 

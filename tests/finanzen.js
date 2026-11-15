@@ -115,6 +115,9 @@ lauf(async () => {
   P.enthaelt('Fixkosten aufs Jahr: Miete 7.200, Versicherung 360, Summe 7.560', await text(page, '#v-haushalt .sec, #v-haushalt [data-m="fixed"]'), ['7.560 € im Jahr', '7.200 € im Jahr', '360 € im Jahr']);
   await nachOben(page); await page.click('#v-haushalt .mnav button:first-child');
   P.enthaelt('Vormonat: (2.000 − 600 − 200) / 2.000 = 60 %, davor 50 %', await text(page, '#v-haushalt .kv'), ['Sparquote', '60 %', '+10 Prozentpunkte']);
+  /* Der Vergleich steht in einer eigenen Zeile unter dem Wert, nicht daneben */
+  const lage = await page.evaluate(() => { const k = document.querySelector('#v-haushalt .kv'), w = k.querySelector('b').getBoundingClientRect(), d = k.querySelector('.delta').getBoundingClientRect(); return { darunter: d.top >= w.bottom - 4, rechts: Math.abs(d.right - w.right) < 2 }; });
+  P.ok('Vergleich steht unter dem Wert, rechtsbündig', lage.darunter && lage.rechts, JSON.stringify(lage));
   P.ok('gespeicherte Daten sind lesbar', !!(await gespeichert(page)).MF);
   await P.ende(browser, fehler);
 });

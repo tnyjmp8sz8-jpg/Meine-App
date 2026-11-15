@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v40 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v41 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -17,7 +17,8 @@
 - v38: Finanzen mit „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Graph), Sparzielen, Sparquote und Fixkosten aufs Jahr.
 - Danach: `CLAUDE.md` neu aufgebaut und diese Datei angelegt.
 - v39: Konten an Buchungen. Ausgaben, Einnahmen und feste Posten bekommen ein Konto; der Kontostand rechnet ab dem eingetragenen Stand von selbst weiter. Dazu Umbuchungen zwischen Konten und „Tag im Monat“ bei festen Posten.
-- v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/` (82 Prüfungen).
+- v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
+- v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 
 ## Offene Probleme
 - Nichts ist auf einem echten iPhone getestet; alle Prüfungen laufen im Test-Browser.
