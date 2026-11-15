@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v46 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v47 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -18,6 +18,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v47: Apple-Feinschliff, alle sieben Punkte: blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, einheitliche Strichstärken, leere Seiten mit Symbol und einem Satz, neues App-Symbol, große Zahl zählt beim Blättern.
 - v46: Auf Wunsch des Nutzers zurückgenommen: Wochenleiste wieder in jedem Bereich, Monat/Jahr und Pfeile wieder in zwei Reihen, Kalender-Knopf in der Kopfzeile entfernt.
 - v45: Aus der Durchsicht, Punkte 3, 6, 7: „Rückgängig“ nach jedem Löschen; eigene Kategorien („+ Kategorie“ im Blatt); Erinnerung an die Sicherung nach 7 statt 14 Tagen; Startbilder fürs iPhone.
 - v44: Aus der Durchsicht, Punkte 1, 2, 4, 5: Zeitraum in einer Reihe und Wochenleiste nur auf Heute und Routinen (Kalender über Knopf in der Kopfzeile); Blätter nach unten wegziehen, zwischen Monaten wischen; Graphen ablesbar; Erklärungen hinter „i“; „kg“/„Wdh“ normal geschrieben.
@@ -45,6 +46,8 @@
 - Zwischen Monaten wischen (v44) in Finanzen und Training: löst es aus Versehen aus, wenn man nur scrollt?
 - Graph antippen und mit dem Finger entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
 - „Rückgängig“ nach dem Löschen (v45): liegt der Hinweis gut über der Leiste unten?
+- Neues App-Symbol (v47): erscheint erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern, danach einlesen).
+- Gefüllte Symbole unten, blaue Pfeile, Linie oben erst beim Scrollen (v47): gefällt es am Gerät?
 - Startbild (v45): wirkt wohl erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern). Kein weißer Blitz mehr beim Öffnen?
 
 ## Durchsicht der ganzen App (nach v43, Wunsch des Nutzers: „Apple-like Produkt“)
@@ -54,15 +57,10 @@
 - Noch offen: alte CSS-Regeln zusammenführen, die weiter unten überschrieben werden (rein intern, Risiko fürs Aussehen; nur mit Bildvergleich vorher/nachher).
 - Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, automatische iCloud-Sicherung.
 
-## Apple-Look: was noch fehlt (Einschätzung nach v46, nur auf Zuruf und immer erst mit Bild fragen)
-1. Pfeile für Monat/Jahr ohne graue Kreise, als schlichte blaue Pfeile (wie im Apple-Kalender).
-2. Aktiver Bereich unten mit gefülltem Symbol statt nur blauer Linie.
-3. Linie unter der Kopfzeile erst zeigen, wenn gescrollt wurde.
-4. Alle Symbole mit derselben Strichstärke zeichnen (Leiste unten, Plus, Pfeile, „i“ weichen leicht voneinander ab).
-5. Leere Zustände mit Symbol, einer Zeile und einem Knopf statt Textkasten.
-6. App-Symbol: ein einzelnes Zeichen auf leichtem Verlauf statt drei Balken auf Schwarz.
-7. Zahlen beim Wechsel des Monats kurz hochzählen lassen.
-Nicht machbar in der Web-App: Milchglas in der Kopfzeile (machte sie auf dem iPhone unscharf, v37), Haptik.
+## Apple-Look
+- Die sieben Punkte der Einschätzung nach v46 sind seit v47 umgesetzt (siehe Erledigt).
+- Nicht machbar in der Web-App: Milchglas in der Kopfzeile (machte sie auf dem iPhone unscharf, v37), Haptik.
+- Offen als Idee: großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert (wie in Apple-Apps); vorher mit Bild fragen.
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
@@ -72,8 +70,7 @@ Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, z. B. „(Heute, 7,0 km)“, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
 - Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
 - Finanzen: Umschalter für Schulden (negative Stände).
-- Name: den Punkt von „Track.“ in der Kopfzeile in Akzentblau.
-- Kopfzeile: Linie darunter erst zeigen, wenn gescrollt wurde.
+- Name: den Punkt von „Track.“ in der Kopfzeile in Akzentblau (passt jetzt zum Punkt im App-Symbol).
 - Gym: „Stärkste Übung“ und „Schwächste Übung“ im Monats-Recap.
 - Gym: „Training beenden“ als kleiner Knopf oben im laufenden Training.
 - Gym: im laufenden Training anzeigen, ob ein Satz besser oder schlechter war als beim letzten Mal.

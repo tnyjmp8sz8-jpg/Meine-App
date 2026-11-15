@@ -227,7 +227,7 @@ dialog{overscroll-behavior:contain}
 body{display:flex;flex-direction:column;overflow:hidden}
 .scroll{flex:1;min-height:0;overflow-y:auto}
 .view{display:flex;flex-direction:column;gap:22px}
-.view[hidden],.fld[hidden]{display:none}
+.view[hidden],.fld[hidden],.hero[hidden]{display:none}
 .view>.sec{margin:6px 2px -12px}
 .tabs{flex:none;background:var(--bg);border-top:1px solid var(--line)}
 .tabs-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;padding:4px 16px calc(4px + env(safe-area-inset-bottom,0px))}
@@ -725,7 +725,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v46</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v47</span></footer>
 </div>
 </div>
 
@@ -1352,6 +1352,7 @@ function renderRoutines() {
   if (!S.running) { document.title = TITLE; $('#tab-r').textContent = 'Routinen'; }
   const strip = $('#r-strip'), showStrip = S.routines.length > 0;
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
+  document.querySelector('#v-routinen .hero').hidden = !showStrip;   // leer: nur der leere Zustand, wie in den anderen Bereichen
 
   if (!S.routines.length) {
     main.innerHTML = emptyHTML('routinen', 'Noch keine Routine', 'Lege fest, was du regelmäßig machst. Ein Tipp startet den Timer.',

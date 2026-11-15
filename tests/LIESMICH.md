@@ -18,3 +18,4 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 Neue Funktion oder behobener Fehler: eine Prüfung dazuschreiben, mit der Rechnung als Kommentar.
 
 `python3 tests/startbilder.py` erzeugt die Startbilder fürs iPhone in `start/` neu (kein Test).
+`node tests/symbol.js` erzeugt das App-Symbol (`icon-180/192/512.png`) neu (kein Test).
