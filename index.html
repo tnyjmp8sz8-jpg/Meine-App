@@ -3083,7 +3083,17 @@ show(location.hash.slice(1));
 render();
 ensureTicker();
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
-if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(() => {});
+/* Neue Version: Beim Öffnen wird nach einem neuen Service Worker gesucht. Sobald er übernimmt, lädt die App einmal neu, aber nie, solange ein Blatt offen ist. */
+if ('serviceWorker' in navigator) {
+  const sw = navigator.serviceWorker, hadSW = !!sw.controller;
+  let fresh = false;
+  const reloadIfIdle = () => { if (fresh && !document.querySelector('dialog[open]')) location.reload(); };
+  sw.addEventListener('controllerchange', () => { if (hadSW) { fresh = true; reloadIfIdle(); } });
+  document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', reloadIfIdle));
+  sw.register('sw.js').then(reg => {
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) reg.update().catch(() => {}); });
+  }).catch(() => {});
+}
 })();
 </script>
 </body>
