@@ -361,8 +361,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
 #x-stats{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty{display:none}
-#x-more{margin-top:0}
-#x-more[hidden],.primary[hidden]{display:none}
+.primary[hidden]{display:none}
 .xh,.xh .mons{display:flex;flex-direction:column;gap:8px}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
@@ -546,7 +545,12 @@ button.lastx:active{background:var(--fill)}
 /* Übungen einklappbar */
 .fold{display:inline-flex;align-items:center;gap:8px}
 .mons{display:flex;flex-direction:column;gap:6px}
-.entries button.mon .l{font-weight:600}
+.entries button.mon .l>span{font-weight:600}
+.entries button.mon .fold .up,.entries button.mon .fold .down,.entries .xrow b,.fig b .up,.fig b .down{font-weight:700}
+.fold .ink{color:var(--ink)}
+.fig b span{font:inherit;color:inherit}
+.fig b .up,.fold .up{color:var(--good)}
+.fig b .down,.fold .down{color:var(--danger)}
 .fold svg{width:14px;height:14px;transition:transform .2s ease}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
@@ -652,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v31</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v32</span></footer>
 </div>
 </div>
 
@@ -910,10 +914,13 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
     </label>
+    <div class="fld" id="x-years-fld">
+      <span>Jahre</span>
+      <ul class="entries" id="x-years"></ul>
+    </div>
     <div class="fld" id="x-hist-fld">
-      <span>Einheiten</span>
+      <span>Monate</span>
       <div class="xh" id="x-hist"></div>
-      <button type="button" class="linkbtn" id="x-more" hidden></button>
     </div>
     <p class="err" id="x-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="x-save">Speichern</button>
@@ -1032,7 +1039,7 @@ const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', kAll = false, kMon = {}, kExOpen = false, hMode = 'day', hWeek = '';
+let tSub = 'cardio', kAll = false, kExOpen = false, hMode = 'day', hWeek = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -1545,7 +1552,7 @@ function renderWeight() {
   /* Einträge: zuerst nur die letzten drei, aufgeklappt nach Monaten (monthsHTML) */
   const rev = all.slice().reverse();
   const wRow = e => '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>';
-  h += '<h2 class="sec">Einträge</h2>' + (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"') : '<ul class="entries">' + rev.slice(0, 3).map(wRow).join('') + '</ul>');
+  h += '<h2 class="sec">Einträge</h2>' + (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"', false, (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; }) : '<ul class="entries">' + rev.slice(0, 3).map(wRow).join('') + '</ul>');
   if (rev.length > 3) h += '<button type="button" class="linkbtn" data-w="more">' + (wAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einträge zeigen') + '</button>';
   el.innerHTML = h;
 }
@@ -2062,13 +2069,13 @@ function runSVG(runs, metric) {
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-function kmBarsSVG(vals) {
+function kmBarsSVG(vals, label) {
   const VW = 360, VH = 170, L = 4, R = 40, T0 = 10, B = 22;
   let hi = Math.max.apply(null, vals.concat([5]));
   const step = [2, 5, 10, 20, 25, 50, 100, 200, 500].find(x => x >= hi / 3) || 1000;
   hi = Math.ceil(hi / step - 1e-9) * step;
   const Y = v => T0 + (hi - v) / hi * (VH - T0 - B), slot = (VW - L - R) / 12, bw = slot * 0.62, f = n => n.toFixed(1);
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Kilometer pro Monat">';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (label || 'Kilometer pro Monat') + '">';
   for (let v = 0; v <= hi + 1e-9; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + v + '</text>';
   vals.forEach((v, i) => {
     const cx = L + slot * (i + 0.5);
@@ -2149,8 +2156,8 @@ function renderTraining() {
     '<button type="button" data-t="mode" data-v="year" aria-pressed="' + (tMode === 'year') + '">Jahr</button></div>' + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM));
 }
 $('#v-training').addEventListener('click', e => {
-  const t = e.target.closest('[data-t]'); if (!t) return;
-  const a = t.dataset.t;
+  const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
+  const a = nav ? nav.dataset.m : t.dataset.t;
   if (a === 'add') return openT();
   if (a === 'edit') return openT(t.dataset.id);
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
@@ -2158,8 +2165,8 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'kind') { tKind = t.dataset.v; tAll = false; }
   else if (a === 'metric') tMetric = t.dataset.v;
   else if (a === 'more') tAll = !tAll;
-  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; tAll = false; $('#scroll').scrollTop = 0; }
-  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else { tYM = ymOfIdx(ymIdx(tYM) + d); tAll = false; } }
+  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; tAll = kAll = false; $('#scroll').scrollTop = 0; }
+  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else { tYM = ymOfIdx(ymIdx(tYM) + d); tAll = kAll = false; } }
   renderTraining();
 });
 
@@ -2276,12 +2283,45 @@ function kScore(sets) {
   sets.forEach(s => { e = Math.max(e, s[0] * (1 + s[1] / 30)); reps = Math.max(reps, s[1]); });
   return e > 0 ? { v: e, w: true } : { v: reps, w: false };
 }
-function kDelta(cur, prev) {
-  const a = kScore(cur), b = kScore(prev);
-  if (a.w && b.w) { const p = (a.v / b.v - 1) * 100; return Math.abs(p) < 0.05 ? { t: 'gleich', c: '' } : { t: (p > 0 ? '+' : '−') + kg(Math.abs(p)) + ' %', c: p > 0 ? 'up' : 'down' }; }
-  if (!a.w && !b.w) { const d = a.v - b.v; return d === 0 ? { t: 'gleich', c: '' } : { t: (d > 0 ? '+' : '−') + Math.abs(d) + ' Wdh', c: d > 0 ? 'up' : 'down' }; }
-  return null;
+/* Veränderung zwischen zwei Vergleichswerten (kScore): t = Text, c = Klasse, p = Anteil (0.05 = +5 %). null, wenn einer fehlt oder die Art wechselt (mit/ohne Gewicht) */
+function scoreDelta(a, b) {
+  if (!a || !b || a.w !== b.w || !b.v) return null;
+  const p = a.v / b.v - 1;
+  if (a.w) return Math.abs(p) < 0.0005 ? { t: 'gleich', c: '', p: 0 } : { t: (p > 0 ? '+' : '−') + kg(Math.abs(p * 100)) + ' %', c: p > 0 ? 'up' : 'down', p };
+  const d = a.v - b.v;
+  return d === 0 ? { t: 'gleich', c: '', p: 0 } : { t: (d > 0 ? '+' : '−') + Math.abs(d) + ' Wdh', c: d > 0 ? 'up' : 'down', p };
 }
+const kDelta = (cur, prev) => scoreDelta(kScore(cur), kScore(prev));
+/* Stand einer Übung in einem Zeitraum: bester Vergleichswert der Einheiten, deren Datum mit pre beginnt ('YYYY-MM' oder 'YYYY') */
+function exLevel(hist, pre) {
+  let b = null;
+  hist.forEach(x => { if (x.d.slice(0, pre.length) === pre) { const s = kScore(x.sets); if (!b || (s.w === b.w ? s.v > b.v : s.w)) b = s; } });
+  return b;
+}
+/* Monat: Stand gegenüber dem letzten Monat davor, in dem die Übung trainiert wurde */
+function exMonthDelta(hist, ym) {
+  let before = null; hist.forEach(x => { if (x.d.slice(0, 7) < ym) before = x; });
+  return before ? scoreDelta(exLevel(hist, ym), exLevel(hist, before.d.slice(0, 7))) : null;
+}
+/* Jahr: Stand im letzten trainierten Monat des Jahres gegenüber dem Stand davor (letzter Monat des Vorjahres, im ersten Jahr der erste Monat) */
+function exYearDelta(hist, y) {
+  const inY = hist.filter(x => x.d.slice(0, 4) === y); if (!inY.length) return null;
+  let before = null; hist.forEach(x => { if (x.d.slice(0, 4) < y) before = x; });
+  const endYM = inY[inY.length - 1].d.slice(0, 7), startYM = (before || inY[0]).d.slice(0, 7);
+  return startYM === endYM ? null : scoreDelta(exLevel(hist, endYM), exLevel(hist, startYM));
+}
+/* Gym gesamt in einem Monat oder Jahr: Einheiten, bewegtes Gewicht, Zeit und „Kraft“ = Schnitt der Veränderungen aller Übungen */
+function kPeriod(pre) {
+  const ds = kDates().filter(d => d.slice(0, pre.length) === pre), ps = [];
+  let vol = 0, dur = 0;
+  ds.forEach(d => { kDay(d).forEach(x => x.sets.forEach(s => { vol += s[0] * s[1]; })); const m = (K.meta || {})[d]; if (m) dur += m.dur || 0; });
+  if (ds.length) kExs().forEach(x => { const hist = kHist(x.id), dl = pre.length === 7 ? exMonthDelta(hist, pre) : exYearDelta(hist, pre); if (dl) ps.push(dl.p); });
+  const pp = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
+  return { n: ds.length, vol, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
+}
+const volText = v => v >= 1000 ? [kg(v / 1000), 't'] : [String(Math.round(v)), 'kg'];
+const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Kraft') + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+const kHero = (label, n, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1><p class="sub">' + sub + '</p></section>';
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
   if (ws.length === 1) return (ws[0] ? kgn(ws[0]) + ' kg × ' : '') + sets.map(s => s[1]).join(', ') + (ws[0] ? '' : ' Wdh');
@@ -2303,26 +2343,47 @@ function liveCardHTML() {
 }
 const CHEV_D = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
 /* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt, open = Merker { 'YYYY-MM': offen }, attr = data-Attribut des Monatsknopfs.
-   Jeder Monat ist einklappbar, der jüngste ist offen. cards = Einträge sind eigene Karten statt Zeilen einer Liste. */
-function monthsHTML(items, open, attr, cards) {
+   Jeder Monat ist einklappbar, der jüngste ist offen. cards = Einträge sind eigene Karten statt Zeilen einer Liste.
+   info(ym, anzahl) liefert auf Wunsch { s: kleine Zeile unter dem Monat, r: Angabe rechts }; ohne info steht rechts die Anzahl. */
+function monthsHTML(items, open, attr, cards, info) {
   const groups = [];
   items.forEach(it => { const ym = it.d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.h.push(it.html); else groups.push({ ym, h: [it.html] }); });
   return '<div class="mons">' + groups.map((g, i) => {
-    const on = open[g.ym] != null ? open[g.ym] : i === 0, body = on ? g.h.join('') : '';
-    const head = '<li><button type="button" class="two mon" ' + attr + ' data-ym="' + g.ym + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span></span><b class="dim fold">' + g.h.length + CHEV_D + '</b></button></li>';
+    const on = open[g.ym] != null ? open[g.ym] : i === 0, body = on ? g.h.join('') : '', x = info ? info(g.ym, g.h.length) : { r: g.h.length };
+    const head = '<li><button type="button" class="two mon" ' + attr + ' data-ym="' + g.ym + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span>' + (x.s ? '<small>' + x.s + '</small>' : '') + '</span><b class="dim fold">' + (x.r == null ? '' : x.r) + CHEV_D + '</b></button></li>';
     return cards ? '<ul class="entries">' + head + '</ul>' + body : '<ul class="entries">' + head + body + '</ul>';
   }).join('') + '</div>';
 }
 const monToggle = (open, t) => { open[t.dataset.ym] = t.getAttribute('aria-expanded') !== 'true'; };
+const kUnitRow = d => {
+  const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
+  return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
+    '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b></button></li>';
+};
+function kYearHTML(curYM) {
+  const y = String(tYear), s = kPeriod(y), per = [];
+  for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
+  let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
+  if (!s.n) return h;
+  h += kTiles(s) + (s.p ? '<p class="note">Kraft: Stand am Ende des Jahres gegenüber dem Stand davor, Schnitt aus ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '');
+  h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
+  h += '<h2 class="sec">Monate</h2><ul class="entries">' + per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('') + '</ul>';
+  return h;
+}
 function kraftHTML(curYM) {
   const dates = kDates(), exs = kExs(), plans = kPlans();
   if (!dates.length && !exs.length && !plans.length && !K.live) return '<section class="hero"><h1>Noch kein Training</h1></section>' +
     '<div class="empty"><p>Lege einen Plan mit deinen Übungen an, zum Beispiel Torso. Dann startest du das Training hier, hakst jeden Satz ab und siehst bei jeder Übung, ob du dich steigerst.</p>' +
     '<button type="button" class="primary" data-k="plan">Ersten Plan anlegen</button></div>';
-  const prevYM = ymOfIdx(ymIdx(curYM) - 1), n = dates.filter(d => d.slice(0, 7) === curYM).length, np = dates.filter(d => d.slice(0, 7) === prevYM).length;
   let h = weekStripHTML('gym') + liveCardHTML();
-  h += '<section class="hero w-hero"><p class="date">Gym im ' + MONTHS[+curYM.slice(5) - 1] + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1>' +
-    '<p class="sub">' + MONTHS[+prevYM.slice(5) - 1] + ': ' + np + '</p></section>';
+  h += '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-t="mode" data-v="month" aria-pressed="' + (tMode === 'month') + '">Monat</button>' +
+    '<button type="button" data-t="mode" data-v="year" aria-pressed="' + (tMode === 'year') + '">Jahr</button></div>';
+  if (tMode === 'year') return h + kYearHTML(curYM);
+  const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
+  h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
+  /* Kennzahlen des Monats; „Kraft“ vergleicht je Übung das beste geschätzte Maximum mit dem Monat davor */
+  if (s.n) h += kTiles(s) + (s.p ? '<p class="note">Kraft: bestes geschätztes Maximum je Übung gegenüber dem Monat davor, Schnitt aus ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '');
   h += '<h2 class="sec">Pläne</h2>';
   h += plans.length ? '<ul class="rows">' + plans.map(pl => {
     const last = planLast(pl.id);
@@ -2340,18 +2401,11 @@ function kraftHTML(curYM) {
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (dS ? '<span class="r"><b class="' + dS.c + '">' + dS.t + '</b><small>seit Start' + (dL ? ' · zuletzt ' + dL.t : '') + '</small></span>' : '') + '</button></li>';
     }).join('') : '') + '</ul>';
-  /* Einheiten: zuerst nur die letzten drei, aufgeklappt nach Monaten (monthsHTML) */
-  const rev = dates.slice().reverse();
-  const unitRow = d => {
-    const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
-    return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
-      '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b></button></li>';
-  };
+  /* Einheiten des gewählten Monats */
+  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse(), shown = kAll ? rev : rev.slice(0, 7);
   h += '<h2 class="sec">Einheiten</h2>';
-  if (!rev.length) h += '<p class="note">Noch keine Einheit eingetragen.</p>';
-  else if (!kAll) h += '<ul class="entries">' + rev.slice(0, 3).map(unitRow).join('') + '</ul>';
-  else h += monthsHTML(rev.map(d => ({ d, html: unitRow(d) })), kMon, 'data-k="mon"');
-  if (rev.length > 3) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
+  h += rev.length ? '<ul class="entries">' + shown.map(kUnitRow).join('') + '</ul>' : '<p class="note">Keine Einheit in diesem Monat.</p>';
+  if (rev.length > 7) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
   return h;
 }
 $('#v-training').addEventListener('click', e => {
@@ -2361,7 +2415,6 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'ex') openX(t.dataset.id);
   else if (a === 'more') { kAll = !kAll; renderTraining(); }
   else if (a === 'exs') { kExOpen = !kExOpen; renderTraining(); }
-  else if (a === 'mon') { monToggle(kMon, t); renderTraining(); }
   else if (a === 'start') startPlan(t.dataset.id);
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
@@ -2529,7 +2582,7 @@ function sugHTML(used, q, attr) {
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
-let kS = null, xId = null, xArm = false, xAll = false, xMore = false, xMon = {};
+let kS = null, xId = null, xArm = false, xAll = false, xMon = {};
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
@@ -2662,14 +2715,19 @@ const exCard = o => '<div class="card lastx"><p class="note"><span>' + unitLabel
 function paintX() {
   const full = kHist(xId), rows = exRows(full);
   $('#x-stats').innerHTML = exFigsHTML(full) + exChartHTML(full, xAll);
-  $('#x-hist').innerHTML = xMore ? monthsHTML(rows.map(o => ({ d: o.x.d, html: exCard(o) })), xMon, 'data-xm="1"', true) : rows.slice(0, 3).map(exCard).join('');
+  const lvl = s => s ? (s.w ? '1RM ' + kgn(Math.round(s.v * 10) / 10) + ' kg' : 'bis ' + s.v + ' Wdh') : '', cnt = n => n + (n === 1 ? ' Einheit' : ' Einheiten'), dl = d => d ? '<span class="' + d.c + '">' + d.t + '</span>' : '';
+  /* Jahre: Anzahl, bester Stand und Veränderung übers Jahr */
+  const years = full.map(x => x.d.slice(0, 4)).filter((y, i, a) => a.indexOf(y) === i).reverse();
+  $('#x-years').innerHTML = years.map(y => '<li><div class="xrow"><span class="l"><span>' + y + '</span><small>' + cnt(full.filter(x => x.d.slice(0, 4) === y).length) + ' · ' + lvl(exLevel(full, y)) + '</small></span>' + (exYearDelta(full, y) ? '<b>' + dl(exYearDelta(full, y)) + '</b>' : '') + '</div></li>').join('');
+  $('#x-years-fld').hidden = !years.length;
+  /* Monate: jeder Monat mit Stand und Veränderung zum Monat davor, aufgeklappt die Einheiten als Karten */
+  $('#x-hist').innerHTML = monthsHTML(rows.map(o => ({ d: o.x.d, html: exCard(o) })), xMon, 'data-xm="1"', true, (ym, n) => ({ s: cnt(n) + ' · ' + lvl(exLevel(full, ym)), r: dl(exMonthDelta(full, ym)) }));
   $('#x-hist-fld').hidden = !rows.length;
-  const more = $('#x-more'); more.hidden = rows.length <= 3; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
 }
 /* view = nur ansehen (Tipp auf „Letztes Mal“ im laufenden Training), sonst auch umbenennen und löschen */
 function openX(id, view) {
   const ex = K.ex[id]; if (!ex) return;
-  xId = id; xArm = false; xAll = false; xMore = false; xMon = {};
+  xId = id; xArm = false; xAll = false; xMon = {};
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
   $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
@@ -2678,7 +2736,6 @@ function openX(id, view) {
   xdlg.scrollTop = 0;
 }
 $('#x-stats').addEventListener('click', e => { const t = e.target.closest('[data-x]'); if (t) { xAll = t.dataset.x === 'all'; paintX(); } });
-$('#x-more').addEventListener('click', () => { xMore = !xMore; paintX(); });
 $('#x-hist').addEventListener('click', e => { const t = e.target.closest('[data-xm]'); if (t) { monToggle(xMon, t); paintX(); } });
 function closeX() { if (xdlg.open) xdlg.close(); }
 $('#xs-close').addEventListener('click', closeX);
