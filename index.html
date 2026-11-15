@@ -437,6 +437,10 @@ body{font-size:15px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
+.toast{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:14px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast[hidden]{display:none}
+.toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;padding:6px 8px;position:relative}
+.toast button::after{content:"";position:absolute;inset:-8px}
 .tools{display:flex;align-items:center;gap:10px}
 .tool{width:34px;height:34px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;position:relative}
 .tool[hidden]{display:none}
@@ -712,6 +716,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 </div>
 </div>
 
+<div class="toast" id="toast" role="status" hidden><span></span><button type="button">Rückgängig</button></div>
 <nav class="tabs" aria-label="Bereiche">
   <div class="tabs-in">
     <button type="button" class="tab" data-view="heute" aria-current="page">
@@ -842,6 +847,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="fld" id="m-cat-fld">
       <span id="lbl-m-cat">Kategorie</span>
       <div class="chips" id="m-cat" role="group" aria-labelledby="lbl-m-cat"></div>
+      <div class="stepper" id="m-catnew-row" hidden>
+        <input id="m-catnew" type="text" maxlength="24" autocomplete="off" placeholder="Name der Kategorie, z. B. Haustier" aria-label="Name der neuen Kategorie">
+        <button type="button" id="m-catnew-add" aria-label="Kategorie anlegen">+</button>
+      </div>
     </div>
     <div class="fld" id="m-acc-fld" hidden>
       <span id="lbl-m-acc">Konto</span>
@@ -1125,7 +1134,7 @@ function loadLocal() {
   } catch (e) {}
   return false;
 }
-function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K })); } catch (e) {} }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K })); } catch (e) {} toastOff(); }
 
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
@@ -1710,7 +1719,16 @@ const MONTHS = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'A
 const CATS = [['essen', 'Lebensmittel'], ['drog', 'Drogerie'], ['aus', 'Essen gehen'], ['shop', 'Kleidung'], ['frei', 'Spaß'],
   ['mobil', 'Mobilität'], ['gesund', 'Gesundheit'], ['uni', 'Studium'], ['reise', 'Reisen'], ['gesch', 'Geschenke'], ['sonst', 'Sonstiges']];
 const QUICK = 5;                            // so viele Kategorien stehen sofort im Formular
-const catName = c => { const f = CATS.find(x => x[0] === c); return f ? f[1] : 'Sonstiges'; };
+/* Eigene Kategorien stehen in MF.cats und folgen auf die festen. Ihre Namen sind Nutzertext: allCats() liefert sie schon sicher für HTML. */
+const allCats = () => CATS.concat(Object.keys(MF.cats || {}).filter(id => MF.cats[id]).map(id => [id, esc(MF.cats[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
+const catName = c => { const f = allCats().find(x => x[0] === c); return f ? f[1] : 'Sonstiges'; };
+/* Eigene Kategorien ohne Buchung und ohne Budget verschwinden beim Start von selbst: So braucht es keine Verwaltung zum Löschen. */
+function cleanCats() {
+  const used = {}, p = { cats: {} }; let n = 0;
+  for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) used[MY[y].tx[id].c] = 1;
+  for (const id in MF.cats || {}) if (MF.cats[id] && !used[id] && !(MF.budgets || {})[id]) { p.cats[id] = null; n++; }
+  if (n) mfdoc.patch(p);
+}
 const EVERY = [[1, 'monatlich'], [3, 'alle 3 Monate'], [6, 'alle 6 Monate'], [12, 'jährlich']];
 const everyName = n => { const f = EVERY.find(x => x[0] === n); return f ? f[1] : 'monatlich'; };
 const isYM = s => typeof s === 'string' && /^\d{4}-(0[1-9]|1[0-2])$/.test(s);
@@ -1736,6 +1754,9 @@ function normMF(o) {
   const rl = o && o.roll;
   if (rl && typeof rl === 'object') for (const c in rl) { const r = rl[c]; out.roll[c] = r && typeof r === 'object' && isYM(r.from) ? { from: r.from, base: okCents(r.base) ? Math.round(r.base) : 0 } : null; }
   /* Vermögen: Konten { id: { n } }, Stände { 'YYYY-MM': { kontoId: Cent } } (ein Stand je Konto und Monat), Sparziele { id: { n, amount, acc } } (acc = Konto oder null für alles) */
+  out.cats = {};                            // eigene Kategorien { id: { n } }, id höchstens 12 Zeichen (so lang darf die Kategorie einer Buchung sein)
+  const ct = o && o.cats;
+  if (ct && typeof ct === 'object') for (const id in ct) out.cats[id] = id.length <= 12 && ct[id] && typeof ct[id] === 'object' && ct[id].n ? { n: String(ct[id].n).slice(0, 24) } : null;
   out.acc = {}; out.bal = {}; out.goals = {}; out.balT = {};
   const ac = o && o.acc, bl = o && o.bal, gl = o && o.goals, bt = o && o.balT;
   /* balT: Zeitpunkt (ms), zu dem ein Stand eingetragen wurde. Fehlt er, gilt der Stand zum Monatsende. */
@@ -2257,8 +2278,10 @@ function paintM() {
   $('#m-name-fld').hidden = !fx; $('#m-every-fld').hidden = !fx; $('#m-from-fld').hidden = !fx;
   $('#m-roll-fld').hidden = !bg;
   if (bg) { const cy = carryIn(mE.cat, todayKey().slice(0, 7)); $('#m-roll-s').textContent = cy > 0 ? 'Aus den Vormonaten angespart: ' + eur0(cy) + ' €.' : 'Was am Monatsende übrig ist, kommt im nächsten Monat dazu.'; }
-  const extraSel = CATS.findIndex(c => c[0] === mE.cat) >= QUICK, showAll = bg || mE.more || extraSel;
-  $('#m-cat').innerHTML = (showAll ? CATS : CATS.slice(0, QUICK)).map(c => '<button type="button" class="chip" data-c="' + c[0] + '" aria-pressed="' + (c[0] === mE.cat) + '">' + c[1] + '</button>').join('') +
+  const all = allCats(), extraSel = all.findIndex(c => c[0] === mE.cat) >= QUICK, showAll = bg || mE.more || extraSel;
+  $('#m-catnew-row').hidden = !(mE.newCat && showAll);
+  $('#m-cat').innerHTML = (showAll ? all : all.slice(0, QUICK)).map(c => '<button type="button" class="chip" data-c="' + c[0] + '" aria-pressed="' + (c[0] === mE.cat) + '">' + c[1] + '</button>').join('') +
+    (showAll ? '<button type="button" class="chip" data-c="__new" aria-expanded="' + !!mE.newCat + '">' + (mE.newCat ? 'Abbrechen' : '+ Kategorie') + '</button>' : '') +
     (extraSel || bg ? '' : '<button type="button" class="chip more" data-c="__more" aria-expanded="' + showAll + '" aria-label="' + (showAll ? 'Weniger Kategorien zeigen' : 'Mehr Kategorien zeigen') + '"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 7h10' + (showAll ? '' : 'M7 2v10') + '"/></svg></button>');
   $('#m-note').placeholder = mE.kind === 'in' ? 'optional, z. B. Gehalt' : 'optional, z. B. Rewe';
   mdlg.querySelectorAll('#m-every .chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.e === mE.every)));
@@ -2275,7 +2298,7 @@ function openM(mode, id, kind, date) {
   if (!isYM(mYM)) mYM = curYM;
   $('#m-err').hidden = true; $('#m-end').hidden = true; $('#m-del').hidden = true;
   if (mode === 'budget') {
-    const c = id && CATS.some(x => x[0] === id) ? id : CATS[0][0], cur = (MF.budgets || {})[c];
+    const c = id && allCats().some(x => x[0] === id) ? id : CATS[0][0], cur = (MF.budgets || {})[c];
     mE = { mode: 'budget', id: null, kind: 'out', cat: c, every: 1 };
     $('#m-amt').value = cur ? eur(cur).replace(' €', '') : '';
     $('#m-roll').checked = !!(cur && (MF.roll || {})[c]);
@@ -2318,6 +2341,7 @@ $('#ms-close').addEventListener('click', closeM);
 mdlg.addEventListener('click', e => { if (e.target === mdlg) closeM(); });
 $('#m-cat').addEventListener('click', e => {
   const b = e.target.closest('.chip'); if (!b) return;
+  if (b.dataset.c === '__new') { mE.newCat = !mE.newCat; paintM(); if (mE.newCat) $('#m-catnew').focus(); return; }
   if (b.dataset.c === '__more') mE.more = !mE.more; else mE.cat = b.dataset.c;
   if (mE.mode === 'budget' && b.dataset.c !== '__more') { const cur = (MF.budgets || {})[mE.cat]; $('#m-amt').value = cur ? eur(cur).replace(' €', '') : ''; $('#m-roll').checked = !!(cur && (MF.roll || {})[mE.cat]); }
   paintM();
@@ -2334,6 +2358,17 @@ function addAccM() {
   if (!id) { x.textContent = ACC_DUP; x.hidden = false; return; }
   x.hidden = true; i.value = ''; mE.acc = id; mE.newAcc = false; paintM(); renderMoney();
 }
+/* Eigene Kategorie anlegen und gleich auswählen */
+function addCatM() {
+  const i = $('#m-catnew'), name = i.value.trim().slice(0, 24), x = $('#m-err'); if (!name) return i.focus();
+  if (allCats().some(c => c[1].toLowerCase() === esc(name).toLowerCase())) { x.textContent = 'Diese Kategorie gibt es schon.'; x.hidden = false; return; }
+  const id = 'c' + Date.now().toString(36).slice(-7) + Math.random().toString(36).slice(2, 5), p = { cats: {} }; p.cats[id] = { n: name }; mfdoc.patch(p);
+  x.hidden = true; i.value = ''; mE.cat = id; mE.newCat = false;
+  if (mE.mode === 'budget') { $('#m-amt').value = ''; $('#m-roll').checked = false; }
+  paintM();
+}
+$('#m-catnew-add').addEventListener('click', addCatM);
+$('#m-catnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCatM(); } });
 $('#m-accnew-add').addEventListener('click', addAccM);
 $('#m-accnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccM(); } });
 $('#m-to').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.to = b.dataset.to; paintM(); } });
@@ -3491,7 +3526,7 @@ function lastBackupText() {
 }
 function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
 /* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer */
-const BK_DAYS = 14;
+const BK_DAYS = 7;
 function backupDue() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
   const today = dayNum(todayKey());
@@ -3646,6 +3681,33 @@ window.addEventListener('hashchange', () => { const v = location.hash.slice(1); 
 
 function render() { renderRoutines(); renderWeight(); renderMoney(); renderTraining(); ensureLiveTick(); renderHome(); }
 
+/* ---------- Rückgängig ---------- */
+/* Nach jedem Löschen steht für einige Sekunden „Gelöscht · Rückgängig“ unten. Der Weg ist für alle Löschknöpfe derselbe (id endet auf -del, oder data-vdel):
+   Vor dem Tipp wird der gespeicherte Stand gemerkt. Hat der Tipp die Daten verändert (und nicht nur „Wirklich löschen?“ scharf gestellt), erscheint der Hinweis.
+   Rückgängig spielt den gemerkten Stand zurück. Jede weitere Änderung nimmt den Hinweis weg (toastOff() in saveLocal), damit nie etwas Neueres überschrieben wird. */
+let undo = null;
+const toastEl = $('#toast');
+function toastOff() { if (undo) clearTimeout(undo.timer); undo = null; toastEl.hidden = true; }
+document.addEventListener('click', e => {
+  const b = e.target.closest && e.target.closest('[id$="-del"], [data-vdel]'); if (!b) return;
+  let before = null; try { before = localStorage.getItem(LS); } catch (x) {}
+  setTimeout(() => {
+    let after = null; try { after = localStorage.getItem(LS); } catch (x) {}
+    if (before == null || after === before) return;
+    toastEl.firstElementChild.textContent = b.id === 'l-del' ? 'Training verworfen' : 'Gelöscht';
+    /* Ein offenes Blatt sperrt alles außerhalb: Der Hinweis muss dann im Blatt liegen, sonst ließe er sich nicht antippen */
+    (document.querySelector('dialog[open]') || document.body).appendChild(toastEl);
+    toastEl.hidden = false;
+    undo = { before, after, timer: setTimeout(toastOff, 7000) };
+  }, 0);
+}, true);
+toastEl.lastElementChild.addEventListener('click', () => {
+  const u = undo; toastOff(); if (!u) return;
+  try { if (localStorage.getItem(LS) !== u.after) return; localStorage.setItem(LS, u.before); } catch (x) { return; }
+  document.querySelectorAll('dialog[open]').forEach(d => d.close());
+  loadLocal(); render();
+});
+
 /* ---------- Graphen ablesen ---------- */
 /* Jeder Graph trägt seine Punkte in data-pts: [x, y, Text] in den Koordinaten seiner viewBox. Ein Tipp oder ein Zug mit dem Finger zeigt
    den nächsten Punkt mit Linie und Wert; ein Tipp daneben blendet ihn aus. Senkrecht scrollt die Seite weiter (touch-action: pan-y). */
@@ -3739,6 +3801,7 @@ setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 
 loadLocal();
 healBal();
+cleanCats();
 show(location.hash.slice(1));
 render();
 ensureTicker();
