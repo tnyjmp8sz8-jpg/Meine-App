@@ -1,16 +1,14 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v42 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v43 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
 
 ## Erledigt
 - v20–v29: Umzug ins Repository; dunkler, kompakter Look; Cloud-Code, Google-Schrift und Ton entfernt; Erinnerung an die Sicherung; GitHub Pages; Selbst-Aktualisierung; Versionshinweis; Gym nach Vorbild Alpha Progression („Letztes Mal“, Blatt der Übung mit Graph); iPhone-Fehler bei Datumsfeld, seitlichem Wischen und Fokus-Rahmen behoben.
-- v30–v31: wachsende Listen nach Monaten gruppiert (Gewicht mit Monatsschnitt).
-- v32–v34: Gym mit Monat/Jahr wie Cardio; Recap mit „Verbesserung“ gesamt und je Übung; Pfeile im Training repariert (waren seit v20 ohne Wirkung).
-- v33: „Einheiten“ im Gym als eingeklappte Zeile wie „Übungen“.
+- v30–v34: wachsende Listen nach Monaten gruppiert; Gym mit Monat/Jahr, Recap mit „Verbesserung“ gesamt und je Übung, „Einheiten“ eingeklappt; Pfeile im Training repariert.
 - v35: Bereich heißt „Finanzen“ statt „Haushalt“.
 - v36: App heißt „Track.“; interne Kennungen bleiben `takt…`.
 - v37: Kopfzeile deckend, damit sie auf dem iPhone beim Scrollen nicht unscharf wird.
@@ -20,12 +18,14 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v43: Zeile „Ohne Konto“ im Bereich Vermögen: zeigt eingeklappt, was ohne Konto gebucht ist und deshalb nicht mitrechnet; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen.
 
 ## Offene Probleme
 - Nichts ist auf einem echten iPhone getestet; alle Prüfungen laufen im Test-Browser.
 - Negative Kontostände lassen sich speichern, aber auf dem iPhone nicht eintippen (Zahlentastatur ohne Minus).
 - Feste Posten, deren Tag im Monat des eingetragenen Stands schon vorbei ist, zählen erst ab dem Folgemonat (gewollt: Sie stecken schon im Stand).
-- Buchungen, die der Nutzer vor v42 ohne Konto eingetragen hat, zählen weiter nicht. Er muss sie antippen und das Konto wählen.
+- Buchungen, die der Nutzer vor v42 ohne Konto eingetragen hat, zählen weiter nicht, bis er das Konto nachträgt (seit v43 über die Zeile „Ohne Konto“ im Vermögen).
+- Wer bewusst ohne Konto bucht, sieht die Zeile „Ohne Konto“ im Vermögen dauerhaft. Für den Nutzer passt das (er will, dass alles mitrechnet).
 - `healBal()` wird nur für Stände aus v38 gebraucht und wirkt nur im Monat des Stands (November 2026). Ab Dezember 2026 kann die Funktion samt ihrer Prüfung entfernt werden.
 - Unter dem Symbol auf dem Home-Bildschirm steht noch „Takt“, bis der Nutzer die App neu hinzufügt (vorher Sicherung speichern, danach einlesen, erst dann das alte Symbol löschen).
 
@@ -37,10 +37,11 @@
 - Konto-Chips und „+ Konto“ im Blatt für Ausgaben und Einnahmen (v39, v40): passen sie bei mehreren Konten?
 - Kontoname im Blatt „Stand eintragen“ antippen und ändern (v40).
 - Rechnet das Vermögen nach einer Ausgabe oder Einnahme jetzt mit (v42)? Ist im Blatt das Konto schon blau gewählt?
+- Zeile „Ohne Konto“ im Vermögen (v43): aufklappen, Buchung antippen, Konto wählen, speichern.
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
-- Finanzen: im Bereich Vermögen eine kleine Zeile „n Buchungen ohne Konto“, wenn im Monat welche ohne Konto eingetragen sind; ein Tipp zeigt sie.
+- Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
 - Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, z. B. „(Heute, 7,0 km)“, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
 - Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
 - Finanzen: Umschalter für Schulden (negative Stände).

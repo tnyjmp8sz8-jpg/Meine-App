@@ -668,7 +668,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v42</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v43</span></footer>
 </div>
 </div>
 
@@ -1805,6 +1805,10 @@ const heroM = (label, bal, sub) => '<section class="hero w-hero"><p class="date"
 const fixedRow = x => '<li><button type="button" class="two" data-m="fixed" data-id="' + esc(x.id) + '" aria-label="' + esc(x.f.name) + ' ändern">' +
   '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + accTag(x.f.acc) + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
   '<b' + (x.due ? '' : ' class="dim"') + '>' + eur(x.f.amount) + '</b></button></li>';
+function txRow(x) {
+  const t = x.t, title = (t.k === 'in' ? 'Einnahme' : catName(t.c)) + (t.n ? ' · ' + esc(t.n) : '');
+  return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + accTag(t.acc) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
+}
 function fixedListHTML(ym) {
   const rows = fixedIn(ym).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount);
   return rows.length ? '<ul class="entries">' + rows.map(fixedRow).join('') + '</ul>' : '<p class="note">Noch keine Fixkosten eingetragen.</p>';
@@ -1836,10 +1840,7 @@ function monthHTML(curYM) {
   h += '<button type="button" class="linkbtn" data-m="budget">+ Budget festlegen</button>';
   if (!tx.length) h += '<p class="note">Noch keine Ausgaben in diesem Monat.</p>';
   else {
-    h += '<ul class="entries">' + shown.map(x => {
-      const t = x.t, title = (t.k === 'in' ? 'Einnahme' : catName(t.c)) + (t.n ? ' · ' + esc(t.n) : '');
-      return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + accTag(t.acc) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
-    }).join('') + '</ul>';
+    h += '<ul class="entries">' + shown.map(txRow).join('') + '</ul>';
     if (tx.length > 7) h += '<button type="button" class="linkbtn" data-m="more">' + (mAll ? 'Weniger zeigen' : 'Alle ' + tx.length + ' Einträge zeigen') + '</button>';
   }
   h += '<h2 class="sec">Einnahmen</h2>' + incomeHTML(mYM) + '<button type="button" class="linkbtn" data-m="newin">+ Feste Einnahme hinzufügen</button>';
@@ -1926,13 +1927,20 @@ function accFlow(id, aD, aT, bis) {
   return { sum, n };
 }
 /* Stand eines Kontos in einem Monat (laufender Monat: bis heute, sonst zum Monatsende): der letzte eingetragene Stand bis dahin plus die Bewegungen seitdem.
-   Liefert { v: Stand, aD: Datum des eingetragenen Stands, n: Zahl der Bewegungen } oder null ohne Stand. Ein neuer Stand korrigiert alles, was davor fehlte. */
+   Liefert { v: Stand, aD: Datum und aT: Zeitpunkt des eingetragenen Stands, n: Zahl der Bewegungen } oder null ohne Stand. Ein neuer Stand korrigiert alles, was davor fehlte. */
 function accState(id, ym) {
   const cur = todayKey(), bis = ym >= cur.slice(0, 7) ? cur : monthEnd(ym);
   let A = null; balMonths().forEach(m => { if (m <= ym && typeof MF.bal[m][id] === 'number') A = m; });
   if (!A) return null;
   const ts = ((MF.balT || {})[A] || {})[id] || 0, aD = ts ? keyOf(new Date(ts)) : monthEnd(A), f = accFlow(id, aD, ts || Infinity, bis);
-  return { v: MF.bal[A][id] + f.sum, aD, n: f.n };
+  return { v: MF.bal[A][id] + f.sum, aD, aT: ts || Infinity, n: f.n };
+}
+/* Buchungen und fällige feste Posten eines Monats ohne Konto, die mit Konto einen Stand verändern würden, also nach einem eingetragenen Stand liegen.
+   Was vor dem Stand liegt, steckt schon in ihm und fehlt hier bewusst. */
+function noAcc(ym) {
+  const st = accList().map(a => accState(a.id, ym)).filter(Boolean);
+  return { tx: txIn(ym).filter(x => !accName(x.t.acc) && st.some(s => x.t.d > s.aD || (x.t.d === s.aD && (x.t.t || 0) > s.aT))),
+    fx: fixedIn(ym).filter(x => x.due && !accName(x.f.acc) && st.some(s => ym + '-28' > s.aD)) };
 }
 /* Stand des laufenden Monats ohne Zeitpunkt (eingetragen mit v38): Er galt als Stand zum Monatsende, und keine Buchung des Monats zählte.
    Er bekommt den Zeitpunkt kurz vor der ersten Buchung mit Zeitstempel (die gibt es erst seit v39), sonst jetzt.
@@ -2006,6 +2014,10 @@ function wealthHTML(curYM) {
     const trs = txIn(mYM, true);
     if (trs.length) h += '<ul class="entries">' + trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + ' · Umbuchung</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + '</ul>';
     if (accList().length > 1) h += '<button type="button" class="linkbtn" data-m="newtr">+ Umbuchung</button>';
+    /* Ohne Konto gebucht: verändert kein Konto. Eingeklappte Zeile; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen des Kontos. */
+    const na = noAcc(mYM), nn = na.tx.length + na.fx.length;
+    if (nn) h += '<ul class="entries"><li><button type="button" class="two" data-m="noacc" aria-expanded="' + vNoOpen + '"><span class="l"><span>Ohne Konto</span><small>zählt nicht zum Vermögen</small></span><b class="dim fold">' + nn + CHEV_D + '</b></button></li>' +
+      (vNoOpen ? na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('') : '') + '</ul>';
     return h + goalsHTML(curYM);
   }
   /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
@@ -2015,6 +2027,7 @@ function wealthHTML(curYM) {
   return h + '<h2 class="sec">Monate</h2><ul class="entries">' + rows + '</ul>';
 }
 
+let vNoOpen = false;   // Zeile „Ohne Konto“ im Bereich Vermögen aufgeklappt
 let fSub = '';   // vom Nutzer gewählter Bereich: 'verm' = Vermögen, 'budget' = Einnahmen und Ausgaben
 /* Ohne Wahl: Budget, wenn es nur Budget-Daten gibt, sonst Vermögen */
 const finSub = () => fSub || (hasMoney() && !hasWealth() ? 'budget' : 'verm');
@@ -2055,6 +2068,7 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
   else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
   else if (a === 'more') mAll = !mAll;
+  else if (a === 'noacc') vNoOpen = !vNoOpen;
   else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; mAll = false; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
     const d = a === 'prev' ? -1 : 1;

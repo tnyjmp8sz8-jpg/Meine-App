@@ -125,12 +125,13 @@ lauf(async () => {
   const lage = await page.evaluate(() => { const k = document.querySelector('#v-haushalt .kv'), w = k.querySelector('b').getBoundingClientRect(), d = k.querySelector('.delta').getBoundingClientRect(); return { darunter: d.top >= w.bottom - 4, rechts: Math.abs(d.right - w.right) < 2 }; });
   P.ok('Vergleich steht unter dem Wert, rechtsbündig', lage.darunter && lage.rechts, JSON.stringify(lage));
 
-  // --- Teil 6: Fall des Nutzers. Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu eine Ausgabe von 12, die ohne Konto gebucht wurde ---
+  // --- Teil 6: Fall des Nutzers. Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu ohne Konto: eine Ausgabe von 12 nach dem Stand, eine von 5 am Tag davor, Miete als fester Posten ---
   await page.evaluate(d => {
-    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, W: {}, T: {}, K: {},
-      MF: { fixed: {}, acc: { g: { n: 'Girokonto' } }, bal: { [d.ym]: { g: 100000 } } },
-      MY: { [d.tag.slice(0, 4)]: { tx: { alt: { d: d.tag, a: 1200, k: 'out', c: 'essen', n: 'Alt', t: Date.now() - 1000 } } } } }));
-  }, { ym: monat(0), tag: tag(0) });
+    const MY = {}, tx = (id, tag, a, n, alter) => { const y = tag.slice(0, 4); MY[y] = MY[y] || { tx: {} }; MY[y].tx[id] = { d: tag, a, k: 'out', c: 'essen', n, t: Date.now() - alter }; };
+    tx('alt', d.tag, 1200, 'Alt', 1000); tx('vor', d.vor, 500, 'Davor', 2000);
+    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, W: {}, T: {}, K: {}, MY,
+      MF: { fixed: { m: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: d.ym } }, acc: { g: { n: 'Girokonto' } }, bal: { [d.ym]: { g: 100000 } } } }));
+  }, { ym: monat(0), tag: tag(0), vor: tag(1) });
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt');
   P.ok('Stand ohne Zeitpunkt bekommt beim Laden einen', (((await gespeichert(page)).MF.balT || {})[monat(0)] || {}).g > 0);
   await sub('budget'); await page.click('#v-haushalt [data-m="add"]');
@@ -138,9 +139,18 @@ lauf(async () => {
   await page.fill('#m-amt', '30'); await speichern('#m-save');
   // 1.000 − 30 = 970; die Ausgabe ohne Konto zählt nicht
   P.enthaelt('Ausgabe 30 verändert das Vermögen: 970', await konten(), ['970 €', 'gerechnet seit']);
-  await sub('budget'); await page.click('#v-haushalt [data-m="tx"]:has-text("Alt")'); await chip('#m-acc', 'Girokonto'); await speichern('#m-save');
+  // Zeile „Ohne Konto“: die Ausgabe nach dem Stand und die Miete = 2; die Ausgabe vom Vortag steckt schon im Stand und fehlt
+  P.enthaelt('Vermögen nennt, was ohne Konto gebucht ist', await text(page, '#v-haushalt [data-m="noacc"]'), ['Ohne Konto', '2']);
+  P.ok('Zeile ist eingeklappt', !(await text(page, '#v-haushalt')).includes('Alt'));
+  await page.click('#v-haushalt [data-m="noacc"]');
+  const offen = await text(page, '#v-haushalt .entries:has([data-m="noacc"])');
+  P.ok('aufgeklappt: Ausgabe und Miete, nicht die vom Vortag', offen.includes('Alt') && offen.includes('Miete') && !offen.includes('Davor'), offen);
+  await page.click('#v-haushalt [data-m="tx"]:has-text("Alt")'); await chip('#m-acc', 'Girokonto'); await speichern('#m-save');
   // 970 − 12 = 958
   P.enthaelt('Konto bei der alten Ausgabe nachgetragen: 958', await konten(), ['958 €']);
+  P.enthaelt('danach steht nur noch die Miete ohne Konto', await text(page, '#v-haushalt .entries:has([data-m="noacc"])'), ['1', 'Miete']);
+  await page.click('#v-haushalt [data-m="fixed"]:has-text("Miete")'); await chip('#m-acc', 'Girokonto'); await page.fill('#m-day', '1'); await speichern('#m-save');
+  P.ok('alles hat ein Konto: Zeile ist weg', !(await page.$('#v-haushalt [data-m="noacc"]')));
   await sub('budget'); await page.click('#v-haushalt [data-m="newfix"]');
   P.ok('Konto ist auch bei neuen Fixkosten vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
   await page.click('#ms-close');
