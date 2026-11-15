@@ -4,7 +4,7 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 
 - `node tests/alle.js`: alle Tests nacheinander. Vor jeder Veröffentlichung laufen lassen.
 - `ablauf.js`: Sicherung einlesen, in jedem Bereich etwas eintragen, Neuladen.
-- `aufbau.js`: Inhalt steht oben, Zeitraum in einer Reihe, Kalender-Knopf, Erklärungen hinter „i“ (390 und 320 px).
+- `aufbau.js`: Wochenleiste in jedem Bereich mit Kalender, Monat/Jahr über den Pfeilen, Erklärungen hinter „i“ (390 und 320 px).
 - `gesten.js`: Blatt wegziehen, zwischen Monaten wischen, Wert im Graphen ablesen (echte Berührungen).
 - `loeschen.js`: „Rückgängig“ nach dem Löschen (Buchung, Konto im offenen Blatt, Training), eigene Kategorien.
 - `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote.

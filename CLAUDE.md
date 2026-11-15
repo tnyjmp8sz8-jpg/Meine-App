@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v45)
+# Track. – Projektwissen (App-Stand v46)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -38,9 +38,9 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, Rückgängig, Graphen ablesen, Wischgesten, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
 - Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
-- Wochenleiste nur auf Heute und Routinen (v44); in Gewicht, Finanzen und Training öffnet der Knopf `#calbtn` in der Kopfzeile den Kalender des Bereichs (`calOf()`). Warum: Der Inhalt soll oben stehen, nicht die Bedienung.
+- Wochenleiste in jedem Bereich (Heute, Routinen, Gewicht, Budget, Cardio, Gym; im Vermögen gab es sie nie): Ein Tipp auf einen Tag öffnet den Kalender des Bereichs. In v44 hatte ich sie aus Gewicht, Finanzen und Training entfernt; der Nutzer wollte sie zurück (v46).
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`; Modi `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
-- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML(titel, vor, was, seg)` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`) und mit `seg` (`m`, `t`, `x`) der Umschalter Monat/Jahr in derselben Reihe (`.period`), `INFO(id)` kleines „i“, das den Text `#info-id` zeigt, `scrubAttr()` macht einen Graphen ablesbar, `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
+- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr mit mittigem Titel (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `segMY()` Umschalter Monat/Jahr als eigene Reihe darüber, `INFO(id)` kleines „i“, das den Text `#info-id` zeigt, `scrubAttr()` macht einen Graphen ablesbar, `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
   - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
   - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `defAcc()`: zuletzt benutztes Konto, sonst das einzige; bei mehreren ohne Vorgeschichte muss gewählt werden) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
@@ -108,7 +108,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
 - Kennfarben der Bereiche (Routinen blau, Gewicht lila, Finanzen orange, Training grün) nur am Symbol in der Übersicht auf Heute.
 - Systemschrift, große Zahlen mit `var(--round)`. Abschnittstitel fett und normal geschrieben.
-- Inhalt zuerst: höchstens zwei Reihen Bedienung über der großen Zahl (Bereichs-Umschalter, Zeitraum). Erklärungen nie dauerhaft, sondern hinter `INFO()`.
+- Erklärungen nie dauerhaft, sondern hinter `INFO()`. Bedienreihen (Wochenleiste, Monat/Jahr, Pfeile) bleiben je eine eigene Reihe: nicht zusammenlegen, um Platz zu sparen.
 - Nur was nötig ist: keine erklärenden Texte ohne Nutzen, keine Töne, keine ungefragten Einstellungen, lange Listen einklappen.
 - Hell, dunkel und 320 px Breite müssen funktionieren. Nichts darf seitlich wischbar oder abgeschnitten sein.
 
@@ -125,6 +125,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Klein wirkt edler: alles kompakt, wie herausgezoomt; eine Ansicht darf dafür lang sein und scrollen.
 - Viel auf einen Blick: eine Liste statt mehrerer großer Karten; „Übungen“ und „Einheiten“ als eingeklappte Zeile mit Anzahl.
 - Überall ein Plus oder Minus zum Zeitraum davor (Monat, Jahr, je Übung), grün oder rot.
+- Die Wochenleiste mag er, in jedem Bereich („ich mochte das“, v46). Mein Umbau in v44 (Leiste weg, Kalender als Knopf oben, Pfeile und Monat/Jahr in einer Reihe) kam nicht an: „das November ist eingequetscht“. Zweites Mal dieselbe Lehre: nichts zusammenschieben, was vorher Luft hatte; Vertrautes nicht für „weniger Bedienung“ opfern, sondern vorher mit Bild fragen.
 - In Zeilen mit Wert (`kvRow()`: Letzter Lauf, Woche, Sparquote) steht der Vergleich in einer eigenen Zeile unter dem Wert, nicht daneben. Der Nutzer fand das ruhiger; „daneben“ war ein Vorschlag von mir (v26), den er nach dem Ausprobieren zurückgenommen hat. Kompakt heißt für ihn nicht: alles in eine Zeile quetschen.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
@@ -139,7 +140,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v45` → `takt-v46`), `<span class="ver">v45</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v46` → `takt-v47`), `<span class="ver">v46</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

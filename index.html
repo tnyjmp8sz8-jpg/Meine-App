@@ -443,19 +443,6 @@ body{font-size:15px}
 .mnav button{width:34px;height:34px;position:relative}
 .mnav button::after{content:"";position:absolute;inset:-5px}
 .mnav svg{width:14px;height:14px}
-.period{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-4px}
-.period .mnav{margin:0;gap:2px;justify-content:flex-start}
-.period .mnav b{min-width:124px;text-align:center;white-space:nowrap}
-.period .mnav .sm{display:none}
-.period .seg2{flex:none;display:flex;gap:2px}
-.period .seg2 button{padding:6px 11px;font-size:13px}
-@media (max-width:359px){
-  .period .mnav b{min-width:76px;font-size:15px}
-  .period .mnav .lg{display:none}
-  .period .mnav .sm{display:inline}
-  .period .mnav button{width:32px;height:32px}
-  .period .seg2 button{padding:6px 8px}
-}
 .info{border:0;background:none;padding:0;margin-left:5px;color:var(--muted);vertical-align:-2px;position:relative;display:inline-grid}
 .info svg{width:14px;height:14px}
 .info::after{content:"";position:absolute;inset:-13px}
@@ -466,11 +453,6 @@ body{font-size:15px}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
-.tools{display:flex;align-items:center;gap:10px}
-.tool{width:34px;height:34px;border-radius:50%;border:0;background:var(--surface);color:var(--ink);display:grid;place-items:center;position:relative}
-.tool[hidden]{display:none}
-.tool::after{content:"";position:absolute;inset:-5px}
-.tool svg{width:17px;height:17px}
 .eyebrow{font-size:12px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
@@ -708,14 +690,9 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="app">
   <header class="top">
     <span class="mark">Track.</span>
-    <span class="tools">
-      <button class="tool" id="calbtn" type="button" aria-label="Kalender öffnen" hidden>
-        <svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="3.5" width="13" height="12" rx="3"/><path d="M2.5 7.5h13M6 2v3M12 2v3"/></svg>
-      </button>
-      <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
-        <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
-      </button>
-    </span>
+    <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
+      <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
+    </button>
   </header>
 
   <div id="v-heute" class="view" hidden></div>
@@ -737,7 +714,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v45</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v46</span></footer>
 </div>
 </div>
 
@@ -1641,7 +1618,7 @@ function renderWeight() {
       '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.round(p * 100) + '</b><span>%</span></span></div></div>';
   }
 
-  let h = '<section class="hero w-hero"><p class="date">7-Tage-Schnitt</p>' +
+  let h = weekStripHTML('weight') + '<section class="hero w-hero"><p class="date">7-Tage-Schnitt</p>' +
     '<h1><span class="num">' + kg(last.m) + '</span><span class="unit">kg</span></h1>' +
     '<p class="sub">Zuletzt gewogen: ' + kg2(last.w) + ' kg, ' + when + '</p></section>';
   h += '<button type="button" class="' + (hasToday ? 'ghost center' : 'primary') + '" data-w="add">' + (hasToday ? 'Heutigen Eintrag ändern' : 'Heute eintragen') + '</button>';
@@ -1860,15 +1837,10 @@ const hasMoney = () => live(MF.fixed) || Object.keys(MY).some(y => live(MY[y].tx
 const CIRC = plus => '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10" cy="10" r="8.2"/><path d="M6.6 10h6.8' + (plus ? 'M10 6.6v6.8' : '') + '"/></svg>';
 const DUO = '<div class="duo"><button type="button" class="primary" data-m="add">Ausgabe' + CIRC(false) + '</button><button type="button" class="ghost center" data-m="income">Einnahme' + CIRC(true) + '</button></div>';
 const CHEV = d => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="' + (d < 0 ? 'M10 3L5 8l5 5' : 'M6 3l5 5-5 5') + '"/></svg>';
-/* Zeitraum in einer Reihe: links Pfeile mit Titel, rechts (mit seg) der Umschalter Monat/Jahr. seg nennt den Bereich: 'm' Finanzen, 't' Training, 'x' Blatt der Übung.
-   Der Titel hat eine feste Breite, damit die Pfeile beim Blättern nicht wandern; auf schmalen Geräten steht der Monat kurz („Nov. 2026“). */
-const SEG = { m: ['data-m="mode" data-v="month"', 'data-m="mode" data-v="year"'], t: ['data-t="mode" data-v="month"', 'data-t="mode" data-v="year"'], x: ['data-xr="month"', 'data-xr="year"'] };
-function navHTML(label, canNext, what, seg) {
-  const year = what === 'Ein Jahr', m = /^(\S{5,}) (\d{4})$/.exec(label);
-  const nav = '<div class="mnav"><button type="button" data-m="prev" aria-label="' + what + ' zurück">' + CHEV(-1) + '</button><b>' + (seg && m ? '<span class="lg">' + label + '</span><span class="sm">' + m[1].slice(0, 3) + '. ' + m[2] + '</span>' : label) + '</b>' +
-    '<button type="button" data-m="next" aria-label="' + what + ' vor"' + (canNext ? '' : ' disabled') + '>' + CHEV(1) + '</button></div>';
-  return seg ? '<div class="period">' + nav + '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" ' + SEG[seg][0] + ' aria-pressed="' + !year + '">Monat</button><button type="button" ' + SEG[seg][1] + ' aria-pressed="' + year + '">Jahr</button></div></div>' : nav;
-}
+const navHTML = (label, canNext, what) => '<div class="mnav"><button type="button" data-m="prev" aria-label="' + what + ' zurück">' + CHEV(-1) + '</button><b>' + label + '</b>' +
+  '<button type="button" data-m="next" aria-label="' + what + ' vor"' + (canNext ? '' : ' disabled') + '>' + CHEV(1) + '</button></div>';
+/* Umschalter Monat/Jahr als eigene Reihe über den Pfeilen. m und y sind die Attribute der beiden Knöpfe. */
+const segMY = (year, m, y) => '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" ' + m + ' aria-pressed="' + !year + '">Monat</button><button type="button" ' + y + ' aria-pressed="' + year + '">Jahr</button></div>';
 /* Kategorien eines Zeitraums; mit Budgets (nur Monat) zeigt der Balken den verbrauchten Anteil */
 function catsHTML(cats, budgets, ym) {
   const b = budgets || {}, ids = Object.keys(cats);
@@ -1924,7 +1896,7 @@ function monthHTML(curYM) {
     const now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     sub = s.bal > 0 ? eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende' : s.bal < 0 ? 'Deine Ausgaben liegen über deinen Einnahmen.' : '';
   }
-  let h = navHTML(name + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat', 'm');
+  let h = navHTML(name + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
   h += heroM((s.bal < 0 ? 'Minus im ' : 'Übrig im ') + name, s.bal, sub);
   h += DUO;
   h += barHTML(s) + sumTiles(s) + rateHTML(s, isCur ? null : mSum(ymOfIdx(ymIdx(mYM) - 1)), isCur ? 'Sparquote bisher' : 'Sparquote');
@@ -1980,7 +1952,7 @@ function ySum(y, lastM) {
 function yearHTML(curYM) {
   const y = mYear, curY = +curYM.slice(0, 4), lastM = y < curY ? 12 : y > curY ? 0 : +curYM.slice(5);
   const Y = ySum(y, lastM), ms = Y.ms, tot = Y.tot, first = Y.first, last = Y.last;
-  let h = navHTML(String(y), y < curY, 'Ein Jahr', 'm');
+  let h = navHTML(String(y), y < curY, 'Ein Jahr');
   const span = !first ? '' : first === last ? MONTHS[first - 1] : MONTHS[first - 1] + ' bis ' + MONTHS[last - 1];
   h += heroM('Bilanz ' + y, tot.bal, first ? span : 'Keine Einträge in diesem Jahr.');
   if (!first) return h;
@@ -2088,7 +2060,7 @@ function wealthHTML(curYM) {
     '<button type="button" class="primary" data-m="bal">Ersten Stand eintragen</button></div>';
   const year = mMode === 'year', pre = year ? String(mYear) : mYM, w = wealthDelta(pre), curY = +curYM.slice(0, 4);
   const end = year ? (pre + '-12' > curYM ? curYM : pre + '-12') : mYM;
-  let h = year ? navHTML(pre, mYear < curY, 'Ein Jahr', 'm') : navHTML(ymName(mYM) + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat', 'm');
+  let h = year ? navHTML(pre, mYear < curY, 'Ein Jahr') : navHTML(ymName(mYM) + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
   const entered = !year && accList().some(a => typeof ((MF.bal || {})[mYM] || {})[a.id] === 'number');
   const btn = year ? '' : '<button type="button" class="' + (entered ? 'ghost center' : 'primary') + '" data-m="bal">' + (entered ? 'Stand ändern' : 'Stand eintragen') + '</button>';
   if (!w) return h + '<section class="hero w-hero"><p class="date">Vermögen</p><h1>Noch kein Stand</h1><p class="sub">' + (year ? 'In diesem Jahr gab es noch keinen Eintrag.' : 'Vor diesem Monat gibt es noch keinen Eintrag.') + '</p></section>' + btn;
@@ -2133,7 +2105,8 @@ function renderMoney() {
   if (!mYear) mYear = +curYM.slice(0, 4);
   const sub = finSub();
   const subs = '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
-  if (sub === 'verm') { el.innerHTML = subs + wealthHTML(curYM); return; }
+  const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"');
+  if (sub === 'verm') { el.innerHTML = subs + (hasWealth() ? seg : '') + wealthHTML(curYM); return; }
   if (!hasMoney()) {
     el.innerHTML = subs + '<section class="hero"><p class="date">Budget</p><h1>Noch nichts eingetragen</h1></section>' +
       '<div class="empty"><p>Trag deine Einnahmen und deine festen Kosten ein. Danach erfasst du nur noch deine laufenden Ausgaben und siehst, was übrig bleibt.</p>' +
@@ -2142,7 +2115,7 @@ function renderMoney() {
       '<button type="button" class="ghost center" data-m="newin">Feste Einnahme hinzufügen</button></div>';
     return;
   }
-  el.innerHTML = subs + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
+  el.innerHTML = subs + weekStripHTML('money') + seg + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
 }
 
 $('#v-haushalt').addEventListener('click', e => {
@@ -2570,7 +2543,7 @@ function lastCardHTML(r) {
 function tMonthHTML(all, list0, kind, curYM) {
   const list = list0.filter(r => r.d.slice(0, 7) === tYM), g = tAgg(list), name = MONTHS[+tYM.slice(5) - 1];
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(list0.filter(r => r.d.slice(0, 7) === prevYM));
-  let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat', 't') + tHero('Gelaufen im ' + name, g);
+  let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g);
   h += '<button type="button" class="primary" data-t="add">Lauf eintragen</button>';
   const last = list0[list0.length - 1];
   if (tYM === curYM && last) h += lastCardHTML(last);
@@ -2594,13 +2567,14 @@ function tMonthHTML(all, list0, kind, curYM) {
 function tYearHTML(list0, curYM) {
   const y = String(tYear), list = list0.filter(r => r.d.slice(0, 4) === y), g = tAgg(list), per = [];
   for (let m = 1; m <= 12; m++) per.push(tAgg(list.filter(r => r.d.slice(5, 7) === pad(m))));
-  let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr', 't') + tHero('Gelaufen ' + y, g);
+  let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
   h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000)) + '</div>';
   h += '<h2 class="sec">Monate</h2><ul class="entries">' + per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join('') + '</ul>';
   return h;
 }
+const segT = () => segMY(tMode === 'year', 'data-t="mode" data-v="month"', 'data-t="mode" data-v="year"');
 function renderTraining() {
   const el = $('#v-training'), curYM = todayKey().slice(0, 7);
   if (!isYM(tYM)) tYM = curYM;
@@ -2616,7 +2590,7 @@ function renderTraining() {
   }
   const kind = tKind || all[all.length - 1].k, list0 = kind === 'all' ? all : all.filter(r => r.k === kind);
   el.innerHTML = '<div class="card-head">' + subs + '<div class="seg" role="group" aria-label="Art">' +
-    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM));
+    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM));
 }
 $('#v-training').addEventListener('click', e => {
   const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
@@ -2837,7 +2811,7 @@ function kExFoldHTML() {
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
-  let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr', 't') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
+  let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
   h += kTiles(s) + kNote(s);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
@@ -2850,10 +2824,10 @@ function kraftHTML(curYM) {
   if (!dates.length && !exs.length && !plans.length && !K.live) return '<section class="hero"><h1>Noch kein Training</h1></section>' +
     '<div class="empty"><p>Lege einen Plan mit deinen Übungen an, zum Beispiel Torso. Dann startest du das Training hier, hakst jeden Satz ab und siehst bei jeder Übung, ob du dich steigerst.</p>' +
     '<button type="button" class="primary" data-k="plan">Ersten Plan anlegen</button></div>';
-  let h = liveCardHTML();
+  let h = weekStripHTML('gym') + liveCardHTML() + segT();
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
-  h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat', 't') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
+  h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
   if (s.n) h += kTiles(s) + kNote(s);
   h += '<h2 class="sec">Pläne</h2>';
   h += plans.length ? '<ul class="rows">' + plans.map(pl => {
@@ -3180,7 +3154,7 @@ function exRecapHTML(full) {
   const curYM = todayKey().slice(0, 7), year = xMode === 'year', pre = year ? String(xYear) : xYM;
   const inP = full.filter(x => x.d.slice(0, pre.length) === pre), lv = exLevel(full, pre), d = exDelta(full, pre), cnt = n => n + (n === 1 ? ' Einheit' : ' Einheiten');
   const val = s => s ? (s.w ? [kgn(Math.round(s.v * 10) / 10), 'kg', '1RM geschätzt'] : [String(s.v), 'Wdh', 'Bestwert']) : ['–', '', 'Bestwert'];
-  let h = year ? navHTML(pre, xYear < +curYM.slice(0, 4), 'Ein Jahr', 'x') : navHTML(MONTHS[+xYM.slice(5) - 1] + ' ' + xYM.slice(0, 4), xYM < curYM, 'Einen Monat', 'x');
+  let h = segMY(year, 'data-xr="month"', 'data-xr="year"') + (year ? navHTML(pre, xYear < +curYM.slice(0, 4), 'Ein Jahr') : navHTML(MONTHS[+xYM.slice(5) - 1] + ' ' + xYM.slice(0, 4), xYM < curYM, 'Einen Monat'));
   if (!inP.length) return h + '<p class="note">Keine Einheit ' + (year ? 'in diesem Jahr.' : 'in diesem Monat.') + '</p>';
   const v = val(lv);
   h += '<div class="figs">' + fig(d ? '<span class="' + d.c + '">' + d.t + '</span>' : '–', '', 'Verbesserung') + fig(v[0], v[1], v[2]) + fig(String(inP.length), '', inP.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
@@ -3681,15 +3655,12 @@ function paintTop() {
   const add = $('#add');
   add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
-  $('#calbtn').hidden = !calOf();
 }
-/* Kalender des Bereichs. Heute und Routinen haben dafür die Wochenleiste, die anderen Bereiche den Knopf in der Kopfzeile. */
-const calOf = () => view === 'gewicht' ? 'weight' : view === 'haushalt' ? 'money' : view === 'training' ? (tSub === 'kraft' ? 'gym' : 'cardio') : '';
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-info]'), p = b && document.getElementById('info-' + b.dataset.info); if (!p) return;
   p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden));
 });
-$('#calbtn').addEventListener('click', () => { if (calOf()) openCal(calOf(), todayKey()); });
+
 function show(v, user) {
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });

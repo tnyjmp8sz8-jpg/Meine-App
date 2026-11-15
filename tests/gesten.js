@@ -8,7 +8,7 @@ const name = ym => MON[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4);
 
 lauf(async () => {
   const P = pruefer('Gesten'), { browser, ctx, page, fehler } = await oeffnen({ finger: true, daten: beispiel() });
-  const titel = () => text(page, '#v-haushalt .mnav .lg');
+  const titel = () => text(page, '#v-haushalt .mnav b');
   const offen = sel => page.evaluate(q => document.querySelector(q).open, sel);
 
   // --- Zwischen Monaten wischen (Budget) ---
