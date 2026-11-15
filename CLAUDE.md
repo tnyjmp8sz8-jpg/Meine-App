@@ -1,10 +1,10 @@
-# Takt – Alltags-Tracker (v32)
+# Takt – Alltags-Tracker (v33)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v32` → `takt-v33`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v32</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v33` → `takt-v34`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v33</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -61,5 +61,5 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Ruhig: keine Töne, keine Ränder um Karten, keine Großbuchstaben-Labels, keine erklärenden Texte ohne Nutzen.
 - Im Zweifel die schlichtere Lösung wählen und lieber etwas weglassen.
 - Überall ein Plus oder Minus zum Zeitraum davor zeigen (Monat, Jahr, je Übung), grün oder rot. Zahlen ohne Vergleich sagen dem Nutzer wenig.
-- Listen, die mit der Zeit wachsen, dürfen nie unübersichtlich werden: zuerst nur die letzten drei zeigen, aufgeklappt nach Monaten gruppieren und jeden Monat einklappbar machen. Dafür gibt es `monthsHTML()` und `monToggle()`; so gebaut sind Einträge (Gewicht) und die Monate im Blatt einer Übung. Läufe, Gym-Einheiten und Ausgaben zeigen nur den oben gewählten Monat.
+- Listen, die mit der Zeit wachsen, dürfen nie unübersichtlich werden: zuerst nur die letzten drei zeigen, aufgeklappt nach Monaten gruppieren und jeden Monat einklappbar machen. Dafür gibt es `monthsHTML()` und `monToggle()`; so gebaut sind Einträge (Gewicht) und die Monate im Blatt einer Übung. Läufe, Gym-Einheiten und Ausgaben zeigen nur den oben gewählten Monat. Im Gym-Bereich sind „Übungen“ und „Einheiten“ je eine eingeklappte Zeile mit Anzahl, die ein Tipp aufklappt; diese Form mag der Nutzer.
 - Klein wirkt edler: neue Ansichten von Anfang an kompakt bauen, nie groß. Eine Ansicht darf dafür lang sein und scrollen (z. B. laufendes Training mit Verlauf darunter).

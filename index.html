@@ -656,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v32</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v33</span></footer>
 </div>
 </div>
 
@@ -1039,7 +1039,7 @@ const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', kAll = false, kExOpen = false, hMode = 'day', hWeek = '';
+let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -2165,8 +2165,8 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'kind') { tKind = t.dataset.v; tAll = false; }
   else if (a === 'metric') tMetric = t.dataset.v;
   else if (a === 'more') tAll = !tAll;
-  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; tAll = kAll = false; $('#scroll').scrollTop = 0; }
-  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else { tYM = ymOfIdx(ymIdx(tYM) + d); tAll = kAll = false; } }
+  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; tAll = false; $('#scroll').scrollTop = 0; }
+  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else { tYM = ymOfIdx(ymIdx(tYM) + d); tAll = false; } }
   renderTraining();
 });
 
@@ -2401,11 +2401,10 @@ function kraftHTML(curYM) {
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (dS ? '<span class="r"><b class="' + dS.c + '">' + dS.t + '</b><small>seit Start' + (dL ? ' · zuletzt ' + dL.t : '') + '</small></span>' : '') + '</button></li>';
     }).join('') : '') + '</ul>';
-  /* Einheiten des gewählten Monats */
-  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse(), shown = kAll ? rev : rev.slice(0, 7);
-  h += '<h2 class="sec">Einheiten</h2>';
-  h += rev.length ? '<ul class="entries">' + shown.map(kUnitRow).join('') + '</ul>' : '<p class="note">Keine Einheit in diesem Monat.</p>';
-  if (rev.length > 7) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
+  /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
+  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
+  if (rev.length) h += '<ul class="entries"><li><button type="button" class="two" data-k="units" aria-expanded="' + kUnOpen + '"><span class="l"><span>Einheiten</span></span><b class="dim fold">' + rev.length + CHEV_D + '</b></button></li>' +
+    (kUnOpen ? rev.map(kUnitRow).join('') : '') + '</ul>';
   return h;
 }
 $('#v-training').addEventListener('click', e => {
@@ -2413,7 +2412,7 @@ $('#v-training').addEventListener('click', e => {
   const a = t.dataset.k;
   if (a === 'day') openK(t.dataset.d);
   else if (a === 'ex') openX(t.dataset.id);
-  else if (a === 'more') { kAll = !kAll; renderTraining(); }
+  else if (a === 'units') { kUnOpen = !kUnOpen; renderTraining(); }
   else if (a === 'exs') { kExOpen = !kExOpen; renderTraining(); }
   else if (a === 'start') startPlan(t.dataset.id);
   else if (a === 'live') openL();
