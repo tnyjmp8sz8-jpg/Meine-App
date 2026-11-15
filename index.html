@@ -158,6 +158,11 @@ dialog::backdrop{background:rgba(4,6,10,.6)}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
 input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+/* iPhone: Datumsfelder sind sonst breiter als ihr Platz, dann ragt das Feld rechts hinaus und das Blatt lässt sich seitlich wischen */
+input[type="date"],input[type="month"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-height:46px}
+input::-webkit-date-and-time-value{text-align:left;margin:0;min-width:0}
+dialog,.scroll{overflow-x:hidden}
+.fld{min-width:0}
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
 .stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
@@ -640,7 +645,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v27</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v28</span></footer>
 </div>
 </div>
 
@@ -2713,7 +2718,7 @@ function paintL() {
   if (cur) tabs.scrollLeft = cur.offsetLeft - (tabs.clientWidth - cur.offsetWidth) / 2;
   const it = Lw.items[lI];
   if (!it) { $('#l-items').innerHTML = ''; return; }
-  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d < Lw.date), last = hist[hist.length - 1];
+  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1];
   const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v);
   let h = '<div class="lx"><h3>' + esc(name) + '</h3><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span></span></div>' + it.sets.map((s, j) => j === act
     ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' +
@@ -2732,7 +2737,7 @@ function paintL() {
     h += exStatsHTML(hist, lAll, 'lh');
     if (rows.length) h += '<ul class="entries">' + exRowsHTML(lMore ? rows : rows.slice(0, 5)) + '</ul>' +
       (rows.length > 5 ? '<button type="button" class="linkbtn" data-la="hmore">' + (lMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' früheren Einheiten zeigen') + '</button>' : '');
-  }
+  } else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte und der Verlauf.</p>';
   $('#l-items').innerHTML = h + '</div>';
 }
 function openL() {

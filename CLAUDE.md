@@ -1,10 +1,10 @@
-# Takt – Alltags-Tracker (v27)
+# Takt – Alltags-Tracker (v28)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v27` → `takt-v28`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v27</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v28` → `takt-v29`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v28</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -43,6 +43,7 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Wortwahl in der Oberfläche: „Gym“, nicht „Kraft“.
 - Hell und dunkel folgen der Systemeinstellung; beide prüfen, ebenso 320 px Breite.
 - HTML wird per String gebaut: Nutzertexte immer durch `esc()` schicken.
+- Nichts darf seitlich wischbar oder abgeschnitten sein. Datumsfelder brauchen auf dem iPhone `appearance:none` (steht im CSS), sonst werden sie breiter als ihr Platz. Das lässt sich im Test-Browser nicht nachstellen: nach Änderungen an Blättern den Nutzer bitten, am iPhone zu prüfen.
 
 ## Zusammenarbeit (vom Nutzer so gewünscht)
 - Sprache: Deutsch, einfache Worte, kurz. Der Nutzer ist kein Entwickler und bedient GitHub nur am iPhone.
