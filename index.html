@@ -359,8 +359,8 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
 .pst{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
-#x-stats{display:flex;flex-direction:column;gap:10px}
-#x-stats:empty{display:none}
+#x-stats,#x-recap{display:flex;flex-direction:column;gap:10px}
+#x-stats:empty,#x-recap:empty{display:none}
 .primary[hidden]{display:none}
 .xh,.xh .mons{display:flex;flex-direction:column;gap:8px}
 
@@ -656,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v33</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v34</span></footer>
 </div>
 </div>
 
@@ -910,18 +910,11 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div id="x-stats"></div>
+    <div id="x-recap"></div>
     <label class="fld" for="x-name" id="x-name-fld">
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
     </label>
-    <div class="fld" id="x-years-fld">
-      <span>Jahre</span>
-      <ul class="entries" id="x-years"></ul>
-    </div>
-    <div class="fld" id="x-hist-fld">
-      <span>Monate</span>
-      <div class="xh" id="x-hist"></div>
-    </div>
     <p class="err" id="x-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="x-save">Speichern</button>
     <button type="button" class="ghost danger" id="x-del">Übung löschen</button>
@@ -2298,29 +2291,27 @@ function exLevel(hist, pre) {
   hist.forEach(x => { if (x.d.slice(0, pre.length) === pre) { const s = kScore(x.sets); if (!b || (s.w === b.w ? s.v > b.v : s.w)) b = s; } });
   return b;
 }
-/* Monat: Stand gegenüber dem letzten Monat davor, in dem die Übung trainiert wurde */
-function exMonthDelta(hist, ym) {
-  let before = null; hist.forEach(x => { if (x.d.slice(0, 7) < ym) before = x; });
-  return before ? scoreDelta(exLevel(hist, ym), exLevel(hist, before.d.slice(0, 7))) : null;
+/* Verbesserung einer Übung in einem Zeitraum ('YYYY-MM' oder 'YYYY'): Stand am Ende gegenüber dem Stand davor.
+   Ende = bester Wert im letzten trainierten Monat des Zeitraums. Davor = bester Wert im letzten trainierten Monat vor dem Zeitraum;
+   gibt es keinen (erster Monat, erstes Jahr), die erste Einheit im Zeitraum. null ohne Vergleich. */
+function exDelta(hist, pre) {
+  const inP = hist.filter(x => x.d.slice(0, pre.length) === pre); if (!inP.length) return null;
+  let before = null; hist.forEach(x => { if (x.d.slice(0, pre.length) < pre) before = x; });
+  const end = exLevel(hist, inP[inP.length - 1].d.slice(0, 7));
+  return before ? scoreDelta(end, exLevel(hist, before.d.slice(0, 7))) : inP.length > 1 ? scoreDelta(end, kScore(inP[0].sets)) : null;
 }
-/* Jahr: Stand im letzten trainierten Monat des Jahres gegenüber dem Stand davor (letzter Monat des Vorjahres, im ersten Jahr der erste Monat) */
-function exYearDelta(hist, y) {
-  const inY = hist.filter(x => x.d.slice(0, 4) === y); if (!inY.length) return null;
-  let before = null; hist.forEach(x => { if (x.d.slice(0, 4) < y) before = x; });
-  const endYM = inY[inY.length - 1].d.slice(0, 7), startYM = (before || inY[0]).d.slice(0, 7);
-  return startYM === endYM ? null : scoreDelta(exLevel(hist, endYM), exLevel(hist, startYM));
-}
-/* Gym gesamt in einem Monat oder Jahr: Einheiten, bewegtes Gewicht, Zeit und „Kraft“ = Schnitt der Veränderungen aller Übungen */
+/* Gym gesamt in einem Monat oder Jahr: Einheiten, bewegtes Gewicht, Zeit und die Verbesserung = Schnitt der Verbesserungen aller Übungen (exDelta) */
 function kPeriod(pre) {
   const ds = kDates().filter(d => d.slice(0, pre.length) === pre), ps = [];
   let vol = 0, dur = 0;
   ds.forEach(d => { kDay(d).forEach(x => x.sets.forEach(s => { vol += s[0] * s[1]; })); const m = (K.meta || {})[d]; if (m) dur += m.dur || 0; });
-  if (ds.length) kExs().forEach(x => { const hist = kHist(x.id), dl = pre.length === 7 ? exMonthDelta(hist, pre) : exYearDelta(hist, pre); if (dl) ps.push(dl.p); });
+  if (ds.length) kExs().forEach(x => { const dl = exDelta(kHist(x.id), pre); if (dl) ps.push(dl.p); });
   const pp = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
   return { n: ds.length, vol, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
 const volText = v => v >= 1000 ? [kg(v / 1000), 't'] : [String(Math.round(v)), 'kg'];
-const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Kraft') + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung') + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+const kNote = s => s.p ? '<p class="note">Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
 const kHero = (label, n, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1><p class="sub">' + sub + '</p></section>';
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
@@ -2360,16 +2351,29 @@ const kUnitRow = d => {
   return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
     '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b></button></li>';
 };
+/* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
+function kExFoldHTML() {
+  const pre = tMode === 'year' ? String(tYear) : tYM, when = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
+  const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
+    .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
+  if (!rows.length) return '';
+  return '<ul class="entries"><li><button type="button" class="two" data-k="exs" aria-expanded="' + kExOpen + '"><span class="l"><span>Übungen</span></span><b class="dim fold">' + rows.length + CHEV_D + '</b></button></li>' +
+    (kExOpen ? rows.map(o => {
+      const d = exDelta(o.hist, pre);
+      return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
+        (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
+    }).join('') : '') + '</ul>';
+}
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
-  h += kTiles(s) + (s.p ? '<p class="note">Kraft: Stand am Ende des Jahres gegenüber dem Stand davor, Schnitt aus ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '');
+  h += kTiles(s) + kNote(s);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
   h += '<h2 class="sec">Monate</h2><ul class="entries">' + per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('') + '</ul>';
-  return h;
+  return h + kExFoldHTML();
 }
 function kraftHTML(curYM) {
   const dates = kDates(), exs = kExs(), plans = kPlans();
@@ -2382,8 +2386,7 @@ function kraftHTML(curYM) {
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
-  /* Kennzahlen des Monats; „Kraft“ vergleicht je Übung das beste geschätzte Maximum mit dem Monat davor */
-  if (s.n) h += kTiles(s) + (s.p ? '<p class="note">Kraft: bestes geschätztes Maximum je Übung gegenüber dem Monat davor, Schnitt aus ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '');
+  if (s.n) h += kTiles(s) + kNote(s);
   h += '<h2 class="sec">Pläne</h2>';
   h += plans.length ? '<ul class="rows">' + plans.map(pl => {
     const last = planLast(pl.id);
@@ -2392,15 +2395,7 @@ function kraftHTML(curYM) {
       '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   h += '<div class="links"><button type="button" class="linkbtn" data-k="plan">+ Plan anlegen</button></div>';
-  const rows = exs.map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
-    .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
-  /* Übungen: eingeklappt, ein Tipp klappt die Liste auf */
-  if (rows.length) h += '<ul class="entries"><li><button type="button" class="two" data-k="exs" aria-expanded="' + kExOpen + '"><span class="l"><span>Übungen</span></span><b class="dim fold">' + rows.length + CHEV_D + '</b></button></li>' +
-    (kExOpen ? rows.map(o => {
-      const n2 = o.hist.length, dS = n2 > 1 ? kDelta(o.last.sets, o.hist[0].sets) : null, dL = n2 > 2 ? kDelta(o.last.sets, o.hist[n2 - 2].sets) : null;
-      return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
-        (dS ? '<span class="r"><b class="' + dS.c + '">' + dS.t + '</b><small>seit Start' + (dL ? ' · zuletzt ' + dL.t : '') + '</small></span>' : '') + '</button></li>';
-    }).join('') : '') + '</ul>';
+  h += kExFoldHTML();
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
   if (rev.length) h += '<ul class="entries"><li><button type="button" class="two" data-k="units" aria-expanded="' + kUnOpen + '"><span class="l"><span>Einheiten</span></span><b class="dim fold">' + rev.length + CHEV_D + '</b></button></li>' +
@@ -2581,7 +2576,7 @@ function sugHTML(used, q, attr) {
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
-let kS = null, xId = null, xArm = false, xAll = false, xMon = {};
+let kS = null, xId = null, xArm = false, xAll = false, xMode = 'month', xYM = '', xYear = 0;
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
@@ -2711,22 +2706,36 @@ const unitLabel = d => { const m = (K.meta || {})[d], pn = m ? planName(m.plan) 
 /* Einheiten von neu nach alt, jede als Karte mit der Veränderung zur Einheit davor */
 const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse();
 const exCard = o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>';
+/* Recap einer Übung für den gewählten Monat oder das Jahr (xMode, xYM, xYear): Verbesserung, bester Stand, Einheiten; im Monat die Einheiten, im Jahr die Monate */
+function exRecapHTML(full) {
+  const curYM = todayKey().slice(0, 7), year = xMode === 'year', pre = year ? String(xYear) : xYM;
+  const inP = full.filter(x => x.d.slice(0, pre.length) === pre), lv = exLevel(full, pre), d = exDelta(full, pre), cnt = n => n + (n === 1 ? ' Einheit' : ' Einheiten');
+  const val = s => s ? (s.w ? [kgn(Math.round(s.v * 10) / 10), 'kg', '1RM geschätzt'] : [String(s.v), 'Wdh', 'Bestwert']) : ['–', '', 'Bestwert'];
+  let h = '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-xr="month" aria-pressed="' + !year + '">Monat</button><button type="button" data-xr="year" aria-pressed="' + year + '">Jahr</button></div>' +
+    (year ? navHTML(pre, xYear < +curYM.slice(0, 4), 'Ein Jahr') : navHTML(MONTHS[+xYM.slice(5) - 1] + ' ' + xYM.slice(0, 4), xYM < curYM, 'Einen Monat'));
+  if (!inP.length) return h + '<p class="note">Keine Einheit ' + (year ? 'in diesem Jahr.' : 'in diesem Monat.') + '</p>';
+  const v = val(lv);
+  h += '<div class="figs">' + fig(d ? '<span class="' + d.c + '">' + d.t + '</span>' : '–', '', 'Verbesserung') + fig(v[0], v[1], v[2]) + fig(String(inP.length), '', inP.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
+  if (!year) return h + '<div class="xh">' + exRows(full).filter(o => o.x.d.slice(0, 7) === xYM).map(exCard).join('') + '</div>';
+  /* Jahr: die Monate mit Stand und Verbesserung, ein Tipp springt in den Monat */
+  const yms = inP.map(x => x.d.slice(0, 7)).filter((m, i, a) => a.indexOf(m) === i).reverse();
+  return h + '<ul class="entries">' + yms.map(ym => { const dm = exDelta(full, ym), s = exLevel(full, ym), n = inP.filter(x => x.d.slice(0, 7) === ym).length;
+    return '<li><button type="button" class="two" data-xr="goto" data-ym="' + ym + '" aria-label="' + MONTHS[+ym.slice(5) - 1] + ' öffnen"><span class="l"><span>' + MONTHS[+ym.slice(5) - 1] + '</span><small>' + cnt(n) + ' · ' + (s.w ? '1RM ' + kgn(Math.round(s.v * 10) / 10) + ' kg' : 'bis ' + s.v + ' Wdh') + '</small></span>' + (dm ? '<b class="' + dm.c + '">' + dm.t + '</b>' : '') + '</button></li>'; }).join('') + '</ul>';
+}
 function paintX() {
-  const full = kHist(xId), rows = exRows(full);
+  const full = kHist(xId);
   $('#x-stats').innerHTML = exFigsHTML(full) + exChartHTML(full, xAll);
-  const lvl = s => s ? (s.w ? '1RM ' + kgn(Math.round(s.v * 10) / 10) + ' kg' : 'bis ' + s.v + ' Wdh') : '', cnt = n => n + (n === 1 ? ' Einheit' : ' Einheiten'), dl = d => d ? '<span class="' + d.c + '">' + d.t + '</span>' : '';
-  /* Jahre: Anzahl, bester Stand und Veränderung übers Jahr */
-  const years = full.map(x => x.d.slice(0, 4)).filter((y, i, a) => a.indexOf(y) === i).reverse();
-  $('#x-years').innerHTML = years.map(y => '<li><div class="xrow"><span class="l"><span>' + y + '</span><small>' + cnt(full.filter(x => x.d.slice(0, 4) === y).length) + ' · ' + lvl(exLevel(full, y)) + '</small></span>' + (exYearDelta(full, y) ? '<b>' + dl(exYearDelta(full, y)) + '</b>' : '') + '</div></li>').join('');
-  $('#x-years-fld').hidden = !years.length;
-  /* Monate: jeder Monat mit Stand und Veränderung zum Monat davor, aufgeklappt die Einheiten als Karten */
-  $('#x-hist').innerHTML = monthsHTML(rows.map(o => ({ d: o.x.d, html: exCard(o) })), xMon, 'data-xm="1"', true, (ym, n) => ({ s: cnt(n) + ' · ' + lvl(exLevel(full, ym)), r: dl(exMonthDelta(full, ym)) }));
-  $('#x-hist-fld').hidden = !rows.length;
+  $('#x-recap').innerHTML = full.length ? exRecapHTML(full) : '';
 }
 /* view = nur ansehen (Tipp auf „Letztes Mal“ im laufenden Training), sonst auch umbenennen und löschen */
 function openX(id, view) {
   const ex = K.ex[id]; if (!ex) return;
-  xId = id; xArm = false; xAll = false; xMon = {};
+  xId = id; xArm = false; xAll = false;
+  /* Recap beginnt beim Zeitraum aus dem Gym-Bereich; hat die Übung dort keine Einheit, bei ihrem jüngsten Monat */
+  const hist = kHist(id), lastYM = hist.length ? hist[hist.length - 1].d.slice(0, 7) : todayKey().slice(0, 7), has = pre => hist.some(x => x.d.slice(0, pre.length) === pre);
+  xMode = view ? 'month' : tMode;
+  xYM = !view && isYM(tYM) && has(tYM) ? tYM : lastYM;
+  xYear = !view && tYear && has(String(tYear)) ? tYear : +lastYM.slice(0, 4);
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
   $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
@@ -2735,7 +2744,14 @@ function openX(id, view) {
   xdlg.scrollTop = 0;
 }
 $('#x-stats').addEventListener('click', e => { const t = e.target.closest('[data-x]'); if (t) { xAll = t.dataset.x === 'all'; paintX(); } });
-$('#x-hist').addEventListener('click', e => { const t = e.target.closest('[data-xm]'); if (t) { monToggle(xMon, t); paintX(); } });
+$('#x-recap').addEventListener('click', e => {
+  const nav = e.target.closest('.mnav [data-m]'), t = e.target.closest('[data-xr]');
+  if (nav) { const d = nav.dataset.m === 'prev' ? -1 : 1; if (xMode === 'year') xYear += d; else xYM = ymOfIdx(ymIdx(xYM) + d); }
+  else if (!t) return;
+  else if (t.dataset.xr === 'goto') { xYM = t.dataset.ym; xMode = 'month'; }
+  else { xMode = t.dataset.xr; if (xMode === 'year') xYear = +xYM.slice(0, 4); }
+  paintX();
+});
 function closeX() { if (xdlg.open) xdlg.close(); }
 $('#xs-close').addEventListener('click', closeX);
 xdlg.addEventListener('click', e => { if (e.target === xdlg) closeX(); });
