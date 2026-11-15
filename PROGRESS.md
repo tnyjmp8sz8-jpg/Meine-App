@@ -39,6 +39,17 @@
 - Rechnet das Vermögen nach einer Ausgabe oder Einnahme jetzt mit (v42)? Ist im Blatt das Konto schon blau gewählt?
 - Zeile „Ohne Konto“ im Vermögen (v43): aufklappen, Buchung antippen, Konto wählen, speichern.
 
+## Durchsicht der ganzen App (nach v43, auf Wunsch des Nutzers: „Apple-like Produkt“)
+Urteil: Aussehen nah dran, Bediengefühl noch nicht. Befunde, nach Wirkung geordnet (nur auf Zuruf umsetzen):
+1. Zu viel Bedienleiste über dem Inhalt: in Finanzen und Training vier Reihen (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) vor der ersten Zahl. Idee: Wochenleiste nur auf Heute und Routinen, Monat/Jahr und Pfeile in eine Reihe.
+2. Blätter lassen sich nicht nach unten wegwischen, obwohl der Griff das verspricht; kein Wischen zwischen Monaten. Im Code gibt es keine Wischgesten.
+3. Löschen ohne „Rückgängig“.
+4. Graphen sind nicht antippbar (kein Wert an einem Punkt).
+5. Erklärtexte stehen dauerhaft da (Gym-Verbesserung, Zusammenhänge, „pro Tag bis Monatsende“): hinter ein kleines „i“.
+6. Kleinigkeiten: „KG“, „WDH“ in Großbuchstaben im laufenden Training (`.lt-h span`, gegen die Vorliebe des Nutzers, von mir übersehen); keine eigenen Kategorien; kein Startbild beim Öffnen; alte CSS-Regeln, die weiter unten überschrieben werden, zusammenführen.
+7. Daten nur auf dem Gerät, Sicherung von Hand: größtes Risiko.
+Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, iCloud-Sicherung.
+
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
