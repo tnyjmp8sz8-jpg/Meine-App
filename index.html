@@ -362,7 +362,8 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #x-stats{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty{display:none}
 #x-more{margin-top:0}
-#x-more[hidden]{display:none}
+#x-more[hidden],.primary[hidden]{display:none}
+.xh{display:flex;flex-direction:column;gap:8px}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:15px}
@@ -519,7 +520,11 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .linkbtn.danger{color:var(--danger)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
 .lastx{gap:0;padding:10px 12px 8px}
-.lastx .note{margin:0 0 4px}
+.lastx .note{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.lastx .note b{flex:none;font-weight:600}
+.lastx .note svg{flex:none;width:12px;height:12px;color:var(--mid)}
+button.lastx{width:100%;border:0;font:inherit;color:inherit;text-align:left}
+button.lastx:active{background:var(--fill)}
 .lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr}
 .lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
@@ -645,7 +650,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v28</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v29</span></footer>
 </div>
 </div>
 
@@ -899,13 +904,13 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div id="x-stats"></div>
-    <label class="fld" for="x-name">
+    <label class="fld" for="x-name" id="x-name-fld">
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
     </label>
     <div class="fld" id="x-hist-fld">
-      <span>Verlauf</span>
-      <ul class="entries" id="x-hist"></ul>
+      <span>Einheiten</span>
+      <div class="xh" id="x-hist"></div>
       <button type="button" class="linkbtn" id="x-more" hidden></button>
     </div>
     <p class="err" id="x-err" role="alert" hidden></p>
@@ -2605,40 +2610,48 @@ function seriesSVG(pts, fmtV, steps, label) {
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-/* Verlauf einer Übung als Bausteine, für das Blatt der Übung und fürs laufende Training.
-   full = Einheiten (alt nach neu), all = Graph über alle statt die letzten 12, act = Name des data-Attributs der Umschalter */
-function exStatsHTML(full, all, act) {
-  if (!full.length) return '';
+/* Verlauf einer Übung als Bausteine: Kennzahlen (auch im laufenden Training), Graph und Einheiten (im Blatt der Übung). full = Einheiten, alt nach neu */
+function exInfo(full) {
   const sc = full.map(x => ({ d: x.d, sets: x.sets, s: kScore(x.sets) })), wt = sc[sc.length - 1].s.w, same = sc.filter(q => q.s.w === wt);
-  const best = Math.max.apply(null, same.map(q => q.s.v)), dS = same.length > 1 ? kDelta(same[same.length - 1].sets, same[0].sets) : null;
-  const top = Math.max.apply(null, full.map(x => Math.max.apply(null, x.sets.map(s => s[0]))));
-  let st = '<div class="figs">' + (wt ? fig(kgn(top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(best), 'Wdh', 'Bestwert') + fig(dS ? dS.t : '–', '', 'seit Start')) +
-    fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
-  const pts = (all ? same : same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
-  if (pts.length > 1) st += '<div class="card chart">' +
-    (same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-' + act + '="last" aria-pressed="' + !all + '">Letzte 12</button><button type="button" class="chip" data-' + act + '="all" aria-pressed="' + !!all + '">Alle ' + same.length + '</button></div>' : '') +
-    '<p class="note">' + (wt ? 'Geschätztes Maximum (1RM) in kg' + (dS ? ' · seit Start ' + dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
-    seriesSVG(pts, wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
-  return st;
+  return { wt, same, best: Math.max.apply(null, same.map(q => q.s.v)), dS: same.length > 1 ? kDelta(same[same.length - 1].sets, same[0].sets) : null,
+    top: Math.max.apply(null, full.map(x => Math.max.apply(null, x.sets.map(s => s[0])))) };
 }
-/* Einheiten von neu nach alt, jede mit der Veränderung zur Einheit davor */
+function exFigsHTML(full) {
+  if (!full.length) return '';
+  const i = exInfo(full);
+  return '<div class="figs">' + (i.wt ? fig(kgn(i.top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(i.best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(i.best), 'Wdh', 'Bestwert') + fig(i.dS ? i.dS.t : '–', '', 'seit Start')) +
+    fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
+}
+function exChartHTML(full, all) {
+  if (!full.length) return '';
+  const i = exInfo(full), pts = (all ? i.same : i.same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
+  if (pts.length < 2) return '';
+  return '<div class="card chart">' +
+    (i.same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-x="last" aria-pressed="' + !all + '">Letzte 12</button><button type="button" class="chip" data-x="all" aria-pressed="' + !!all + '">Alle ' + i.same.length + '</button></div>' : '') +
+    '<p class="note">' + (i.wt ? 'Geschätztes Maximum (1RM) in kg' + (i.dS ? ' · seit Start ' + i.dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
+    seriesSVG(pts, i.wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), i.wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
+}
+/* Tabelle der Sätze einer Einheit, wie in „Letztes Mal“ */
+const setsTable = sets => '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
+  sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div>';
+const unitLabel = d => { const m = (K.meta || {})[d], pn = m ? planName(m.plan) : ''; return dRow(d) + (pn ? ' · ' + esc(pn) : ''); };
+/* Einheiten von neu nach alt, jede als Karte mit der Veränderung zur Einheit davor */
 const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse();
-const exRowsHTML = rows => rows.map(o => {
-  const m = (K.meta || {})[o.x.d], pn = m ? planName(m.plan) : '';
-  return '<li><div class="xrow"><span class="l"><span>' + setsText(o.x.sets) + '</span><small>' + dRow(o.x.d) + (pn ? ' · ' + esc(pn) : '') + '</small></span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</div></li>';
-}).join('');
+const exCardsHTML = rows => rows.map(o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>').join('');
 function paintX() {
   const full = kHist(xId), rows = exRows(full);
-  $('#x-stats').innerHTML = exStatsHTML(full, xAll, 'x');
-  $('#x-hist').innerHTML = exRowsHTML(xMore ? rows : rows.slice(0, 8));
+  $('#x-stats').innerHTML = exFigsHTML(full) + exChartHTML(full, xAll);
+  $('#x-hist').innerHTML = exCardsHTML(xMore ? rows : rows.slice(0, 5));
   $('#x-hist-fld').hidden = !rows.length;
-  const more = $('#x-more'); more.hidden = rows.length <= 8; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
+  const more = $('#x-more'); more.hidden = rows.length <= 5; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
 }
-function openX(id) {
+/* view = nur ansehen (Tipp auf „Letztes Mal“ im laufenden Training), sonst auch umbenennen und löschen */
+function openX(id, view) {
   const ex = K.ex[id]; if (!ex) return;
   xId = id; xArm = false; xAll = false; xMore = false;
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
+  $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
   paintX();
   openDlg(xdlg);
   xdlg.scrollTop = 0;
@@ -2700,7 +2713,7 @@ function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
 function wakeOff() { try { if (wakeL) wakeL.release(); } catch (e) {} wakeL = null; }
 function saveLive() { if (Lw && K.live && JSON.stringify(Lw) !== JSON.stringify(K.live)) kdoc.patch({ live: clone(Lw) }); }
-let lI = 0, lJ = null, lAdd = false, lRm = false, lAll = false, lMore = false;
+let lI = 0, lJ = null, lAdd = false, lRm = false;
 const undone = it => it.sets.findIndex(s => !s.done);
 function paintLPick() { if (Lw) paintPick('#l-pick', '#l-new', Lw.items.map(it => it.id), 'la'); }
 /* Eine Übung im Fokus: oben wechseln, darunter die Sätze. Der nächste offene Satz ist aktiv, ein Tipp auf eine andere Zeile macht sie aktiv. */
@@ -2728,21 +2741,13 @@ function paintL() {
     : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + '</span><span>' + val(s.r) + '</span><span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   h += '<div class="links"><button type="button" class="linkbtn" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" class="linkbtn" data-la="rmset">− Satz</button>' : '') +
     '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
-  if (last) {
-    const m = (K.meta || {})[last.d], pn = m ? planName(m.plan) : '';
-    h += '<div class="card lastx"><p class="note">Letztes Mal · ' + dRow(last.d) + (pn ? ' · ' + esc(pn) : '') + '</p><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
-      last.sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div></div>';
-    /* Verlauf der Übung gleich darunter. Die jüngste Einheit steht schon in „Letztes Mal“ und fehlt deshalb in der Liste. */
-    const rows = exRows(hist).slice(1);
-    h += exStatsHTML(hist, lAll, 'lh');
-    if (rows.length) h += '<ul class="entries">' + exRowsHTML(lMore ? rows : rows.slice(0, 5)) + '</ul>' +
-      (rows.length > 5 ? '<button type="button" class="linkbtn" data-la="hmore">' + (lMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' früheren Einheiten zeigen') + '</button>' : '');
-  } else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte und der Verlauf.</p>';
+  if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets) + '</button>' + exFigsHTML(hist);
+  else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte.</p>';
   $('#l-items').innerHTML = h + '</div>';
 }
 function openL() {
   if (!K.live) return;
-  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lAll = false; lMore = false;
+  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false;
   const open = Lw.items.findIndex(it => undone(it) >= 0);
   lI = open >= 0 ? open : 0;
   $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
@@ -2766,13 +2771,12 @@ $('#lform').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f) { e.preventDefault(); const b = $('#l-items .chk'); if (b) b.click(); }
 });
 $('#lform').addEventListener('click', e => {
-  const hr = e.target.closest('[data-lh]'); if (hr && Lw) { lAll = hr.dataset.lh === 'all'; paintL(); return; }
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
+  if (a === 'hist') { if (it) openX(it.id, true); return; }
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
-  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lAll = false; lMore = false; }
-  else if (a === 'hmore') lMore = !lMore;
+  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; }
   else if (a === 'addx') lAdd = !lAdd;
   else if (a === 'sel') lJ = +t.dataset.s;
   else if (a === 'done' && it) {

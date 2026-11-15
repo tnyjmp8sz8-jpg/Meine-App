@@ -1,10 +1,10 @@
-# Takt – Alltags-Tracker (v28)
+# Takt – Alltags-Tracker (v29)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v28` → `takt-v29`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v28</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v29` → `takt-v30`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v29</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -26,7 +26,7 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Jeder Bereich hat eine `render…`-Funktion, die das HTML seiner `.view` neu schreibt, und einen Klick-Listener mit `data-…`-Attributen.
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`. Modi: `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
 - Laufendes Training: `paintL()`, `liveTick()`, Zustand in `K.live`, Arbeitskopie `Lw`.
-- Verlauf einer Übung: Bausteine `exStatsHTML()` (Kennzahlen und Graph), `exRows()` und `exRowsHTML()` (Einheiten). Sie stehen im laufenden Training direkt unter „Letztes Mal“ und im Blatt der Übung (`openX(id)`, `paintX()`).
+- Verlauf einer Übung: Im laufenden Training stehen unter den Sätzen die Karte „Letztes Mal“ und die Kennzahlen (`exFigsHTML()`). Ein Tipp auf die Karte öffnet das Blatt der Übung nur zum Ansehen (`openX(id, true)`) mit Graph (`exChartHTML()`) und allen Einheiten als Karten mit Satz-Tabelle (`exCardsHTML()`), so vom Nutzer nach dem Vorbild Alpha Progression gewünscht. Aus der Übungsliste (`openX(id)`) kommen Umbenennen und Löschen dazu.
 - Blätter immer mit `openDlg(dialog)` öffnen, nie direkt mit `showModal()`: sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 
 ## Design-Regeln (verbindlich)
