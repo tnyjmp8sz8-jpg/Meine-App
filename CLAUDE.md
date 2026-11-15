@@ -7,6 +7,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei jeder neuen Entscheidung zu Stack, Architektur, Datenmodell, Konventionen, Design oder Vorlieben des Nutzers: diese Datei aktualisieren, mit kurzem Warum.
 - Veraltete Infos ersetzen oder löschen, nicht nur anhängen. Die Versionsnummer in der Überschrift und in „Veröffentlichen“ mitziehen.
 - Beide Dateien kompakt halten: Stichpunkte, keine Code-Blöcke, keine Logs. In `PROGRESS.md` unter „Erledigt“ nur die letzten rund zehn Versionen, Älteres in einem Satz.
+- Regelmäßig sichern (Wunsch des Nutzers): Nach jedem Arbeitsschritt committen und hochladen, auch Zwischenstände dieser beiden Dateien. Nichts bleibt nur im Arbeitsordner liegen. Warum: Die Cloud-Umgebung der Sitzung wird nach einer Pause gelöscht.
 - Sagt der Nutzer „zusammenfassen“, „compact“ oder „Pause“: zuerst beide Dateien aktualisieren und hochladen, dann kurz bestätigen.
 - Keine dauerhaften Freigaben hier eintragen (z. B. „darf immer veröffentlichen“). Freigaben gelten nur für die laufende Sitzung. Warum: Diese Datei steuert künftige Sitzungen, und der Nutzer soll jede Sitzung selbst freigeben.
 
