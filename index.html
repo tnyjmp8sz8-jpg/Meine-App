@@ -357,7 +357,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #x-stats{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty{display:none}
 #x-more{margin-top:0}
-#x-more[hidden],.primary[hidden]{display:none}
+#x-more[hidden]{display:none}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:15px}
@@ -434,7 +434,8 @@ body{font-size:15px}
 .links .linkbtn{margin-top:0}
 .legend{font-size:11.5px}
 #form .fig b{font-size:19px}
-#ls-times .fig b{font-size:22px}
+#ls-times .fig b{font-size:18px}
+#ls-times .fig{padding:6px 10px 5px}
 
 /* Heute: Routinen direkt startbar */
 .view>.date{margin:0 2px -6px}
@@ -482,38 +483,40 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .cs-day .entries .l small{white-space:pre-line;line-height:1.45;margin-top:2px}
 
 /* Laufendes Training: eine Übung im Fokus */
-#lform{gap:14px}
+#lform{gap:12px}
+#lsheet .sh-head h2{font-size:18px}
+#lsheet .primary{min-height:42px;font-size:14.5px}
+.lx .linkbtn{font-size:13px}
+.lx>.linkbtn{margin-top:-4px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
-.lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:7px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:36px}
+.lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:32px}
 .lx-tab[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
 .lx-tab.fin{color:var(--good)}
-.lx-tab.addx{width:40px;padding:0;font-size:18px;line-height:1;color:var(--at)}
+.lx-tab.addx{width:36px;padding:0;font-size:17px;line-height:1;color:var(--at)}
 #l-add{display:flex;flex-direction:column;gap:8px}
 #l-add[hidden]{display:none}
-.lx{display:flex;flex-direction:column;gap:12px}
-.lx h3{margin:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
-.lt{display:flex;flex-direction:column;gap:4px}
-.lt-h,.lt-r{display:grid;grid-template-columns:40px 1fr 1fr 52px;gap:8px;align-items:center;text-align:center}
-.lt-h span{font-size:11.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
-.lt-r{min-height:44px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:17px;font-weight:600;font-variant-numeric:tabular-nums}
+.lx{display:flex;flex-direction:column;gap:10px}
+.lx h3{margin:0;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
+.lt{display:flex;flex-direction:column;gap:3px}
+.lt-h,.lt-r{display:grid;grid-template-columns:36px 1fr 1fr 46px;gap:6px;align-items:center;text-align:center}
+.lt-h span{font-size:10.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--mid)}
+.lt-r{min-height:38px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .lt-r.act{color:var(--ink)}
-.lt-r.act .n{background:var(--fill);border-radius:12px;height:44px;display:grid;place-items:center}
-.lt-r input[type="text"]{height:44px;padding:0 6px;text-align:center;font-size:18px;font-weight:700;background:var(--fill);border-color:transparent;border-radius:12px}
-.lt-r .chk{width:52px;height:44px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
-.lt-r .chk svg{width:18px;height:18px}
+.lt-r.act .n{background:var(--fill);border-radius:12px;height:40px;display:grid;place-items:center}
+.lt-r input[type="text"]{height:40px;padding:0 6px;text-align:center;font-size:16px;font-weight:700;background:var(--fill);border-color:transparent;border-radius:12px}
+.lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
+.lt-r .chk svg{width:16px;height:16px}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
-.lt-r .st svg{width:16px;height:16px}
+.lt-r .st svg{width:14px;height:14px}
 .lx .links{margin-top:0}
 .linkbtn.danger{color:var(--danger)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
-.lastx{gap:2px;padding:12px 14px 10px;width:100%;border:0;font:inherit;color:inherit;text-align:left}
-.lastx:active{background:var(--fill)}
-.lastx .note{margin:0 0 6px;display:flex;justify-content:space-between;gap:10px}
-.lastx .note b{flex:none;color:var(--at);font-weight:600}
-.lastx .lt-h,.lastx .lt-r{grid-template-columns:40px 1fr 1fr}
-.lastx .lt-r{min-height:24px;font-size:14px;font-weight:500}
+.lastx{gap:0;padding:10px 12px 8px}
+.lastx .note{margin:0 0 4px}
+.lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr}
+.lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
 /* Budget: Rest mitnehmen */
 .tog{display:flex;align-items:center;gap:12px;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--surface);cursor:pointer;position:relative}
@@ -543,8 +546,8 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-radius:16px}
 .days button{border-radius:14px}
 .kx,.prow,.tog{border-radius:16px}
-.lx-tab{border-radius:999px;padding:7px 13px}
-.lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:14px}
+.lx-tab{border-radius:999px;padding:6px 12px}
+.lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:12px}
 .cat .track{height:5px;border-radius:3px}
 .cat .track i{border-radius:3px}
 .mbar{border-radius:4px}
@@ -637,7 +640,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v26</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v27</span></footer>
 </div>
 </div>
 
@@ -891,7 +894,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div id="x-stats"></div>
-    <label class="fld" for="x-name" id="x-name-fld">
+    <label class="fld" for="x-name">
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
     </label>
@@ -2597,37 +2600,40 @@ function seriesSVG(pts, fmtV, steps, label) {
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-/* Verlauf einer Übung: Kennzahlen, Graph, alle Einheiten. view = nur ansehen (aus dem laufenden Training), sonst auch umbenennen und löschen. */
+/* Verlauf einer Übung als Bausteine, für das Blatt der Übung und fürs laufende Training.
+   full = Einheiten (alt nach neu), all = Graph über alle statt die letzten 12, act = Name des data-Attributs der Umschalter */
+function exStatsHTML(full, all, act) {
+  if (!full.length) return '';
+  const sc = full.map(x => ({ d: x.d, sets: x.sets, s: kScore(x.sets) })), wt = sc[sc.length - 1].s.w, same = sc.filter(q => q.s.w === wt);
+  const best = Math.max.apply(null, same.map(q => q.s.v)), dS = same.length > 1 ? kDelta(same[same.length - 1].sets, same[0].sets) : null;
+  const top = Math.max.apply(null, full.map(x => Math.max.apply(null, x.sets.map(s => s[0]))));
+  let st = '<div class="figs">' + (wt ? fig(kgn(top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(best), 'Wdh', 'Bestwert') + fig(dS ? dS.t : '–', '', 'seit Start')) +
+    fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
+  const pts = (all ? same : same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
+  if (pts.length > 1) st += '<div class="card chart">' +
+    (same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-' + act + '="last" aria-pressed="' + !all + '">Letzte 12</button><button type="button" class="chip" data-' + act + '="all" aria-pressed="' + !!all + '">Alle ' + same.length + '</button></div>' : '') +
+    '<p class="note">' + (wt ? 'Geschätztes Maximum (1RM) in kg' + (dS ? ' · seit Start ' + dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
+    seriesSVG(pts, wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
+  return st;
+}
+/* Einheiten von neu nach alt, jede mit der Veränderung zur Einheit davor */
+const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse();
+const exRowsHTML = rows => rows.map(o => {
+  const m = (K.meta || {})[o.x.d], pn = m ? planName(m.plan) : '';
+  return '<li><div class="xrow"><span class="l"><span>' + setsText(o.x.sets) + '</span><small>' + dRow(o.x.d) + (pn ? ' · ' + esc(pn) : '') + '</small></span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</div></li>';
+}).join('');
 function paintX() {
-  const full = kHist(xId);
-  let st = '';
-  if (full.length) {
-    const sc = full.map(x => ({ d: x.d, sets: x.sets, s: kScore(x.sets) })), wt = sc[sc.length - 1].s.w, same = sc.filter(q => q.s.w === wt);
-    const best = Math.max.apply(null, same.map(q => q.s.v)), dS = same.length > 1 ? kDelta(same[same.length - 1].sets, same[0].sets) : null;
-    const top = Math.max.apply(null, full.map(x => Math.max.apply(null, x.sets.map(s => s[0]))));
-    st = '<div class="figs">' + (wt ? fig(kgn(top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(best), 'Wdh', 'Bestwert') + fig(dS ? dS.t : '–', '', 'seit Start')) +
-      fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
-    const pts = (xAll ? same : same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
-    if (pts.length > 1) st += '<div class="card chart">' +
-      (same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-x="last" aria-pressed="' + !xAll + '">Letzte 12</button><button type="button" class="chip" data-x="all" aria-pressed="' + xAll + '">Alle ' + same.length + '</button></div>' : '') +
-      '<p class="note">' + (wt ? 'Geschätztes Maximum für eine Wiederholung (1RM) in kg' + (dS ? ' · seit Start ' + dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
-      seriesSVG(pts, wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
-  }
-  $('#x-stats').innerHTML = st;
-  const rows = full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse(), shown = xMore ? rows : rows.slice(0, 8);
-  $('#x-hist').innerHTML = shown.map(o => {
-    const m = (K.meta || {})[o.x.d], pn = m ? planName(m.plan) : '';
-    return '<li><div class="xrow"><span class="l"><span>' + setsText(o.x.sets) + '</span><small>' + dRow(o.x.d) + (pn ? ' · ' + esc(pn) : '') + '</small></span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</div></li>';
-  }).join('');
+  const full = kHist(xId), rows = exRows(full);
+  $('#x-stats').innerHTML = exStatsHTML(full, xAll, 'x');
+  $('#x-hist').innerHTML = exRowsHTML(xMore ? rows : rows.slice(0, 8));
   $('#x-hist-fld').hidden = !rows.length;
   const more = $('#x-more'); more.hidden = rows.length <= 8; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
 }
-function openX(id, view) {
+function openX(id) {
   const ex = K.ex[id]; if (!ex) return;
   xId = id; xArm = false; xAll = false; xMore = false;
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
-  $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
   paintX();
   openDlg(xdlg);
   xdlg.scrollTop = 0;
@@ -2689,7 +2695,7 @@ function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
 function wakeOff() { try { if (wakeL) wakeL.release(); } catch (e) {} wakeL = null; }
 function saveLive() { if (Lw && K.live && JSON.stringify(Lw) !== JSON.stringify(K.live)) kdoc.patch({ live: clone(Lw) }); }
-let lI = 0, lJ = null, lAdd = false, lRm = false;
+let lI = 0, lJ = null, lAdd = false, lRm = false, lAll = false, lMore = false;
 const undone = it => it.sets.findIndex(s => !s.done);
 function paintLPick() { if (Lw) paintPick('#l-pick', '#l-new', Lw.items.map(it => it.id), 'la'); }
 /* Eine Übung im Fokus: oben wechseln, darunter die Sätze. Der nächste offene Satz ist aktiv, ein Tipp auf eine andere Zeile macht sie aktiv. */
@@ -2719,14 +2725,19 @@ function paintL() {
     '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
   if (last) {
     const m = (K.meta || {})[last.d], pn = m ? planName(m.plan) : '';
-    h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + dRow(last.d) + (pn ? ' · ' + esc(pn) : '') + '</span><b>Verlauf</b></span><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
-      last.sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div></button>';
+    h += '<div class="card lastx"><p class="note">Letztes Mal · ' + dRow(last.d) + (pn ? ' · ' + esc(pn) : '') + '</p><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
+      last.sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div></div>';
+    /* Verlauf der Übung gleich darunter. Die jüngste Einheit steht schon in „Letztes Mal“ und fehlt deshalb in der Liste. */
+    const rows = exRows(hist).slice(1);
+    h += exStatsHTML(hist, lAll, 'lh');
+    if (rows.length) h += '<ul class="entries">' + exRowsHTML(lMore ? rows : rows.slice(0, 5)) + '</ul>' +
+      (rows.length > 5 ? '<button type="button" class="linkbtn" data-la="hmore">' + (lMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' früheren Einheiten zeigen') + '</button>' : '');
   }
   $('#l-items').innerHTML = h + '</div>';
 }
 function openL() {
   if (!K.live) return;
-  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false;
+  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lAll = false; lMore = false;
   const open = Lw.items.findIndex(it => undone(it) >= 0);
   lI = open >= 0 ? open : 0;
   $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
@@ -2750,12 +2761,13 @@ $('#lform').addEventListener('keydown', e => {
   if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f) { e.preventDefault(); const b = $('#l-items .chk'); if (b) b.click(); }
 });
 $('#lform').addEventListener('click', e => {
+  const hr = e.target.closest('[data-lh]'); if (hr && Lw) { lAll = hr.dataset.lh === 'all'; paintL(); return; }
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
-  if (a === 'hist') { if (it) openX(it.id, true); return; }
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
-  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; }
+  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lAll = false; lMore = false; }
+  else if (a === 'hmore') lMore = !lMore;
   else if (a === 'addx') lAdd = !lAdd;
   else if (a === 'sel') lJ = +t.dataset.s;
   else if (a === 'done' && it) {
