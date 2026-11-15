@@ -1,10 +1,10 @@
-# Takt – Alltags-Tracker (v22)
+# Takt – Alltags-Tracker (v23)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v22` → `takt-v23`), sonst sehen installierte Geräte die Änderung nicht.
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v23` → `takt-v24`), sonst sehen installierte Geräte die Änderung nicht.
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -22,7 +22,7 @@ Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Haushalt mit B
 - Die App lädt nichts von fremden Servern nach (keine Schriften, keine Skripte), sie läuft komplett offline.
 
 ## Orientierung im Script
-Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, state, sound, persistence, actions, render, sheet, Gewicht, Haushalt, Training: Cardio, Training: Kraft (im Code heißt Gym „Kraft“), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, boot.
+Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt, Training: Cardio, Training: Kraft (im Code heißt Gym „Kraft“), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, boot.
 - Jeder Bereich hat eine `render…`-Funktion, die das HTML seiner `.view` neu schreibt, und einen Klick-Listener mit `data-…`-Attributen.
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`. Modi: `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
 - Laufendes Training: `paintL()`, `liveTick()`, Zustand in `K.live`, Arbeitskopie `Lw`.

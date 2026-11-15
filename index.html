@@ -1078,34 +1078,6 @@ function schedText(r) {
   return DAYS.filter((_, i) => d[i]).join(', ');
 }
 
-/* ---------- sound ---------- */
-let actx = null, chime = null;
-function armChime(inSec) {
-  try {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    actx = actx || new AC();
-    if (actx.resume) actx.resume();
-    disarmChime();
-    const t0 = actx.currentTime + Math.max(0, inSec);
-    chime = [[659.25, 0], [987.77, 0.2], [1318.5, 0.4]].map(([f, dt]) => {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = 'sine'; o.frequency.value = f;
-      g.gain.setValueAtTime(0.0001, t0 + dt);
-      g.gain.exponentialRampToValueAtTime(0.2, t0 + dt + 0.03);
-      g.gain.exponentialRampToValueAtTime(0.0001, t0 + dt + 1.1);
-      o.connect(g); g.connect(actx.destination);
-      o.start(t0 + dt); o.stop(t0 + dt + 1.2);
-      return [o, g];
-    });
-  } catch (e) {}
-}
-function disarmChime() {
-  if (!chime) return;
-  chime.forEach(([o, g]) => { try { o.stop(); } catch (e) {} try { o.disconnect(); g.disconnect(); } catch (e) {} });
-  chime = null;
-}
-
 /* ---------- persistence (alles liegt in localStorage, siehe loadLocal und saveLocal) ---------- */
 function mergeInto(base, over) {
   if (!over) return base;
@@ -1126,13 +1098,11 @@ function start(r) {
   if (secsOf(tk, r.id) >= goal(r)) return finish(r, tk);
   S.running = { id: r.id, startedAt: Date.now(), date: tk };
   saveLocal();
-  armChime(goal(r) - secsOf(tk, r.id));
   ensureTicker(); render();
 }
 function pause(silent) {
   const ru = S.running; if (!ru) return;
   const r = byId(ru.id);
-  disarmChime();
   S.running = null; saveLocal();
   if (r) {
     const s = Math.min(goal(r), secsOf(ru.date, r.id) + Math.max(0, (Date.now() - ru.startedAt) / 1000));
@@ -1377,16 +1347,16 @@ $('#form').addEventListener('submit', e => {
   }
   saveLocal(); closeSheet(); render();
 });
-$('#act-done').addEventListener('click', () => { const r = byId(editId); closeSheet(); if (r) { disarmChime(); finish(r, todayKey()); } });
+$('#act-done').addEventListener('click', () => { const r = byId(editId); closeSheet(); if (r) finish(r, todayKey()); });
 $('#act-reset').addEventListener('click', () => {
   const r = byId(editId); closeSheet(); if (!r) return;
-  if (isRunning(r)) { disarmChime(); S.running = null; saveLocal(); }
+  if (isRunning(r)) { S.running = null; saveLocal(); }
   setEntry(todayKey(), r.id, { s: 0, d: 0 }); render();
 });
 $('#act-del').addEventListener('click', () => {
   if (!delArmed) { delArmed = true; $('#act-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
   const id = editId; closeSheet();
-  if (S.running && S.running.id === id) { disarmChime(); S.running = null; }
+  if (S.running && S.running.id === id) S.running = null;
   S.routines = S.routines.filter(r => r.id !== id);
   saveLocal(); render();
 });
