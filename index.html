@@ -342,7 +342,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .kset input[type="text"]{padding:8px 8px;font-size:16px;font-weight:600;text-align:center}
 .kset button,.x.sm{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:20px;line-height:1;display:grid;place-items:center;padding:0}
 .x.sm svg{width:12px;height:12px}
-#kform .stepper input,#lform .stepper input,#pform .stepper input,#vform #v-new{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
+#kform .stepper input,#lform .stepper input,#pform .stepper input,#vform #v-new,#mform #m-accnew{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
 .entries .xrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;font-size:15px}
 .entries b.up{color:var(--good)}
 .entries b.down{color:var(--danger)}
@@ -527,12 +527,14 @@ button.lastx:active{background:var(--fill)}
 .lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr}
 .lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
+.stepper[hidden]{display:none}
 /* Vermögen: Stand je Konto eintragen */
 #v-body{display:flex;flex-direction:column;gap:16px}
 .vrows{display:flex;flex-direction:column;gap:6px}
 .vrow{display:grid;grid-template-columns:minmax(0,1fr) 116px auto 36px;gap:8px;align-items:center}
-.vrow b{font-size:14.5px;font-weight:500;overflow-wrap:anywhere}
 .vrow input[type="text"]{text-align:right;padding:9px 12px;font-family:var(--round);font-weight:600}
+.vrow input.vname{text-align:left;padding:9px 0;background:none;border-radius:8px;font-family:var(--body);font-weight:500}
+.vrow input.vname:focus-visible{outline-offset:2px}
 .vrow em{font-style:normal;color:var(--muted);font-size:13px}
 .vrows .err{margin:-2px 0 4px}
 .rows .goal .streak b{font-size:19px}
@@ -666,7 +668,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v39</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v40</span></footer>
 </div>
 </div>
 
@@ -804,6 +806,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="fld" id="m-acc-fld" hidden>
       <span id="lbl-m-acc">Konto</span>
       <div class="chips" id="m-acc" role="group" aria-labelledby="lbl-m-acc"></div>
+      <div class="stepper" id="m-accnew-row" hidden>
+        <input id="m-accnew" type="text" maxlength="30" autocomplete="off" placeholder="Name des Kontos, z. B. PayPal" aria-label="Name des neuen Kontos">
+        <button type="button" id="m-accnew-add" aria-label="Konto anlegen">+</button>
+      </div>
     </div>
     <div class="fld" id="m-to-fld" hidden>
       <span id="lbl-m-to">Nach</span>
@@ -1980,7 +1986,8 @@ function wealthHTML(curYM) {
   for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
   if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
   h += '<h2 class="sec">Konten</h2><ul class="entries">' + accList().map(a => {
-    const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id); if (v == null) return '';
+    const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id);
+    if (v == null) return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' eintragen"><span class="l"><span>' + esc(a.n) + '</span><small>noch kein Stand eingetragen</small></span><b class="dim">–</b></button></li>';
     return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span>' + (st.n ? '<small>gerechnet seit ' + dRow(st.aD) + '</small>' : '') + '</span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
   }).join('') + '</ul>';
   if (!year) {
@@ -2065,7 +2072,7 @@ function paintV() {
   const prev = ymOfIdx(ymIdx(vS.ym) - 1);
   $('#v-body').innerHTML = '<label class="fld" for="v-month"><span>Monat</span><input id="v-month" type="month" max="' + cur + '" value="' + vS.ym + '" placeholder="JJJJ-MM"></label>' +
     (accs.length ? '<div class="fld"><span>Stand je Konto</span><div class="vrows">' + accs.map(a => { const last = accAt(a.id, prev);
-      return '<div class="vrow"><b>' + esc(a.n) + '</b><input type="text" inputmode="decimal" autocomplete="off" data-acc="' + esc(a.id) + '" value="' + esc(vS.vals[a.id] || '') + '" placeholder="' + (last != null ? 'zuletzt ' + minus(last) + eur0(last) : '0') + '" aria-label="Stand ' + esc(a.n) + ' in Euro"><em>€</em>' +
+      return '<div class="vrow"><input class="vname" type="text" maxlength="30" autocomplete="off" data-accn="' + esc(a.id) + '" value="' + esc(a.n) + '" aria-label="Name des Kontos"><input type="text" inputmode="decimal" autocomplete="off" data-acc="' + esc(a.id) + '" value="' + esc(vS.vals[a.id] || '') + '" placeholder="' + (last != null ? 'zuletzt ' + minus(last) + eur0(last) : '0') + '" aria-label="Stand ' + esc(a.n) + ' in Euro"><em>€</em>' +
         '<button type="button" class="x sm" data-vdel="' + esc(a.id) + '" aria-label="' + esc(a.n) + ' löschen">' + XSVG + '</button></div>' +
         (vS.arm === a.id ? '<p class="err">Noch einmal auf das Kreuz tippen löscht ' + esc(a.n) + ' mit allen Ständen.</p>' : ''); }).join('') + '</div></div>' : '') +
     '<div class="fld"><span>Konto hinzufügen</span><div class="stepper"><input id="v-new" type="text" maxlength="30" autocomplete="off" placeholder="z. B. Girokonto" aria-label="Name des Kontos"><button type="button" id="v-new-add" aria-label="Konto hinzufügen">+</button></div></div>';
@@ -2081,10 +2088,17 @@ function openV(mode, id) {
   vdlg.scrollTop = 0;
 }
 function closeV() { if (vdlg.open) vdlg.close(); }
+/* Konto anlegen oder (mit id) umbenennen. Liefert die id, bei doppeltem Namen null. */
+function saveAcc(name, id) {
+  if (accList().some(a => a.id !== id && a.n.toLowerCase() === name.toLowerCase())) return null;
+  const nid = id || newId(), p = { acc: {} }; p.acc[nid] = { n: name }; mfdoc.patch(p);
+  return nid;
+}
+const ACC_DUP = 'Ein Konto mit diesem Namen gibt es schon.';
 function addAcc() {
   const i = $('#v-new'), name = i.value.trim().slice(0, 30); if (!name) return i.focus();
-  if (accList().some(a => a.n.toLowerCase() === name.toLowerCase())) { const x = $('#v-err'); x.textContent = 'Ein Konto mit diesem Namen gibt es schon.'; x.hidden = false; return; }
-  const id = newId(), p = { acc: {} }; p.acc[id] = { n: name }; mfdoc.patch(p);
+  const id = saveAcc(name);
+  if (!id) { const x = $('#v-err'); x.textContent = ACC_DUP; x.hidden = false; return; }
   $('#v-err').hidden = true; vS.arm = null; paintV(); renderMoney();
   const f = vdlg.querySelector('[data-acc="' + CSS.escape(id) + '"]'); if (f) f.focus();
 }
@@ -2104,6 +2118,12 @@ vdlg.addEventListener('click', e => {
 });
 $('#vform').addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.acc) vS.vals[t.dataset.acc] = t.value; });
 $('#vform').addEventListener('change', e => {
+  /* Konto umbenennen: Name im Feld ändern. Leer oder doppelt wird zurückgesetzt. */
+  if (e.target.dataset && e.target.dataset.accn) {
+    const t = e.target, id = t.dataset.accn, name = t.value.trim().slice(0, 30), x = $('#v-err');
+    if (!name || !saveAcc(name, id)) { t.value = accName(id); x.textContent = name ? ACC_DUP : 'Ein Konto braucht einen Namen.'; x.hidden = false; return; }
+    t.value = name; x.hidden = true; renderMoney(); return;
+  }
   if (e.target.id !== 'v-month') return;
   const ym = e.target.value.trim();
   if (isYM(ym) && ym <= todayKey().slice(0, 7)) { vS.ym = ym; vS.vals = loadVals(ym); vS.orig = Object.assign({}, vS.vals); vS.arm = null; paintV(); }
@@ -2150,10 +2170,12 @@ function paintM() {
   const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget', tr = tx && mE.kind === 'tr', accs = accList();
   const chip = (attr, id, name, on) => '<button type="button" class="chip" ' + attr + '="' + esc(id) + '" aria-pressed="' + on + '">' + esc(name) + '</button>';
   $('#m-note-fld').hidden = !tx || tr; $('#m-date-fld').hidden = !tx;
-  /* Konto: nur wenn es Konten gibt. Die Buchung verändert dann den Stand dieses Kontos. */
-  $('#m-acc-fld').hidden = !(accs.length && (tx || fx)); $('#m-to-fld').hidden = !tr; $('#m-day-fld').hidden = !(fx && mE.acc);
+  /* Konto: Die Buchung verändert den Stand dieses Kontos. Das Plus legt ein neues Konto an. */
+  $('#m-acc-fld').hidden = !(tx || fx); $('#m-to-fld').hidden = !tr; $('#m-day-fld').hidden = !(fx && mE.acc);
   $('#lbl-m-acc').textContent = tr ? 'Von' : 'Konto';
-  $('#m-acc').innerHTML = (tr ? '' : chip('data-a', '', 'Kein Konto', !mE.acc)) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('');
+  $('#m-acc').innerHTML = (tr || !accs.length ? '' : chip('data-a', '', 'Kein Konto', !mE.acc)) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('') +
+    (tr ? '' : '<button type="button" class="chip" data-a="__new" aria-expanded="' + !!mE.newAcc + '">' + (mE.newAcc ? 'Abbrechen' : '+ Konto') + '</button>');
+  $('#m-accnew-row').hidden = !mE.newAcc || tr;
   $('#m-to').innerHTML = accs.filter(a => a.id !== mE.acc).map(a => chip('data-to', a.id, a.n, mE.to === a.id)).join('');
   $('#m-cat-fld').hidden = !(bg || (tx && mE.kind === 'out'));
   $('#m-name-fld').hidden = !fx; $('#m-every-fld').hidden = !fx; $('#m-from-fld').hidden = !fx;
@@ -2224,7 +2246,20 @@ $('#m-cat').addEventListener('click', e => {
   if (mE.mode === 'budget' && b.dataset.c !== '__more') { const cur = (MF.budgets || {})[mE.cat]; $('#m-amt').value = cur ? eur(cur).replace(' €', '') : ''; $('#m-roll').checked = !!(cur && (MF.roll || {})[mE.cat]); }
   paintM();
 });
-$('#m-acc').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.acc = b.dataset.a; if (mE.to === mE.acc) mE.to = ''; paintM(); } });
+$('#m-acc').addEventListener('click', e => {
+  const b = e.target.closest('.chip'); if (!b) return;
+  if (b.dataset.a === '__new') { mE.newAcc = !mE.newAcc; paintM(); if (mE.newAcc) $('#m-accnew').focus(); return; }
+  mE.acc = b.dataset.a; if (mE.to === mE.acc) mE.to = ''; paintM();
+});
+/* Neues Konto beim Buchen: anlegen und gleich auswählen. Seinen Stand trägt man später im Bereich Vermögen ein. */
+function addAccM() {
+  const i = $('#m-accnew'), name = i.value.trim().slice(0, 30), x = $('#m-err'); if (!name) return i.focus();
+  const id = saveAcc(name);
+  if (!id) { x.textContent = ACC_DUP; x.hidden = false; return; }
+  x.hidden = true; i.value = ''; mE.acc = id; mE.newAcc = false; paintM(); renderMoney();
+}
+$('#m-accnew-add').addEventListener('click', addAccM);
+$('#m-accnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccM(); } });
 $('#m-to').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.to = b.dataset.to; paintM(); } });
 $('#m-every').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.every = +b.dataset.e; paintM(); } });
 $('#mform').addEventListener('submit', e => {

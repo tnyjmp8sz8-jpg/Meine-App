@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v39)
+# Track. – Projektwissen (App-Stand v40)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -32,6 +32,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - `sw.js`: cache-first mit Aktualisierung im Hintergrund; der Cache-Name `takt-vN` trägt die Versionsnummer.
 - `manifest.webmanifest`, `icon-180/192/512.png`: Installation auf dem Home-Bildschirm. `.nojekyll` für Pages.
 - `CLAUDE.md` (dieses Wissen), `PROGRESS.md` (Stand, Offenes, nächste Schritte).
+- `tests/`: Tests und Bildschirmfotos (siehe „Testen“ und `tests/LIESMICH.md`). Gehören nicht zur App; der Service Worker speichert sie nicht.
 - Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
 - Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
@@ -39,7 +40,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
   - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
-  - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (nur wenn Konten existieren, Vorbelegung `lastAcc()`), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
+  - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `lastAcc()`) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
   - Budget: `monthHTML()`, `yearHTML()`, `mSum()`, `ySum()`, `rateHTML()` Sparquote, Blatt `msheet` mit `openM('tx'|'fixed'|'budget')`.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
@@ -120,21 +121,22 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 ## Zusammenarbeit
 - Sprache: Deutsch, einfache Worte, kurz. Der Nutzer ist kein Entwickler, arbeitet am iPhone und schickt Screenshots.
 - Zu jeder Änderung einen eigenen, konkreten Verbesserungsvorschlag mitbringen: nur vorschlagen, nicht ungefragt umsetzen. Offene Vorschläge stehen in `PROGRESS.md`.
+- Mitdenken ist ausdrücklich erwünscht („immer weiter so“): Was eine Idee des Nutzers braucht, damit sie im Alltag wirklich stimmt, gleich mitbauen und erklären (Beispiel: Zu Konten an Buchungen gehörten Umbuchungen und der Tag bei festen Posten).
 - Nichts umsetzen, wovon man selbst nicht überzeugt ist. Ist ein Wunsch keine gute Idee, das offen sagen und eine bessere Lösung nennen. Eigene Fehler und falsche Vorschläge benennen.
 - Antwort nach einer Änderung: was neu ist, was bewusst anders gelöst wurde, wie getestet wurde, was nicht getestet werden konnte, welche Version live ist, ein Vorschlag.
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v39` → `takt-v40`), `<span class="ver">v39</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v40` → `takt-v41`), `<span class="ver">v40</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
-- Werkzeug: Playwright mit dem vorinstallierten Chromium, die App direkt als Datei geöffnet. Testskripte liegen im Arbeitsordner der Sitzung, nicht im Repository, und müssen in einer neuen Sitzung neu geschrieben werden.
-- Immer prüfen: Syntax des Scripts, dunkel und hell, 390 und 320 px, leerer Zustand und Zustand mit Beispieldaten, keine Fehler in der Konsole.
-- Ablauftest über die Oberfläche: Sicherung einlesen, Routine anlegen und starten, Gewicht, Ausgabe, Einnahme, Lauf, Gym-Training; danach müssen dieselben Daten gespeichert sein wie vor der Änderung.
-- Bei Rechenwerten ein Beispiel von Hand nachrechnen und mit der Anzeige vergleichen.
-- Den Fall des Nutzers nachstellen, wenn er einen Fehler meldet (seine Daten sind oft sehr klein: eine Übung, wenige Einheiten, alles im selben Monat).
-- Beispieldaten nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich beim Neuladen und überschreibt dann die Daten. Besser einmal nach dem Laden einspielen.
-- Service Worker und Selbst-Aktualisierung brauchen http: Der Test liefert die Dateien dann selbst aus, nur für die Dauer des Tests. Ein dauerhaft laufender lokaler Server wird von der Berechtigungsprüfung abgelehnt.
-- Die veröffentlichte App lässt sich abrufen, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
+- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Finanzen, Gym, Speichern, Aktualisierung. Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
+- `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
+- Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
+- Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.
+- Meldet der Nutzer einen Fehler, zuerst seinen Fall nachstellen (seine Daten sind oft sehr klein: eine Übung, wenige Einheiten, alles im selben Monat).
+- Beispieldaten nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich beim Neuladen und überschreibt dann die Daten. `oeffnen({ daten })` in `tests/lib.js` spielt sie einmal nach dem Laden ein.
+- Service Worker und Selbst-Aktualisierung brauchen http: `tests/update.js` liefert die Dateien selbst aus, nur für die Dauer des Tests. Ein dauerhaft laufender lokaler Server wird von der Berechtigungsprüfung abgelehnt.
+- Was Tests nicht zeigen, steht unter „iPhone-Besonderheiten“.
