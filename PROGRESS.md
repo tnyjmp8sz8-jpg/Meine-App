@@ -37,6 +37,7 @@
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
 - Finanzen: Umschalter für Schulden (negative Stände).
+- Sicherung: Erinnerung schon nach sieben Tagen, sobald Konten geführt werden.
 - Name: den Punkt von „Track.“ in der Kopfzeile in Akzentblau.
 - Kopfzeile: Linie darunter erst zeigen, wenn gescrollt wurde.
 - Gym: „Stärkste Übung“ und „Schwächste Übung“ im Monats-Recap.
