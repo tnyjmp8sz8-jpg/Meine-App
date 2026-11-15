@@ -54,6 +54,16 @@
 - Noch offen: alte CSS-Regeln zusammenführen, die weiter unten überschrieben werden (rein intern, Risiko fürs Aussehen; nur mit Bildvergleich vorher/nachher).
 - Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, automatische iCloud-Sicherung.
 
+## Apple-Look: was noch fehlt (Einschätzung nach v46, nur auf Zuruf und immer erst mit Bild fragen)
+1. Pfeile für Monat/Jahr ohne graue Kreise, als schlichte blaue Pfeile (wie im Apple-Kalender).
+2. Aktiver Bereich unten mit gefülltem Symbol statt nur blauer Linie.
+3. Linie unter der Kopfzeile erst zeigen, wenn gescrollt wurde.
+4. Alle Symbole mit derselben Strichstärke zeichnen (Leiste unten, Plus, Pfeile, „i“ weichen leicht voneinander ab).
+5. Leere Zustände mit Symbol, einer Zeile und einem Knopf statt Textkasten.
+6. App-Symbol: ein einzelnes Zeichen auf leichtem Verlauf statt drei Balken auf Schwarz.
+7. Zahlen beim Wechsel des Monats kurz hochzählen lassen.
+Nicht machbar in der Web-App: Milchglas in der Kopfzeile (machte sie auf dem iPhone unscharf, v37), Haptik.
+
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
