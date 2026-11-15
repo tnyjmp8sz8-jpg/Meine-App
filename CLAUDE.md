@@ -1,11 +1,11 @@
-# Track. – Alltags-Tracker (v36)
+# Track. – Alltags-Tracker (v37)
 
 Persönliche All-in-One-App als PWA: Routinen mit Timer, Gewicht, Finanzen mit Budgets, Training (Cardio und Gym). Sprache der Oberfläche und der Kommentare: Deutsch.
 
 ## Aufbau
 - Die App heißt „Track.“ (mit Punkt), früher „Takt“. Der alte Name bleibt absichtlich in allen internen Kennungen: `localStorage`-Schlüssel `takt.v1`, `takt.backup`, `takt.view`, Cache-Name `takt-vN` und `app: 'takt'` in der Sicherungsdatei. Diese nie umbenennen, sonst sind die Daten des Nutzers weg oder alte Sicherungen unlesbar.
 - `index.html` – die ganze App in einer Datei: CSS im `<style>`, HTML mit allen Blättern (`<dialog>`), JavaScript in einem `<script>` (IIFE, kein Build, keine Abhängigkeiten).
-- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v36` → `takt-v37`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v36</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
+- `sw.js` – Service Worker, cache-first mit Aktualisierung im Hintergrund. **Bei jeder Änderung an `index.html` den Cache-Namen hochzählen** (`takt-v37` → `takt-v38`) **und dieselbe Nummer unten in der Fußzeile eintragen** (`<span class="ver">v37</span>` in `index.html`), sonst sehen installierte Geräte die Änderung nicht. Mit neuem Cache-Namen aktualisiert sich die App selbst: Beim Öffnen sucht sie nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt (nicht, solange ein Blatt offen ist).
 - `manifest.webmanifest`, `icon-*.png` – Installation auf dem Homescreen.
 - Kein Server nötig: statisch ausliefern (z. B. `python3 -m http.server`), der Service Worker braucht http(s) oder localhost.
 
@@ -46,6 +46,7 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Wortwahl in der Oberfläche: „Gym“, nicht „Kraft“; „Finanzen“, nicht „Haushalt“ (im Code heißt der Bereich weiter `haushalt`).
 - Hell und dunkel folgen der Systemeinstellung; beide prüfen, ebenso 320 px Breite.
 - HTML wird per String gebaut: Nutzertexte immer durch `esc()` schicken.
+- Kein `backdrop-filter` und keine durchscheinenden Flächen über scrollendem Inhalt: Auf dem iPhone wurde die Kopfzeile damit beim Scrollen selbst unscharf. Kopfzeile und Leiste sind deckend.
 - Nichts darf seitlich wischbar oder abgeschnitten sein. Datumsfelder brauchen auf dem iPhone `appearance:none` (steht im CSS), sonst werden sie breiter als ihr Platz. Das lässt sich im Test-Browser nicht nachstellen: nach Änderungen an Blättern den Nutzer bitten, am iPhone zu prüfen.
 
 ## Zusammenarbeit (vom Nutzer so gewünscht)

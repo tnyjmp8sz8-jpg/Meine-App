@@ -34,7 +34,6 @@
   --good:#248A3D;
   --c-weight:#AF52DE;
   --c-money:#F08C00;
-  --head:rgba(242,242,247,.82);
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
   --body:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI",Roboto,system-ui,sans-serif;
   --round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
@@ -43,13 +42,13 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A; --head:rgba(14,15,19,.82);
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A; --head:rgba(14,15,19,.82);
+  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A;
   color-scheme:dark;
 }
 
@@ -64,7 +63,8 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 24px;display:flex;flex-direction:column;gap:22px;min-height:100%}
 
-.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--head);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+/* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
+.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
 .add{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
 .add svg{width:20px;height:20px}
@@ -196,7 +196,7 @@ dialog,.scroll{overflow-x:hidden}
 
 /* Bereiche und Leiste */
 body{display:flex;flex-direction:column;overflow:hidden}
-.scroll{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.scroll{flex:1;min-height:0;overflow-y:auto}
 .view{display:flex;flex-direction:column;gap:22px}
 .view[hidden],.fld[hidden]{display:none}
 .view>.sec{margin:6px 2px -12px}
@@ -472,7 +472,7 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .cs-top .linkbtn{margin:0;font-size:15px;padding:8px 6px}
 .cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:1px solid var(--line)}
 .cs-wd span{text-align:center;font-size:11px;font-weight:600;color:var(--mid)}
-.cs-body{flex:1;min-height:0;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:0 10px 18px}
+.cs-body{flex:1;min-height:0;overflow-y:auto;padding:0 10px 18px}
 .cm{padding-top:16px}
 .cm h3{margin:0 8px;font-family:var(--display);font-size:18px;font-weight:700;letter-spacing:-.02em}
 .cm p{margin:1px 8px 6px;color:var(--muted);font-size:12.5px}
@@ -656,7 +656,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v36</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v37</span></footer>
 </div>
 </div>
 
