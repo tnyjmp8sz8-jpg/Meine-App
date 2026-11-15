@@ -545,6 +545,8 @@ button.lastx:active{background:var(--fill)}
 
 /* Übungen einklappbar */
 .fold{display:inline-flex;align-items:center;gap:8px}
+.mons{display:flex;flex-direction:column;gap:6px}
+.entries button.mon .l{font-weight:600}
 .fold svg{width:14px;height:14px;transition:transform .2s ease}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
@@ -650,7 +652,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v29</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v30</span></footer>
 </div>
 </div>
 
@@ -1030,7 +1032,7 @@ const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', kAll = false, kExOpen = false, hMode = 'day', hWeek = '';
+let tSub = 'cardio', kAll = false, kMon = {}, kExOpen = false, hMode = 'day', hWeek = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -2324,14 +2326,26 @@ function kraftHTML(curYM) {
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (dS ? '<span class="r"><b class="' + dS.c + '">' + dS.t + '</b><small>seit Start' + (dL ? ' · zuletzt ' + dL.t : '') + '</small></span>' : '') + '</button></li>';
     }).join('') : '') + '</ul>';
-  const rev = dates.slice().reverse(), shown = kAll ? rev : rev.slice(0, 5);
-  h += '<h2 class="sec">Einheiten</h2>';
-  h += rev.length ? '<ul class="entries">' + shown.map(d => {
+  /* Einheiten: zuerst nur die letzten drei. Aufgeklappt nach Monaten gruppiert, jeder Monat einklappbar, der jüngste ist offen. */
+  const rev = dates.slice().reverse();
+  const unitRow = d => {
     const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
     return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
       '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b></button></li>';
-  }).join('') + '</ul>' : '<p class="note">Noch keine Einheit eingetragen.</p>';
-  if (rev.length > 5) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
+  };
+  h += '<h2 class="sec">Einheiten</h2>';
+  if (!rev.length) h += '<p class="note">Noch keine Einheit eingetragen.</p>';
+  else if (!kAll) h += '<ul class="entries">' + rev.slice(0, 3).map(unitRow).join('') + '</ul>';
+  else {
+    const groups = [];
+    rev.forEach(d => { const ym = d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.ds.push(d); else groups.push({ ym, ds: [d] }); });
+    h += '<div class="mons">' + groups.map((g, i) => {
+      const open = kMon[g.ym] != null ? kMon[g.ym] : i === 0;
+      return '<ul class="entries"><li><button type="button" class="two mon" data-k="mon" data-ym="' + g.ym + '" aria-expanded="' + open + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span></span><b class="dim fold">' + g.ds.length + CHEV_D + '</b></button></li>' +
+        (open ? g.ds.map(unitRow).join('') : '') + '</ul>';
+    }).join('') + '</div>';
+  }
+  if (rev.length > 3) h += '<button type="button" class="linkbtn" data-k="more">' + (kAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einheiten zeigen') + '</button>';
   return h;
 }
 $('#v-training').addEventListener('click', e => {
@@ -2341,6 +2355,7 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'ex') openX(t.dataset.id);
   else if (a === 'more') { kAll = !kAll; renderTraining(); }
   else if (a === 'exs') { kExOpen = !kExOpen; renderTraining(); }
+  else if (a === 'mon') { kMon[t.dataset.ym] = t.getAttribute('aria-expanded') !== 'true'; renderTraining(); }
   else if (a === 'start') startPlan(t.dataset.id);
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
