@@ -41,3 +41,18 @@ Die Abschnitte sind mit `/* ---------- Name ---------- */` markiert: helpers, st
 - Wortwahl in der Oberfläche: „Gym“, nicht „Kraft“.
 - Hell und dunkel folgen der Systemeinstellung; beide prüfen, ebenso 320 px Breite.
 - HTML wird per String gebaut: Nutzertexte immer durch `esc()` schicken.
+
+## Zusammenarbeit (vom Nutzer so gewünscht)
+- Sprache: Deutsch, einfache Worte, kurz. Der Nutzer ist kein Entwickler und bedient GitHub nur am iPhone.
+- Zu jeder Änderung einen eigenen, konkreten Verbesserungsvorschlag mitbringen (nur vorschlagen, nicht ungefragt umsetzen). Richtung: clean, modern, angenehm, alltagstauglich. Stetiger Fortschritt in kleinen Schritten.
+- Nichts umsetzen, wovon man selbst nicht überzeugt ist. Ist ein Wunsch des Nutzers keine gute Idee, das offen sagen und eine bessere Lösung nennen.
+- Vor jeder Veröffentlichung im Test-Browser prüfen (dunkel, hell, 320 px, Ablauf mit Daten) und die Version hochzählen.
+- Auslieferung: Der Zweig `main` wird über GitHub Pages ausgeliefert (https://tnyjmp8sz8-jpg.github.io/Meine-App/). Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt veröffentlicht werden darf, in jeder neuen Sitzung beim Nutzer erfragen.
+- Nach einer Veröffentlichung sagen, welche Version live ist. Der Nutzer prüft das an der Nummer in der Fußzeile.
+
+## Was dem Nutzer gefällt (aus Rückmeldungen gelernt)
+- Der Look von v21 an („genau getroffen“): fast schwarzer, bläulicher Grund, Karten nur eine Stufe heller, wenige farbige Akzente mit Bedeutung.
+- Kompakt statt groß: viel auf einen Blick, eine Liste statt mehrerer großer Karten, Heute passt auf einen Bildschirm.
+- Farbe als Detail, nicht als Fläche: Bereichs-Symbole, Punkte, ein blauer Hauptknopf.
+- Ruhig: keine Töne, keine Ränder um Karten, keine Großbuchstaben-Labels, keine erklärenden Texte ohne Nutzen.
+- Im Zweifel die schlichtere Lösung wählen und lieber etwas weglassen.
