@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v44 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v45 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -18,6 +18,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v45: Aus der Durchsicht, Punkte 3, 6, 7: „Rückgängig“ nach jedem Löschen; eigene Kategorien („+ Kategorie“ im Blatt); Erinnerung an die Sicherung nach 7 statt 14 Tagen; Startbilder fürs iPhone.
 - v44: Aus der Durchsicht, Punkte 1, 2, 4, 5: Zeitraum in einer Reihe und Wochenleiste nur auf Heute und Routinen (Kalender über Knopf in der Kopfzeile); Blätter nach unten wegziehen, zwischen Monaten wischen; Graphen ablesbar; Erklärungen hinter „i“; „kg“/„Wdh“ normal geschrieben.
 - v43: Zeile „Ohne Konto“ im Bereich Vermögen: zeigt eingeklappt, was ohne Konto gebucht ist und deshalb nicht mitrechnet; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen.
 
@@ -39,29 +40,30 @@
 - Kontoname im Blatt „Stand eintragen“ antippen und ändern (v40).
 - Rechnet das Vermögen nach einer Ausgabe oder Einnahme jetzt mit (v42)? Ist im Blatt das Konto schon blau gewählt?
 - Zeile „Ohne Konto“ im Vermögen (v43): aufklappen, Buchung antippen, Konto wählen, speichern.
+- Blatt am Griff nach unten wegziehen (v44): fühlt es sich richtig an, ruckelt oder federt etwas? Scrollt ein langes Blatt weiter normal?
+- Zwischen Monaten wischen (v44) in Finanzen und Training: löst es aus Versehen aus, wenn man nur scrollt?
+- Graph antippen und mit dem Finger entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
+- Kalender-Knopf oben rechts in Gewicht, Finanzen, Training (v44).
+- „Rückgängig“ nach dem Löschen (v45): liegt der Hinweis gut über der Leiste unten?
+- Startbild (v45): wirkt wohl erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern). Kein weißer Blitz mehr beim Öffnen?
 
-## Durchsicht der ganzen App (nach v43, auf Wunsch des Nutzers: „Apple-like Produkt“)
-Urteil: Aussehen nah dran, Bediengefühl noch nicht. Befunde, nach Wirkung geordnet (nur auf Zuruf umsetzen):
-1. Zu viel Bedienleiste über dem Inhalt: in Finanzen und Training vier Reihen (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) vor der ersten Zahl. Idee: Wochenleiste nur auf Heute und Routinen, Monat/Jahr und Pfeile in eine Reihe.
-2. Blätter lassen sich nicht nach unten wegwischen, obwohl der Griff das verspricht; kein Wischen zwischen Monaten. Im Code gibt es keine Wischgesten.
-3. Löschen ohne „Rückgängig“.
-4. Graphen sind nicht antippbar (kein Wert an einem Punkt).
-5. Erklärtexte stehen dauerhaft da (Gym-Verbesserung, Zusammenhänge, „pro Tag bis Monatsende“): hinter ein kleines „i“.
-6. Kleinigkeiten: „KG“, „WDH“ in Großbuchstaben im laufenden Training (`.lt-h span`, gegen die Vorliebe des Nutzers, von mir übersehen); keine eigenen Kategorien; kein Startbild beim Öffnen; alte CSS-Regeln, die weiter unten überschrieben werden, zusammenführen.
-7. Daten nur auf dem Gerät, Sicherung von Hand: größtes Risiko.
-Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, iCloud-Sicherung.
+## Durchsicht der ganzen App (nach v43, Wunsch des Nutzers: „Apple-like Produkt“)
+- Umgesetzt in v44 und v45: Inhalt zuerst, Wischgesten, Graphen ablesen, Erklärungen hinter „i“, kg/Wdh, Rückgängig, eigene Kategorien, Startbild, Erinnerung nach 7 Tagen.
+- Bewusst nicht gemacht: „58,71 € pro Tag bis Monatsende“ bleibt sichtbar (ist eine Zahl, keine Erklärung), nur gekürzt.
+- Noch offen: alte CSS-Regeln zusammenführen, die weiter unten überschrieben werden (rein intern, Risiko fürs Aussehen; nur mit Bildvergleich vorher/nachher).
+- Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, automatische iCloud-Sicherung.
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
+- Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
+- Heute: Die Wochenleiste könnte auch dort dem Kalender-Knopf weichen; dann sähen alle Bereiche gleich aus.
 - Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
 - Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, z. B. „(Heute, 7,0 km)“, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
 - Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
 - Finanzen: Umschalter für Schulden (negative Stände).
-- Sicherung: Erinnerung schon nach sieben Tagen, sobald Konten geführt werden.
 - Name: den Punkt von „Track.“ in der Kopfzeile in Akzentblau.
 - Kopfzeile: Linie darunter erst zeigen, wenn gescrollt wurde.
 - Gym: „Stärkste Übung“ und „Schwächste Übung“ im Monats-Recap.
-- Gym: Erklärtext unter den Kennzahlen nur auf Tipp zeigen.
 - Gym: „Training beenden“ als kleiner Knopf oben im laufenden Training.
 - Gym: im laufenden Training anzeigen, ob ein Satz besser oder schlechter war als beim letzten Mal.
 - Heute: Verbesserung im Gym in der Zeile „Training“ zeigen.

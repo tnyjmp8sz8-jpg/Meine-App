@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v44)
+# Track. – Projektwissen (App-Stand v45)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -32,9 +32,10 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - `index.html`: die ganze App. CSS im `<style>`, alle Blätter als `<dialog>`, JavaScript als eine IIFE im `<script>`.
 - `sw.js`: cache-first mit Aktualisierung im Hintergrund; der Cache-Name `takt-vN` trägt die Versionsnummer.
 - `manifest.webmanifest`, `icon-180/192/512.png`: Installation auf dem Home-Bildschirm. `.nojekyll` für Pages.
+- `start/`: einfarbige Startbilder fürs iPhone (hell und dunkel, je Gerätegröße), erzeugt mit `tests/startbilder.py`; die Zeilen dazu stehen im `<head>`. Bewusst ohne Schriftzug, damit das Startbild nahtlos in die App übergeht. Neue iPhone-Größe: im Skript ergänzen und neu erzeugen.
 - `CLAUDE.md` (dieses Wissen), `PROGRESS.md` (Stand, Offenes, nächste Schritte).
 - `tests/`: Tests und Bildschirmfotos (siehe „Testen“ und `tests/LIESMICH.md`). Gehören nicht zur App; der Service Worker speichert sie nicht.
-- Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, boot.
+- Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, Rückgängig, Graphen ablesen, Wischgesten, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
 - Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
 - Wochenleiste nur auf Heute und Routinen (v44); in Gewicht, Finanzen und Training öffnet der Knopf `#calbtn` in der Kopfzeile den Kalender des Bereichs (`calOf()`). Warum: Der Inhalt soll oben stehen, nicht die Bedienung.
@@ -54,7 +55,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K }`.
   - `S` Routinen und laufender Timer; `LY` Tagesprotokoll der Routinen je Jahr.
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
-  - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
+  - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `cats` eigene Kategorien (id höchstens 12 Zeichen, wie `c` einer Buchung), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
   - `MY` Buchungen je Jahr: `d` Datum, `a` Betrag, `k` (`in`, `out`, `tr` = Umbuchung), `c` Kategorie, `n` Notiz, optional `acc` Konto, `to` Zielkonto der Umbuchung, `t` Zeitpunkt des Eintragens in ms.
   - `T` Läufe. `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
@@ -65,7 +66,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 
 ## Entscheidungen (mit Begründung)
 - Eine Datei ohne Build: einfach auszuliefern und für den Nutzer ohne Technik-Wissen tragbar.
-- Nur lokale Daten, kein Server: privat und ohne Betrieb. Folge: Die Sicherung ist wichtig, deshalb die Erinnerung nach 14 Tagen (`backupDue()`).
+- Nur lokale Daten, kein Server: privat und ohne Betrieb. Folge: Die Sicherung ist wichtig, deshalb die Erinnerung nach 7 Tagen (`backupDue()`, seit v45; vorher 14). Speichern läuft auf dem iPhone über das Teilen-Menü („In Dateien sichern“). Automatisch sichern kann eine Web-App nicht.
 - Alter Cloud-Abgleich und Google-Schrift entfernt (v22): nie aktiv bzw. unnötig, die App soll nichts nachladen.
 - Interne Kennungen behalten den alten Namen (`takt.v1`, `takt.backup`, `takt.view`, Cache `takt-vN`, `app: 'takt'`): Umbenennen würde die Daten des Nutzers oder alte Sicherungen unbrauchbar machen.
 - Selbst-Aktualisierung (v24): Beim Öffnen sucht die App nach einem neuen `sw.js` und lädt einmal neu, sobald er übernimmt, aber nie bei offenem Blatt. Warum: Der Nutzer soll Updates ohne Zutun bekommen und keine Eingabe verlieren.
@@ -73,6 +74,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Kopfzeile deckend, kein `backdrop-filter` (v37): Der Milchglas-Effekt machte auf dem iPhone beim Scrollen den Kopf selbst unscharf.
 - Wischgesten (v44, Abschnitt „Wischgesten“): Blatt nach unten wegziehen (nur wenn alles unter dem Finger ganz oben steht; schließt über denselben Weg wie ein Tipp neben das Blatt) und waagerecht zwischen Monaten, Jahren, Wochen wischen (klickt den Pfeil; nicht vom Bildschirmrand, nicht auf Graphen).
 - Graphen ablesen (v44, Abschnitt „Graphen ablesen“): Jeder Graph trägt seine Punkte in `data-pts`; Tipp oder Zug zeigt Linie, Punkt und Schild (`scrubShow()`), ein Tipp daneben blendet es aus.
+- Rückgängig (v45, Abschnitt „Rückgängig“): ein Weg für alle Löschknöpfe (id endet auf `-del`, oder `data-vdel`). Vor dem Tipp wird der gespeicherte Stand gemerkt; hat sich danach etwas geändert, erscheint unten „Gelöscht · Rückgängig“ (`#toast`, 7 Sekunden). `saveLocal()` ruft `toastOff()`: Jede weitere Änderung nimmt den Hinweis weg, damit Rückgängig nie etwas Neueres überschreibt. Neue Löschknöpfe brauchen nur eine id auf `-del`.
+- Eigene Kategorien (v45): `MF.cats`, anlegen im Blatt über „+ Kategorie“ (`addCatM()`), `allCats()` = feste plus eigene. Unbenutzte (keine Buchung, kein Budget) entfernt `cleanCats()` beim Start. Warum: So braucht es keine Verwaltung zum Löschen. Umbenennen gibt es noch nicht.
 - Blätter nur über `openDlg()`: Sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 - Gym nach Vorbild Alpha Progression: Im laufenden Training stehen unter den Sätzen „Letztes Mal“ und Kennzahlen; ein Tipp auf „Letztes Mal“ öffnet das Blatt der Übung mit Graph und Recap. Einheiten erscheinen dort als Karten mit Satz-Tabelle.
 - Vergleichswert im Gym ist das geschätzte Maximum für eine Wiederholung (Gewicht × (1 + Wdh/30)), ohne Gewicht die meisten Wiederholungen. Kein 10RM: Die App rechnete schon immer so, der Nutzer hat es so belassen.
@@ -136,12 +139,12 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v44` → `takt-v45`), `<span class="ver">v44</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v45` → `takt-v46`), `<span class="ver">v45</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
-- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
+- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
 - Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.
