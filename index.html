@@ -60,6 +60,7 @@ button,.row,.hero,.top,.tabs{-webkit-user-select:none;user-select:none;-webkit-t
 button{font:inherit;color:inherit;cursor:pointer}
 button:disabled{cursor:default;opacity:.4}
 :focus-visible{outline:2px solid var(--at);outline-offset:2px}
+dialog:focus,dialog:focus-visible{outline:none}
 
 .app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 24px;display:flex;flex-direction:column;gap:22px;min-height:100%}
 
@@ -221,7 +222,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .entries button{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;background:none;border:0;text-align:left;font-size:16px}
 .entries .d{color:var(--muted)}
 .entries b{font-weight:600;font-variant-numeric:tabular-nums}
-.linkbtn{align-self:flex-start;border:0;background:none;color:var(--at);font-weight:600;font-size:15px;padding:8px 4px;margin-top:-10px}
+.linkbtn{align-self:flex-start;border:0;border-radius:9px;background:none;color:var(--at);font-weight:600;font-size:15px;padding:8px 4px;margin-top:-10px}
 .ghost.center{text-align:center}
 .goal .streak b{font-size:24px}
 
@@ -264,12 +265,13 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .last{gap:0;padding:12px 16px 4px}
 .last h3{margin:0 0 2px;font-size:15px;font-weight:600}
 .last h3 small{font-weight:400;color:var(--muted);font-size:14px}
-.kv{display:grid;grid-template-columns:1fr auto;gap:2px 12px;align-items:baseline;padding:11px 0}
+.kv{display:flex;flex-wrap:wrap;justify-content:flex-end;align-items:baseline;gap:0 8px;padding:11px 0}
+.kv>span:first-child{margin-right:auto}
 .kv+.kv{border-top:1px solid var(--line)}
 .kv span{color:var(--muted);font-size:15px}
 .kv b{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
 .kv b small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:3px}
-.delta{grid-column:1/-1;font-size:13px;font-weight:600;color:var(--muted);text-align:right;margin-top:-2px}
+.delta{font-size:13px;font-weight:600;color:var(--muted);text-align:right;white-space:nowrap}
 .up,.kv .delta.up{color:var(--good)}
 .down,.kv .delta.down{color:var(--danger)}
 .entries .r{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
@@ -354,6 +356,8 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
 #x-stats{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty{display:none}
+#x-more{margin-top:0}
+#x-more[hidden],.primary[hidden]{display:none}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:15px}
@@ -390,7 +394,8 @@ body{font-size:15px}
 .fig{padding:8px 9px 7px}
 .fig b{font-size:17px}
 .fig b small{font-size:11.5px}
-.fig span{font-size:11px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fig span{font-size:11px;line-height:1.25}
+.fig span:has(.dot){white-space:nowrap}
 .card{padding:12px 12px 10px;gap:8px}
 .entries button{padding:9px 14px;font-size:14px}
 .entries .l small,.entries .r small{font-size:12px}
@@ -405,11 +410,11 @@ body{font-size:15px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
 .cat .roll{font-size:11.5px}
-.kv{padding:7px 0}
+.kv{padding:8px 0}
 .kv b{font-size:16px}
 .kv b small{font-size:12px}
 .kv span{font-size:13.5px}
-.delta{font-size:12px}
+.kv .delta{font-size:12px}
 .last{padding:10px 14px 2px}
 .last h3{font-size:14px}
 .last h3 small{font-size:13px}
@@ -503,8 +508,10 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .lx .links{margin-top:0}
 .linkbtn.danger{color:var(--danger)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
-.lastx{gap:2px;padding:12px 14px 10px}
-.lastx .note{margin:0 0 6px}
+.lastx{gap:2px;padding:12px 14px 10px;width:100%;border:0;font:inherit;color:inherit;text-align:left}
+.lastx:active{background:var(--fill)}
+.lastx .note{margin:0 0 6px;display:flex;justify-content:space-between;gap:10px}
+.lastx .note b{flex:none;color:var(--at);font-weight:600}
 .lastx .lt-h,.lastx .lt-r{grid-template-columns:40px 1fr 1fr}
 .lastx .lt-r{min-height:24px;font-size:14px;font-weight:500}
 
@@ -630,7 +637,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v25</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v26</span></footer>
 </div>
 </div>
 
@@ -659,7 +666,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </div>
 </nav>
 
-<dialog id="sheet" aria-labelledby="sh-title">
+<dialog tabindex="-1" id="sheet" aria-labelledby="sh-title">
   <form id="form" novalidate>
     <div class="sh-head">
       <h2 id="sh-title">Neue Routine</h2>
@@ -715,7 +722,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="wsheet" aria-labelledby="ws-title">
+<dialog tabindex="-1" id="wsheet" aria-labelledby="ws-title">
   <form id="wform" novalidate>
     <div class="sh-head">
       <h2 id="ws-title">Gewicht eintragen</h2>
@@ -742,7 +749,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="msheet" aria-labelledby="ms-title">
+<dialog tabindex="-1" id="msheet" aria-labelledby="ms-title">
   <form id="mform" novalidate>
     <div class="sh-head">
       <h2 id="ms-title">Ausgabe eintragen</h2>
@@ -793,7 +800,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="tsheet" aria-labelledby="ts-title">
+<dialog tabindex="-1" id="tsheet" aria-labelledby="ts-title">
   <form id="tform" novalidate>
     <div class="sh-head">
       <h2 id="ts-title">Lauf eintragen</h2>
@@ -848,7 +855,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="ksheet" aria-labelledby="ks-title">
+<dialog tabindex="-1" id="ksheet" aria-labelledby="ks-title">
   <form id="kform" novalidate>
     <div class="sh-head">
       <h2 id="ks-title">Training eintragen</h2>
@@ -875,7 +882,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="xsheet" aria-labelledby="xs-title">
+<dialog tabindex="-1" id="xsheet" aria-labelledby="xs-title">
   <form id="xform" novalidate>
     <div class="sh-head">
       <h2 id="xs-title">Übung</h2>
@@ -884,13 +891,14 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div id="x-stats"></div>
-    <label class="fld" for="x-name">
+    <label class="fld" for="x-name" id="x-name-fld">
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
     </label>
     <div class="fld" id="x-hist-fld">
       <span>Verlauf</span>
       <ul class="entries" id="x-hist"></ul>
+      <button type="button" class="linkbtn" id="x-more" hidden></button>
     </div>
     <p class="err" id="x-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="x-save">Speichern</button>
@@ -898,7 +906,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="lsheet" aria-labelledby="ls-title">
+<dialog tabindex="-1" id="lsheet" aria-labelledby="ls-title">
   <form id="lform" novalidate>
     <div class="sh-head">
       <h2 id="ls-title">Training</h2>
@@ -925,7 +933,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="psheet" aria-labelledby="ps-title">
+<dialog tabindex="-1" id="psheet" aria-labelledby="ps-title">
   <form id="pform" novalidate>
     <div class="sh-head">
       <h2 id="ps-title">Plan</h2>
@@ -952,7 +960,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog id="csheet" aria-labelledby="cs-title">
+<dialog tabindex="-1" id="csheet" aria-labelledby="cs-title">
   <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button></div>
   <p class="cs-leg" id="cs-leg" hidden></p>
   <div class="cs-wd" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
@@ -1042,6 +1050,8 @@ function normApp(d) {
 }
 
 const byId = id => S.routines.find(r => r.id === id) || null;
+/* Blatt öffnen. Der Browser setzt den Fokus sonst auf den ersten Knopf und zeichnet auf dem iPhone einen Rahmen darum; der Fokus gehört dann aufs Blatt selbst. */
+function openDlg(d) { if (!d.open) d.showModal(); const a = document.activeElement; if (a && a !== d && a.tagName === 'BUTTON') d.focus(); }
 const entry = (date, rid) => { const y = LY[date.slice(0, 4)]; const d = y && y[date]; return (d && d[rid]) || null; };
 const secsOf = (date, rid) => { const e = entry(date, rid); return Math.max(0, Number(e && e.s) || 0); };
 const doneOn = (date, rid) => { const e = entry(date, rid); return !!(e && e.d); };
@@ -1310,7 +1320,7 @@ function openSheet(id) {
     $('#act-reset').hidden = !(dn || secsOf(tk, r.id) > 0 || isRunning(r));
     $('#act-del').textContent = 'Routine löschen';
   }
-  if (!dlg.open) dlg.showModal();
+  openDlg(dlg);
   dlg.scrollTop = 0;
   if (!r) setTimeout(() => $('#f-name').focus(), 60);
 }
@@ -1559,7 +1569,7 @@ function openW(mode, date) {
     $('#w-del').textContent = 'Eintrag löschen';
     fillEntry(k);
   }
-  if (!wdlg.open) wdlg.showModal();
+  openDlg(wdlg);
   setTimeout(() => { const i = $('#w-val'); i.focus(); try { i.select(); } catch (e) {} }, 60);
 }
 function closeW() { if (wdlg.open) wdlg.close(); }
@@ -1865,7 +1875,7 @@ function openM(mode, id, kind, date) {
     $('#m-amt').value = cur ? eur(cur).replace(' €', '') : '';
     $('#m-roll').checked = !!(cur && (MF.roll || {})[c]);
     paintM();
-    if (!mdlg.open) mdlg.showModal();
+    openDlg(mdlg);
     mdlg.scrollTop = 0;
     setTimeout(() => { const i = $('#m-amt'); i.focus(); try { i.select(); } catch (e) {} }, 60);
     return;
@@ -1891,7 +1901,7 @@ function openM(mode, id, kind, date) {
     }
   }
   paintM();
-  if (!mdlg.open) mdlg.showModal();
+  openDlg(mdlg);
   mdlg.scrollTop = 0;
   setTimeout(() => { const i = mode === 'fixed' && !mE.id ? $('#m-name') : $('#m-amt'); i.focus(); try { i.select(); } catch (e) {} }, 60);
 }
@@ -2175,7 +2185,7 @@ function openT(id, date) {
   $('#t-date').max = tk; $('#t-date').value = r ? r.d : isKey(date) ? date : tk;
   $('#t-err').hidden = true; $('#t-del').hidden = !r;
   paintTK();
-  if (!tdlg.open) tdlg.showModal();
+  openDlg(tdlg);
   tdlg.scrollTop = 0;
   setTimeout(() => { const i = $('#t-km'); i.focus(); try { i.select(); } catch (e) {} }, 60);
 }
@@ -2258,7 +2268,10 @@ function kDelta(cur, prev) {
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
   if (ws.length === 1) return (ws[0] ? kgn(ws[0]) + ' kg × ' : '') + sets.map(s => s[1]).join(', ') + (ws[0] ? '' : ' Wdh');
-  return sets.map(s => kgn(s[0]) + ' × ' + s[1]).join(', ');
+  /* verschiedene Gewichte: aufeinanderfolgende Sätze mit gleichem Gewicht zusammenfassen, z. B. „72,5 kg × 8, 7 · 70 kg × 6“ */
+  const runs = [];
+  sets.forEach(s => { const l = runs[runs.length - 1]; if (l && l.w === s[0]) l.r.push(s[1]); else runs.push({ w: s[0], r: [s[1]] }); });
+  return runs.map(g => (g.w ? kgn(g.w) + ' kg × ' : '') + g.r.join(', ') + (g.w ? '' : ' Wdh')).join(' · ');
 }
 
 const kPlans = () => Object.keys(K.plans || {}).filter(id => K.plans[id]).map(id => ({ id, n: K.plans[id].n, items: K.plans[id].items.filter(it => K.ex[it.id]) })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
@@ -2453,7 +2466,7 @@ function openCal(mode, sel) {
   $('#cs-title').textContent = CAL[cMode];
   const leg = cMode === 'all' ? '<span><u class="b"></u>alle Routinen</span><span><u class="g"></u>Training</span>' : cMode === 'rout' ? '<span><u class="b"></u>alles erledigt</span><span><u class="p"></u>teilweise</span>' : '';
   $('#cs-leg').innerHTML = leg; $('#cs-leg').hidden = !leg;
-  if (!cdlg.open) cdlg.showModal();
+  openDlg(cdlg);
   paintCal(false);
 }
 document.querySelector('.app').addEventListener('click', e => { const b = e.target.closest('.wk .wd'); if (b) openCal(b.parentNode.dataset.cal, b.dataset.d); });
@@ -2482,7 +2495,7 @@ function sugHTML(used, q, attr) {
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
-let kS = null, xId = null, xArm = false;
+let kS = null, xId = null, xArm = false, xAll = false, xMore = false;
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
@@ -2511,7 +2524,7 @@ function openK(date) {
   $('#k-date').max = tk; $('#k-date').value = kS.date;
   $('#k-new').value = ''; $('#k-err').hidden = true; $('#k-del').hidden = !d;
   paintK();
-  if (!kdlg.open) kdlg.showModal();
+  openDlg(kdlg);
   kdlg.scrollTop = 0;
 }
 function closeK() { if (kdlg.open) kdlg.close(); }
@@ -2580,31 +2593,47 @@ function seriesSVG(pts, fmtV, steps, label) {
   for (let i = 0; i <= n; i++) { const v = lo + i * step; s += '<line class="g-grid" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 8) + '" y="' + f(Y(v) + 4) + '">' + fmtV(v) + '</text>'; }
   const line = pts.map((q, i) => (i ? 'L' : 'M') + f(X(i)) + ' ' + f(Y(q.v))).join(' ');
   s += '<path class="g-area" d="' + line + ' L' + f(X(pts.length - 1)) + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-trend" d="' + line + '"/>';
-  s += pts.map((q, i) => i === pts.length - 1 ? '<circle class="g-end" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="5"/>' : '<circle class="g-pos" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="2.6"/>').join('');
+  s += pts.map((q, i) => i === pts.length - 1 ? '<circle class="g-end" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="5"/>' : pts.length > 24 ? '' : '<circle class="g-pos" cx="' + f(X(i)) + '" cy="' + f(Y(q.v)) + '" r="2.6"/>').join('');
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-function openX(id) {
-  const ex = K.ex[id]; if (!ex) return;
-  xId = id; xArm = false;
-  $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
-  const full = kHist(id), rows = full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).slice(-8).reverse();
+/* Verlauf einer Übung: Kennzahlen, Graph, alle Einheiten. view = nur ansehen (aus dem laufenden Training), sonst auch umbenennen und löschen. */
+function paintX() {
+  const full = kHist(xId);
   let st = '';
   if (full.length) {
     const sc = full.map(x => ({ d: x.d, sets: x.sets, s: kScore(x.sets) })), wt = sc[sc.length - 1].s.w, same = sc.filter(q => q.s.w === wt);
     const best = Math.max.apply(null, same.map(q => q.s.v)), dS = same.length > 1 ? kDelta(same[same.length - 1].sets, same[0].sets) : null;
-    st = '<div class="figs">' + fig(wt ? kgn(Math.round(best * 10) / 10) : String(best), wt ? 'kg' : 'Wdh', wt ? 'geschätztes Maximum' : 'Bestwert') +
-      fig(dS ? dS.t : '–', '', 'seit Start') + fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
-    const pts = same.slice(-12).map(q => ({ d: q.d, v: q.s.v }));
-    if (pts.length > 1) st += '<div class="card chart"><p class="note">' + (wt ? 'Geschätztes Maximum in kg' : 'Meiste Wiederholungen in einem Satz') + '</p>' +
+    const top = Math.max.apply(null, full.map(x => Math.max.apply(null, x.sets.map(s => s[0]))));
+    st = '<div class="figs">' + (wt ? fig(kgn(top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(best), 'Wdh', 'Bestwert') + fig(dS ? dS.t : '–', '', 'seit Start')) +
+      fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
+    const pts = (xAll ? same : same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
+    if (pts.length > 1) st += '<div class="card chart">' +
+      (same.length > 12 ? '<div class="seg" role="group" aria-label="Zeitraum"><button type="button" class="chip" data-x="last" aria-pressed="' + !xAll + '">Letzte 12</button><button type="button" class="chip" data-x="all" aria-pressed="' + xAll + '">Alle ' + same.length + '</button></div>' : '') +
+      '<p class="note">' + (wt ? 'Geschätztes Maximum für eine Wiederholung (1RM) in kg' + (dS ? ' · seit Start ' + dS.t : '') : 'Meiste Wiederholungen in einem Satz') + '</p>' +
       seriesSVG(pts, wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung') + '</div>';
   }
   $('#x-stats').innerHTML = st;
-  $('#x-hist').innerHTML = rows.map(o => '<li><div class="xrow"><span class="l"><span>' + setsText(o.x.sets) + '</span><small>' + dRow(o.x.d) + '</small></span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</div></li>').join('');
+  const rows = full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse(), shown = xMore ? rows : rows.slice(0, 8);
+  $('#x-hist').innerHTML = shown.map(o => {
+    const m = (K.meta || {})[o.x.d], pn = m ? planName(m.plan) : '';
+    return '<li><div class="xrow"><span class="l"><span>' + setsText(o.x.sets) + '</span><small>' + dRow(o.x.d) + (pn ? ' · ' + esc(pn) : '') + '</small></span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</div></li>';
+  }).join('');
   $('#x-hist-fld').hidden = !rows.length;
-  if (!xdlg.open) xdlg.showModal();
+  const more = $('#x-more'); more.hidden = rows.length <= 8; more.textContent = xMore ? 'Weniger zeigen' : 'Alle ' + rows.length + ' Einheiten zeigen';
+}
+function openX(id, view) {
+  const ex = K.ex[id]; if (!ex) return;
+  xId = id; xArm = false; xAll = false; xMore = false;
+  $('#xs-title').textContent = ex.n;
+  $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
+  $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
+  paintX();
+  openDlg(xdlg);
   xdlg.scrollTop = 0;
 }
+$('#x-stats').addEventListener('click', e => { const t = e.target.closest('[data-x]'); if (t) { xAll = t.dataset.x === 'all'; paintX(); } });
+$('#x-more').addEventListener('click', () => { xMore = !xMore; paintX(); });
 function closeX() { if (xdlg.open) xdlg.close(); }
 $('#xs-close').addEventListener('click', closeX);
 xdlg.addEventListener('click', e => { if (e.target === xdlg) closeX(); });
@@ -2690,8 +2719,8 @@ function paintL() {
     '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
   if (last) {
     const m = (K.meta || {})[last.d], pn = m ? planName(m.plan) : '';
-    h += '<div class="card lastx"><p class="note">Letztes Mal · ' + dRow(last.d) + (pn ? ' · ' + esc(pn) : '') + '</p><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
-      last.sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div></div>';
+    h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + dRow(last.d) + (pn ? ' · ' + esc(pn) : '') + '</span><b>Verlauf</b></span><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
+      last.sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div></button>';
   }
   $('#l-items').innerHTML = h + '</div>';
 }
@@ -2702,7 +2731,7 @@ function openL() {
   lI = open >= 0 ? open : 0;
   $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
   paintL();
-  if (!ldlg.open) ldlg.showModal();
+  openDlg(ldlg);
   ldlg.scrollTop = 0;
   paintL();
   ensureLiveTick(); wakeOn();
@@ -2723,6 +2752,7 @@ $('#lform').addEventListener('keydown', e => {
 $('#lform').addEventListener('click', e => {
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
+  if (a === 'hist') { if (it) openX(it.id, true); return; }
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
   if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; }
@@ -2791,7 +2821,7 @@ function openP(id) {
   $('#p-name').value = pl ? pl.n : ''; $('#p-new').value = ''; $('#p-err').hidden = true;
   $('#p-del').hidden = !pl; $('#p-del').textContent = 'Plan löschen';
   paintP();
-  if (!pdlg.open) pdlg.showModal();
+  openDlg(pdlg);
   pdlg.scrollTop = 0;
   if (!pl) setTimeout(() => $('#p-name').focus(), 60);
 }
