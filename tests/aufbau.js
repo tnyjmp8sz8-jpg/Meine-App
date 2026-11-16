@@ -36,6 +36,10 @@ lauf(async () => {
     P.ok('Jahr gewählt' + b, /^\d{4}$/.test(await text(page, '#v-training .mnav b')));
     await page.click('#v-training [data-t="mode"][data-v="month"]');
 
+    // Der Punkt von „Track.“ trägt die Akzentfarbe (dieselbe wie der blaue Plus-Knopf), der Name selbst nicht
+    const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).backgroundColor }));
+    P.ok('Punkt von „Track.“ ist blau' + b, farben.punkt === farben.plus && farben.name !== farben.plus && (await text(page, '.mark')) === 'Track.', JSON.stringify(farben));
+
     // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar
     P.ok('Erklärung ist zuerst verborgen' + b, !(await page.isVisible('#info-k-imp')));
     await page.click('#v-training [data-info="k-imp"]');

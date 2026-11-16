@@ -91,6 +91,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 /* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
 .top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
+.mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
 .add{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
 .add svg{width:20px;height:20px}
 
@@ -700,7 +701,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="scroll" id="scroll">
 <div class="app">
   <header class="top">
-    <span class="mark">Track.</span>
+    <span class="mark">Track<span class="dot">.</span></span>
     <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
@@ -725,7 +726,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v47</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v48</span></footer>
 </div>
 </div>
 

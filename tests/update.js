@@ -15,7 +15,9 @@ lauf(async () => {
   [A, B].forEach(d => { fs.mkdirSync(d); DATEIEN.forEach(f => fs.copyFileSync(path.join(ROOT, f), path.join(d, f))); });
   const sw = fs.readFileSync(path.join(A, 'sw.js'), 'utf8'), alt = (sw.match(/takt-v(\d+)/) || [])[1];
   fs.writeFileSync(path.join(B, 'sw.js'), sw.replace('takt-v' + alt, 'takt-v' + (+alt + 1)));
-  fs.writeFileSync(path.join(B, 'index.html'), fs.readFileSync(path.join(B, 'index.html'), 'utf8').replace('<span class="mark">Track.</span>', '<span class="mark">Track. NEU</span>'));
+  const alteSeite = fs.readFileSync(path.join(B, 'index.html'), 'utf8'), neueSeite = alteSeite.replace('<span class="dot">.</span></span>', '<span class="dot">.</span> NEU</span>');
+  if (neueSeite === alteSeite) throw new Error('Der Schriftzug in der Kopfzeile wurde nicht gefunden: Die „neue Version“ lässt sich nicht kennzeichnen.');
+  fs.writeFileSync(path.join(B, 'index.html'), neueSeite);
   const fuss = (fs.readFileSync(path.join(A, 'index.html'), 'utf8').match(/class="ver">v(\d+)</) || [])[1];
   P.ok('Versionsnummer in sw.js und in der Fußzeile gleich (v' + alt + ')', !!alt && alt === fuss, 'sw.js v' + alt + ', Fußzeile v' + fuss);
 

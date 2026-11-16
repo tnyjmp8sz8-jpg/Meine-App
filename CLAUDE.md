@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v47)
+# Track. – Projektwissen (App-Stand v48)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -106,7 +106,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Flächen ohne Rand, Trennlinien nur in Listen, Rundungen: Karten 20 px, Knöpfe 14 px, Chips als Pillen, Blätter mit Griff oben.
 - Kompakt: Fließtext 15 px, Listen 14 px, Nebentexte 12–13 px, große Zahl höchstens 44 px.
 - Tippflächen mindestens 40 px; kleinere Knöpfe bekommen per `::after` eine größere Tippfläche.
-- Akzentblau nur für Aktionen, Links und aktive Auswahl. Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
+- Akzentblau nur für Aktionen, Links und aktive Auswahl. Einzige Ausnahme: der Punkt von „Track.“ in der Kopfzeile (v48, vom Nutzer nach Vorschaubild gewählt). Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
 - Kennfarben der Bereiche (Routinen blau, Gewicht lila, Finanzen orange, Training grün) nur am Symbol in der Übersicht auf Heute.
 - Systemschrift, große Zahlen mit `var(--round)`. Abschnittstitel fett und normal geschrieben.
 - Erklärungen nie dauerhaft, sondern hinter `INFO()`. Bedienreihen (Wochenleiste, Monat/Jahr, Pfeile) bleiben je eine eigene Reihe: nicht zusammenlegen, um Platz zu sparen.
@@ -141,7 +141,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v47` → `takt-v48`), `<span class="ver">v47</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v48` → `takt-v49`), `<span class="ver">v48</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

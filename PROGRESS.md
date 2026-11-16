@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v47 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v48 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -18,6 +18,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v48: Punkt von „Track.“ in der Kopfzeile in Akzentblau.
 - v47: Apple-Feinschliff, alle sieben Punkte: blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, einheitliche Strichstärken, leere Seiten mit Symbol und einem Satz, neues App-Symbol, große Zahl zählt beim Blättern.
 - v46: Auf Wunsch des Nutzers zurückgenommen: Wochenleiste wieder in jedem Bereich, Monat/Jahr und Pfeile wieder in zwei Reihen, Kalender-Knopf in der Kopfzeile entfernt.
 - v45: Aus der Durchsicht, Punkte 3, 6, 7: „Rückgängig“ nach jedem Löschen; eigene Kategorien („+ Kategorie“ im Blatt); Erinnerung an die Sicherung nach 7 statt 14 Tagen; Startbilder fürs iPhone.
@@ -70,7 +71,6 @@ Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, z. B. „(Heute, 7,0 km)“, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
 - Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
 - Finanzen: Umschalter für Schulden (negative Stände).
-- Name: den Punkt von „Track.“ in der Kopfzeile in Akzentblau (passt jetzt zum Punkt im App-Symbol).
 - Gym: „Stärkste Übung“ und „Schwächste Übung“ im Monats-Recap.
 - Gym: „Training beenden“ als kleiner Knopf oben im laufenden Training.
 - Gym: im laufenden Training anzeigen, ob ein Satz besser oder schlechter war als beim letzten Mal.
