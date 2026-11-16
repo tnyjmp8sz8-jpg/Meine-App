@@ -65,6 +65,11 @@
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
+- Neuer Bereich (Frage des Nutzers nach v48: Notion ersetzen, Notizen, To-do?). Meine Einschätzung:
+  - Aufgaben: ja. Als Umschalter „Routinen / Aufgaben“ im Bereich Routinen (unten ist mit fünf Bereichen kein Platz), offene Aufgaben des Tages auch auf Heute. Schlicht: Titel, optional Datum, abhaken; Offenes rutscht auf den nächsten Tag.
+  - Notizen und Notion-Ersatz: nein. Daten liegen nur auf einem Gerät, ohne Abgleich und ohne Rechner; lange Texte sind in Apple Notizen besser aufgehoben. Höchstens eine kurze Notiz an einer Aufgabe.
+  - Stattdessen sinnvoll: Tages-Check (Schlaf, Energie oder Stimmung mit einem Tipp, 1 bis 5). Klein, täglich, und füttert die Zusammenhänge in der Wochenansicht.
+  - Vor dem Bauen ein Bild zeigen.
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
 - Finanzen: Wochenleiste auch im Vermögen zeigen, damit beim Wechsel zu Budget nichts springt.
 - Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
