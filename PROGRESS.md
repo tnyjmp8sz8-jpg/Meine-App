@@ -1,17 +1,16 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v55 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v57 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung (`claude/app-entwicklung-verschieben-af0kew`) und `main` sind gleich, nichts liegt nur im Arbeitsordner.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
-- `node tests/alle.js`: alle 275 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Speichern 8, Aktualisierung 8).
-- Keine beauftragte Arbeit offen. Der Nutzer wartet auf nichts; die nächsten Schritte bestimmt er.
+- `node tests/alle.js`: alle 292 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Tages-Check 17, Speichern 8, Aktualisierung 8).
+- Keine beauftragte Arbeit offen. Offen ist eine Entscheidung des Nutzers: Der Tages-Check (v57) ist zur Probe eingebaut („weiß noch nicht, ob ich übernehme, vielleicht rückgängig machen“). Sagt er „rausnehmen“: den Commit „Tages-Check: Schlaf bewerten (v57)“ mit `git revert` zurücknehmen, Version hochzählen, testen, veröffentlichen. Schon eingetragene Bewertungen fallen dann beim nächsten Speichern weg.
 
 ## Erledigt
 - v20–v43: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Monat/Jahr und Recap im Gym; App heißt „Track.“, Bereich „Finanzen“; Vermögen, Sparziele, Sparquote; Konten an Buchungen, Umbuchungen, Zeile „Ohne Konto“; Tests im Repository; Fehler behoben, dass Buchungen das Vermögen nicht veränderten (v42).
-- v44–v45: Blätter nach unten wegziehen, zwischen Monaten wischen, Graphen ablesen, Erklärungen hinter „i“, „Rückgängig“ nach dem Löschen, eigene Kategorien, Erinnerung an die Sicherung nach 7 Tagen, Startbilder.
-- v46: Auf Wunsch des Nutzers zurückgenommen: Wochenleiste wieder in jedem Bereich, Monat/Jahr und Pfeile wieder in zwei Reihen.
+- v44–v46: Blätter nach unten wegziehen, zwischen Monaten wischen, Graphen ablesen, Erklärungen hinter „i“, „Rückgängig“ nach dem Löschen, eigene Kategorien, Erinnerung an die Sicherung nach 7 Tagen, Startbilder; Wochenleiste auf Wunsch wieder in jedem Bereich.
 - v47–v48: Apple-Feinschliff (blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, leere Seiten mit Symbol, neues App-Symbol, große Zahl zählt beim Blättern); Punkt von „Track.“ in Blau.
 - v49: Aufgaben und Notizen im Bereich Routinen (Umschalter „Routinen / Aufgaben / Notizen“), Ordner, beides auf Heute, in der Sicherung, mit „Rückgängig“.
 - v50: Wiederkehrende Aufgaben (täglich, wöchentlich, monatlich); Suche in den Notizen.
@@ -20,6 +19,7 @@
 - v53: Notizen auf Heute ganz oben (vor Routinen); Ecken der Karten 16 statt 20 px.
 - v54: Kacheln ohne Wert (Strich) werden nicht mehr gezeigt; der Bereich heißt unten „Planer“; nach Enter bleibt das Notiz-Blatt offen für die nächste Notiz.
 - v56: Auf Wunsch des Nutzers entfernt: das Tempo (km/h) beim Laufband und die Schnell-Knöpfe „Aufgabe“, „Lauf“, „Einnahme“. Auf Heute bleiben Notiz, Gewicht, Ausgabe; im Blatt schaltet man oben zwischen Ausgabe und Einnahme um. Alte Laufband-Läufe mit Tempo behalten ihre Zahlen.
+- v57: Tages-Check zur Probe: Zeile „Schlaf“ auf Heute (ein Tipp, 1 bis 5), Schnitt in der Wochenansicht, Zusammenhänge „Training und Schlaf“ und „Schlaf und Routinen“. In der Sicherung enthalten.
 - v55: Kennfarben der Bereiche auch am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (nach Vorschaubild vom Nutzer gewählt: „genauso umsetzen“).
 
 ## Offene Probleme
@@ -34,6 +34,8 @@
 - Alte CSS-Regeln, die weiter unten überschrieben werden, sind noch nicht zusammengeführt (rein intern; nur mit Bildvergleich vorher/nachher anfassen).
 
 ## Am iPhone noch zu prüfen (Rückmeldung des Nutzers steht aus)
+- Tages-Check (v57): Trifft man die fünf Kreise gut? Steht die Zeile an der richtigen Stelle (nach den Notizen, vor den Routinen)? Behalten oder herausnehmen?
+- Ausgabe/Einnahme (v56): Ist der Umschalter oben im Blatt gut zu sehen? Geht die Tastatur beim Betrag weiter sofort auf?
 - „+ Notiz“ auf Heute (v51, v54): Geht die Tastatur sofort auf? Legt die Eingabetaste die Notiz an und bleibt das Feld für die nächste offen? Daran hängen die „5 Sekunden“.
 - Größen (v52): Ist alles klein genug, oder ist etwas zu klein zum Lesen oder Treffen? Trifft man den Kreis zum Abhaken gut?
 - Farben (v55): Wirkt das farbige Plus in den Schnell-Knöpfen, oder ist es zu klein?
@@ -49,7 +51,9 @@
 ## Nächste Schritte
 Der Nutzer entscheidet. Meine offenen Vorschläge (nur auf Zuruf umsetzen; bei Änderungen am Aufbau erst ein Bild zeigen):
 - Aufgaben und Notizen: Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“; Ordner umbenennen; Kalender der Aufgaben zeigt nur Erledigtes, keine künftigen Termine.
-- Tages-Check (Schlaf oder Energie mit einem Tipp, 1 bis 5), der die „Zusammenhänge“ in der Wochenansicht füttert.
+- Tages-Check, falls er bleibt: Schlaf im Kalender von Heute zeigen; Bewertung für gestern nachtragen; „Schlaf und Gewicht“ als weiterer Zusammenhang.
+- Laufband: Feld „Steigung“ auch entfernen, falls der Nutzer es nicht braucht (nachgefragt in v56).
+- Schnell-Knopf „Ausgabe“ in „Buchung“ umbenennen, falls er das klarer findet (nachgefragt in v56).
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
 - Finanzen: Wochenleiste auch im Vermögen; Knopf „Alle aufs Girokonto“ in der Zeile „Ohne Konto“; Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist; Umschalter für Schulden (negative Stände).
 - Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.

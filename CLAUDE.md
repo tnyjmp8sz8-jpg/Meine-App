@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v56)
+# Track. – Projektwissen (App-Stand v57)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -16,7 +16,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Zielgruppe: der Nutzer selbst, auf dem iPhone als App auf dem Home-Bildschirm. Weitergabe an andere ist nur eine Idee. Einschätzung dazu: als Geschäft schwierig; stark wären Zusammenhänge zwischen den Bereichen und „privat, ohne Konto, ohne Abo“.
 - Name: „Track.“ mit Punkt (früher „Takt“). Oberfläche und Code-Kommentare auf Deutsch.
 - Kernfunktionen:
-  - Heute: Wochenleiste, Schnell-Knöpfe, Notizen, Routinen des Tages direkt startbar, Aufgaben des Tages, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
+  - Heute: Wochenleiste, Schnell-Knöpfe, Notizen, Tages-Check (Schlaf, zur Probe seit v57), Routinen des Tages direkt startbar, Aufgaben des Tages, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
   - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender. Im selben Bereich (Umschalter oben) seit v49: „Aufgaben“ (To-do mit Datum, Ordnern, Wiederholung) und „Notizen“ (schnelle Aufnahme in Sekunden: nur Text, jede mit Kreis, Abhaken löscht). Der Nutzer will damit seine Notizen-App ersetzen, für Uni, Promotion und Alltag, und braucht alles nur auf dem Handy.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
@@ -51,13 +51,14 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
   - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()`; neue Aufgaben legt man im Planer an (den Schnell-Knopf „Aufgabe“ wollte der Nutzer nicht mehr, v56). Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde. Wiederkehrend (v50): `REPEAT`, `nextDue(datum, art)`; das Abhaken in `nAct()` legt die nächste Aufgabe an.
   - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld; Enter legt die Notiz an und macht das Feld frei für die nächste (`nE.fresh`, seit v54), Enter im leeren Feld oder „Fertig“ schließt; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf), ganz oben direkt unter den Schnell-Knöpfen, noch vor Routinen (v53, Wunsch des Nutzers: „muss die direkt sehen als erstes“). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
+- Tages-Check (v57, zur Probe: Der Nutzer weiß noch nicht, ob er ihn behält. Er steckt in einem eigenen Commit „Tages-Check“ und lässt sich mit `git revert` herausnehmen; dann auch `tests/check.js`, den Eintrag in `tests/alle.js` und `DC` in `tests/daten.js` prüfen): Zeile „Schlaf“ auf Heute mit fünf Kreisen (`checkHTML()`, `data-h="sleep"`), ein Tipp speichert 1 bis 5 für heute, derselbe Tipp noch einmal nimmt es zurück. Wochenansicht: Zeile „Schlaf“ mit Schnitt und Vergleich (`weekStats()` liefert `sleep`, `sn`). `sleepInsights()` ergänzt die Zusammenhänge um „Training und Schlaf“ (Schlaf nach Trainingstagen gegen die anderen) und „Schlaf und Routinen“ (erledigte Routinen nach gutem Schlaf gegen die anderen); gerechnet mit Tagen der letzten 12 Wochen, je Seite mindestens 5.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
   - Laufendes Training: Blatt `lsheet`, `paintL()`, `liveTick()`, Zustand `K.live`, Arbeitskopie `Lw`.
 
 ## Datenmodell
-- Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K, N }`.
+- Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K, N, DC }`.
   - `S` Routinen und laufender Timer; `LY` Tagesprotokoll der Routinen je Jahr.
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
   - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `cats` eigene Kategorien (id höchstens 12 Zeichen, wie `c` einer Buchung), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
@@ -65,6 +66,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz, `r` Wiederholung (leer, `day`, `week`, `month`), `nx` id der beim Abhaken angelegten nächsten Aufgabe; `notes` je id: `x` Text, `f` Ordner, `c` angelegt, `m` geändert. Notizen aus v49/v50 (mit `t`, `pin`, `items`) übernimmt `normN()`: Titel wird erste Zeile, jede offene Zeile zum Abhaken eine eigene Notiz.
   - `T` Läufe: `d`, `m` Meter, `s` Sekunden, `hr` Puls, `k` (`out`, `in` = Laufband), `inc` Steigung in Prozent (nur Laufband). Das Laufband-Tempo `spd` gibt es seit v56 nicht mehr; `normT()` rechnet alte Läufe um (Strecke = Tempo × Dauer), damit ihre Zahlen gleich bleiben.
   - `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
+  - `DC` Tages-Check: `sleep` je Datum eine Zahl von 1 bis 5 (`normDC()`, `dcdoc`).
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
 - Datumsschlüssel `YYYY-MM-DD` in Ortszeit, Monate `YYYY-MM`, Geld in Cent.
 - Jede Gruppe läuft beim Laden durch eine `norm…`-Funktion: neue Felder dort eintragen, sonst gehen sie beim Laden verloren.
@@ -159,13 +161,13 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v56` → `takt-v57`), `<span class="ver">v56</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v57` → `takt-v58`), `<span class="ver">v57</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
 - Der Gesten-Test ist zeitempfindlich (ein Wisch muss in 0,7 s durch sein): Schlägt in einem vollen Lauf nur dort etwas fehl, zuerst einzeln wiederholen.
-- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Aufgaben und Notizen, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Tests laufen mit „Bewegung reduzieren“, damit Zahlen sofort ihren Endwert zeigen; nur `gesten.js` läuft mit Bewegung (`bewegung: true`). Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
+- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Aufgaben und Notizen, Finanzen, Gym, Tages-Check, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Tests laufen mit „Bewegung reduzieren“, damit Zahlen sofort ihren Endwert zeigen; nur `gesten.js` läuft mit Bewegung (`bewegung: true`). Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
 - Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.
