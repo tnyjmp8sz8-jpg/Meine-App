@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v52)
+# Track. – Projektwissen (App-Stand v53)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -16,7 +16,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Zielgruppe: der Nutzer selbst, auf dem iPhone als App auf dem Home-Bildschirm. Weitergabe an andere ist nur eine Idee. Einschätzung dazu: als Geschäft schwierig; stark wären Zusammenhänge zwischen den Bereichen und „privat, ohne Konto, ohne Abo“.
 - Name: „Track.“ mit Punkt (früher „Takt“). Oberfläche und Code-Kommentare auf Deutsch.
 - Kernfunktionen:
-  - Heute: Wochenleiste, Schnell-Knöpfe, Routinen des Tages direkt startbar, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
+  - Heute: Wochenleiste, Schnell-Knöpfe, Notizen, Routinen des Tages direkt startbar, Aufgaben des Tages, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
   - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender. Im selben Bereich (Umschalter oben) seit v49: „Aufgaben“ (To-do mit Datum, Ordnern, Wiederholung) und „Notizen“ (schnelle Aufnahme in Sekunden: nur Text, jede mit Kreis, Abhaken löscht). Der Nutzer will damit seine Notizen-App ersetzen, für Uni, Promotion und Alltag, und braucht alles nur auf dem Handy.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
@@ -49,7 +49,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Aufgaben und Notizen (v49): Umschalter `rSub` (`rout`, `task`, `note`) in `#r-subs`; Inhalt in `#n-main` über `tasksHTML()` bzw. `notesHTML()`, die Routinen bleiben in `#main`. Der Plus-Knopf oben richtet sich nach `rSub`.
   - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
   - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde. Wiederkehrend (v50): `REPEAT`, `nextDue(datum, art)`; das Abhaken in `nAct()` legt die nächste Aufgabe an.
-  - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld, Enter oder „Fertig“ schließt ab; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
+  - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld, Enter oder „Fertig“ schließt ab; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf), ganz oben direkt unter den Schnell-Knöpfen, noch vor Routinen (v53, Wunsch des Nutzers: „muss die direkt sehen als erstes“). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
@@ -115,7 +115,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 ## Design-Regeln (verbindlich)
 - Modern, clean, Apple-artig. Dunkel: fast schwarzer, leicht bläulicher Grund (`--bg`), Karten eine Stufe heller.
 - Apple-Feinschliff (v47): Pfeile für Monat/Jahr ohne Kreis in Akzentblau; aktiver Bereich in der Leiste unten mit gefülltem Symbol (Klassen `.f` Fläche, `.k`/`.d` ausgespart, `.b` kräftigere Linie); Linie unter der Kopfzeile erst beim Scrollen (`.top.scrolled`); Symbole mit rund 1,8 px Strich im Bild; leere Bereiche mittig mit Symbol, Titel, einem Satz, Knopf; die große Zahl zählt beim Blättern 0,3 s vom alten zum neuen Wert (nicht bei „Bewegung reduzieren“).
-- Flächen ohne Rand, Trennlinien nur in Listen, Rundungen: Karten 20 px, Knöpfe 14 px, Chips als Pillen, Blätter mit Griff oben.
+- Flächen ohne Rand, Trennlinien nur in Listen, Rundungen: Karten 16 px (seit v53, passend zu den kleineren Inhalten; vorher 20), Knöpfe 14 px, Chips als Pillen, Blätter mit Griff oben.
 - Kompakt (seit v52 noch eine Stufe kleiner): Fließtext 14 px, Listen 13,5 px, Nebentexte 12 px, Abschnittstitel 15 px, Umschalter der Bereiche und „Track.“ 17 px, große Zahl höchstens 34 px, blauer Hauptknopf 40 px hoch. Maßstab ist die Wochenleiste (11 und 15 px): Sie „passt gut“ und bleibt, ebenso die Leiste unten und die Eingabefelder (16 px, sonst zoomt iOS). Nie die ganze Seite per `zoom` verkleinern: Das träfe auch die Eingabefelder.
 - Tippflächen mindestens 40 px; kleinere Knöpfe bekommen per `::after` eine größere Tippfläche.
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Einzige Ausnahme: der Punkt von „Track.“ in der Kopfzeile (v48, vom Nutzer nach Vorschaubild gewählt). Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
@@ -154,7 +154,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v52` → `takt-v53`), `<span class="ver">v52</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v53` → `takt-v54`), `<span class="ver">v53</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

@@ -108,7 +108,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .row{
   --r-ink:var(--ink); --r-muted:var(--muted); --r-accent:var(--accent);
   --r-line:color-mix(in srgb,var(--ink) 18%,transparent);
-  position:relative;overflow:hidden;border-radius:20px;background:var(--surface);border:1px solid var(--line);
+  position:relative;overflow:hidden;border-radius:16px;background:var(--surface);border:1px solid var(--line);
   display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;color:var(--r-ink);
 }
 .fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent-soft);transition:width .45s ease}
@@ -246,7 +246,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .w-hero h1 .num{font-size:clamp(72px,23vw,112px)}
 .figs.on-bg .fig{background:var(--surface);border:1px solid var(--line)}
 .fig b small{font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:0;color:var(--muted);margin-left:3px}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:20px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
 .seg .chip{min-height:34px;padding:6px 12px;font-size:13px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
@@ -264,7 +264,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .g-scrub rect{fill:var(--sel)}
 .chart .g-scrub text{fill:var(--ink);font-weight:600}
 .note{margin:0;color:var(--muted);font-size:14px}
-.entries{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:20px;overflow:hidden}
+.entries{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
 .entries li+li{border-top:1px solid var(--line)}
 .entries button{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;background:none;border:0;text-align:left;font-size:16px}
 .entries .d{color:var(--muted)}
@@ -338,7 +338,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .chip.more svg{width:14px;height:14px}
 
 /* Übersicht, Budgets, Kraft */
-.ovs{background:var(--surface);border-radius:20px;overflow:hidden}
+.ovs{background:var(--surface);border-radius:16px;overflow:hidden}
 .ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:8px 12px;border:0;background:none}
 .ov+.ov::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--line)}
 .ov:active{background:var(--fill)}
@@ -638,7 +638,7 @@ button.lastx:active{background:var(--fill)}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
 /* Weicher: rundere Formen, sanfte Übergänge */
-.row,.card,.entries,.empty{border-radius:20px}
+.row,.card,.entries,.empty{border-radius:16px}
 .primary,.ghost,.fig,.stepper button{border-radius:14px}
 .seg2{border-radius:14px;padding:3px}
 .seg2 button{border-radius:11px}
@@ -750,7 +750,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v52</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v53</span></footer>
 </div>
 </div>
 
@@ -3921,6 +3921,7 @@ function renderHome() {
   h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['aufgabe', 'Aufgabe'], ['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme'], ['lauf', 'Lauf']]
     .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const bkDue = backupDue();
+  h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
   if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
   const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
@@ -3949,7 +3950,7 @@ function renderHome() {
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false)).join('') + '</ul>';
-  h += homeTasksHTML() + homeNotesHTML();
+  h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   h += '<h2 class="sec">Daten</h2><div class="links"><button type="button" class="linkbtn" data-h="export">Sicherung speichern</button><button type="button" class="linkbtn" data-h="import">Sicherung einlesen</button></div>' +
     '<p class="note" id="bk-msg">' + esc(bkMsg || lastBackupText()) + '</p>';

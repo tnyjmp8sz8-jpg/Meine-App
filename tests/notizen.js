@@ -149,6 +149,12 @@ lauf(async () => {
   P.enthaelt('Kalender „Aufgaben“ zeigt, was heute erledigt wurde', (await text(b.page, '#cs-title')) + ' ' + (await text(b.page, '#csheet')), ['Aufgaben', 'Betreuer wegen Termin schreiben']);
   await blaetterZu(b.page);
 
+  // --- Heute: Notizen stehen ganz oben, vor Routinen und Aufgaben ---
+  await bereich(b.page, 'heute');
+  const lagen = await b.page.evaluate(() => { const o = {}; document.querySelectorAll('#v-heute .sec').forEach(h => { o[h.firstChild.textContent.trim()] = Math.round(h.getBoundingClientRect().top); }); return o; });
+  P.ok('auf Heute stehen die Notizen über Routinen und Aufgaben', lagen.Notizen < lagen.Routinen && lagen.Routinen < lagen.Aufgaben, JSON.stringify(lagen));
+  await bereich(b.page, 'routinen');
+
   // --- Wiederkehrende Aufgaben ---
   const q = b.page, warte = () => q.waitForTimeout(200), wahl = (box, name) => q.click(box + ' .chip:has-text("' + name + '")');
   const alle = async titel => Object.values((await gespeichert(q)).N.tasks).filter(t => t && t.t === titel);
