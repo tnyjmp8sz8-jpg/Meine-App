@@ -40,6 +40,13 @@ lauf(async () => {
     const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).backgroundColor }));
     P.ok('Punkt von „Track.“ ist blau' + b, farben.punkt === farben.plus && farben.name !== farben.plus && (await text(page, '.mark')) === 'Track.', JSON.stringify(farben));
 
+    // Kennfarben: Das Plus der Schnell-Knöpfe auf Heute trägt die Farbe seines Bereichs, dieselbe wie das Symbol in der Übersicht
+    await bereich(page, 'heute');
+    const kf = await page.evaluate(() => { const f = q => getComputedStyle(document.querySelector(q)).color; const plus = v => f('.quick .chip[data-v="' + v + '"] svg');
+      return { aufgabe: plus('aufgabe'), notiz: plus('notiz'), gewicht: plus('gewicht'), ausgabe: plus('ausgabe'), einnahme: plus('einnahme'), lauf: plus('lauf'), icGewicht: f('.ov .ic.gewicht'), icFinanzen: f('.ov .ic.haushalt'), icTraining: f('.ov .ic.training') }; });
+    P.ok('Plus in der Farbe des Bereichs' + b, kf.gewicht === kf.icGewicht && kf.ausgabe === kf.icFinanzen && kf.einnahme === kf.icFinanzen && kf.lauf === kf.icTraining && kf.aufgabe === kf.notiz && kf.aufgabe !== kf.gewicht && kf.gewicht !== kf.ausgabe && kf.ausgabe !== kf.lauf, JSON.stringify(kf));
+    await bereich(page, 'training');
+
     // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar
     P.ok('Erklärung ist zuerst verborgen' + b, !(await page.isVisible('#info-k-imp')));
     await page.click('#v-training [data-info="k-imp"]');
@@ -48,6 +55,13 @@ lauf(async () => {
     P.ok('zweiter Tipp verbirgt sie wieder' + b, !(await page.isVisible('#info-k-imp')));
     await browser.close();
     fehler.forEach(f => P.ok(f + b, false));
+    // Leere Seiten: Symbol in der Kennfarbe des Bereichs (Planer blau wie der Plus-Knopf, die anderen jeweils eigen)
+    const leer = await oeffnen({ breite });
+    const farbe = async v => { await bereich(leer.page, v); await leer.page.waitForTimeout(150); return leer.page.evaluate(q => getComputedStyle(document.querySelector(q + ' .empty .e-ic')).color, '#v-' + v); };
+    const lf = { planer: await farbe('routinen'), gewicht: await farbe('gewicht'), finanzen: await farbe('haushalt'), training: await farbe('training'), plus: await leer.page.evaluate(() => getComputedStyle(document.querySelector('#add')).backgroundColor) };
+    P.ok('leere Seiten tragen die Farbe ihres Bereichs' + b, lf.planer === lf.plus && new Set([lf.planer, lf.gewicht, lf.finanzen, lf.training]).size === 4, JSON.stringify(lf));
+    await leer.browser.close();
+    leer.fehler.forEach(f => P.ok(f + b, false));
   }
   await P.ende();
 });

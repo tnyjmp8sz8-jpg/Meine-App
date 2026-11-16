@@ -1,94 +1,58 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v54 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
-- Der Arbeitszweig der Sitzung und `main` sind gleich.
+- Live ist v55 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Der Arbeitszweig der Sitzung (`claude/app-entwicklung-verschieben-af0kew`) und `main` sind gleich, nichts liegt nur im Arbeitsordner.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
+- `node tests/alle.js`: alle 264 Prüfungen stimmen (Ablauf 12, Aufbau 66, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 48, Gym 19, Speichern 8, Aktualisierung 8).
+- Keine beauftragte Arbeit offen. Der Nutzer wartet auf nichts; die nächsten Schritte bestimmt er.
 
 ## Erledigt
-- v20–v29: Umzug ins Repository; dunkler, kompakter Look; Cloud-Code, Google-Schrift und Ton entfernt; Erinnerung an die Sicherung; GitHub Pages; Selbst-Aktualisierung; Versionshinweis; Gym nach Vorbild Alpha Progression („Letztes Mal“, Blatt der Übung mit Graph); iPhone-Fehler bei Datumsfeld, seitlichem Wischen und Fokus-Rahmen behoben.
-- v30–v34: wachsende Listen nach Monaten gruppiert; Gym mit Monat/Jahr, Recap mit „Verbesserung“ gesamt und je Übung, „Einheiten“ eingeklappt; Pfeile im Training repariert.
-- v35–v38: Bereich heißt „Finanzen“, App heißt „Track.“, Kopfzeile deckend, Finanzen mit Vermögen, Sparzielen, Sparquote.
-- v39: Konten an Buchungen. Ausgaben, Einnahmen und feste Posten bekommen ein Konto; der Kontostand rechnet ab dem eingetragenen Stand von selbst weiter. Dazu Umbuchungen zwischen Konten und „Tag im Monat“ bei festen Posten.
-- v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
-- v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
-- v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
-- v54: Kacheln ohne Wert (Strich) werden nicht mehr gezeigt; der Bereich heißt unten „Planer“; nach Enter bleibt das Notiz-Blatt offen für die nächste Notiz.
+- v20–v43: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Monat/Jahr und Recap im Gym; App heißt „Track.“, Bereich „Finanzen“; Vermögen, Sparziele, Sparquote; Konten an Buchungen, Umbuchungen, Zeile „Ohne Konto“; Tests im Repository; Fehler behoben, dass Buchungen das Vermögen nicht veränderten (v42).
+- v44–v45: Blätter nach unten wegziehen, zwischen Monaten wischen, Graphen ablesen, Erklärungen hinter „i“, „Rückgängig“ nach dem Löschen, eigene Kategorien, Erinnerung an die Sicherung nach 7 Tagen, Startbilder.
+- v46: Auf Wunsch des Nutzers zurückgenommen: Wochenleiste wieder in jedem Bereich, Monat/Jahr und Pfeile wieder in zwei Reihen.
+- v47–v48: Apple-Feinschliff (blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, leere Seiten mit Symbol, neues App-Symbol, große Zahl zählt beim Blättern); Punkt von „Track.“ in Blau.
+- v49: Aufgaben und Notizen im Bereich Routinen (Umschalter „Routinen / Aufgaben / Notizen“), Ordner, beides auf Heute, in der Sicherung, mit „Rückgängig“.
+- v50: Wiederkehrende Aufgaben (täglich, wöchentlich, monatlich); Suche in den Notizen.
+- v51: Notizen umgebaut zur schnellen Aufnahme: nur Text, jede mit Kreis, Abhaken löscht; „+ Notiz“ öffnet nur ein Textfeld. Titel, Zeilen zum Abhaken und Anheften entfallen; alte Notizen werden übernommen.
+- v52: Noch kompakter: große Zahl 44 → 34 px, blaue Knöpfe 44 → 40 px, Zeilen, Überschriften, Umschalter, Kacheln, Listen und Abstände je eine Stufe kleiner. Wochenleiste, Leiste unten, Eingabefelder unverändert.
 - v53: Notizen auf Heute ganz oben (vor Routinen); Ecken der Karten 16 statt 20 px.
-- v52: Noch kompakter auf Wunsch des Nutzers: große Zahl 44 → 34 px, blaue Knöpfe 44 → 40 px, Routinen-Zeilen, Überschriften, Umschalter, Kacheln, Listen und Abstände je eine Stufe kleiner. Wochenleiste, Leiste unten und Eingabefelder unverändert.
-- v51: Notizen auf Wunsch des Nutzers umgebaut zur schnellen Aufnahme: nur Text, jede mit Kreis, Abhaken löscht (mit „Rückgängig“), „+ Notiz“ öffnet nur ein Textfeld, Enter schließt ab; Notizen stehen auch auf Heute. Titel, Zeilen zum Abhaken und Anheften sind entfallen; alte Notizen werden übernommen.
-- v50: Wiederkehrende Aufgaben (täglich, wöchentlich, monatlich) und Suche in den Notizen (Titel, Text, Zeilen zum Abhaken).
-- v49: Aufgaben und Notizen im Bereich Routinen (Umschalter „Routinen / Aufgaben / Notizen“): Aufgaben mit Datum, Ordnern, Abhaken, Liegengebliebenes rutscht auf heute; Notizen mit Text, Zeilen zum Abhaken, Anheften, speichern von selbst; beides auf Heute, in der Sicherung und mit „Rückgängig“.
-- v48: Punkt von „Track.“ in der Kopfzeile in Akzentblau.
-- v47: Apple-Feinschliff, alle sieben Punkte: blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, einheitliche Strichstärken, leere Seiten mit Symbol und einem Satz, neues App-Symbol, große Zahl zählt beim Blättern.
-- v46: Auf Wunsch des Nutzers zurückgenommen: Wochenleiste wieder in jedem Bereich, Monat/Jahr und Pfeile wieder in zwei Reihen, Kalender-Knopf in der Kopfzeile entfernt.
-- v45: Aus der Durchsicht, Punkte 3, 6, 7: „Rückgängig“ nach jedem Löschen; eigene Kategorien („+ Kategorie“ im Blatt); Erinnerung an die Sicherung nach 7 statt 14 Tagen; Startbilder fürs iPhone.
-- v44: Aus der Durchsicht, Punkte 1, 2, 4, 5: Zeitraum in einer Reihe und Wochenleiste nur auf Heute und Routinen (Kalender über Knopf in der Kopfzeile); Blätter nach unten wegziehen, zwischen Monaten wischen; Graphen ablesbar; Erklärungen hinter „i“; „kg“/„Wdh“ normal geschrieben.
-- v43: Zeile „Ohne Konto“ im Bereich Vermögen: zeigt eingeklappt, was ohne Konto gebucht ist und deshalb nicht mitrechnet; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen.
+- v54: Kacheln ohne Wert (Strich) werden nicht mehr gezeigt; der Bereich heißt unten „Planer“; nach Enter bleibt das Notiz-Blatt offen für die nächste Notiz.
+- v55: Kennfarben der Bereiche auch am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (nach Vorschaubild vom Nutzer gewählt: „genauso umsetzen“).
 
 ## Offene Probleme
 - Nichts ist auf einem echten iPhone getestet; alle Prüfungen laufen im Test-Browser.
+- Der Gesten-Test ist zeitempfindlich: In einem vollen Lauf schlug „nach rechts: Vormonat“ einmal fehl (Wisch dauerte unter Last länger als die erlaubten 0,7 s), danach lief er viermal durch. Bei einem einzelnen Fehlschlag dort: einzeln wiederholen, bevor man einen Fehler in der App sucht.
 - Negative Kontostände lassen sich speichern, aber auf dem iPhone nicht eintippen (Zahlentastatur ohne Minus).
 - Feste Posten, deren Tag im Monat des eingetragenen Stands schon vorbei ist, zählen erst ab dem Folgemonat (gewollt: Sie stecken schon im Stand).
-- Buchungen, die der Nutzer vor v42 ohne Konto eingetragen hat, zählen weiter nicht, bis er das Konto nachträgt (seit v43 über die Zeile „Ohne Konto“ im Vermögen).
-- Wer bewusst ohne Konto bucht, sieht die Zeile „Ohne Konto“ im Vermögen dauerhaft. Für den Nutzer passt das (er will, dass alles mitrechnet).
+- Buchungen, die der Nutzer vor v42 ohne Konto eingetragen hat, zählen nicht, bis er das Konto nachträgt (Zeile „Ohne Konto“ im Vermögen).
 - `healBal()` wird nur für Stände aus v38 gebraucht und wirkt nur im Monat des Stands (November 2026). Ab Dezember 2026 kann die Funktion samt ihrer Prüfung entfernt werden.
-- Unter dem Symbol auf dem Home-Bildschirm steht noch „Takt“, bis der Nutzer die App neu hinzufügt (vorher Sicherung speichern, danach einlesen, erst dann das alte Symbol löschen).
+- Unter dem Symbol auf dem Home-Bildschirm steht noch „Takt“ und das alte Symbol, bis der Nutzer die App neu hinzufügt (vorher Sicherung speichern, danach einlesen, erst dann das alte Symbol löschen). Auch Startbild und neues Symbol wirken erst dann.
+- Erledigte Aufgaben: gezeigt werden die letzten 50, ältere bleiben gespeichert.
+- Alte CSS-Regeln, die weiter unten überschrieben werden, sind noch nicht zusammengeführt (rein intern; nur mit Bildvergleich vorher/nachher anfassen).
 
 ## Am iPhone noch zu prüfen (Rückmeldung des Nutzers steht aus)
-- Datumsfeld bei „Einheit ändern“: passt es, lässt sich nichts mehr seitlich wischen?
-- Kasten um „Schließen“ im Kalender: ist er weg?
-- Kopfzeile beim Scrollen: bleibt sie scharf (v37)?
-- Monatsfeld im Blatt „Stand eintragen“ (v38).
-- Konto-Chips und „+ Konto“ im Blatt für Ausgaben und Einnahmen (v39, v40): passen sie bei mehreren Konten?
-- Kontoname im Blatt „Stand eintragen“ antippen und ändern (v40).
-- Rechnet das Vermögen nach einer Ausgabe oder Einnahme jetzt mit (v42)? Ist im Blatt das Konto schon blau gewählt?
-- Zeile „Ohne Konto“ im Vermögen (v43): aufklappen, Buchung antippen, Konto wählen, speichern.
-- Blatt am Griff nach unten wegziehen (v44): fühlt es sich richtig an, ruckelt oder federt etwas? Scrollt ein langes Blatt weiter normal?
-- Zwischen Monaten wischen (v44) in Finanzen und Training: löst es aus Versehen aus, wenn man nur scrollt?
-- Graph antippen und mit dem Finger entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
+- „+ Notiz“ auf Heute (v51, v54): Geht die Tastatur sofort auf? Legt die Eingabetaste die Notiz an und bleibt das Feld für die nächste offen? Daran hängen die „5 Sekunden“.
+- Größen (v52): Ist alles klein genug, oder ist etwas zu klein zum Lesen oder Treffen? Trifft man den Kreis zum Abhaken gut?
+- Farben (v55): Wirkt das farbige Plus in den Schnell-Knöpfen, oder ist es zu klein?
+- Blatt am Griff nach unten wegziehen (v44): fühlt es sich richtig an? Scrollt ein langes Blatt weiter normal?
+- Zwischen Monaten wischen (v44): löst es aus Versehen aus, wenn man nur scrollt?
+- Graph antippen und entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
 - „Rückgängig“ nach dem Löschen (v45): liegt der Hinweis gut über der Leiste unten?
-- Aufgaben und Notizen (v49): Schreibt es sich gut im Notiz-Blatt (Tastatur, Zoom, Zeilen zum Abhaken)? Trifft man den Kreis zum Abhaken gut? Passt die Reihe „Routinen / Aufgaben / Notizen“?
-- Größen (v52): Ist jetzt alles klein genug, oder ist etwas zu klein zum Lesen oder Treffen geworden?
-- „+ Notiz“ auf Heute (v51): Geht die Tastatur sofort auf? Schließt die Taste „Fertig“ der Tastatur ab? Das ist der Kern der 5 Sekunden und nur am Gerät zu sehen.
-- Wiederkehrende Aufgabe abhaken (v50): Erscheint die nächste unter „Demnächst“? Suche in den Notizen: bleibt die Tastatur beim Tippen offen?
-- Neues App-Symbol (v47): erscheint erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern, danach einlesen).
-- Gefüllte Symbole unten, blaue Pfeile, Linie oben erst beim Scrollen (v47): gefällt es am Gerät?
-- Startbild (v45): wirkt wohl erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern). Kein weißer Blitz mehr beim Öffnen?
-
-## Durchsicht der ganzen App (nach v43, Wunsch des Nutzers: „Apple-like Produkt“)
-- Punkt 1 („Inhalt zuerst“) hat der Nutzer abgelehnt und ist seit v46 zurückgebaut.
-- Umgesetzt in v44 und v45: Wischgesten, Graphen ablesen, Erklärungen hinter „i“, kg/Wdh, Rückgängig, eigene Kategorien, Startbild, Erinnerung nach 7 Tagen.
-- Bewusst nicht gemacht: „58,71 € pro Tag bis Monatsende“ bleibt sichtbar (ist eine Zahl, keine Erklärung), nur gekürzt.
-- Noch offen: alte CSS-Regeln zusammenführen, die weiter unten überschrieben werden (rein intern, Risiko fürs Aussehen; nur mit Bildvergleich vorher/nachher).
-- Nur mit einer echten iPhone-App möglich: Apple Health (Gewicht, Läufe, Trainings automatisch), Mitteilungen ohne Server, Widgets, Timer auf dem Sperrbildschirm, Haptik, automatische iCloud-Sicherung.
-
-## Apple-Look
-- Die sieben Punkte der Einschätzung nach v46 sind seit v47 umgesetzt (siehe Erledigt).
-- Nicht machbar in der Web-App: Milchglas in der Kopfzeile (machte sie auf dem iPhone unscharf, v37), Haptik.
-- Offen als Idee: großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert (wie in Apple-Apps); vorher mit Bild fragen.
+- Wiederkehrende Aufgabe abhaken (v50): erscheint die nächste unter „Demnächst“? Suche in den Notizen: bleibt die Tastatur beim Tippen offen?
+- Rechnet das Vermögen nach einer Ausgabe oder Einnahme mit (v42)? Ist im Blatt das Konto schon blau gewählt?
+- Ältere Punkte ohne Rückmeldung: Datumsfeld bei „Einheit ändern“, Monatsfeld im Blatt „Stand eintragen“, Konto-Chips bei mehreren Konten, Kontoname ändern, Kopfzeile bleibt beim Scrollen scharf.
+- Bestätigt durch Fotos des Nutzers (v51): Kopfzeile, Wochenleiste, blaue Pfeile, gefülltes Symbol unten, blauer Punkt sehen am Gerät aus wie im Test-Browser.
 
 ## Nächste Schritte
-Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
-- Farbe der Bereiche an weiteren Stellen (Frage des Nutzers nach v54; Vorschaubild geschickt, Antwort steht aus):
-  - Vorschlag: das Plus der Schnell-Knöpfe auf Heute in der Farbe des Bereichs (Gewicht lila, Ausgabe und Einnahme orange, Lauf grün) und das Symbol der leeren Seiten in der Farbe des Bereichs.
-  - Davon abgeraten: Leiste unten oder Überschriften einfärben (zu unruhig, Blau bliebe nicht mehr „antippbar“).
-- Aufgaben und Notizen, nächste Schritte (der Nutzer wollte erst alles sehen und sagt dann, was umgebaut wird):
-  - Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“.
-  - Ordner umbenennen; Reihenfolge der Schnell-Knöpfe auf Heute (jetzt: Aufgabe, Notiz vorn).
-  - Erledigtes: nur die letzten 50 werden gezeigt, ältere bleiben gespeichert. Später: nach Monaten gruppieren oder aufräumen.
-  - Kalender der Aufgaben zeigt nur Vergangenes (Erledigtes), keine künftigen Termine.
-  - Erinnerung mit Uhrzeit: gibt es nicht (Mitteilungen kann die Web-App nicht).
-  - Tages-Check (Schlaf/Energie 1 bis 5 für die Zusammenhänge).
+Der Nutzer entscheidet. Meine offenen Vorschläge (nur auf Zuruf umsetzen; bei Änderungen am Aufbau erst ein Bild zeigen):
+- Aufgaben und Notizen: Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“; Ordner umbenennen; Kalender der Aufgaben zeigt nur Erledigtes, keine künftigen Termine.
+- Tages-Check (Schlaf oder Energie mit einem Tipp, 1 bis 5), der die „Zusammenhänge“ in der Wochenansicht füttert.
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
-- Finanzen: Wochenleiste auch im Vermögen zeigen, damit beim Wechsel zu Budget nichts springt.
-- Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
-- Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, z. B. „(Heute, 7,0 km)“, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
-- Finanzen: Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist.
-- Finanzen: Umschalter für Schulden (negative Stände).
-- Gym: „Stärkste Übung“ und „Schwächste Übung“ im Monats-Recap.
-- Gym: „Training beenden“ als kleiner Knopf oben im laufenden Training.
-- Gym: im laufenden Training anzeigen, ob ein Satz besser oder schlechter war als beim letzten Mal.
-- Heute: Verbesserung im Gym in der Zeile „Training“ zeigen.
+- Finanzen: Wochenleiste auch im Vermögen; Knopf „Alle aufs Girokonto“ in der Zeile „Ohne Konto“; Erinnerung auf Heute ab dem 25., wenn für den Monat noch kein Stand eingetragen ist; Umschalter für Schulden (negative Stände).
+- Cardio: bei „Letzter Lauf“ im Vergleichstext zusätzlich die Strecke nennen, weil „Heute“ bei zwei Läufen am selben Tag doppeldeutig ist.
+- Gym: „Stärkste“ und „Schwächste Übung“ im Monats-Recap; „Training beenden“ als kleiner Knopf oben im laufenden Training; im laufenden Training zeigen, ob ein Satz besser oder schlechter war als beim letzten Mal; Verbesserung im Gym in der Zeile „Training“ auf Heute.
+- Apple-Look: großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert.
+- Nicht machbar in der Web-App, nur mit einer echten iPhone-App: Apple Health, Mitteilungen und Erinnerungen mit Uhrzeit, Widgets, Timer auf dem Sperrbildschirm, Haptik, automatische iCloud-Sicherung, Milchglas in der Kopfzeile.
 - Konkurrenz gründlich recherchieren (falls die App für andere gedacht wird).

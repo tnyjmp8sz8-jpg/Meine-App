@@ -159,7 +159,11 @@ dialog:focus,dialog:focus-visible{outline:none}
 .just-done .streak b{animation:pop .7s ease .2s;display:inline-block}
 
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
-.empty .e-ic{width:60px;height:60px;border-radius:50%;background:var(--surface);color:var(--muted);display:grid;place-items:center;margin-bottom:6px}
+/* Symbol der leeren Seite in der Kennfarbe des Bereichs, wie die Symbole in der Übersicht auf Heute */
+.empty .e-ic{--c:var(--accent);width:60px;height:60px;border-radius:50%;background:color-mix(in srgb,var(--c) 17%,transparent);color:var(--c);display:grid;place-items:center;margin-bottom:6px}
+.empty .e-ic.gewicht{--c:var(--c-weight)}
+.empty .e-ic.haushalt{--c:var(--c-money)}
+.empty .e-ic.training{--c:var(--good)}
 .empty .e-ic svg{width:28px;height:28px}
 .empty h2{margin:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em}
 .empty p{margin:0 0 10px;color:var(--muted);font-size:14px;max-width:32ch}
@@ -358,6 +362,10 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .quick::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
 .quick svg{width:9px;height:9px;color:var(--at)}
+/* Das Plus trägt die Kennfarbe des Bereichs; Aufgabe und Notiz gehören zum Planer und bleiben blau */
+.quick .chip[data-v="gewicht"] svg{color:var(--c-weight)}
+.quick .chip[data-v="ausgabe"] svg,.quick .chip[data-v="einnahme"] svg{color:var(--c-money)}
+.quick .chip[data-v="lauf"] svg{color:var(--good)}
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
@@ -751,7 +759,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v54</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v55</span></footer>
 </div>
 </div>
 
@@ -1689,7 +1697,7 @@ function chartSVG(pts, t0) {
 
 /* Kleines „i“: zeigt auf Tipp den Erklärtext mit der id info-… darunter. Erklärungen stehen nie dauerhaft da. */
 /* Leerer Bereich: Symbol des Bereichs, Titel, ein Satz, darunter die Knöpfe (rest). Mittig und ohne Kasten. */
-const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
+const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic ' + area + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
 const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.5v3.6"/><circle cx="8" cy="4.9" r=".5" fill="currentColor"/></svg></button>';
 /* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
 const fig = (val, unit, label) => val === '–' ? '' : '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';

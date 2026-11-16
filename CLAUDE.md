@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v54)
+# Track. – Projektwissen (App-Stand v55)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -119,7 +119,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Kompakt (seit v52 noch eine Stufe kleiner): Fließtext 14 px, Listen 13,5 px, Nebentexte 12 px, Abschnittstitel 15 px, Umschalter der Bereiche und „Track.“ 17 px, große Zahl höchstens 34 px, blauer Hauptknopf 40 px hoch. Maßstab ist die Wochenleiste (11 und 15 px): Sie „passt gut“ und bleibt, ebenso die Leiste unten und die Eingabefelder (16 px, sonst zoomt iOS). Nie die ganze Seite per `zoom` verkleinern: Das träfe auch die Eingabefelder.
 - Tippflächen mindestens 40 px; kleinere Knöpfe bekommen per `::after` eine größere Tippfläche.
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Einzige Ausnahme: der Punkt von „Track.“ in der Kopfzeile (v48, vom Nutzer nach Vorschaubild gewählt). Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
-- Kennfarben der Bereiche (Routinen blau, Gewicht lila, Finanzen orange, Training grün) nur am Symbol in der Übersicht auf Heute.
+- Kennfarben der Bereiche (Planer blau, Gewicht lila `--c-weight`, Finanzen orange `--c-money`, Training grün `--good`): am Symbol in der Übersicht auf Heute, am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (`emptyHTML()` gibt `.e-ic` die Klasse des Bereichs; seit v55, vom Nutzer nach Vorschaubild gewählt). Nicht in der Leiste unten und nicht an Überschriften: Dort bliebe Blau nicht mehr „antippbar“, und es würde bunt.
 - Systemschrift, große Zahlen mit `var(--round)`. Abschnittstitel fett und normal geschrieben.
 - Erklärungen nie dauerhaft, sondern hinter `INFO()`. Bedienreihen (Wochenleiste, Monat/Jahr, Pfeile) bleiben je eine eigene Reihe: nicht zusammenlegen, um Platz zu sparen.
 - Nur was nötig ist: keine erklärenden Texte ohne Nutzen, keine Töne, keine ungefragten Einstellungen, lange Listen einklappen.
@@ -141,7 +141,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Die Wochenleiste mag er, in jedem Bereich („ich mochte das“, v46). Mein Umbau in v44 (Leiste weg, Kalender als Knopf oben, Pfeile und Monat/Jahr in einer Reihe) kam nicht an: „das November ist eingequetscht“. Zweites Mal dieselbe Lehre: nichts zusammenschieben, was vorher Luft hatte; Vertrautes nicht für „weniger Bedienung“ opfern, sondern vorher mit Bild fragen.
 - In Zeilen mit Wert (`kvRow()`: Letzter Lauf, Woche, Sparquote) steht der Vergleich in einer eigenen Zeile unter dem Wert, nicht daneben. Der Nutzer fand das ruhiger; „daneben“ war ein Vorschlag von mir (v26), den er nach dem Ausprobieren zurückgenommen hat. Kompakt heißt für ihn nicht: alles in eine Zeile quetschen.
 - Erfassen muss in Sekunden gehen: ein Tipp, tippen, fertig. Keine Pflichtfelder, keine Auswahl davor (Rückmeldung zu den Notizen, v51).
-- Die farbigen Symbole der Bereiche auf Heute findet er „schön und cool“ (v54) und fragte, wo Farbe noch Sinn ergibt. Farbe darf also etwas mehr vorkommen, solange sie eine Bedeutung trägt (Farbe = Bereich).
+- Die farbigen Symbole der Bereiche auf Heute findet er „schön und cool“ (v54) und fragte, wo Farbe noch Sinn ergibt. Farbe darf also etwas mehr vorkommen, solange sie eine Bedeutung trägt (Farbe = Bereich). Meinen Vorschlag dazu hat er nach Bildern genau so übernommen (v55).
+- Vorschaubilder kommen gut an: Für Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen (im Test-Browser per eingefügtem CSS, ohne die App zu ändern), dann bauen. So sind v48 und v55 entstanden.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
@@ -155,11 +156,12 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v54` → `takt-v55`), `<span class="ver">v54</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v55` → `takt-v56`), `<span class="ver">v55</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
+- Der Gesten-Test ist zeitempfindlich (ein Wisch muss in 0,7 s durch sein): Schlägt in einem vollen Lauf nur dort etwas fehl, zuerst einzeln wiederholen.
 - `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Aufgaben und Notizen, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Tests laufen mit „Bewegung reduzieren“, damit Zahlen sofort ihren Endwert zeigen; nur `gesten.js` läuft mit Bewegung (`bewegung: true`). Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
