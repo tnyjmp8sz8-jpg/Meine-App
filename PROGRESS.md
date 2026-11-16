@@ -5,7 +5,7 @@
 - Der Arbeitszweig der Sitzung (`claude/app-entwicklung-verschieben-af0kew`) und `main` sind gleich, nichts liegt nur im Arbeitsordner.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
-- `node tests/alle.js`: alle 264 Prüfungen stimmen (Ablauf 12, Aufbau 66, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 48, Gym 19, Speichern 8, Aktualisierung 8).
+- `node tests/alle.js`: alle 275 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Speichern 8, Aktualisierung 8).
 - Keine beauftragte Arbeit offen. Der Nutzer wartet auf nichts; die nächsten Schritte bestimmt er.
 
 ## Erledigt
@@ -19,6 +19,7 @@
 - v52: Noch kompakter: große Zahl 44 → 34 px, blaue Knöpfe 44 → 40 px, Zeilen, Überschriften, Umschalter, Kacheln, Listen und Abstände je eine Stufe kleiner. Wochenleiste, Leiste unten, Eingabefelder unverändert.
 - v53: Notizen auf Heute ganz oben (vor Routinen); Ecken der Karten 16 statt 20 px.
 - v54: Kacheln ohne Wert (Strich) werden nicht mehr gezeigt; der Bereich heißt unten „Planer“; nach Enter bleibt das Notiz-Blatt offen für die nächste Notiz.
+- v56: Auf Wunsch des Nutzers entfernt: das Tempo (km/h) beim Laufband und die Schnell-Knöpfe „Aufgabe“, „Lauf“, „Einnahme“. Auf Heute bleiben Notiz, Gewicht, Ausgabe; im Blatt schaltet man oben zwischen Ausgabe und Einnahme um. Alte Laufband-Läufe mit Tempo behalten ihre Zahlen.
 - v55: Kennfarben der Bereiche auch am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (nach Vorschaubild vom Nutzer gewählt: „genauso umsetzen“).
 
 ## Offene Probleme

@@ -43,8 +43,10 @@ lauf(async () => {
     // Kennfarben: Das Plus der Schnell-Knöpfe auf Heute trägt die Farbe seines Bereichs, dieselbe wie das Symbol in der Übersicht
     await bereich(page, 'heute');
     const kf = await page.evaluate(() => { const f = q => getComputedStyle(document.querySelector(q)).color; const plus = v => f('.quick .chip[data-v="' + v + '"] svg');
-      return { aufgabe: plus('aufgabe'), notiz: plus('notiz'), gewicht: plus('gewicht'), ausgabe: plus('ausgabe'), einnahme: plus('einnahme'), lauf: plus('lauf'), icGewicht: f('.ov .ic.gewicht'), icFinanzen: f('.ov .ic.haushalt'), icTraining: f('.ov .ic.training') }; });
-    P.ok('Plus in der Farbe des Bereichs' + b, kf.gewicht === kf.icGewicht && kf.ausgabe === kf.icFinanzen && kf.einnahme === kf.icFinanzen && kf.lauf === kf.icTraining && kf.aufgabe === kf.notiz && kf.aufgabe !== kf.gewicht && kf.gewicht !== kf.ausgabe && kf.ausgabe !== kf.lauf, JSON.stringify(kf));
+      return { notiz: plus('notiz'), gewicht: plus('gewicht'), ausgabe: plus('ausgabe'), icGewicht: f('.ov .ic.gewicht'), icFinanzen: f('.ov .ic.haushalt') }; });
+    P.ok('Plus in der Farbe des Bereichs' + b, kf.gewicht === kf.icGewicht && kf.ausgabe === kf.icFinanzen && kf.notiz !== kf.gewicht && kf.notiz !== kf.ausgabe && kf.gewicht !== kf.ausgabe, JSON.stringify(kf));
+    // Seit v56 nur noch drei Schnell-Knöpfe (Wunsch des Nutzers): Aufgabe und Lauf sind weg, Ausgabe und Einnahme teilen sich einen
+    P.ok('drei Schnell-Knöpfe: Notiz, Gewicht, Ausgabe' + b, (await text(page, '.quick .chip')) === 'Notiz | Gewicht | Ausgabe', await text(page, '.quick .chip'));
     await bereich(page, 'training');
 
     // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar

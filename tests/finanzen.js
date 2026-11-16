@@ -41,7 +41,9 @@ lauf(async () => {
   await page.fill('#m-amt', '200'); await speichern('#m-save');
   P.enthaelt('Einnahme 200 aufs Girokonto', await konten(), ['1.220', '1.170 €']);
 
-  await sub('verm'); await page.click('#v-haushalt [data-m="newtr"]'); await page.fill('#m-amt', '100'); await chip('#m-acc', 'Girokonto'); await chip('#m-to', 'Bargeld'); await speichern('#m-save');
+  await sub('verm'); await page.click('#v-haushalt [data-m="newtr"]');
+  P.ok('Umbuchung: kein Umschalter Ausgabe/Einnahme', !(await page.isVisible('#m-kind')));
+  await page.fill('#m-amt', '100'); await chip('#m-acc', 'Girokonto'); await chip('#m-to', 'Bargeld'); await speichern('#m-save');
   P.enthaelt('Umbuchung 100 vom Girokonto zum Bargeld', await konten(), ['1.220', '1.070 €', '150 €']);
   P.enthaelt('Umbuchung steht im Bereich Vermögen', await text(page, '#v-haushalt [data-m="tx"]'), ['Girokonto → Bargeld', '100,00 €']);
 
@@ -153,6 +155,20 @@ lauf(async () => {
   P.ok('alles hat ein Konto: Zeile ist weg', !(await page.$('#v-haushalt [data-m="noacc"]')));
   await sub('budget'); await page.click('#v-haushalt [data-m="newfix"]');
   P.ok('Konto ist auch bei neuen Fixkosten vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
+  await page.click('#ms-close');
+
+  // --- Ein Knopf für Ausgabe und Einnahme (v56): Das Blatt öffnet als Ausgabe, oben schaltet man auf Einnahme um ---
+  const txAlle = async () => Object.values((await gespeichert(page)).MY).flatMap(y => Object.values(y.tx)).filter(Boolean);
+  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="ausgabe"]');
+  P.ok('Blatt öffnet als Ausgabe, mit Kategorie', (await text(page, '#ms-title')) === 'Ausgabe eintragen' && await page.isVisible('#m-cat-fld') && (await page.getAttribute('#m-kind [data-k="out"]', 'aria-pressed')) === 'true');
+  await page.click('#m-kind [data-k="in"]');
+  P.ok('umgeschaltet auf Einnahme: Titel wechselt, keine Kategorie', (await text(page, '#ms-title')) === 'Einnahme eintragen' && !(await page.isVisible('#m-cat-fld')) && (await page.getAttribute('#m-kind [data-k="in"]', 'aria-pressed')) === 'true');
+  await page.fill('#m-amt', '77,70'); await chip('#m-acc', 'Kein Konto'); await speichern('#m-save');
+  P.ok('als Einnahme von 77,70 € gespeichert', (await txAlle()).some(t => t.a === 7770 && t.k === 'in'), JSON.stringify((await txAlle()).filter(t => t.a === 7770)));
+  await page.click('#v-heute [data-h="q"][data-v="ausgabe"]'); await page.click('#m-kind [data-k="in"]'); await page.click('#m-kind [data-k="out"]'); await page.fill('#m-amt', '8,80'); await chip('#m-acc', 'Kein Konto'); await speichern('#m-save');
+  P.ok('hin und zurück geschaltet: Ausgabe von 8,80 € mit Kategorie', (await txAlle()).some(t => t.a === 880 && t.k === 'out' && t.c === 'essen'));
+  await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-m="newfix"]');
+  P.ok('feste Posten: kein Umschalter', !(await page.isVisible('#m-kind')));
   await page.click('#ms-close');
 
   P.ok('gespeicherte Daten sind lesbar', !!(await gespeichert(page)).MF);

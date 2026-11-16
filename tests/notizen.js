@@ -78,8 +78,10 @@ lauf(async () => {
   P.enthaelt('Heute zeigt die Aufgaben des Tages', await text(page, '#v-heute'), ['Aufgaben2 offen', 'Kapitel schreiben', 'Von gestern']);
   await page.click('#v-heute .trow:has-text("Von gestern") .tk'); await kurz();
   P.enthaelt('auf Heute abgehakt: 1 offen', await text(page, '#v-heute'), ['Aufgaben1 offen']);
-  await page.click('#v-heute [data-h="q"][data-v="aufgabe"]'); await page.fill('#a-title', 'Schnell notiert'); await page.click('#a-save'); await kurz();
-  P.enthaelt('Schnell-Knopf legt eine Aufgabe für heute an', await text(page, '#v-heute'), ['Aufgaben2 offen', 'Schnell notiert']);
+  // Den Schnell-Knopf „Aufgabe“ gibt es seit v56 nicht mehr; eine neue Aufgabe aus dem Planer erscheint trotzdem sofort auf Heute
+  await bereich(page, 'routinen'); await page.click('#add'); await page.fill('#a-title', 'Schnell notiert'); await chip('#a-due', 'Heute'); await page.click('#a-save'); await kurz();
+  await bereich(page, 'heute');
+  P.enthaelt('neue Aufgabe für heute steht auf Heute', await text(page, '#v-heute'), ['Aufgaben2 offen', 'Schnell notiert']);
 
   // --- Notizen: schnelle Aufnahme. Nur ein Textfeld, jede Notiz mit Kreis, Abhaken löscht sie ---
   const roh = () => page.evaluate(() => localStorage.getItem('takt.v1'));
