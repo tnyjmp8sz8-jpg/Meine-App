@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v50)
+# Track. – Projektwissen (App-Stand v51)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -17,7 +17,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Name: „Track.“ mit Punkt (früher „Takt“). Oberfläche und Code-Kommentare auf Deutsch.
 - Kernfunktionen:
   - Heute: Wochenleiste, Schnell-Knöpfe, Routinen des Tages direkt startbar, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
-  - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender. Im selben Bereich (Umschalter oben) seit v49: „Aufgaben“ (To-do mit Datum und Ordnern) und „Notizen“ (Text mit Zeilen zum Abhaken). Der Nutzer will damit seine Notizen-App ersetzen, für Uni, Promotion und Alltag, und braucht alles nur auf dem Handy.
+  - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender. Im selben Bereich (Umschalter oben) seit v49: „Aufgaben“ (To-do mit Datum, Ordnern, Wiederholung) und „Notizen“ (schnelle Aufnahme in Sekunden: nur Text, jede mit Kreis, Abhaken löscht). Der Nutzer will damit seine Notizen-App ersetzen, für Uni, Promotion und Alltag, und braucht alles nur auf dem Handy.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
   - Training: „Cardio“ (Läufe, Pace, Effizienz) und „Gym“ (Pläne, laufendes Training, Übungen, Recap für Monat und Jahr).
@@ -49,7 +49,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Aufgaben und Notizen (v49): Umschalter `rSub` (`rout`, `task`, `note`) in `#r-subs`; Inhalt in `#n-main` über `tasksHTML()` bzw. `notesHTML()`, die Routinen bleiben in `#main`. Der Plus-Knopf oben richtet sich nach `rSub`.
   - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
   - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde. Wiederkehrend (v50): `REPEAT`, `nextDue(datum, art)`; das Abhaken in `nAct()` legt die nächste Aufgabe an.
-  - Notizen: `noteRow()`, angeheftete oben, sonst nach Monat der letzten Änderung. Blatt `nsheet` mit `openN(id)`, Zustand `nE`, `noteSave()`, `itemsN()` Zeilen zum Abhaken, „Als Aufgabe“. Suche (v50): Feld `#n-q`, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
+  - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld, Enter oder „Fertig“ schließt ab; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
@@ -61,7 +61,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
   - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `cats` eigene Kategorien (id höchstens 12 Zeichen, wie `c` einer Buchung), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
   - `MY` Buchungen je Jahr: `d` Datum, `a` Betrag, `k` (`in`, `out`, `tr` = Umbuchung), `c` Kategorie, `n` Notiz, optional `acc` Konto, `to` Zielkonto der Umbuchung, `t` Zeitpunkt des Eintragens in ms.
-  - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz, `r` Wiederholung (leer, `day`, `week`, `month`), `nx` id der beim Abhaken angelegten nächsten Aufgabe; `notes` je id: `t` Titel, `x` Text (bis 20.000 Zeichen), `f`, `pin`, `c`, `m` geändert, `items` Liste aus `{ t, d }` zum Abhaken.
+  - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz, `r` Wiederholung (leer, `day`, `week`, `month`), `nx` id der beim Abhaken angelegten nächsten Aufgabe; `notes` je id: `x` Text, `f` Ordner, `c` angelegt, `m` geändert. Notizen aus v49/v50 (mit `t`, `pin`, `items`) übernimmt `normN()`: Titel wird erste Zeile, jede offene Zeile zum Abhaken eine eigene Notiz.
   - `T` Läufe. `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
 - Datumsschlüssel `YYYY-MM-DD` in Ortszeit, Monate `YYYY-MM`, Geld in Cent.
@@ -79,13 +79,15 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Kopfzeile deckend, kein `backdrop-filter` (v37): Der Milchglas-Effekt machte auf dem iPhone beim Scrollen den Kopf selbst unscharf.
 - Wischgesten (v44, Abschnitt „Wischgesten“): Blatt nach unten wegziehen (nur wenn alles unter dem Finger ganz oben steht; schließt über denselben Weg wie ein Tipp neben das Blatt) und waagerecht zwischen Monaten, Jahren, Wochen wischen (klickt den Pfeil; nicht vom Bildschirmrand, nicht auf Graphen).
 - Graphen ablesen (v44, Abschnitt „Graphen ablesen“): Jeder Graph trägt seine Punkte in `data-pts`; Tipp oder Zug zeigt Linie, Punkt und Schild (`scrubShow()`), ein Tipp daneben blendet es aus.
-- Rückgängig (v45, Abschnitt „Rückgängig“): ein Weg für alle Löschknöpfe (id endet auf `-del`, oder `data-vdel`). Vor dem Tipp wird der gespeicherte Stand gemerkt; hat sich danach etwas geändert, erscheint unten „Gelöscht · Rückgängig“ (`#toast`, 7 Sekunden). `saveLocal()` ruft `toastOff()`: Jede weitere Änderung nimmt den Hinweis weg, damit Rückgängig nie etwas Neueres überschreibt. Neue Löschknöpfe brauchen nur eine id auf `-del`.
+- Rückgängig (v45, Abschnitt „Rückgängig“): ein Weg für alle Löschknöpfe (id endet auf `-del`, oder `data-vdel`, oder `data-undo`). Vor dem Tipp wird der gespeicherte Stand gemerkt; hat sich danach etwas geändert, erscheint unten „Gelöscht · Rückgängig“ (`#toast`, 7 Sekunden). `saveLocal()` ruft `toastOff()`: Jede weitere Änderung nimmt den Hinweis weg, damit Rückgängig nie etwas Neueres überschreibt. Neue Löschknöpfe brauchen nur eine id auf `-del`.
 - Eigene Kategorien (v45): `MF.cats`, anlegen im Blatt über „+ Kategorie“ (`addCatM()`), `allCats()` = feste plus eigene. Unbenutzte (keine Buchung, kein Budget) entfernt `cleanCats()` beim Start. Warum: So braucht es keine Verwaltung zum Löschen. Umbenennen gibt es noch nicht.
+- Notizen sind eine schnelle Aufnahme (v51, Wunsch des Nutzers: „in 5 Sekunden“): kein Titel, keine Unterpunkte, kein Anheften. „+ Notiz“ öffnet nur ein Textfeld mit Tastatur, Enter schließt ab, jede Notiz hat einen Kreis, Abhaken löscht sie (mit „Rückgängig“, damit ein Fehltipp nichts kostet). Sie stehen auch auf Heute, sonst wäre das schnell Notierte außer Sicht. Mein Entwurf aus v49 (Titel, Text, Zeilen zum Abhaken, Anheften, nach Monaten) war ihm zu schwer.
+- Der Fokus ins Textfeld wird beim Öffnen sofort gesetzt, nicht verzögert (`openN()`, `openA()`): Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp kommt. Am Gerät noch nicht bestätigt.
 - Notizen speichern von selbst (v49): kurz nach jeder Eingabe, beim Verlassen eines Feldes und bei jedem Schließen (`close`-Ereignis des Blatts); kein „Speichern“-Knopf. Warum: Ein Blatt lässt sich wegziehen, dabei darf kein Text verloren gehen. Leere Notizen werden nicht angelegt, geleerte gelöscht. `nE = null` heißt „nichts zu speichern“ (nach dem Löschen), damit das Schließen die Notiz nicht wieder anlegt.
-- Im Blatt darf sich beim Speichern nichts verschieben und nichts neu gezeichnet werden, was man gerade antippt (v49): Die Zeile „Geändert“ und „Notiz löschen“ stehen von Anfang an da. Ein Test fand, dass sonst der Tipp auf „Fertig“ danebenging.
+- Im Blatt darf sich beim Speichern nichts verschieben und nichts neu gezeichnet werden, was man gerade antippt (v49): Was im Blatt verborgen ist, bleibt es, solange es offen ist (bei einer neuen Notiz: Ordner, „Als Aufgabe“, Löschen). Ein Test fand, dass sonst der Tipp auf „Fertig“ danebenging.
 - Offene Aufgaben mit Datum von gestern oder früher stehen unter „Heute“ mit rotem Datum: Liegengebliebenes rutscht von selbst weiter, ohne dass das Datum umgeschrieben wird.
 - Wiederkehrende Aufgaben (v50): Beim Abhaken bleibt die Aufgabe als erledigt stehen und eine neue mit dem nächsten Datum entsteht; nimmt man den Haken wieder weg, verschwindet die neue, solange sie offen ist. Warum nicht einfach das Datum weiterschieben: So bleibt im Kalender und unter „Erledigt“ sichtbar, was wann erledigt wurde. Das nächste Datum liegt immer nach heute (Liegengebliebenes springt nicht in die Vergangenheit); monatlich = gleicher Tag, sonst der letzte des Monats. Ohne Datum gibt es keine Wiederholung.
-- Aufgaben und Notizen sind nur Text: keine Bilder, keine PDFs (kein Platz in `localStorage`). Dem Nutzer gesagt.
+- Aufgaben und Notizen sind nur Text; längere Texte für die Promotion sind seit v51 nicht mehr das Ziel der Notizen: keine Bilder, keine PDFs (kein Platz in `localStorage`). Dem Nutzer gesagt.
 - Blätter nur über `openDlg()`: Sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 - Gym nach Vorbild Alpha Progression: Im laufenden Training stehen unter den Sätzen „Letztes Mal“ und Kennzahlen; ein Tipp auf „Letztes Mal“ öffnet das Blatt der Übung mit Graph und Recap. Einheiten erscheinen dort als Karten mit Satz-Tabelle.
 - Vergleichswert im Gym ist das geschätzte Maximum für eine Wiederholung (Gewicht × (1 + Wdh/30)), ohne Gewicht die meisten Wiederholungen. Kein 10RM: Die App rechnete schon immer so, der Nutzer hat es so belassen.
@@ -138,6 +140,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Überall ein Plus oder Minus zum Zeitraum davor (Monat, Jahr, je Übung), grün oder rot.
 - Die Wochenleiste mag er, in jedem Bereich („ich mochte das“, v46). Mein Umbau in v44 (Leiste weg, Kalender als Knopf oben, Pfeile und Monat/Jahr in einer Reihe) kam nicht an: „das November ist eingequetscht“. Zweites Mal dieselbe Lehre: nichts zusammenschieben, was vorher Luft hatte; Vertrautes nicht für „weniger Bedienung“ opfern, sondern vorher mit Bild fragen.
 - In Zeilen mit Wert (`kvRow()`: Letzter Lauf, Woche, Sparquote) steht der Vergleich in einer eigenen Zeile unter dem Wert, nicht daneben. Der Nutzer fand das ruhiger; „daneben“ war ein Vorschlag von mir (v26), den er nach dem Ausprobieren zurückgenommen hat. Kompakt heißt für ihn nicht: alles in eine Zeile quetschen.
+- Erfassen muss in Sekunden gehen: ein Tipp, tippen, fertig. Keine Pflichtfelder, keine Auswahl davor (Rückmeldung zu den Notizen, v51).
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
@@ -151,7 +154,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v50` → `takt-v51`), `<span class="ver">v50</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v51` → `takt-v52`), `<span class="ver">v51</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

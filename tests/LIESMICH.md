@@ -7,7 +7,7 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 - `aufbau.js`: Wochenleiste in jedem Bereich mit Kalender, Monat/Jahr über den Pfeilen, Erklärungen hinter „i“ (390 und 320 px).
 - `gesten.js`: Blatt wegziehen, zwischen Monaten wischen, Wert im Graphen ablesen (echte Berührungen).
 - `loeschen.js`: „Rückgängig“ nach dem Löschen (Buchung, Konto im offenen Blatt, Training), eigene Kategorien.
-- `notizen.js`: Aufgaben (Abschnitte, abhaken, Ordner, Liegengebliebenes) und Notizen (speichern von selbst, Zeilen zum Abhaken, „Als Aufgabe“), Heute, Rückgängig, Sicherung, Kalender.
+- `notizen.js`: Aufgaben (Abschnitte, abhaken, Ordner, Liegengebliebenes) und Notizen (schnelle Aufnahme, Abhaken löscht, „Als Aufgabe“, Suche, Übernahme alter Notizen), wiederkehrende Aufgaben, Heute, Rückgängig, Sicherung, Kalender.
 - `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote.
 - `gym.js`: Recap für Monat und Jahr, Verbesserung, Blatt der Übung, laufendes Training.
 - `speicher.js`: 25-mal Neuladen, Sicherung speichern und einlesen.

@@ -1,4 +1,4 @@
-// Aufgaben und Notizen im Bereich Routinen: anlegen, abhaken, Abschnitte, Ordner, Notiz speichert von selbst, Rückgängig, Sicherung.
+// Aufgaben und Notizen im Bereich Routinen: Aufgaben anlegen, abhaken, Abschnitte, Ordner, wiederkehrend; Notizen als schnelle Aufnahme (Abhaken löscht), Suche, Rückgängig, Sicherung.
 const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, blaetterZu } = require('./lib');
 const { beispiel, alsSicherung } = require('./daten');
 
@@ -81,45 +81,56 @@ lauf(async () => {
   await page.click('#v-heute [data-h="q"][data-v="aufgabe"]'); await page.fill('#a-title', 'Schnell notiert'); await page.click('#a-save'); await kurz();
   P.enthaelt('Schnell-Knopf legt eine Aufgabe für heute an', await text(page, '#v-heute'), ['Aufgaben2 offen', 'Schnell notiert']);
 
-  // --- Notizen: speichern von selbst, ohne „Speichern“ ---
+  // --- Notizen: schnelle Aufnahme. Nur ein Textfeld, jede Notiz mit Kreis, Abhaken löscht sie ---
+  const roh = () => page.evaluate(() => localStorage.getItem('takt.v1'));
+  const hinweis = () => page.evaluate(() => { const t = document.querySelector('#toast'); return t.hidden || !t.getClientRects().length ? '' : t.innerText.replace(/\s+/g, ' ').trim(); });
+  const sichtbar = async (...ids) => { for (const id of ids) if (!(await page.isVisible(id))) return false; return true; };
   await bereich(page, 'routinen'); await sub('note');
   P.enthaelt('leerer Zustand', await liste(), ['Noch keine Notiz']);
-  await page.click('#add'); await page.click('#ns-close'); await kurz();
-  P.ok('leere Notiz wird nicht angelegt', (await notizen()).length === 0);
-  await page.click('#add'); await page.fill('#n-title', 'Besprechung'); await page.fill('#n-text', 'Kapitel 2 kürzen.\nAbbildung 4 neu.'); await page.waitForTimeout(600);
-  P.ok('kurz nach dem Tippen ist die Notiz gespeichert', (await notizen()).some(n => n.t === 'Besprechung' && n.x.includes('Abbildung 4')));
-  await page.click('#n-item-add'); await page.keyboard.type('Termin ausmachen'); await page.keyboard.press('Enter'); await page.keyboard.type('Folien schicken');
-  await page.click('#n-items .nitem:first-child .tk');
-  await chip('#n-folder', 'Promotion'); await page.click('#n-pin');
-  await page.evaluate(() => document.querySelector('#nsheet').close()); await kurz();   // irgendein Weg zu schließen, hier wie die Zurück-Taste
-  const n1 = (await notizen())[0];
-  P.ok('Punkte zum Abhaken, Ordner und Anheften sind gespeichert', n1 && n1.items.length === 2 && n1.items[0].d === true && n1.items[1].t === 'Folien schicken' && n1.f === 'prom' && n1.pin === true, JSON.stringify(n1));
-  P.enthaelt('Liste: angeheftet, mit Ordner und erster Zeile', await liste(), ['Angeheftet', 'Besprechung Promotion · Kapitel 2 kürzen. Heute']);
-  await page.click('#add'); await page.fill('#n-text', 'Nur Text ohne Titel'); await page.click('#n-done'); await kurz();
-  P.enthaelt('Notiz ohne Titel heißt nach ihrer ersten Zeile', await liste(), ['Nur Text ohne Titel']);
-  // Beim ersten Speichern darf sich im Blatt nichts verschieben: „Fertig“ bleibt, wo es ist (sonst geht ein Tipp daneben)
-  await page.click('#add'); const y1 = await page.evaluate(() => Math.round(document.querySelector('#n-done').getBoundingClientRect().top));
-  await page.fill('#n-title', 'Lage'); await page.waitForTimeout(600);
-  const y2 = await page.evaluate(() => Math.round(document.querySelector('#n-done').getBoundingClientRect().top));
-  P.ok('Knöpfe verschieben sich beim ersten Speichern nicht', y1 === y2 && (await notizen()).some(n => n.t === 'Lage'), y1 + ' / ' + y2);
-  await page.click('#n-del'); await kurz();
+  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="notiz"]');
+  P.ok('„+ Notiz“ auf Heute: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.isVisible('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
+  await page.keyboard.type('Bib-Ausweis verlängern'); await page.keyboard.press('Enter'); await kurz();
+  P.ok('Enter legt die Notiz an und schließt das Blatt', !(await page.evaluate(() => document.querySelector('#nsheet').open)) && (await notizen()).length === 1 && (await notizen())[0].x === 'Bib-Ausweis verlängern', JSON.stringify(await notizen()));
+  P.ok('sie steht auf Heute, mit Kreis zum Abhaken', (await text(page, '#v-heute')).includes('Notizen1') && !!(await page.$('#v-heute .nrow:has-text("Bib-Ausweis verlängern") .tk')));
+  await page.click('#v-heute [data-h="q"][data-v="notiz"]'); await page.click('#n-done'); await kurz();
+  P.ok('leere Notiz wird nicht angelegt', (await notizen()).length === 1);
+  await page.click('#v-heute [data-h="q"][data-v="notiz"]'); await page.keyboard.type('Paket abholen'); await page.evaluate(() => document.querySelector('#nsheet').close()); await kurz();
+  P.ok('auch beim bloßen Schließen ist die Notiz gespeichert', (await notizen()).some(n => n.x === 'Paket abholen'));
 
-  // „Als Aufgabe“ legt eine Aufgabe für heute an, die Notiz bleibt
-  await page.click('#n-main [data-n="note"]:has-text("Besprechung")'); await page.click('#n-task');
-  P.ok('Knopf meldet es', (await text(page, '#n-task')) === 'Aufgabe angelegt');
-  await page.click('#n-done'); await kurz();
-  P.ok('Aufgabe „Besprechung“ für heute im selben Ordner', (await aufgaben()).some(t => t.t === 'Besprechung' && t.d === tag(0) && t.f === 'prom') && (await notizen()).length === 2);
-
-  // Löschen und Rückgängig; geleerte Notiz verschwindet
-  const mitNotiz = await page.evaluate(() => localStorage.getItem('takt.v1'));
-  await page.click('#n-main [data-n="note"]:has-text("Besprechung")'); await page.click('#n-del'); await kurz();
-  P.ok('Notiz gelöscht, Blatt zu', (await notizen()).length === 1 && !(await page.evaluate(() => document.querySelector('#nsheet').open)));
+  // Abhaken löscht, „Rückgängig“ holt zurück
+  const vorN = await roh();
+  await page.click('#v-heute .nrow:has-text("Paket abholen") .tk'); await kurz();
+  P.ok('Abhaken löscht die Notiz', (await notizen()).length === 1 && !(await text(page, '#v-heute')).includes('Paket abholen'));
+  P.ok('Hinweis „Gelöscht · Rückgängig“ erscheint', (await hinweis()) === 'Gelöscht Rückgängig', await hinweis());
   await page.click('#toast button'); await kurz();
-  P.ok('Rückgängig holt sie zurück', (await page.evaluate(() => localStorage.getItem('takt.v1'))) === mitNotiz);
-  await page.click('#n-main [data-n="note"]:has-text("Nur Text")'); await page.fill('#n-text', ''); await page.click('#n-done'); await kurz();
-  P.ok('geleerte Notiz ist weg', (await notizen()).length === 1);
-  await page.click('#n-main [data-n="note"]:has-text("Besprechung")'); await page.fill('#n-title', '<b>Fett</b>'); await page.click('#n-done'); await kurz();
-  P.ok('Sonderzeichen im Titel werden als Text gezeigt', (await liste()).includes('<b>Fett</b>') && !(await page.$('#n-main b:has-text("Fett")')));
+  P.ok('Rückgängig holt sie zurück', (await roh()) === vorN);
+
+  // Im Bereich: neueste zuerst; vorhandene Notiz ändern, Ordner, „Als Aufgabe“
+  await bereich(page, 'routinen');
+  const l2 = await liste();
+  P.ok('Bereich Notizen: beide, die neueste zuerst', l2.includes('Paket abholen') && l2.indexOf('Paket abholen') < l2.indexOf('Bib-Ausweis verlängern'), l2);
+  P.ok('bei wenigen Notizen gibt es kein Suchfeld', !(await page.$('#n-q')));
+  await page.click('#n-main [data-n="note"]:has-text("Paket abholen")');
+  P.ok('vorhandene Notiz: Ordner, „Als Aufgabe“ und Löschen sind da', await sichtbar('#n-folder-fld', '#n-task', '#n-del'));
+  await page.fill('#n-text', 'Paket bei der Post abholen'); await chip('#n-folder', 'Privat'); await page.click('#n-done'); await kurz();
+  P.ok('Text und Ordner geändert', (await notizen()).some(n => n.x === 'Paket bei der Post abholen' && n.f === 'priv'));
+  P.enthaelt('Zeile nennt Ordner und Tag', await liste(), ['Paket bei der Post abholen Privat · Heute']);
+  await page.click('#n-main [data-n="note"]:has-text("Paket bei der Post")'); await page.click('#n-task'); await kurz();
+  P.ok('„Als Aufgabe“: Aufgabe für heute im selben Ordner, die Notiz ist weg', (await aufgaben()).some(t => t.t === 'Paket bei der Post abholen' && t.d === tag(0) && t.f === 'priv') && (await notizen()).length === 1);
+  await page.click('#n-main [data-n="note"]:has-text("Bib-Ausweis")'); await page.fill('#n-text', '   '); await page.click('#n-done'); await kurz();
+  P.ok('geleerte Notiz ist weg', (await notizen()).length === 0);
+  await page.click('#add'); await page.keyboard.type('<b>Fett</b>'); await page.keyboard.press('Enter'); await kurz();
+  P.ok('Plus im Bereich legt eine Notiz an; Sonderzeichen bleiben Text', (await liste()).includes('<b>Fett</b>') && !(await page.$('#n-main b:has-text("Fett")')));
+
+  // Altbestand aus v49/v50: Titel wird erste Zeile, jede offene Zeile zum Abhaken eine eigene Notiz, erledigte Zeilen fallen weg
+  await page.evaluate(() => { const o = JSON.parse(localStorage.getItem('takt.v1'));
+    o.N.notes.alt = { t: 'Besprechung', x: 'Kapitel 2 kürzen.', f: 'prom', pin: true, c: 5, m: 6, items: [{ t: 'Erledigter Punkt', d: true }, { t: 'Offener Punkt', d: false }] };
+    localStorage.setItem('takt.v1', JSON.stringify(o)); });
+  await page.reload(); await page.waitForTimeout(300); await bereich(page, 'routinen'); await sub('note');
+  const l3 = await liste();
+  P.ok('alte Notiz mit Titel und Zeilen wird übernommen', l3.includes('Besprechung Kapitel 2 kürzen.') && l3.includes('Offener Punkt') && !l3.includes('Erledigter Punkt'), l3);
+  await page.click('#n-main .nrow:has-text("Offener Punkt") .tk'); await kurz();
+  P.ok('danach ist alles im neuen Aufbau gespeichert', (await notizen()).every(n => typeof n.x === 'string' && !('t' in n) && !('items' in n) && !('pin' in n)) && (await notizen()).length === 2, JSON.stringify(await notizen()));
 
   // --- Bestand: Neuladen, eigener Ordner bleibt (benutzt), Sicherung enthält alles ---
   const stand = await gespeichert(page);
@@ -168,18 +179,18 @@ lauf(async () => {
   P.ok('ohne Datum gibt es kein „Wiederholen“', !(await q.isVisible('#a-rep-fld')));
   await q.click('#as-close');
 
-  // --- Suche in den Notizen: Titel, Text und Zeilen zum Abhaken ---
+  // --- Suche in den Notizen (das Feld erscheint ab sechs Notizen) ---
   await q.click('#r-subs [data-v="note"]'); await warte();
   const treffer = () => text(q, '#n-list');
   await q.click('#n-q'); await q.keyboard.type('müller');
-  P.ok('Suche im Text: nur die passende Notiz', (await treffer()).includes('Ideen für die Diskussion') && !(await treffer()).includes('Gliederung'), await treffer());
+  P.ok('Suche: nur die passende Notiz', (await treffer()).includes('Vergleich mit Müller 2021') && !(await treffer()).includes('Gliederung'), await treffer());
   P.ok('beim Tippen bleibt der Cursor im Suchfeld', (await q.evaluate(() => document.activeElement.id)) === 'n-q');
-  await q.fill('#n-q', 'januar');
-  P.ok('Suche findet auch Zeilen zum Abhaken', (await treffer()).includes('Besprechung mit Betreuer') && (await treffer()).includes('Zeitplan bis zur Abgabe') && !(await treffer()).includes('Fragen ans Labor'), await treffer());
   await q.fill('#n-q', 'gibtesnicht');
   P.enthaelt('kein Treffer', await treffer(), ['Keine Notiz gefunden.']);
   await q.fill('#n-q', '');
-  P.ok('leeres Suchfeld zeigt wieder alle sechs', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 6);
+  P.ok('leeres Suchfeld zeigt wieder alle sieben', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 7);
+  await q.click('#n-list .nrow:has-text("Druckerpapier") .tk'); await warte();
+  P.ok('Abhaken in der Liste löscht die Notiz', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 6);
   await b.browser.close();
   await P.ende(null, fehler.concat(b.fehler));
 });

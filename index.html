@@ -479,15 +479,12 @@ input.n-q{margin-bottom:-8px}
 .trow.done .l>span{text-decoration:line-through}
 .when{flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
 .when.late{color:var(--danger)}
+
 .nrow .l{min-width:0}
-.nrow .l small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-input.n-title{flex:1;min-width:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;background:none;border:0;border-radius:0;padding:2px 1px}
-.n-text{font:inherit;font-size:16px;line-height:1.5;color:var(--ink);background:none;border:0;padding:0;width:100%;min-height:96px;resize:none;overflow:hidden}
-input.n-title:focus,.n-text:focus,.nitem input[type="text"]:focus{outline:none;box-shadow:none}
-.n-text::placeholder,input.n-title::placeholder{color:var(--muted)}
-.nitem{display:flex;align-items:center;margin-left:-11px}
-.nitem input[type="text"]{background:none;border:0;border-radius:0;padding:7px 0}
-.nitem.done input[type="text"]{opacity:.45;text-decoration:line-through}
+.ntxt{white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
+.n-text{font:inherit;font-size:16px;line-height:1.45;color:var(--ink);background:var(--surface);border:0;border-radius:16px;padding:12px 14px;width:100%;min-height:72px;resize:none;overflow:hidden}
+.n-text:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.n-text::placeholder{color:var(--muted)}
 .eyebrow{font-size:12px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
@@ -753,7 +750,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v50</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v51</span></footer>
 </div>
 </div>
 
@@ -908,21 +905,16 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog tabindex="-1" id="nsheet" aria-label="Notiz">
+<dialog tabindex="-1" id="nsheet" aria-labelledby="ns-title">
   <form id="nform" novalidate>
     <div class="sh-head">
-      <input id="n-title" class="n-title" type="text" maxlength="120" autocomplete="off" placeholder="Titel" aria-label="Titel">
+      <h2 id="ns-title">Neue Notiz</h2>
       <button type="button" class="x" id="ns-close" aria-label="Schließen">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
-    <textarea id="n-text" class="n-text" maxlength="20000" placeholder="Schreib los" aria-label="Text"></textarea>
-    <div class="fld">
-      <span>Zum Abhaken</span>
-      <div id="n-items"></div>
-      <button type="button" class="linkbtn" id="n-item-add">+ Punkt</button>
-    </div>
-    <div class="fld">
+    <textarea id="n-text" class="n-text" maxlength="20000" enterkeyhint="done" placeholder="Was willst du festhalten?" aria-label="Notiz"></textarea>
+    <div class="fld" id="n-folder-fld" hidden>
       <span id="lbl-n-folder">Ordner</span>
       <div class="chips" id="n-folder" role="group" aria-labelledby="lbl-n-folder"></div>
       <div class="stepper" id="n-fnew-row" hidden>
@@ -931,13 +923,9 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </div>
     </div>
     <p class="err" id="n-err" role="alert" hidden></p>
-    <p class="note" id="n-meta"></p>
-    <div class="duo">
-      <button type="button" class="ghost center" id="n-pin">Anheften</button>
-      <button type="button" class="ghost center" id="n-task">Als Aufgabe</button>
-    </div>
     <button type="button" class="primary" id="n-done">Fertig</button>
-    <button type="button" class="ghost danger" id="n-del">Notiz löschen</button>
+    <button type="button" class="ghost center" id="n-task" hidden>Als Aufgabe</button>
+    <button type="button" class="ghost danger" id="n-del" hidden>Notiz löschen</button>
   </form>
 </dialog>
 
@@ -3549,7 +3537,8 @@ $('#p-del').addEventListener('click', () => {
    N = { folders: { id: { n } },
          tasks: { id: { t Titel, f Ordner, d fällig (Datum oder null), done Zeitpunkt des Abhakens oder null, c angelegt, n Notiz,
                         r Wiederholung ('' | 'day' | 'week' | 'month'), nx id der beim Abhaken angelegten nächsten Aufgabe } },
-         notes: { id: { t Titel, x Text, f Ordner, pin, c angelegt, m geändert, items: [{ t, d }] Zeilen zum Abhaken } } } */
+         notes: { id: { x Text, f Ordner, c angelegt, m geändert } } }
+   Notizen sind für die schnelle Aufnahme: nur Text, jede mit einem Kreis davor, Abhaken löscht sie. */
 function normN(o) {
   const out = { folders: {}, tasks: {}, notes: {} }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
   const fo = o && o.folders, ta = o && o.tasks, no = o && o.notes;
@@ -3562,9 +3551,10 @@ function normN(o) {
   if (no && typeof no === 'object') for (const id in no) {
     const x = no[id];
     if (!x || typeof x !== 'object') { out.notes[id] = null; continue; }
-    const items = Array.isArray(x.items) ? x.items.filter(i => i && typeof i === 'object' && str(i.t, 200).trim()).slice(0, 100).map(i => ({ t: str(i.t, 200), d: !!i.d })) : [];
-    const t = str(x.t, 120), tx = str(x.x, 20000);
-    out.notes[id] = t.trim() || tx.trim() || items.length ? { t, x: tx, f: str(x.f, 24), pin: !!x.pin, c: num(x.c), m: num(x.m) || num(x.c), items } : null;
+    /* Notizen aus v49 und v50 hatten Titel und Zeilen zum Abhaken: Der Titel wird die erste Zeile, jede noch offene Zeile eine eigene Notiz */
+    const tx = [str(x.t, 120).trim(), str(x.x, 20000).replace(/\s+$/, '')].filter(Boolean).join('\n').slice(0, 20000), f = str(x.f, 24), c = num(x.c), m = num(x.m) || c;
+    out.notes[id] = tx.trim() ? { x: tx, f, c, m } : null;
+    if (Array.isArray(x.items)) x.items.forEach((it, i) => { if (it && typeof it === 'object' && !it.d && str(it.t, 200).trim()) out.notes[id + 'i' + i] = { x: str(it.t, 200).trim(), f, c, m }; });
   }
   return out;
 }
@@ -3632,28 +3622,31 @@ function homeTasksHTML() {
     (list.length > 6 ? '<button type="button" class="linkbtn" data-n="alltasks">Alle ' + list.length + ' Aufgaben</button>' : '');
 }
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
-function noteRow(x) {
-  const title = x.t.trim() || firstLine(x.x) || 'Ohne Titel', rest = String(x.x).split('\n').map(l => l.trim()).filter(l => l && l !== title)[0] || '';
-  const sub = rest || (x.items.length ? x.items.filter(i => i.d).length + ' von ' + x.items.length + ' erledigt' : ''), fn = nFolder ? '' : folderName(x.f);
-  return '<li><button type="button" class="two nrow" data-n="note" data-id="' + esc(x.id) + '" aria-label="' + esc(title) + ' öffnen"><span class="l"><span>' + esc(title) + '</span>' + (sub || fn ? '<small>' + [fn, esc(sub)].filter(Boolean).join(' · ') + '</small>' : '') + '</span>' +
-    '<small class="when">' + dRow(keyOf(new Date(x.m || x.c || Date.now()))) + '</small></button></li>';
+const notesNew = () => noteList().sort((a, b) => b.m - a.m);
+/* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
+function noteRow(x, folder) {
+  const sub = [folder ? folderName(x.f) : '', dRow(keyOf(new Date(x.m || x.c || Date.now())))].filter(Boolean).join(' · ');
+  return '<li class="trow nrow"><button type="button" class="tk" data-n="notedone" data-undo data-id="' + esc(x.id) + '" aria-label="Notiz abhaken und löschen"><i></i></button>' +
+    '<button type="button" class="two" data-n="note" data-id="' + esc(x.id) + '" aria-label="Notiz ändern"><span class="l"><span class="ntxt">' + esc(x.x) + '</span><small>' + sub + '</small></span></button></li>';
 }
-/* Liste der Notizen: gewählter Ordner und Suchtext (Titel, Text und Zeilen zum Abhaken). Steht in #n-list, damit beim Tippen nur die Liste
-   neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
+/* Liste der Notizen: gewählter Ordner und Suchtext. Steht in #n-list, damit beim Tippen nur die Liste neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
 function noteListHTML() {
-  const q = nQuery.trim().toLowerCase(), hit = x => !q || (x.t + '\n' + x.x + '\n' + x.items.map(i => i.t).join('\n')).toLowerCase().indexOf(q) >= 0;
-  const list = noteList().filter(x => inFolder(x) && hit(x)).sort((a, b) => b.m - a.m), pin = list.filter(x => x.pin), rest = list.filter(x => !x.pin), curY = todayKey().slice(0, 4);
-  if (!list.length) return '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
-  let h = pin.length ? '<h2 class="sec">Angeheftet</h2><ul class="entries">' + pin.map(noteRow).join('') + '</ul>' : '';
-  /* nach Monaten der letzten Änderung, neueste zuerst: so bleibt die Liste auch mit vielen Notizen übersichtlich */
-  let ym = '';
-  rest.forEach(x => { const k = keyOf(new Date(x.m || x.c || Date.now())).slice(0, 7); if (k !== ym) { h += (ym ? '</ul>' : '') + '<h2 class="sec">' + MONTHS[+k.slice(5) - 1] + (k.slice(0, 4) !== curY ? ' ' + k.slice(0, 4) : '') + '</h2><ul class="entries">'; ym = k; } h += noteRow(x); });
-  return h + (ym ? '</ul>' : '');
+  const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
+  return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
 }
 function notesHTML() {
-  if (!noteList().length) return emptyHTML('notizen', 'Noch keine Notiz', 'Halte fest, was du nicht vergessen willst, auch mit Zeilen zum Abhaken.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>');
-  return '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' +
+  const n = noteList().length;
+  if (!n) { nQuery = ''; return emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
+  /* Das Suchfeld erscheint erst, wenn die Liste länger wird */
+  if (n <= 5) nQuery = '';
+  return (n > 5 ? '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' : '') +
     folderBarHTML() + '<div id="n-list">' + noteListHTML() + '</div>';
+}
+/* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
+function homeNotesHTML() {
+  const list = notesNew(); if (!list.length) return '';
+  return '<h2 class="sec">Notizen<small>' + list.length + '</small></h2><ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>' +
+    (list.length > 5 ? '<button type="button" class="linkbtn" data-n="allnotes">Alle ' + list.length + ' Notizen</button>' : '');
 }
 /* Tipp in einer Liste mit Aufgaben oder Notizen (im Bereich und auf Heute). Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
@@ -3674,6 +3667,8 @@ function nAct(e) {
   else if (a === 'newtask') openA(null);
   else if (a === 'note') openN(id);
   else if (a === 'newnote') openN(null);
+  else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
+  else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderRoutines(); }
   else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
   else if (a === 'donefold') { nDoneOpen = !nDoneOpen; renderRoutines(); }
   else if (a === 'alltasks') { rSub = 'task'; nFolder = ''; show('routinen', true); renderRoutines(); }
@@ -3721,7 +3716,7 @@ function openA(id, date) {
   $('#a-err').hidden = true; $('#a-del').hidden = !t;
   paintA();
   openDlg(adlg); adlg.scrollTop = 0;
-  if (!t) setTimeout(() => $('#a-title').focus(), 60);
+  if (!t) $('#a-title').focus();   // sofort, siehe openN()
 }
 function closeA() { if (adlg.open) adlg.close(); }
 $('#as-close').addEventListener('click', closeA);
@@ -3744,41 +3739,32 @@ $('#aform').addEventListener('submit', e => {
 });
 $('#a-del').addEventListener('click', () => { if (aE.id) { const p = { tasks: {} }; p.tasks[aE.id] = null; ndoc.patch(p); } closeA(); render(); });
 
-/* Blatt „Notiz“. Speichert von selbst: kurz nach jeder Eingabe, beim Verlassen eines Feldes und beim Schließen. So geht nichts verloren, auch wenn das Blatt
-   versehentlich weggezogen wird. Eine leere Notiz wird nicht angelegt, eine geleerte gelöscht. nE = null heißt: nichts zu speichern (z. B. nach dem Löschen). */
+/* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Ordner, „Als Aufgabe“, Löschen.
+   Gespeichert wird von selbst (kurz nach jeder Eingabe, beim Verlassen des Feldes, beim Schließen), damit nichts verloren geht, auch wenn das Blatt weggezogen wird.
+   Eine leere Notiz wird nicht angelegt, eine geleerte gelöscht. nE = null heißt: nichts zu speichern (z. B. nach dem Löschen). */
 const ndlg = $('#nsheet');
 let nE = null, nTimer = 0;
-const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.height = Math.max(96, t.scrollHeight) + 'px'; };
-function itemsN() {
-  $('#n-items').innerHTML = nE.items.map((it, i) => '<div class="nitem' + (it.d ? ' done' : '') + '"><button type="button" class="tk" data-i="' + i + '" aria-pressed="' + !!it.d + '" aria-label="Punkt ' + (i + 1) + (it.d ? ' wieder öffnen' : ' abhaken') + '"><i>' + (it.d ? CHECK : '') + '</i></button>' +
-    '<input type="text" data-i="' + i + '" maxlength="200" autocomplete="off" placeholder="Punkt" aria-label="Punkt ' + (i + 1) + '" value="' + esc(it.t) + '"></div>').join('');
-}
-/* Die Zeile „Geändert“ steht immer da, auch bei einer neuen Notiz: Erschiene sie erst beim ersten Speichern, verschöben sich die Knöpfe unter dem Finger. */
-function metaN() { const old = nE.id ? N.notes[nE.id] : null; $('#n-meta').textContent = old ? 'Geändert: ' + dRow(keyOf(new Date(old.m || old.c))) : 'Wird von selbst gespeichert'; }
-function paintN() {
-  $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF;
-  $('#n-pin').textContent = nE.pin ? 'Nicht mehr anheften' : 'Anheften';
-  metaN();
-}
+const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.height = Math.max(72, t.scrollHeight) + 'px'; };
+function paintN() { $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF; }
 function openN(id) {
   const x = id ? N.notes[id] : null;
-  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : nFolder, pin: x ? x.pin : false, items: x ? x.items.map(i => ({ t: i.t, d: i.d })) : [], newF: false };
-  $('#n-title').value = x ? x.t : ''; $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = '';
-  $('#n-err').hidden = true; $('#n-task').textContent = 'Als Aufgabe'; $('#n-task').disabled = false;
-  itemsN(); paintN();
+  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? nFolder : '', newF: false };
+  $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz';
+  $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = ''; $('#n-err').hidden = true;
+  /* Neu: nur das Textfeld. Was hier verborgen ist, bleibt es, solange das Blatt offen ist: So verschiebt sich beim Speichern nichts unter dem Finger. */
+  $('#n-folder-fld').hidden = !x; $('#n-task').hidden = !x; $('#n-del').hidden = !x;
+  paintN();
   openDlg(ndlg); ndlg.scrollTop = 0; growN();
-  if (!x) setTimeout(() => $('#n-title').focus(), 60);
+  /* Sofort und ohne Verzögerung ins Feld: Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp heraus gesetzt wird */
+  if (!x) $('#n-text').focus();
 }
 function noteSave() {
   clearTimeout(nTimer); if (!nE) return;
-  const t = $('#n-title').value.trim().slice(0, 120), x = $('#n-text').value.slice(0, 20000), items = nE.items.filter(i => i.t.trim()).map(i => ({ t: i.t.trim().slice(0, 200), d: !!i.d }));
-  const old = nE.id ? N.notes[nE.id] : null, p = { notes: {} };
-  if (!t && !x.trim() && !items.length) { if (old) { p.notes[nE.id] = null; ndoc.patch(p); } return; }
-  const same = old && old.t === t && old.x === x && JSON.stringify(old.items) === JSON.stringify(items);
-  if (same && old.f === nE.f && old.pin === nE.pin) return;
+  const x = $('#n-text').value.replace(/\s+$/, '').slice(0, 20000), old = nE.id ? N.notes[nE.id] : null, p = { notes: {} };
+  if (!x.trim()) { if (old) { p.notes[nE.id] = null; ndoc.patch(p); } return; }
+  if (old && old.x === x && old.f === nE.f) return;
   if (!nE.id) { nE.id = newId(); nE.c = Date.now(); }
-  p.notes[nE.id] = { t, x, f: nE.f, pin: nE.pin, c: nE.c, m: same ? old.m : Date.now(), items }; ndoc.patch(p);
-  metaN();   // nur der Text ändert sich; die Chips werden hier nicht neu gezeichnet, sonst ginge ein Tipp darauf verloren
+  p.notes[nE.id] = { x, f: nE.f, c: nE.c, m: old && old.x === x ? old.m : Date.now() }; ndoc.patch(p);
 }
 const noteSoon = () => { clearTimeout(nTimer); nTimer = setTimeout(noteSave, 400); };
 function closeN() { if (ndlg.open) ndlg.close(); }
@@ -3788,35 +3774,19 @@ $('#ns-close').addEventListener('click', closeN);
 $('#n-done').addEventListener('click', closeN);
 ndlg.addEventListener('click', e => { if (e.target === ndlg) closeN(); });
 $('#nform').addEventListener('submit', e => e.preventDefault());
-$('#nform').addEventListener('input', e => {
-  if (!nE) return;
-  if (e.target.id === 'n-text') growN();
-  if (e.target.closest('#n-items') && e.target.dataset.i != null) nE.items[+e.target.dataset.i].t = e.target.value;
-  if (e.target.id !== 'n-fnew') noteSoon();
-});
-$('#nform').addEventListener('focusout', () => { if (nE) noteSave(); });
-$('#n-items').addEventListener('click', e => {
-  const b = e.target.closest('.tk'); if (!b || !nE) return;
-  const it = nE.items[+b.dataset.i]; it.d = !it.d; itemsN(); noteSave();
-});
-function addItemN(at) {
-  nE.items.splice(at, 0, { t: '', d: false }); itemsN();
-  const i = $('#n-items').querySelector('input[data-i="' + at + '"]'); if (i) i.focus();
-}
-$('#n-item-add').addEventListener('click', () => { if (nE && nE.items.length < 100) addItemN(nE.items.length); });
-$('#n-items').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.i != null) { e.preventDefault(); if (nE.items.length < 100) addItemN(+e.target.dataset.i + 1); } });
-$('#n-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#n-text').focus(); } });
+$('#n-text').addEventListener('input', () => { if (nE) { growN(); noteSoon(); } });
+$('#n-text').addEventListener('blur', () => { if (nE) noteSave(); });
+/* Enter schließt ab: Die Notiz ist für einen schnellen Gedanken, nicht für Absätze */
+$('#n-text').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); closeN(); } });
 $('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
 $('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
 $('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });
-$('#n-pin').addEventListener('click', () => { if (!nE) return; nE.pin = !nE.pin; noteSave(); paintN(); });
-/* Aus der Notiz eine Aufgabe für heute machen; die Notiz bleibt */
+/* Aus der Notiz wird eine Aufgabe für heute; die Notiz selbst ist damit erledigt und verschwindet */
 $('#n-task').addEventListener('click', () => {
   if (!nE) return; noteSave();
-  const title = $('#n-title').value.trim() || firstLine($('#n-text').value);
-  if (!title) { const x = $('#n-err'); x.textContent = 'Gib der Notiz zuerst einen Titel.'; x.hidden = false; return; }
-  const p = { tasks: {} }; p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: '' }; ndoc.patch(p);
-  $('#n-err').hidden = true; $('#n-task').textContent = 'Aufgabe angelegt'; $('#n-task').disabled = true;
+  const id = nE.id, title = firstLine($('#n-text').value); if (!id || !title) return;
+  const p = { tasks: {}, notes: {} }; p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: '', r: '', nx: '' }; p.notes[id] = null;
+  ndoc.patch(p); nE = null; closeN();
 });
 $('#n-del').addEventListener('click', () => {
   const id = nE && nE.id; nE = null; clearTimeout(nTimer);
@@ -3979,7 +3949,7 @@ function renderHome() {
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false)).join('') + '</ul>';
-  h += homeTasksHTML();
+  h += homeTasksHTML() + homeNotesHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   h += '<h2 class="sec">Daten</h2><div class="links"><button type="button" class="linkbtn" data-h="export">Sicherung speichern</button><button type="button" class="linkbtn" data-h="import">Sicherung einlesen</button></div>' +
     '<p class="note" id="bk-msg">' + esc(bkMsg || lastBackupText()) + '</p>';
@@ -4095,7 +4065,7 @@ let undo = null;
 const toastEl = $('#toast');
 function toastOff() { if (undo) clearTimeout(undo.timer); undo = null; toastEl.hidden = true; }
 document.addEventListener('click', e => {
-  const b = e.target.closest && e.target.closest('[id$="-del"], [data-vdel]'); if (!b) return;
+  const b = e.target.closest && e.target.closest('[id$="-del"], [data-vdel], [data-undo]'); if (!b) return;
   let before = null; try { before = localStorage.getItem(LS); } catch (x) {}
   setTimeout(() => {
     let after = null; try { after = localStorage.getItem(LS); } catch (x) {}
