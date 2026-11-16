@@ -180,7 +180,7 @@ dialog::backdrop{background:rgba(4,6,10,.6)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.sh-head h2{margin:0;font-family:var(--display);font-size:20px;letter-spacing:-.02em}
+.sh-head h2{margin:0;font-family:var(--display);font-size:18px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
 .x svg{width:16px;height:16px}
 .fld{display:flex;flex-direction:column;gap:6px}
@@ -339,7 +339,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 
 /* Übersicht, Budgets, Kraft */
 .ovs{background:var(--surface);border-radius:20px;overflow:hidden}
-.ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:10px 12px;border:0;background:none}
+.ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:8px 12px;border:0;background:none}
 .ov+.ov::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--line)}
 .ov:active{background:var(--fill)}
 .ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent)}
@@ -348,16 +348,16 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ov .ic.gewicht{--c:var(--c-weight)}
 .ov .ic.haushalt{--c:var(--c-money)}
 .ov .ic.training{--c:var(--good)}
-.ov .k{grid-area:1/2;font-size:14.5px;font-weight:500}
-.ov .v{grid-area:1/3;justify-self:end;font-weight:700;font-size:16px;letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
+.ov .k{grid-area:1/2;font-size:14px;font-weight:500}
+.ov .v{grid-area:1/3;justify-self:end;font-weight:700;font-size:15px;letter-spacing:-.01em;white-space:nowrap;font-variant-numeric:tabular-nums}
 .ov .v.neg{color:var(--danger)}
-.ov .s{grid-area:2/2/3/4;font-size:12.5px;color:var(--muted)}
+.ov .s{grid-area:2/2/3/4;font-size:12px;color:var(--muted)}
 .ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
 .quick{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .quick::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
 .quick svg{width:9px;height:9px;color:var(--at)}
-.remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:40px;padding:8px 14px;border:0;border-radius:14px;background:var(--surface);font-size:13px;color:var(--muted);text-align:left}
+.remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
@@ -407,49 +407,49 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .xh,.xh .mons{display:flex;flex-direction:column;gap:8px}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
-body{font-size:15px}
-.app,.view{gap:14px}
-.top{padding-top:calc(8px + env(safe-area-inset-top,0px));padding-bottom:8px}
-.add{width:34px;height:34px;position:relative}
-.add::after{content:"";position:absolute;inset:-5px}
-.add svg{width:16px;height:16px}
+body{font-size:14px}
+.app,.view{gap:12px}
+.top{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
+.add{width:30px;height:30px;position:relative}
+.add::after{content:"";position:absolute;inset:-7px}
+.add svg{width:14px;height:14px}
 .hero{gap:1px}
-.date{font-size:13px}
-.hero h1{font-size:clamp(23px,6.4vw,27px);line-height:1.05}
-.hero h1 .num,.w-hero h1 .num{font-size:clamp(38px,10.6vw,44px);line-height:1}
-.hero h1 .unit{font-size:clamp(15px,4vw,17px)}
-.sub{font-size:13px;margin-top:2px}
+.date{font-size:12px}
+.hero h1{font-size:clamp(20px,5.4vw,22px);line-height:1.05}
+.hero h1 .num,.w-hero h1 .num{font-size:clamp(30px,8.6vw,34px);line-height:1}
+.hero h1 .unit{font-size:clamp(13px,3.5vw,14px)}
+.sub{font-size:12px;margin-top:2px}
 .rows{gap:6px}
-.go{padding:10px 4px 10px 10px;gap:10px}
-.glyph{width:34px;height:34px}
-.glyph svg{width:14px;height:14px}
-.name{font-size:15px}
-.meta{font-size:12.5px}
+.go{padding:8px 4px 8px 10px;gap:10px}
+.glyph{width:30px;height:30px}
+.glyph svg{width:12px;height:12px}
+.name{font-size:14px}
+.meta{font-size:12px}
 .week{margin-top:4px;gap:5px}
 .week i{width:6px;height:6px}
-.streak b{font-size:19px}
-.more{width:32px;height:44px}
+.streak b{font-size:16px}
+.more{width:32px;height:40px}
 .more svg{width:18px;height:18px}
 .live{padding:0 10px 12px}
 .clock{font-size:clamp(40px,12vw,50px)}
 .pill{font-size:12.5px;padding:6px 12px}
-.primary{padding:9px 16px}
-.ghost{min-height:40px;padding:9px 14px;font-size:14px}
-.chip{min-height:34px;padding:6px 12px;font-size:13px}
-.seg .chip{min-height:30px;padding:5px 11px;font-size:12.5px}
+.primary{padding:8px 16px}
+.ghost{min-height:40px;padding:8px 14px;font-size:13.5px}
+.chip{min-height:32px;padding:5px 12px;font-size:12.5px}
+.seg .chip{min-height:28px;padding:4px 10px;font-size:12px}
 .figs{gap:6px}
-.fig{padding:8px 9px 7px}
-.fig b{font-size:17px}
-.fig b small{font-size:11.5px}
+.fig{padding:7px 9px 6px}
+.fig b{font-size:15px}
+.fig b small{font-size:11px}
 .fig span{font-size:11px;line-height:1.25}
 .fig span:has(.dot){white-space:nowrap}
-.card{padding:12px 12px 10px;gap:8px}
-.entries button{padding:9px 14px;font-size:14px}
-.entries .l small,.entries .r small{font-size:12px}
-.entries .xrow{padding:9px 14px;font-size:14px}
-.seg2 button{padding:6px;font-size:13.5px}
+.card{padding:11px 12px 9px;gap:8px}
+.entries button{padding:8px 13px;font-size:13.5px}
+.entries .l small,.entries .r small{font-size:11.5px}
+.entries .xrow{padding:8px 13px;font-size:13.5px}
+.seg2 button{padding:5px;font-size:13px}
 .mnav{margin-bottom:-4px}
-.mnav b{font-size:16px}
+.mnav b{font-size:15px}
 .mnav button{width:34px;height:34px;position:relative}
 .mnav button::after{content:"";position:absolute;inset:-5px}
 .mnav svg{width:14px;height:14px}
@@ -459,13 +459,13 @@ body{font-size:15px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:14px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
 .toast[hidden]{display:none}
-.toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;padding:6px 8px;position:relative}
+.toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
 /* Aufgaben und Notizen */
 #main[hidden],#n-main[hidden]{display:none}
-#n-main,#n-list{display:flex;flex-direction:column;gap:22px}
+#n-main,#n-list{display:flex;flex-direction:column;gap:12px}
 #n-main>.sec,#n-list>.sec{margin:8px 2px -6px}
 input.n-q{margin-bottom:-8px}
 .entries .trow{display:flex;align-items:stretch}
@@ -489,24 +489,24 @@ input.n-q{margin-bottom:-8px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
 .cat .roll{font-size:11.5px}
-.kv{padding:7px 0}
-.kv b{font-size:16px}
-.kv b small{font-size:12px}
-.kv span{font-size:13.5px}
+.kv{padding:6px 0}
+.kv b{font-size:15px}
+.kv b small{font-size:11.5px}
+.kv span{font-size:13px}
 .kv .delta{font-size:12px}
 .last{padding:10px 14px 2px}
-.last h3{font-size:14px}
-.last h3 small{font-size:13px}
-.last .note{font-size:12.5px}
-.note{font-size:12.5px}
+.last h3{font-size:13.5px}
+.last h3 small{font-size:12.5px}
+.last .note{font-size:12px}
+.note{font-size:12px}
 .ins b{font-size:13.5px}
 .ins span{font-size:12.5px}
 .mbar{height:8px;margin-bottom:-6px}
 .tab{padding:5px 0 3px}
-.tab svg{width:21px;height:21px}
+.tab svg{width:20px;height:20px}
 .foot{font-size:11.5px}
 .ver{display:block;margin-top:2px;font-size:10px;color:var(--mid)}
-.linkbtn{font-size:13.5px;margin-top:-6px}
+.linkbtn{font-size:13px;margin-top:-6px}
 .links .linkbtn{margin-top:0}
 .legend{font-size:11.5px}
 #form .fig b{font-size:19px}
@@ -685,22 +685,22 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .top{border-bottom-color:transparent;transition:border-color .2s ease}
 .top.scrolled{border-bottom-color:var(--line)}
 .tab{font-size:10px;font-weight:500}
-.primary{font-size:15px;font-weight:600;min-height:44px;border-radius:14px}
+.primary{font-size:14px;font-weight:600;min-height:40px;border-radius:14px}
 .ghost{border-radius:14px}
 .x{width:32px;height:32px;position:relative}
 .x::after{content:"";position:absolute;inset:-6px}
 .x svg{width:12px;height:12px}
 
-.sec{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
+.sec{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
 .view>.sec{margin:8px 2px -6px}
-.sec small{font-size:13px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
+.sec small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
 .fld>span,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
-.fld>span{font-size:13.5px;font-weight:500}
+.fld>span{font-size:13px;font-weight:500}
 .streak span{font-size:10.5px;font-weight:500}
 .subtabs{gap:16px}
-.subtabs button{font-family:var(--display);font-size:19px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
+.subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
-.mark{font-size:19px;font-weight:700}
+.mark{font-size:17px;font-weight:700}
 .hero h1 .num,.clock,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
@@ -750,7 +750,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v51</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v52</span></footer>
 </div>
 </div>
 

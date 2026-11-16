@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v51 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v52 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -14,6 +14,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v52: Noch kompakter auf Wunsch des Nutzers: große Zahl 44 → 34 px, blaue Knöpfe 44 → 40 px, Routinen-Zeilen, Überschriften, Umschalter, Kacheln, Listen und Abstände je eine Stufe kleiner. Wochenleiste, Leiste unten und Eingabefelder unverändert.
 - v51: Notizen auf Wunsch des Nutzers umgebaut zur schnellen Aufnahme: nur Text, jede mit Kreis, Abhaken löscht (mit „Rückgängig“), „+ Notiz“ öffnet nur ein Textfeld, Enter schließt ab; Notizen stehen auch auf Heute. Titel, Zeilen zum Abhaken und Anheften sind entfallen; alte Notizen werden übernommen.
 - v50: Wiederkehrende Aufgaben (täglich, wöchentlich, monatlich) und Suche in den Notizen (Titel, Text, Zeilen zum Abhaken).
 - v49: Aufgaben und Notizen im Bereich Routinen (Umschalter „Routinen / Aufgaben / Notizen“): Aufgaben mit Datum, Ordnern, Abhaken, Liegengebliebenes rutscht auf heute; Notizen mit Text, Zeilen zum Abhaken, Anheften, speichern von selbst; beides auf Heute, in der Sicherung und mit „Rückgängig“.
@@ -47,6 +48,7 @@
 - Graph antippen und mit dem Finger entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
 - „Rückgängig“ nach dem Löschen (v45): liegt der Hinweis gut über der Leiste unten?
 - Aufgaben und Notizen (v49): Schreibt es sich gut im Notiz-Blatt (Tastatur, Zoom, Zeilen zum Abhaken)? Trifft man den Kreis zum Abhaken gut? Passt die Reihe „Routinen / Aufgaben / Notizen“?
+- Größen (v52): Ist jetzt alles klein genug, oder ist etwas zu klein zum Lesen oder Treffen geworden?
 - „+ Notiz“ auf Heute (v51): Geht die Tastatur sofort auf? Schließt die Taste „Fertig“ der Tastatur ab? Das ist der Kern der 5 Sekunden und nur am Gerät zu sehen.
 - Wiederkehrende Aufgabe abhaken (v50): Erscheint die nächste unter „Demnächst“? Suche in den Notizen: bleibt die Tastatur beim Tippen offen?
 - Neues App-Symbol (v47): erscheint erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern, danach einlesen).

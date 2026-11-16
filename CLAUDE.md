@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v51)
+# Track. – Projektwissen (App-Stand v52)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -116,7 +116,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Modern, clean, Apple-artig. Dunkel: fast schwarzer, leicht bläulicher Grund (`--bg`), Karten eine Stufe heller.
 - Apple-Feinschliff (v47): Pfeile für Monat/Jahr ohne Kreis in Akzentblau; aktiver Bereich in der Leiste unten mit gefülltem Symbol (Klassen `.f` Fläche, `.k`/`.d` ausgespart, `.b` kräftigere Linie); Linie unter der Kopfzeile erst beim Scrollen (`.top.scrolled`); Symbole mit rund 1,8 px Strich im Bild; leere Bereiche mittig mit Symbol, Titel, einem Satz, Knopf; die große Zahl zählt beim Blättern 0,3 s vom alten zum neuen Wert (nicht bei „Bewegung reduzieren“).
 - Flächen ohne Rand, Trennlinien nur in Listen, Rundungen: Karten 20 px, Knöpfe 14 px, Chips als Pillen, Blätter mit Griff oben.
-- Kompakt: Fließtext 15 px, Listen 14 px, Nebentexte 12–13 px, große Zahl höchstens 44 px.
+- Kompakt (seit v52 noch eine Stufe kleiner): Fließtext 14 px, Listen 13,5 px, Nebentexte 12 px, Abschnittstitel 15 px, Umschalter der Bereiche und „Track.“ 17 px, große Zahl höchstens 34 px, blauer Hauptknopf 40 px hoch. Maßstab ist die Wochenleiste (11 und 15 px): Sie „passt gut“ und bleibt, ebenso die Leiste unten und die Eingabefelder (16 px, sonst zoomt iOS). Nie die ganze Seite per `zoom` verkleinern: Das träfe auch die Eingabefelder.
 - Tippflächen mindestens 40 px; kleinere Knöpfe bekommen per `::after` eine größere Tippfläche.
 - Akzentblau nur für Aktionen, Links und aktive Auswahl. Einzige Ausnahme: der Punkt von „Track.“ in der Kopfzeile (v48, vom Nutzer nach Vorschaubild gewählt). Grün = erledigt/besser, Rot = schlechter/löschen. Pro Ansicht ein blauer Hauptknopf, Nebenaktionen als `.ghost`.
 - Kennfarben der Bereiche (Routinen blau, Gewicht lila, Finanzen orange, Training grün) nur am Symbol in der Übersicht auf Heute.
@@ -135,7 +135,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 
 ## Meine Vorlieben (aus Rückmeldungen des Nutzers)
 - Der Look seit v21 ist „genau getroffen“: dunkel, ruhig, wenige farbige Akzente mit Bedeutung.
-- Klein wirkt edler: alles kompakt, wie herausgezoomt; eine Ansicht darf dafür lang sein und scrollen.
+- Klein wirkt edler: alles kompakt, wie herausgezoomt; eine Ansicht darf dafür lang sein und scrollen. Nach v51 wollte er es noch kleiner („manches ist zu groß noch, noch mehr rauszoomen“), v52 hat große Zahl, Knöpfe, Zeilen und Überschriften verkleinert.
 - Viel auf einen Blick: eine Liste statt mehrerer großer Karten; „Übungen“ und „Einheiten“ als eingeklappte Zeile mit Anzahl.
 - Überall ein Plus oder Minus zum Zeitraum davor (Monat, Jahr, je Übung), grün oder rot.
 - Die Wochenleiste mag er, in jedem Bereich („ich mochte das“, v46). Mein Umbau in v44 (Leiste weg, Kalender als Knopf oben, Pfeile und Monat/Jahr in einer Reihe) kam nicht an: „das November ist eingequetscht“. Zweites Mal dieselbe Lehre: nichts zusammenschieben, was vorher Luft hatte; Vertrautes nicht für „weniger Bedienung“ opfern, sondern vorher mit Bild fragen.
@@ -154,7 +154,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v51` → `takt-v52`), `<span class="ver">v51</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v52` → `takt-v53`), `<span class="ver">v52</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
