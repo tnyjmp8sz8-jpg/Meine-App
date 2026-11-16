@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v49)
+# Track. – Projektwissen (App-Stand v50)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -48,8 +48,8 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Budget: `monthHTML()`, `yearHTML()`, `mSum()`, `ySum()`, `rateHTML()` Sparquote, Blatt `msheet` mit `openM('tx'|'fixed'|'budget')`.
 - Aufgaben und Notizen (v49): Umschalter `rSub` (`rout`, `task`, `note`) in `#r-subs`; Inhalt in `#n-main` über `tasksHTML()` bzw. `notesHTML()`, die Routinen bleiben in `#main`. Der Plus-Knopf oben richtet sich nach `rSub`.
   - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
-  - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde.
-  - Notizen: `noteRow()`, angeheftete oben, sonst nach Monat der letzten Änderung. Blatt `nsheet` mit `openN(id)`, Zustand `nE`, `noteSave()`, `itemsN()` Zeilen zum Abhaken, „Als Aufgabe“.
+  - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde. Wiederkehrend (v50): `REPEAT`, `nextDue(datum, art)`; das Abhaken in `nAct()` legt die nächste Aufgabe an.
+  - Notizen: `noteRow()`, angeheftete oben, sonst nach Monat der letzten Änderung. Blatt `nsheet` mit `openN(id)`, Zustand `nE`, `noteSave()`, `itemsN()` Zeilen zum Abhaken, „Als Aufgabe“. Suche (v50): Feld `#n-q`, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
@@ -61,7 +61,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
   - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `cats` eigene Kategorien (id höchstens 12 Zeichen, wie `c` einer Buchung), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
   - `MY` Buchungen je Jahr: `d` Datum, `a` Betrag, `k` (`in`, `out`, `tr` = Umbuchung), `c` Kategorie, `n` Notiz, optional `acc` Konto, `to` Zielkonto der Umbuchung, `t` Zeitpunkt des Eintragens in ms.
-  - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz; `notes` je id: `t` Titel, `x` Text (bis 20.000 Zeichen), `f`, `pin`, `c`, `m` geändert, `items` Liste aus `{ t, d }` zum Abhaken.
+  - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz, `r` Wiederholung (leer, `day`, `week`, `month`), `nx` id der beim Abhaken angelegten nächsten Aufgabe; `notes` je id: `t` Titel, `x` Text (bis 20.000 Zeichen), `f`, `pin`, `c`, `m` geändert, `items` Liste aus `{ t, d }` zum Abhaken.
   - `T` Läufe. `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
 - Datumsschlüssel `YYYY-MM-DD` in Ortszeit, Monate `YYYY-MM`, Geld in Cent.
@@ -84,6 +84,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Notizen speichern von selbst (v49): kurz nach jeder Eingabe, beim Verlassen eines Feldes und bei jedem Schließen (`close`-Ereignis des Blatts); kein „Speichern“-Knopf. Warum: Ein Blatt lässt sich wegziehen, dabei darf kein Text verloren gehen. Leere Notizen werden nicht angelegt, geleerte gelöscht. `nE = null` heißt „nichts zu speichern“ (nach dem Löschen), damit das Schließen die Notiz nicht wieder anlegt.
 - Im Blatt darf sich beim Speichern nichts verschieben und nichts neu gezeichnet werden, was man gerade antippt (v49): Die Zeile „Geändert“ und „Notiz löschen“ stehen von Anfang an da. Ein Test fand, dass sonst der Tipp auf „Fertig“ danebenging.
 - Offene Aufgaben mit Datum von gestern oder früher stehen unter „Heute“ mit rotem Datum: Liegengebliebenes rutscht von selbst weiter, ohne dass das Datum umgeschrieben wird.
+- Wiederkehrende Aufgaben (v50): Beim Abhaken bleibt die Aufgabe als erledigt stehen und eine neue mit dem nächsten Datum entsteht; nimmt man den Haken wieder weg, verschwindet die neue, solange sie offen ist. Warum nicht einfach das Datum weiterschieben: So bleibt im Kalender und unter „Erledigt“ sichtbar, was wann erledigt wurde. Das nächste Datum liegt immer nach heute (Liegengebliebenes springt nicht in die Vergangenheit); monatlich = gleicher Tag, sonst der letzte des Monats. Ohne Datum gibt es keine Wiederholung.
 - Aufgaben und Notizen sind nur Text: keine Bilder, keine PDFs (kein Platz in `localStorage`). Dem Nutzer gesagt.
 - Blätter nur über `openDlg()`: Sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 - Gym nach Vorbild Alpha Progression: Im laufenden Training stehen unter den Sätzen „Letztes Mal“ und Kennzahlen; ein Tipp auf „Letztes Mal“ öffnet das Blatt der Übung mit Graph und Recap. Einheiten erscheinen dort als Karten mit Satz-Tabelle.
@@ -150,7 +151,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v49` → `takt-v50`), `<span class="ver">v49</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v50` → `takt-v51`), `<span class="ver">v50</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

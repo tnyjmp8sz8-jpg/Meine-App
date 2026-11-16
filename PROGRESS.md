@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v49 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v50 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -14,6 +14,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v50: Wiederkehrende Aufgaben (täglich, wöchentlich, monatlich) und Suche in den Notizen (Titel, Text, Zeilen zum Abhaken).
 - v49: Aufgaben und Notizen im Bereich Routinen (Umschalter „Routinen / Aufgaben / Notizen“): Aufgaben mit Datum, Ordnern, Abhaken, Liegengebliebenes rutscht auf heute; Notizen mit Text, Zeilen zum Abhaken, Anheften, speichern von selbst; beides auf Heute, in der Sicherung und mit „Rückgängig“.
 - v48: Punkt von „Track.“ in der Kopfzeile in Akzentblau.
 - v47: Apple-Feinschliff, alle sieben Punkte: blaue Pfeile ohne Kreis, gefülltes Symbol für den aktiven Bereich, Linie oben erst beim Scrollen, einheitliche Strichstärken, leere Seiten mit Symbol und einem Satz, neues App-Symbol, große Zahl zählt beim Blättern.
@@ -45,6 +46,7 @@
 - Graph antippen und mit dem Finger entlangfahren (v44): erscheint das Schild, scrollt die Seite senkrecht weiter?
 - „Rückgängig“ nach dem Löschen (v45): liegt der Hinweis gut über der Leiste unten?
 - Aufgaben und Notizen (v49): Schreibt es sich gut im Notiz-Blatt (Tastatur, Zoom, Zeilen zum Abhaken)? Trifft man den Kreis zum Abhaken gut? Passt die Reihe „Routinen / Aufgaben / Notizen“?
+- Wiederkehrende Aufgabe abhaken (v50): Erscheint die nächste unter „Demnächst“? Suche in den Notizen: bleibt die Tastatur beim Tippen offen?
 - Neues App-Symbol (v47): erscheint erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern, danach einlesen).
 - Gefüllte Symbole unten, blaue Pfeile, Linie oben erst beim Scrollen (v47): gefällt es am Gerät?
 - Startbild (v45): wirkt wohl erst, wenn die App neu zum Home-Bildschirm hinzugefügt wird (vorher Sicherung speichern). Kein weißer Blitz mehr beim Öffnen?
@@ -64,11 +66,11 @@
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
 - Aufgaben und Notizen, nächste Schritte (der Nutzer wollte erst alles sehen und sagt dann, was umgebaut wird):
-  - Suche in den Notizen (wird ab etwa 20 Notizen wichtig).
+  - Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“.
   - Ordner umbenennen; Reihenfolge der Schnell-Knöpfe auf Heute (jetzt: Aufgabe, Notiz vorn).
   - Erledigtes: nur die letzten 50 werden gezeigt, ältere bleiben gespeichert. Später: nach Monaten gruppieren oder aufräumen.
   - Kalender der Aufgaben zeigt nur Vergangenes (Erledigtes), keine künftigen Termine.
-  - Wiederkehrende Aufgaben, Erinnerung mit Uhrzeit: gibt es nicht (Mitteilungen kann die Web-App nicht).
+  - Erinnerung mit Uhrzeit: gibt es nicht (Mitteilungen kann die Web-App nicht).
   - Tages-Check (Schlaf/Energie 1 bis 5 für die Zusammenhänge).
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
 - Finanzen: Wochenleiste auch im Vermögen zeigen, damit beim Wechsel zu Budget nichts springt.

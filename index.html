@@ -465,8 +465,9 @@ body{font-size:15px}
 .toast button::after{content:"";position:absolute;inset:-8px}
 /* Aufgaben und Notizen */
 #main[hidden],#n-main[hidden]{display:none}
-#n-main{display:flex;flex-direction:column;gap:22px}
-#n-main>.sec{margin:8px 2px -6px}
+#n-main,#n-list{display:flex;flex-direction:column;gap:22px}
+#n-main>.sec,#n-list>.sec{margin:8px 2px -6px}
+input.n-q{margin-bottom:-8px}
 .entries .trow{display:flex;align-items:stretch}
 .tk{flex:none;width:44px;min-height:40px;border:0;background:none;display:grid;place-items:center;padding:0}
 .entries .tk{width:44px;padding:0 0 0 8px;justify-content:center;align-items:center}
@@ -752,7 +753,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v49</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v50</span></footer>
 </div>
 </div>
 
@@ -885,6 +886,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Tag</span>
       <input id="a-date" type="date">
     </label>
+    <div class="fld" id="a-rep-fld">
+      <span id="lbl-a-rep">Wiederholen</span>
+      <div class="chips" id="a-rep" role="group" aria-labelledby="lbl-a-rep"></div>
+    </div>
     <div class="fld">
       <span id="lbl-a-folder">Ordner</span>
       <div class="chips" id="a-folder" role="group" aria-labelledby="lbl-a-folder"></div>
@@ -3542,7 +3547,8 @@ $('#p-del').addEventListener('click', () => {
 /* ---------- Aufgaben und Notizen ---------- */
 /* Liegen im Bereich Routinen hinter dem Umschalter „Routinen / Aufgaben / Notizen“ (rSub). Ordner gelten für beide.
    N = { folders: { id: { n } },
-         tasks: { id: { t Titel, f Ordner, d fällig (Datum oder null), done Zeitpunkt des Abhakens oder null, c angelegt, n Notiz } },
+         tasks: { id: { t Titel, f Ordner, d fällig (Datum oder null), done Zeitpunkt des Abhakens oder null, c angelegt, n Notiz,
+                        r Wiederholung ('' | 'day' | 'week' | 'month'), nx id der beim Abhaken angelegten nächsten Aufgabe } },
          notes: { id: { t Titel, x Text, f Ordner, pin, c angelegt, m geändert, items: [{ t, d }] Zeilen zum Abhaken } } } */
 function normN(o) {
   const out = { folders: {}, tasks: {}, notes: {} }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
@@ -3551,7 +3557,7 @@ function normN(o) {
   if (ta && typeof ta === 'object') for (const id in ta) {
     const x = ta[id];
     if (!x || typeof x !== 'object' || !str(x.t, 120).trim()) { out.tasks[id] = null; continue; }
-    out.tasks[id] = { t: str(x.t, 120), f: str(x.f, 24), d: isKey(x.d) ? x.d : null, done: num(x.done) || null, c: num(x.c), n: str(x.n, 200) };
+    out.tasks[id] = { t: str(x.t, 120), f: str(x.f, 24), d: isKey(x.d) ? x.d : null, done: num(x.done) || null, c: num(x.c), n: str(x.n, 200), r: REPEAT.some(q => q[0] && q[0] === x.r) ? x.r : '', nx: str(x.nx, 24) };
   }
   if (no && typeof no === 'object') for (const id in no) {
     const x = no[id];
@@ -3563,7 +3569,18 @@ function normN(o) {
   return out;
 }
 const ndoc = patchDoc(() => N, v => { N = normN(v); });
+/* Wiederkehrende Aufgaben: Beim Abhaken bleibt die Aufgabe als erledigt stehen, und eine neue mit dem nächsten Datum entsteht (nx merkt sich ihre id).
+   Wird der Haken wieder entfernt, verschwindet die neue, solange sie noch offen ist. So bleibt sichtbar, was wann erledigt wurde. */
+function nextDue(d, r) {
+  const tk = todayKey(); let k = d;
+  do {
+    if (r === 'month') { const y = +k.slice(0, 4), m = +k.slice(5, 7), ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; k = ny + '-' + pad(nm) + '-' + pad(Math.min(+d.slice(8), new Date(ny, nm, 0).getDate())); }
+    else k = keyOf(addDays(parseKey(k), r === 'week' ? 7 : 1));
+  } while (k <= tk);   // Liegengebliebenes springt nicht in die Vergangenheit, sondern auf den nächsten Termin nach heute
+  return k;
+}
 const FOLDERS = [['uni', 'Uni'], ['prom', 'Promotion'], ['priv', 'Privat']];
+const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['month', 'Monatlich']], RNAME = { day: 'täglich', week: 'wöchentlich', month: 'monatlich' };
 /* Feste Ordner plus eigene. Eigene Namen sind Nutzertext: allFolders() liefert sie schon sicher für HTML. */
 const allFolders = () => FOLDERS.concat(Object.keys(N.folders).filter(id => N.folders[id]).map(id => [id, esc(N.folders[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
 const folderName = id => { const f = id && allFolders().find(x => x[0] === id); return f ? f[1] : ''; };
@@ -3576,7 +3593,7 @@ function cleanFolders() {
   for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
   if (n) ndoc.patch(p);
 }
-let rSub = 'rout', nFolder = '', nDoneOpen = false;   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), „Erledigt“ aufgeklappt
+let rSub = 'rout', nFolder = '', nDoneOpen = false, nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), „Erledigt“ aufgeklappt, Suchtext der Notizen
 const inFolder = x => !nFolder || x.f === nFolder;
 const doneKey = t => t.done ? keyOf(new Date(t.done)) : '';
 const dueText = d => d === keyOf(addDays(new Date(), 1)) ? 'Morgen' : dRow(d);
@@ -3589,7 +3606,7 @@ function taskParts(list) {
     old: list.filter(t => t.done && doneKey(t) !== tk).sort((a, b) => b.done - a.done) };
 }
 function taskRow(t, when, late) {
-  const sub = [folderName(t.f), esc(t.n)].filter(Boolean).join(' · ');
+  const sub = [folderName(t.f), t.r ? RNAME[t.r] : '', esc(t.n)].filter(Boolean).join(' · ');
   return '<li class="trow' + (t.done ? ' done' : '') + '"><button type="button" class="tk" data-n="tog" data-id="' + esc(t.id) + '" aria-pressed="' + !!t.done + '" aria-label="' + esc(t.t) + (t.done ? ' wieder öffnen' : ' abhaken') + '"><i>' + (t.done ? CHECK : '') + '</i></button>' +
     '<button type="button" class="two" data-n="task" data-id="' + esc(t.id) + '" aria-label="' + esc(t.t) + ' ändern"><span class="l"><span>' + esc(t.t) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
     (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
@@ -3621,22 +3638,38 @@ function noteRow(x) {
   return '<li><button type="button" class="two nrow" data-n="note" data-id="' + esc(x.id) + '" aria-label="' + esc(title) + ' öffnen"><span class="l"><span>' + esc(title) + '</span>' + (sub || fn ? '<small>' + [fn, esc(sub)].filter(Boolean).join(' · ') + '</small>' : '') + '</span>' +
     '<small class="when">' + dRow(keyOf(new Date(x.m || x.c || Date.now()))) + '</small></button></li>';
 }
-function notesHTML() {
-  if (!noteList().length) return emptyHTML('notizen', 'Noch keine Notiz', 'Halte fest, was du nicht vergessen willst, auch mit Zeilen zum Abhaken.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>');
-  const list = noteList().filter(inFolder).sort((a, b) => b.m - a.m), pin = list.filter(x => x.pin), rest = list.filter(x => !x.pin), curY = todayKey().slice(0, 4);
-  let h = folderBarHTML();
-  if (!list.length) return h + '<p class="note">Keine Notiz in diesem Ordner.</p>';
-  if (pin.length) h += '<h2 class="sec">Angeheftet</h2><ul class="entries">' + pin.map(noteRow).join('') + '</ul>';
+/* Liste der Notizen: gewählter Ordner und Suchtext (Titel, Text und Zeilen zum Abhaken). Steht in #n-list, damit beim Tippen nur die Liste
+   neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
+function noteListHTML() {
+  const q = nQuery.trim().toLowerCase(), hit = x => !q || (x.t + '\n' + x.x + '\n' + x.items.map(i => i.t).join('\n')).toLowerCase().indexOf(q) >= 0;
+  const list = noteList().filter(x => inFolder(x) && hit(x)).sort((a, b) => b.m - a.m), pin = list.filter(x => x.pin), rest = list.filter(x => !x.pin), curY = todayKey().slice(0, 4);
+  if (!list.length) return '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
+  let h = pin.length ? '<h2 class="sec">Angeheftet</h2><ul class="entries">' + pin.map(noteRow).join('') + '</ul>' : '';
   /* nach Monaten der letzten Änderung, neueste zuerst: so bleibt die Liste auch mit vielen Notizen übersichtlich */
   let ym = '';
   rest.forEach(x => { const k = keyOf(new Date(x.m || x.c || Date.now())).slice(0, 7); if (k !== ym) { h += (ym ? '</ul>' : '') + '<h2 class="sec">' + MONTHS[+k.slice(5) - 1] + (k.slice(0, 4) !== curY ? ' ' + k.slice(0, 4) : '') + '</h2><ul class="entries">'; ym = k; } h += noteRow(x); });
   return h + (ym ? '</ul>' : '');
 }
+function notesHTML() {
+  if (!noteList().length) return emptyHTML('notizen', 'Noch keine Notiz', 'Halte fest, was du nicht vergessen willst, auch mit Zeilen zum Abhaken.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>');
+  return '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' +
+    folderBarHTML() + '<div id="n-list">' + noteListHTML() + '</div>';
+}
 /* Tipp in einer Liste mit Aufgaben oder Notizen (im Bereich und auf Heute). Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
   const b = e.target.closest('[data-n]'); if (!b) return false;
   const a = b.dataset.n, id = b.dataset.id;
-  if (a === 'tog') { const t = N.tasks[id]; if (t) { const p = { tasks: {} }; p.tasks[id] = { done: t.done ? null : Date.now() }; ndoc.patch(p); render(); } }
+  if (a === 'tog') {
+    const t = N.tasks[id], p = { tasks: {} }; if (!t) return true;
+    if (!t.done) {
+      p.tasks[id] = { done: Date.now(), nx: '' };
+      if (t.r && t.d) { const nid = newId(); p.tasks[nid] = { t: t.t, f: t.f, d: nextDue(t.d, t.r), done: null, c: Date.now(), n: t.n, r: t.r, nx: '' }; p.tasks[id].nx = nid; }
+    } else {
+      p.tasks[id] = { done: null, nx: '' };
+      if (t.nx && N.tasks[t.nx] && !N.tasks[t.nx].done) p.tasks[t.nx] = null;
+    }
+    ndoc.patch(p); render();
+  }
   else if (a === 'task') openA(id);
   else if (a === 'newtask') openA(null);
   else if (a === 'note') openN(id);
@@ -3647,6 +3680,7 @@ function nAct(e) {
   return true;
 }
 $('#n-main').addEventListener('click', nAct);
+$('#n-main').addEventListener('input', e => { if (e.target.id === 'n-q') { nQuery = e.target.value; $('#n-list').innerHTML = noteListHTML(); } });
 $('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderRoutines(); } });
 
 /* Ordner-Chips in den Blättern: „Kein Ordner“, alle Ordner, „+ Ordner“ legt einen neuen an und wählt ihn */
@@ -3668,16 +3702,19 @@ function folderAdd(st, input, err) {
 
 /* Blatt „Aufgabe“ */
 const adlg = $('#asheet');
-let aE = { id: null, f: '', due: 'today', newF: false };
+let aE = { id: null, f: '', due: 'today', r: '', newF: false };
 const DUE = [['today', 'Heute'], ['tomorrow', 'Morgen'], ['date', 'Anderer Tag'], ['none', 'Ohne Datum']];
 function paintA() {
   $('#a-folder').innerHTML = folderPickHTML(aE); $('#a-fnew-row').hidden = !aE.newF;
   $('#a-due').innerHTML = DUE.map(d => '<button type="button" class="chip" data-d="' + d[0] + '" aria-pressed="' + (aE.due === d[0]) + '">' + d[1] + '</button>').join('');
   $('#a-date-fld').hidden = aE.due !== 'date';
+  /* Wiederholen braucht einen Tag, von dem aus gezählt wird */
+  $('#a-rep-fld').hidden = aE.due === 'none';
+  $('#a-rep').innerHTML = REPEAT.map(q => '<button type="button" class="chip" data-r="' + q[0] + '" aria-pressed="' + (aE.r === q[0]) + '">' + q[1] + '</button>').join('');
 }
 function openA(id, date) {
   const t = id ? N.tasks[id] : null, tk = todayKey(), tm = keyOf(addDays(new Date(), 1));
-  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : isKey(date) && date !== tk ? 'date' : 'today', newF: false };
+  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : isKey(date) && date !== tk ? 'date' : 'today', r: t ? t.r : '', newF: false };
   $('#as-title').textContent = t ? 'Aufgabe ändern' : 'Neue Aufgabe';
   $('#a-title').value = t ? t.t : ''; $('#a-note').value = t ? t.n : ''; $('#a-fnew').value = '';
   $('#a-date').value = t && t.d ? t.d : isKey(date) ? date : tm;
@@ -3693,6 +3730,7 @@ $('#a-folder').addEventListener('click', e => { if (folderClick(e, aE, $('#a-fne
 $('#a-fnew-add').addEventListener('click', () => { if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); });
 $('#a-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); } });
 $('#a-due').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.due = b.dataset.d; paintA(); } });
+$('#a-rep').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.r = b.dataset.r; paintA(); } });
 $('#aform').addEventListener('submit', e => {
   e.preventDefault();
   const err = m => { const x = $('#a-err'); x.textContent = m; x.hidden = false; };
@@ -3701,7 +3739,7 @@ $('#aform').addEventListener('submit', e => {
   let d = null;
   if (aE.due === 'today') d = todayKey(); else if (aE.due === 'tomorrow') d = keyOf(addDays(new Date(), 1));
   else if (aE.due === 'date') { d = $('#a-date').value; if (!isKey(d)) return err('Wähle einen Tag.'); }
-  const p = { tasks: {} }; p.tasks[aE.id || newId()] = { t: title.slice(0, 120), f: aE.f, d, done: old ? old.done : null, c: old ? old.c : Date.now(), n: $('#a-note').value.trim().slice(0, 200) };
+  const p = { tasks: {} }; p.tasks[aE.id || newId()] = { t: title.slice(0, 120), f: aE.f, d, done: old ? old.done : null, c: old ? old.c : Date.now(), n: $('#a-note').value.trim().slice(0, 200), r: d ? aE.r : '', nx: old ? old.nx : '' };
   ndoc.patch(p); closeA(); render();
 });
 $('#a-del').addEventListener('click', () => { if (aE.id) { const p = { tasks: {} }; p.tasks[aE.id] = null; ndoc.patch(p); } closeA(); render(); });

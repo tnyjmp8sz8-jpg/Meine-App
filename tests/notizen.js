@@ -137,6 +137,49 @@ lauf(async () => {
   await bereich(b.page, 'routinen'); await b.page.click('#r-subs [data-v="task"]'); await b.page.click('#n-main .wk .wd.now'); await b.page.waitForTimeout(200);
   P.enthaelt('Kalender „Aufgaben“ zeigt, was heute erledigt wurde', (await text(b.page, '#cs-title')) + ' ' + (await text(b.page, '#csheet')), ['Aufgaben', 'Betreuer wegen Termin schreiben']);
   await blaetterZu(b.page);
+
+  // --- Wiederkehrende Aufgaben ---
+  const q = b.page, warte = () => q.waitForTimeout(200), wahl = (box, name) => q.click(box + ' .chip:has-text("' + name + '")');
+  const alle = async titel => Object.values((await gespeichert(q)).N.tasks).filter(t => t && t.t === titel);
+  const anlegen = async (titel, faellig, wdh, datum) => { await q.click('#add'); await q.fill('#a-title', titel); await wahl('#a-due', faellig); if (datum) await q.fill('#a-date', datum); await wahl('#a-rep', wdh); await q.click('#a-save'); await warte(); };
+  const haken = async titel => { await q.click('#n-main .trow:has-text("' + titel + '") .tk'); await warte(); };
+  await anlegen('Blumen gießen', 'Heute', 'Wöchentlich');
+  P.enthaelt('Zeile nennt die Wiederholung', await q.innerText('#n-main .trow:has-text("Blumen gießen")'), ['wöchentlich']);
+  await haken('Blumen gießen');
+  let w = await alle('Blumen gießen');
+  // heute abgehakt → dieselbe Aufgabe in sieben Tagen wieder
+  P.ok('wöchentlich: abgehakt bleibt stehen, die nächste ist in 7 Tagen fällig', w.length === 2 && w.some(t => t.done && t.d === tag(0)) && w.some(t => !t.done && t.d === tag(-7) && t.r === 'week'), JSON.stringify(w));
+  await q.click('#n-main .trow.done:has-text("Blumen gießen") .tk'); await warte();
+  w = await alle('Blumen gießen');
+  P.ok('Haken wieder weg: die nächste verschwindet, nichts ist doppelt', w.length === 1 && !w[0].done && w[0].d === tag(0), JSON.stringify(w));
+  await anlegen('Tabletten', 'Anderer Tag', 'Täglich', tag(2));
+  await haken('Tabletten');
+  w = await alle('Tabletten');
+  // seit vorgestern liegen geblieben und heute erledigt → als Nächstes morgen, nicht gestern
+  P.ok('täglich, liegen geblieben: die nächste ist morgen fällig', w.length === 2 && w.some(t => !t.done && t.d === tag(-1)), JSON.stringify(w));
+  await anlegen('Miete prüfen', 'Heute', 'Monatlich');
+  await haken('Miete prüfen');
+  w = await alle('Miete prüfen');
+  // gleicher Tag im nächsten Monat; gibt es ihn dort nicht (z. B. der 31.), der letzte Tag des Monats
+  const h = new Date(), ziel = new Date(h.getFullYear(), h.getMonth() + 1, Math.min(h.getDate(), new Date(h.getFullYear(), h.getMonth() + 2, 0).getDate()), 12);
+  const zielTag = ziel.getFullYear() + '-' + String(ziel.getMonth() + 1).padStart(2, '0') + '-' + String(ziel.getDate()).padStart(2, '0');
+  P.ok('monatlich: die nächste am selben Tag im nächsten Monat (' + zielTag + ')', w.some(t => !t.done && t.d === zielTag), JSON.stringify(w));
+  await q.click('#add'); await wahl('#a-due', 'Ohne Datum');
+  P.ok('ohne Datum gibt es kein „Wiederholen“', !(await q.isVisible('#a-rep-fld')));
+  await q.click('#as-close');
+
+  // --- Suche in den Notizen: Titel, Text und Zeilen zum Abhaken ---
+  await q.click('#r-subs [data-v="note"]'); await warte();
+  const treffer = () => text(q, '#n-list');
+  await q.click('#n-q'); await q.keyboard.type('müller');
+  P.ok('Suche im Text: nur die passende Notiz', (await treffer()).includes('Ideen für die Diskussion') && !(await treffer()).includes('Gliederung'), await treffer());
+  P.ok('beim Tippen bleibt der Cursor im Suchfeld', (await q.evaluate(() => document.activeElement.id)) === 'n-q');
+  await q.fill('#n-q', 'januar');
+  P.ok('Suche findet auch Zeilen zum Abhaken', (await treffer()).includes('Besprechung mit Betreuer') && (await treffer()).includes('Zeitplan bis zur Abgabe') && !(await treffer()).includes('Fragen ans Labor'), await treffer());
+  await q.fill('#n-q', 'gibtesnicht');
+  P.enthaelt('kein Treffer', await treffer(), ['Keine Notiz gefunden.']);
+  await q.fill('#n-q', '');
+  P.ok('leeres Suchfeld zeigt wieder alle sechs', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 6);
   await b.browser.close();
   await P.ende(null, fehler.concat(b.fehler));
 });
