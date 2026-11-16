@@ -206,7 +206,8 @@ dialog{overscroll-behavior:contain}
 #sh-extra[hidden],#sh-stats[hidden],.err[hidden],.ghost[hidden]{display:none}
 
 #sh-stats{display:flex;flex-direction:column;gap:16px}
-.figs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.figs{display:grid;grid-auto-flow:column;grid-auto-columns:minmax(0,1fr);gap:8px}
+.figs:empty{display:none}
 .fig{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .fig b{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fig span{font-size:12px;color:var(--muted);font-weight:500}
@@ -750,7 +751,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v53</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v54</span></footer>
 </div>
 </div>
 
@@ -763,7 +764,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </button>
     <button type="button" class="tab" data-view="routinen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="f" cx="12" cy="12" r="8.5"/><path class="k" d="M8.3 12.3l2.5 2.5 4.9-5.2"/></svg>
-      <span id="tab-r">Routinen</span>
+      <span id="tab-r">Planer</span>
     </button>
     <button type="button" class="tab" data-view="gewicht">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="b" d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path class="b" d="M15 7h5v5"/></svg>
@@ -1441,7 +1442,7 @@ function renderRoutines() {
   $('#date').textContent = 'Heute';
   paintTop();
   paintHero();
-  if (!S.running) { document.title = TITLE; $('#tab-r').textContent = 'Routinen'; }
+  if (!S.running) { document.title = TITLE; $('#tab-r').textContent = 'Planer'; }
   const strip = $('#r-strip'), showStrip = S.routines.length > 0;
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
   document.querySelector('#v-routinen .hero').hidden = !showStrip;   // leer: nur der leere Zustand, wie in den anderen Bereichen
@@ -1690,7 +1691,8 @@ function chartSVG(pts, t0) {
 /* Leerer Bereich: Symbol des Bereichs, Titel, ein Satz, darunter die Knöpfe (rest). Mittig und ohne Kasten. */
 const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
 const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.5v3.6"/><circle cx="8" cy="4.9" r=".5" fill="currentColor"/></svg></button>';
-const fig = (val, unit, label) => '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
+/* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
+const fig = (val, unit, label) => val === '–' ? '' : '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
 function renderWeight() {
   const el = $('#v-gewicht');
@@ -1732,7 +1734,7 @@ function renderWeight() {
     '<p class="sub">Zuletzt gewogen: ' + kg2(last.w) + ' kg, ' + when + '</p></section>';
   h += '<button type="button" class="' + (hasToday ? 'ghost center' : 'primary') + '" data-w="add">' + (hasToday ? 'Heutigen Eintrag ändern' : 'Heute eintragen') + '</button>';
   h += '<div class="figs on-bg">' +
-    (rate == null ? fig('–', '', 'pro Woche, ab 7 Tagen') : fig(signed(rate), 'kg', 'pro Woche')) +
+    fig(rate == null ? '–' : signed(rate), 'kg', 'pro Woche') +
     fig(signed(last.m - first.w), 'kg', 'seit ' + DF_SHORT.format(parseKey(first.k))) +
     (W.goal == null ? fig(String(all.length), '', all.length === 1 ? 'Eintrag' : 'Einträge')
       : reached ? fig(kg(W.goal), 'kg', 'Ziel erreicht') : fig(kg(Math.abs(W.goal - last.m)), 'kg', 'bis zum Ziel')) +
@@ -3748,8 +3750,8 @@ const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.h
 function paintN() { $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF; }
 function openN(id) {
   const x = id ? N.notes[id] : null;
-  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? nFolder : '', newF: false };
-  $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz';
+  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? nFolder : '', newF: false, fresh: !x };
+  $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz'; $('#n-text').placeholder = 'Was willst du festhalten?';
   $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = ''; $('#n-err').hidden = true;
   /* Neu: nur das Textfeld. Was hier verborgen ist, bleibt es, solange das Blatt offen ist: So verschiebt sich beim Speichern nichts unter dem Finger. */
   $('#n-folder-fld').hidden = !x; $('#n-task').hidden = !x; $('#n-del').hidden = !x;
@@ -3776,8 +3778,15 @@ ndlg.addEventListener('click', e => { if (e.target === ndlg) closeN(); });
 $('#nform').addEventListener('submit', e => e.preventDefault());
 $('#n-text').addEventListener('input', () => { if (nE) { growN(); noteSoon(); } });
 $('#n-text').addEventListener('blur', () => { if (nE) noteSave(); });
-/* Enter schließt ab: Die Notiz ist für einen schnellen Gedanken, nicht für Absätze */
-$('#n-text').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); closeN(); } });
+/* Enter schließt ab: Die Notiz ist für einen schnellen Gedanken, nicht für Absätze. Bei einer neuen Notiz macht Enter das Feld gleich frei
+   für die nächste (die Tastatur bleibt offen); Enter im leeren Feld oder „Fertig“ schließt das Blatt. Bei einer vorhandenen Notiz schließt Enter. */
+$('#n-text').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
+  e.preventDefault();
+  if (!nE || !nE.fresh || !$('#n-text').value.trim()) return closeN();
+  noteSave(); nE = { id: null, c: 0, f: nE.f, newF: false, fresh: true };
+  $('#n-text').value = ''; $('#n-text').placeholder = 'Nächste Notiz'; growN(); render();
+});
 $('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
 $('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
 $('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });

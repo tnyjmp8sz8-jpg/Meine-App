@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v53)
+# Track. – Projektwissen (App-Stand v54)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -37,10 +37,10 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - `tests/`: Tests und Bildschirmfotos (siehe „Testen“ und `tests/LIESMICH.md`). Gehören nicht zur App; der Service Worker speichert sie nicht.
 - Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Aufgaben und Notizen, Heute und Woche, Datensicherung, Bereiche, Rückgängig, Graphen ablesen, Feinschliff, Wischgesten, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
-- Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
+- Bereiche und IDs im Code: `heute`, `routinen` (in der Leiste unten „Planer“, seit v54, weil dort auch Aufgaben und Notizen liegen), `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
 - Wochenleiste in jedem Bereich (Heute, Routinen, Gewicht, Budget, Cardio, Gym; im Vermögen gab es sie nie): Ein Tipp auf einen Tag öffnet den Kalender des Bereichs. In v44 hatte ich sie aus Gewicht, Finanzen und Training entfernt; der Nutzer wollte sie zurück (v46).
 - Wochenleiste und Kalender: `weekStripHTML(mode)`, `calMarks(mode)`, `calHTML()`, `calDayHTML()`, `openCal(mode, tag)`; Modi `all`, `rout`, `weight`, `money`, `cardio`, `gym`.
-- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel, `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr mit mittigem Titel (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `segMY()` Umschalter Monat/Jahr als eigene Reihe darüber, `INFO(id)` kleines „i“, das den Text `#info-id` zeigt, `scrubAttr()` macht einen Graphen ablesbar, `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `emptyHTML(bereich, titel, satz, knöpfe)` leerer Bereich, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
+- Gemeinsame Bausteine: `fig()` Kennzahl-Kachel (ohne Wert, also mit Strich, entsteht keine Kachel; die übrigen teilen sich die Breite, seit v54), `kvRow()` Zeile mit Wert und Vergleich, `navHTML()` Pfeile für Monat/Jahr mit mittigem Titel (Knöpfe tragen `data-m="prev|next"` in `.mnav`), `segMY()` Umschalter Monat/Jahr als eigene Reihe darüber, `INFO(id)` kleines „i“, das den Text `#info-id` zeigt, `scrubAttr()` macht einen Graphen ablesbar, `seriesSVG()` Liniengraph, `kmBarsSVG()` Balken je Monat, `monthsHTML()` + `monToggle()` Listen nach Monaten, `heroM()`/`kHero()` große Zahl, `emptyHTML(bereich, titel, satz, knöpfe)` leerer Bereich, `openDlg()` Blatt öffnen, `esc()` Text sicher ausgeben.
 - Finanzen: Umschalter „Vermögen / Budget“ (`finSub()`, Wahl in `fSub`), beide teilen `mMode`, `mYM`, `mYear`.
   - Vermögen: `wealthHTML()`, Blatt `vsheet` mit `openV('bal')` und `openV('goal')`. `accState(konto, monat)` = letzter eingetragener Stand plus Bewegungen seitdem (`accFlow()`), `accAt()` nur der Wert, `wealthAt()` summiert, `wealthDelta(zeitraum)` liefert Plus/Minus; `goalsHTML()` Sparziele mit Datum aus dem Schnitt der letzten drei Monate.
   - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `defAcc()`: zuletzt benutztes Konto, sonst das einzige; bei mehreren ohne Vorgeschichte muss gewählt werden) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
@@ -49,7 +49,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Aufgaben und Notizen (v49): Umschalter `rSub` (`rout`, `task`, `note`) in `#r-subs`; Inhalt in `#n-main` über `tasksHTML()` bzw. `notesHTML()`, die Routinen bleiben in `#main`. Der Plus-Knopf oben richtet sich nach `rSub`.
   - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
   - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde. Wiederkehrend (v50): `REPEAT`, `nextDue(datum, art)`; das Abhaken in `nAct()` legt die nächste Aufgabe an.
-  - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld, Enter oder „Fertig“ schließt ab; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf), ganz oben direkt unter den Schnell-Knöpfen, noch vor Routinen (v53, Wunsch des Nutzers: „muss die direkt sehen als erstes“). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
+  - Notizen (seit v51 schnelle Aufnahme): eine Liste, neueste zuerst (`notesNew()`); `noteRow()` mit Kreis (`data-n="notedone"` löscht, `data-undo` zeigt „Rückgängig“). Blatt `nsheet` mit `openN(id)`: neu nur das Textfeld; Enter legt die Notiz an und macht das Feld frei für die nächste (`nE.fresh`, seit v54), Enter im leeren Feld oder „Fertig“ schließt; vorhandene dazu Ordner, „Als Aufgabe“ (macht eine Aufgabe für heute und entfernt die Notiz), Löschen. `noteSave()` speichert von selbst. Auf Heute: `homeNotesHTML()` (neueste fünf), ganz oben direkt unter den Schnell-Knöpfen, noch vor Routinen (v53, Wunsch des Nutzers: „muss die direkt sehen als erstes“). Suche: Feld `#n-q` erst ab sechs Notizen, Text in `nQuery`, `noteListHTML()` zeichnet nur `#n-list` neu, damit das Feld beim Tippen den Fokus behält.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
@@ -108,7 +108,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Farben nur über CSS-Variablen in `:root` (hell, dunkel per Systemeinstellung und `data-theme`).
 - Neue Größen in den bestehenden CSS-Blöcken ändern, keinen weiteren Überschreib-Block anhängen.
 - Kommentare auf Deutsch, nur wo sie eine Absicht oder Falle erklären.
-- Wortwahl in der Oberfläche: „Gym“ statt „Kraft“, „Finanzen“ statt „Haushalt“, „Einheit“ für ein Training.
+- Wortwahl in der Oberfläche: „Gym“ statt „Kraft“, „Finanzen“ statt „Haushalt“, „Einheit“ für ein Training, „Planer“ für den Bereich mit Routinen, Aufgaben und Notizen.
 - Zahlen deutsch formatiert (`toLocaleString('de-DE')`), Euro über `eur()`, `eur0()`, `eurS()`, Kilogramm über `kg()`, `kgn()`.
 - Kein toter Code: Unbenutztes entfernen.
 
@@ -141,6 +141,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Die Wochenleiste mag er, in jedem Bereich („ich mochte das“, v46). Mein Umbau in v44 (Leiste weg, Kalender als Knopf oben, Pfeile und Monat/Jahr in einer Reihe) kam nicht an: „das November ist eingequetscht“. Zweites Mal dieselbe Lehre: nichts zusammenschieben, was vorher Luft hatte; Vertrautes nicht für „weniger Bedienung“ opfern, sondern vorher mit Bild fragen.
 - In Zeilen mit Wert (`kvRow()`: Letzter Lauf, Woche, Sparquote) steht der Vergleich in einer eigenen Zeile unter dem Wert, nicht daneben. Der Nutzer fand das ruhiger; „daneben“ war ein Vorschlag von mir (v26), den er nach dem Ausprobieren zurückgenommen hat. Kompakt heißt für ihn nicht: alles in eine Zeile quetschen.
 - Erfassen muss in Sekunden gehen: ein Tipp, tippen, fertig. Keine Pflichtfelder, keine Auswahl davor (Rückmeldung zu den Notizen, v51).
+- Die farbigen Symbole der Bereiche auf Heute findet er „schön und cool“ (v54) und fragte, wo Farbe noch Sinn ergibt. Farbe darf also etwas mehr vorkommen, solange sie eine Bedeutung trägt (Farbe = Bereich).
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
@@ -154,7 +155,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v53` → `takt-v54`), `<span class="ver">v53</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v54` → `takt-v55`), `<span class="ver">v54</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

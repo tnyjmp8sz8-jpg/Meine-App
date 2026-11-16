@@ -1,7 +1,7 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v53 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v54 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung und `main` sind gleich.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
@@ -14,6 +14,7 @@
 - v40: Konten umbenennen (Name im Blatt „Stand eintragen“ ändern) und mit „+ Konto“ direkt beim Buchen anlegen; Konten ohne Stand erscheinen mit Hinweis. Tests liegen jetzt im Repository unter `tests/`.
 - v41: Vergleich in Zeilen mit Wert (Letzter Lauf, Woche, Sparquote) wieder unter dem Wert statt daneben.
 - v42: Fehler behoben, gemeldet vom Nutzer: Buchungen veränderten das Vermögen nicht. Zwei Ursachen: Ein Stand aus v38 (ohne Zeitpunkt) im laufenden Monat galt als Stand zum Monatsende; und neue Buchungen standen still auf „Kein Konto“. Jetzt ist das zuletzt benutzte oder das einzige Konto vorbelegt, bei mehreren Konten ohne Vorgeschichte fragt das Blatt nach.
+- v54: Kacheln ohne Wert (Strich) werden nicht mehr gezeigt; der Bereich heißt unten „Planer“; nach Enter bleibt das Notiz-Blatt offen für die nächste Notiz.
 - v53: Notizen auf Heute ganz oben (vor Routinen); Ecken der Karten 16 statt 20 px.
 - v52: Noch kompakter auf Wunsch des Nutzers: große Zahl 44 → 34 px, blaue Knöpfe 44 → 40 px, Routinen-Zeilen, Überschriften, Umschalter, Kacheln, Listen und Abstände je eine Stufe kleiner. Wochenleiste, Leiste unten und Eingabefelder unverändert.
 - v51: Notizen auf Wunsch des Nutzers umgebaut zur schnellen Aufnahme: nur Text, jede mit Kreis, Abhaken löscht (mit „Rückgängig“), „+ Notiz“ öffnet nur ein Textfeld, Enter schließt ab; Notizen stehen auch auf Heute. Titel, Zeilen zum Abhaken und Anheften sind entfallen; alte Notizen werden übernommen.
@@ -70,12 +71,10 @@
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
-- Nach v53 auf seine Frage „was noch anpassen?“ vorgeschlagen (Antwort steht aus):
-  - Kacheln, die nur einen Strich zeigen (Vermögen ohne Vormonat: „im Monat“, „in Prozent“, „seit Jahresbeginn“; Gewicht: „pro Woche, ab 7 Tagen“), ausblenden, bis es einen Wert gibt.
-  - Bereich „Routinen“ in der Leiste unten umbenennen, weil dort jetzt auch Aufgaben und Notizen liegen (z. B. „Planer“); vorher fragen.
-  - Notizen: nach Enter bleibt das Blatt offen für die nächste Notiz.
+- Farbe der Bereiche an weiteren Stellen (Frage des Nutzers nach v54; Vorschaubild geschickt, Antwort steht aus):
+  - Vorschlag: das Plus der Schnell-Knöpfe auf Heute in der Farbe des Bereichs (Gewicht lila, Ausgabe und Einnahme orange, Lauf grün) und das Symbol der leeren Seiten in der Farbe des Bereichs.
+  - Davon abgeraten: Leiste unten oder Überschriften einfärben (zu unruhig, Blau bliebe nicht mehr „antippbar“).
 - Aufgaben und Notizen, nächste Schritte (der Nutzer wollte erst alles sehen und sagt dann, was umgebaut wird):
-  - Notizen: nach dem Abschließen gleich die nächste eintippen können (Blatt bleibt offen), falls er oft mehrere hintereinander notiert.
   - Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“.
   - Ordner umbenennen; Reihenfolge der Schnell-Knöpfe auf Heute (jetzt: Aufgabe, Notiz vorn).
   - Erledigtes: nur die letzten 50 werden gezeigt, ältere bleiben gespeichert. Später: nach Monaten gruppieren oder aufräumen.

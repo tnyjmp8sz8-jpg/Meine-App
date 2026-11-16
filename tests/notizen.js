@@ -90,7 +90,13 @@ lauf(async () => {
   await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="notiz"]');
   P.ok('„+ Notiz“ auf Heute: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.isVisible('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
   await page.keyboard.type('Bib-Ausweis verlängern'); await page.keyboard.press('Enter'); await kurz();
-  P.ok('Enter legt die Notiz an und schließt das Blatt', !(await page.evaluate(() => document.querySelector('#nsheet').open)) && (await notizen()).length === 1 && (await notizen())[0].x === 'Bib-Ausweis verlängern', JSON.stringify(await notizen()));
+  P.ok('Enter legt die Notiz an; das Blatt bleibt offen, leer und bereit für die nächste', (await page.evaluate(() => document.querySelector('#nsheet').open && document.activeElement.id === 'n-text' && document.querySelector('#n-text').value === '')) && (await notizen()).length === 1 && (await notizen())[0].x === 'Bib-Ausweis verlängern', JSON.stringify(await notizen()));
+  P.ok('die Notiz steht schon dahinter auf Heute', (await text(page, '#v-heute')).includes('Bib-Ausweis verlängern'));
+  await page.keyboard.type('Zweite gleich hinterher'); await page.keyboard.press('Enter'); await kurz();
+  P.ok('die nächste Notiz ist eine eigene', (await notizen()).length === 2 && (await notizen()).some(n => n.x === 'Zweite gleich hinterher'));
+  await page.keyboard.press('Enter'); await kurz();
+  P.ok('Enter im leeren Feld schließt das Blatt', !(await page.evaluate(() => document.querySelector('#nsheet').open)) && (await notizen()).length === 2);
+  await page.click('#v-heute .nrow:has-text("Zweite gleich hinterher") .tk'); await kurz();
   P.ok('sie steht auf Heute, mit Kreis zum Abhaken', (await text(page, '#v-heute')).includes('Notizen1') && !!(await page.$('#v-heute .nrow:has-text("Bib-Ausweis verlängern") .tk')));
   await page.click('#v-heute [data-h="q"][data-v="notiz"]'); await page.click('#n-done'); await kurz();
   P.ok('leere Notiz wird nicht angelegt', (await notizen()).length === 1);
@@ -119,7 +125,7 @@ lauf(async () => {
   P.ok('„Als Aufgabe“: Aufgabe für heute im selben Ordner, die Notiz ist weg', (await aufgaben()).some(t => t.t === 'Paket bei der Post abholen' && t.d === tag(0) && t.f === 'priv') && (await notizen()).length === 1);
   await page.click('#n-main [data-n="note"]:has-text("Bib-Ausweis")'); await page.fill('#n-text', '   '); await page.click('#n-done'); await kurz();
   P.ok('geleerte Notiz ist weg', (await notizen()).length === 0);
-  await page.click('#add'); await page.keyboard.type('<b>Fett</b>'); await page.keyboard.press('Enter'); await kurz();
+  await page.click('#add'); await page.keyboard.type('<b>Fett</b>'); await page.keyboard.press('Enter'); await page.click('#n-done'); await kurz();
   P.ok('Plus im Bereich legt eine Notiz an; Sonderzeichen bleiben Text', (await liste()).includes('<b>Fett</b>') && !(await page.$('#n-main b:has-text("Fett")')));
 
   // Altbestand aus v49/v50: Titel wird erste Zeile, jede offene Zeile zum Abhaken eine eigene Notiz, erledigte Zeilen fallen weg
