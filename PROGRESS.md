@@ -65,11 +65,12 @@
 
 ## Nächste Schritte
 Vom Nutzer noch nicht entschieden (meine Vorschläge, nur auf Zuruf umsetzen):
-- Neuer Bereich (Frage des Nutzers nach v48: Notion ersetzen, Notizen, To-do?). Meine Einschätzung:
-  - Aufgaben: ja. Als Umschalter „Routinen / Aufgaben“ im Bereich Routinen (unten ist mit fünf Bereichen kein Platz), offene Aufgaben des Tages auch auf Heute. Schlicht: Titel, optional Datum, abhaken; Offenes rutscht auf den nächsten Tag.
-  - Notizen und Notion-Ersatz: nein. Daten liegen nur auf einem Gerät, ohne Abgleich und ohne Rechner; lange Texte sind in Apple Notizen besser aufgehoben. Höchstens eine kurze Notiz an einer Aufgabe.
-  - Stattdessen sinnvoll: Tages-Check (Schlaf, Energie oder Stimmung mit einem Tipp, 1 bis 5). Klein, täglich, und füttert die Zusammenhänge in der Wochenansicht.
-  - Vor dem Bauen ein Bild zeigen.
+- Aufgaben und Notizen (Wunsch des Nutzers nach v48: Ersatz für Notizen, für Uni, Promotion, To-do; er braucht alles nur auf dem Handy). Entwurf als Bild geschickt, Antwort steht aus. Noch nichts gebaut.
+  - Ort: im Bereich Routinen ein Umschalter „Routinen / Aufgaben / Notizen“ (unten ist mit fünf Bereichen kein Platz). Chips als Ordner: Alle, Uni, Promotion, Privat, „+“ für eigene.
+  - Aufgaben: Titel, Ordner, wahlweise Datum, abhaken. Abschnitte Heute, Demnächst, Ohne Datum, „Erledigt“ eingeklappt. Offenes rutscht auf den nächsten Tag. Offene Aufgaben des Tages auch auf Heute.
+  - Notizen: Titel und Text, Zeilen zum Abhaken, anheften, nach Monaten gruppiert, „Als Aufgabe“ übernimmt eine Notiz in die Aufgaben.
+  - Dem Nutzer offen gesagt: nur Text (keine Bilder, keine PDFs), Daten nur auf dem Gerät, deshalb ist die Sicherung hier besonders wichtig.
+  - Reihenfolge: erst Aufgaben, dann Notizen, jeweils getestet veröffentlichen. Suche in Notizen und der Tages-Check (Schlaf/Energie 1 bis 5 für die Zusammenhänge) sind spätere Vorschläge.
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).
 - Finanzen: Wochenleiste auch im Vermögen zeigen, damit beim Wechsel zu Budget nichts springt.
 - Finanzen: in der Zeile „Ohne Konto“ ein Knopf „Alle aufs Girokonto“ (bzw. auf das zuletzt benutzte Konto), damit man nicht jede Buchung einzeln antippen muss.
