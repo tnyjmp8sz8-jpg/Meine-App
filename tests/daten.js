@@ -47,9 +47,26 @@ function beispiel() {
     K.log[k] = j % 2 ? { e2: [[100 - j, 8], [100 - j, 8], [100 - j, 6]], e1: [[w, 7], [w, 6]] } : { e1: [[w, 8 + (j % 3)], [w, 7], [w - 2.5, 6]], e3: [[0, 12 - (j >> 2)], [0, 8], [0, 6]], e4: [[40, 8], [40, 7]] };
     K.meta[k] = { dur: 3300, plan: j % 2 ? 'p2' : 'p1' };
   }
-  return { S, LY, W, MF, MY, T, K };
+  /* Aufgaben und Notizen: drei für heute (eine abgehakt, eine von gestern liegen geblieben), zwei demnächst, eine ohne Datum, 14 früher erledigte; sechs Notizen, eine angeheftet */
+  const jetzt = Date.now(), vor = n => jetzt - n * 864e5;
+  const N = { folders: {}, tasks: {
+    t1: { t: 'Kapitel 3 überarbeiten', f: 'prom', d: tag(1), done: null, c: vor(3), n: '' },
+    t2: { t: 'Folien für das Seminar hochladen', f: 'uni', d: tag(0), done: null, c: vor(1), n: '' },
+    t3: { t: 'Betreuer wegen Termin schreiben', f: 'prom', d: tag(0), done: jetzt, c: vor(2), n: '' },
+    t4: { t: 'Literaturliste ergänzen', f: 'prom', d: tag(-3), done: null, c: vor(2), n: 'bis Kapitel 4' },
+    t5: { t: 'Zur Klausur anmelden', f: 'uni', d: tag(-7), done: null, c: vor(1), n: '' },
+    t6: { t: 'Messreihe 2 auswerten', f: 'prom', d: null, done: null, c: vor(5), n: '' } }, notes: {
+    n1: { t: 'Gliederung Dissertation', x: '1 Einleitung\n2 Stand der Forschung\n3 Methode\n4 Ergebnisse\n5 Diskussion', f: 'prom', pin: true, c: vor(40), m: vor(0), items: [] },
+    n2: { t: 'Besprechung mit Betreuer', x: 'Kapitel 2 ist zu lang, auf 25 Seiten kürzen.\nAbbildung 4 neu zeichnen, Achsen beschriften.', f: 'prom', pin: false, c: vor(4), m: vor(4),
+      items: [{ t: 'Kapitel 2 kürzen', d: true }, { t: 'Abbildung 4 neu zeichnen', d: false }, { t: 'Termin für Januar ausmachen', d: false }] },
+    n3: { t: 'Ideen für die Diskussion', x: 'Vergleich mit Müller 2021, Grenzen der Stichprobe', f: 'prom', pin: false, c: vor(7), m: vor(7), items: [] },
+    n4: { t: 'Fragen ans Labor', x: 'Kalibrierung vor Messreihe 2? Wer hat den Schlüssel?', f: 'uni', pin: false, c: vor(12), m: vor(12), items: [] },
+    n5: { t: 'Zeitplan bis zur Abgabe', x: 'Dezember: Kapitel 3 und 4\nJanuar: Entwurf', f: 'prom', pin: false, c: vor(35), m: vor(35), items: [] },
+    n6: { t: '', x: 'Geschenk für Mama: Buch über Gärten', f: 'priv', pin: false, c: vor(45), m: vor(45), items: [] } } };
+  for (let i = 0; i < 14; i++) N.tasks['d' + i] = { t: 'Erledigte Aufgabe ' + (i + 1), f: i % 2 ? 'uni' : 'prom', d: tag(i + 1), done: vor(i + 1), c: vor(i + 3), n: '' };
+  return { S, LY, W, MF, MY, T, K, N };
 }
 /* Dieselben Daten in der Form einer Sicherungsdatei */
-const alsSicherung = d => ({ app: 'takt', v: 1, exported: new Date(Date.now() - 5 * 864e5).toISOString(), routines: d.S.routines, LY: d.LY, W: d.W, MF: d.MF, MY: d.MY, T: d.T, K: d.K });
+const alsSicherung = d => ({ app: 'takt', v: 1, exported: new Date(Date.now() - 5 * 864e5).toISOString(), routines: d.S.routines, LY: d.LY, W: d.W, MF: d.MF, MY: d.MY, T: d.T, K: d.K, N: d.N });
 
 module.exports = { beispiel, alsSicherung };

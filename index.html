@@ -178,7 +178,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 dialog{border:0;padding:0;margin:auto auto 0;width:100%;max-width:480px;max-height:92%;border-radius:24px 24px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(4,6,10,.6)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh-head h2{margin:0;font-family:var(--display);font-size:20px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
@@ -463,6 +463,30 @@ body{font-size:15px}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:14px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
+/* Aufgaben und Notizen */
+#main[hidden],#n-main[hidden]{display:none}
+#n-main{display:flex;flex-direction:column;gap:22px}
+#n-main>.sec{margin:8px 2px -6px}
+.entries .trow{display:flex;align-items:stretch}
+.tk{flex:none;width:44px;min-height:40px;border:0;background:none;display:grid;place-items:center;padding:0}
+.entries .tk{width:44px;padding:0 0 0 8px;justify-content:center;align-items:center}
+.tk i{width:22px;height:22px;border-radius:50%;border:2px solid var(--mid);display:grid;place-items:center;color:#fff}
+.tk i svg{width:12px;height:12px}
+.tk[aria-pressed="true"] i{border-color:var(--good);background:var(--good)}
+.entries .trow .two{padding-left:8px;min-width:0}
+.trow.done .l{opacity:.45}
+.trow.done .l>span{text-decoration:line-through}
+.when{flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
+.when.late{color:var(--danger)}
+.nrow .l{min-width:0}
+.nrow .l small{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+input.n-title{flex:1;min-width:0;font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.02em;background:none;border:0;border-radius:0;padding:2px 1px}
+.n-text{font:inherit;font-size:16px;line-height:1.5;color:var(--ink);background:none;border:0;padding:0;width:100%;min-height:96px;resize:none;overflow:hidden}
+input.n-title:focus,.n-text:focus,.nitem input[type="text"]:focus{outline:none;box-shadow:none}
+.n-text::placeholder,input.n-title::placeholder{color:var(--muted)}
+.nitem{display:flex;align-items:center;margin-left:-11px}
+.nitem input[type="text"]{background:none;border:0;border-radius:0;padding:7px 0}
+.nitem.done input[type="text"]{opacity:.45;text-decoration:line-through}
 .eyebrow{font-size:12px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
@@ -685,9 +709,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 
 /* Blätter mit Griff wie in iOS */
 dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-radius:3px;background:var(--fill);margin:8px auto 0}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{padding-top:10px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{padding-top:10px}
 .cs-top{padding-top:6px}
-@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform{padding-top:20px}}
+@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
@@ -710,6 +734,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   <div id="v-heute" class="view" hidden></div>
 
   <div id="v-routinen" class="view" hidden>
+  <div id="r-subs"></div>
   <div id="r-strip" hidden></div>
   <section class="hero">
     <p class="date" id="date"></p>
@@ -718,6 +743,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </section>
 
   <main id="main"></main>
+  <div id="n-main" hidden></div>
   </div>
 
   <div id="v-gewicht" class="view" hidden></div>
@@ -726,7 +752,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v48</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v49</span></footer>
 </div>
 </div>
 
@@ -836,6 +862,77 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <p class="err" id="w-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="w-save">Speichern</button>
     <button type="button" class="ghost danger" id="w-del" hidden>Eintrag löschen</button>
+  </form>
+</dialog>
+
+<dialog tabindex="-1" id="asheet" aria-labelledby="as-title">
+  <form id="aform" novalidate>
+    <div class="sh-head">
+      <h2 id="as-title">Neue Aufgabe</h2>
+      <button type="button" class="x" id="as-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <label class="fld" for="a-title">
+      <span>Aufgabe</span>
+      <input id="a-title" type="text" maxlength="120" autocomplete="off" placeholder="z. B. Kapitel 3 überarbeiten">
+    </label>
+    <div class="fld">
+      <span id="lbl-a-due">Fällig</span>
+      <div class="chips" id="a-due" role="group" aria-labelledby="lbl-a-due"></div>
+    </div>
+    <label class="fld" for="a-date" id="a-date-fld" hidden>
+      <span>Tag</span>
+      <input id="a-date" type="date">
+    </label>
+    <div class="fld">
+      <span id="lbl-a-folder">Ordner</span>
+      <div class="chips" id="a-folder" role="group" aria-labelledby="lbl-a-folder"></div>
+      <div class="stepper" id="a-fnew-row" hidden>
+        <input id="a-fnew" type="text" maxlength="24" autocomplete="off" placeholder="Name des Ordners" aria-label="Name des neuen Ordners">
+        <button type="button" id="a-fnew-add" aria-label="Ordner anlegen">+</button>
+      </div>
+    </div>
+    <label class="fld" for="a-note">
+      <span>Notiz</span>
+      <input id="a-note" type="text" maxlength="200" autocomplete="off" placeholder="optional">
+    </label>
+    <p class="err" id="a-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="a-save">Speichern</button>
+    <button type="button" class="ghost danger" id="a-del" hidden>Aufgabe löschen</button>
+  </form>
+</dialog>
+
+<dialog tabindex="-1" id="nsheet" aria-label="Notiz">
+  <form id="nform" novalidate>
+    <div class="sh-head">
+      <input id="n-title" class="n-title" type="text" maxlength="120" autocomplete="off" placeholder="Titel" aria-label="Titel">
+      <button type="button" class="x" id="ns-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <textarea id="n-text" class="n-text" maxlength="20000" placeholder="Schreib los" aria-label="Text"></textarea>
+    <div class="fld">
+      <span>Zum Abhaken</span>
+      <div id="n-items"></div>
+      <button type="button" class="linkbtn" id="n-item-add">+ Punkt</button>
+    </div>
+    <div class="fld">
+      <span id="lbl-n-folder">Ordner</span>
+      <div class="chips" id="n-folder" role="group" aria-labelledby="lbl-n-folder"></div>
+      <div class="stepper" id="n-fnew-row" hidden>
+        <input id="n-fnew" type="text" maxlength="24" autocomplete="off" placeholder="Name des Ordners" aria-label="Name des neuen Ordners">
+        <button type="button" id="n-fnew-add" aria-label="Ordner anlegen">+</button>
+      </div>
+    </div>
+    <p class="err" id="n-err" role="alert" hidden></p>
+    <p class="note" id="n-meta"></p>
+    <div class="duo">
+      <button type="button" class="ghost center" id="n-pin">Anheften</button>
+      <button type="button" class="ghost center" id="n-task">Als Aufgabe</button>
+    </div>
+    <button type="button" class="primary" id="n-done">Fertig</button>
+    <button type="button" class="ghost danger" id="n-del">Notiz löschen</button>
   </form>
 </dialog>
 
@@ -1137,6 +1234,7 @@ let mMode = 'month', mYM = '', mYear = 0, mAll = false;
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
+let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '';
 
@@ -1144,11 +1242,11 @@ const LS = 'takt.v1';
 function loadLocal() {
   try {
     const o = JSON.parse(localStorage.getItem(LS) || 'null');
-    if (o && o.S && Array.isArray(o.S.routines)) { S = normApp(o.S); LY = (o.LY && typeof o.LY === 'object') ? o.LY : {}; W = normW(o.W); T = normT(o.T); K = normK(o.K); MF = normMF(o.MF); MY = {}; if (o.MY && typeof o.MY === 'object') for (const y in o.MY) if (/^\d{4}$/.test(y)) MY[y] = normMY(o.MY[y]); return true; }
+    if (o && o.S && Array.isArray(o.S.routines)) { S = normApp(o.S); LY = (o.LY && typeof o.LY === 'object') ? o.LY : {}; W = normW(o.W); T = normT(o.T); K = normK(o.K); N = normN(o.N); MF = normMF(o.MF); MY = {}; if (o.MY && typeof o.MY === 'object') for (const y in o.MY) if (/^\d{4}$/.test(y)) MY[y] = normMY(o.MY[y]); return true; }
   } catch (e) {}
   return false;
 }
-function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K })); } catch (e) {} toastOff(); }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); }
 
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
@@ -1354,6 +1452,12 @@ function renderRoutines() {
   const strip = $('#r-strip'), showStrip = S.routines.length > 0;
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
   document.querySelector('#v-routinen .hero').hidden = !showStrip;   // leer: nur der leere Zustand, wie in den anderen Bereichen
+  /* Aufgaben und Notizen teilen sich den Bereich mit den Routinen */
+  $('#r-subs').innerHTML = subsRHTML();
+  const nm = $('#n-main'), other = rSub !== 'rout';
+  nm.hidden = !other; main.hidden = other;
+  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'task' ? tasksHTML() : notesHTML(); return; }
+  nm.innerHTML = '';
 
   if (!S.routines.length) {
     main.innerHTML = emptyHTML('routinen', 'Noch keine Routine', 'Lege fest, was du regelmäßig machst. Ein Tipp startet den Timer.',
@@ -1387,7 +1491,7 @@ $('#main').addEventListener('click', e => {
     saveLocal(); render();
   }
 });
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else openSheet(null); });
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'task') openA(null); else if (rSub === 'note') openN(null); else openSheet(null); });
 
 /* ---------- sheet ---------- */
 const dlg = $('#sheet');
@@ -2865,7 +2969,7 @@ $('#v-training').addEventListener('click', e => {
 });
 
 /* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: Routinen und Training zusammen. */
-const CAL = { all: 'Übersicht', rout: 'Routinen', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
+const CAL = { all: 'Übersicht', rout: 'Routinen', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym', task: 'Aufgaben' };
 const cdlg = $('#csheet');
 const DF_DAY = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 let cSel = '', cMode = 'all';
@@ -2882,7 +2986,8 @@ function routDay(k) {
 }
 /* Punkte pro Tag als Buchstabenfolge: g = Training, b = erledigt bzw. eingetragen, p = teilweise */
 function calMarks(mode) {
-  const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
+  const gym = {}, run = {}, tx = {}, dn = {}, liveD = K.live ? K.live.date : '';
+  if (mode === 'task') taskList().forEach(t => { if (t.done) dn[doneKey(t)] = 1; });
   if (mode === 'gym' || mode === 'all') kDates().forEach(d => { gym[d] = 1; });
   if (mode === 'cardio' || mode === 'all') for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out') tx[t.d] = 1; }
@@ -2890,6 +2995,7 @@ function calMarks(mode) {
     if (mode === 'gym') return gym[k] ? 'g' : liveD === k ? 'b' : '';
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
+    if (mode === 'task') return dn[k] ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
     const q = routDay(k), full = q.due > 0 && q.done === q.due;
     if (mode === 'rout') return full ? 'b' : q.done || q.part ? 'p' : '';
@@ -2913,6 +3019,7 @@ function calFirst(mode) {
   if (mode === 'cardio' || mode === 'all') for (const id in T.runs) if (T.runs[id]) take(T.runs[id].d);
   if (mode === 'weight') for (const k in W.entries) if (typeof W.entries[k] === 'number') take(k);
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) take(MY[y].tx[id].d);
+  if (mode === 'task') taskList().forEach(t => take(doneKey(t) || (t.c ? keyOf(new Date(t.c)) : '')));
   if (mode === 'rout' || mode === 'all') S.routines.forEach(r => take(r.created));
   return f;
 }
@@ -2921,6 +3028,7 @@ function calSum(mode, ym, g, b, span) {
   if (mode === 'gym') return n(g, 'Einheit', 'Einheiten') + (g ? ' · ' + kg(g / span * 7) + ' pro Woche' : '');
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
+  if (mode === 'task') return n(taskList().filter(t => doneKey(t).slice(0, 7) === ym).length, 'Aufgabe', 'Aufgaben') + ' erledigt';
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
   if (mode === 'rout') return 'An ' + n(b, 'Tag', 'Tagen') + ' alles erledigt';
   return g || b ? [g ? g + '× Training' : '', b ? n(b, 'Tag', 'Tage') + ' alle Routinen' : ''].filter(Boolean).join(' · ') : 'Keine Einträge';
@@ -2976,6 +3084,8 @@ function calDayHTML() {
     return h + (tx.length ? '<ul class="entries">' + tx.map(x => btn('data-c="tx" data-id="' + esc(x.id) + '" aria-label="Eintrag ändern"', (x.t.k === 'in' ? 'Einnahme' : catName(x.t.c)) + (x.t.n ? ' · ' + esc(x.t.n) : ''), '', (x.t.k === 'in' ? '+' : '−') + eur(x.t.a))).join('') + '</ul>' : note('Keine Ausgabe an diesem Tag.')) + add('tx', 'Ausgabe eintragen');
   }
   const q = routDay(k);
+  const tasksOf = () => taskList().filter(t => doneKey(t) === k);
+  if (cMode === 'task') { const ts = tasksOf(); return h + (ts.length ? '<ul class="entries">' + ts.map(t => btn('data-c="task" data-id="' + esc(t.id) + '" aria-label="Aufgabe ändern"', esc(t.t), folderName(t.f), '')).join('') + '</ul>' : note('An diesem Tag wurde keine Aufgabe erledigt.')); }
   if (cMode === 'rout') return h + (q.due ? '<ul class="entries">' + routRows(q) + '</ul>' : note('Keine Routine an diesem Tag.'));
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
@@ -2983,6 +3093,7 @@ function calDayHTML() {
   const s = gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
   runsOf().forEach(r => { rows += row('Lauf', kindName(r.k) + ' · ' + fmt(r.s), kmf(r.me) + ' km'); });
   if (typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
+  const td = tasksOf(); if (td.length) rows += row('Aufgaben', td.map(t => esc(t.t)).join(', '), td.length + ' erledigt');
   const out = txOf().filter(x => x.t.k === 'out');
   if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
   return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.'));
@@ -3013,6 +3124,7 @@ cdlg.addEventListener('click', e => {
   else if (a === 'run') openT(c.dataset.id);
   else if (a === 'w') openW('entry', cSel);
   else if (a === 'tx') openM('tx', c.dataset.id);
+  else if (a === 'task') openA(c.dataset.id);
   else if (a === 'add') { if (v === 'run') openT(null, cSel); else if (v === 'w') openW('entry', cSel); else openM('tx', null, null, cSel); }
 });
 
@@ -3427,6 +3539,253 @@ $('#p-del').addEventListener('click', () => {
   closeP(); renderTraining();
 });
 
+/* ---------- Aufgaben und Notizen ---------- */
+/* Liegen im Bereich Routinen hinter dem Umschalter „Routinen / Aufgaben / Notizen“ (rSub). Ordner gelten für beide.
+   N = { folders: { id: { n } },
+         tasks: { id: { t Titel, f Ordner, d fällig (Datum oder null), done Zeitpunkt des Abhakens oder null, c angelegt, n Notiz } },
+         notes: { id: { t Titel, x Text, f Ordner, pin, c angelegt, m geändert, items: [{ t, d }] Zeilen zum Abhaken } } } */
+function normN(o) {
+  const out = { folders: {}, tasks: {}, notes: {} }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+  const fo = o && o.folders, ta = o && o.tasks, no = o && o.notes;
+  if (fo && typeof fo === 'object') for (const id in fo) out.folders[id] = fo[id] && typeof fo[id] === 'object' && fo[id].n ? { n: str(fo[id].n, 24) } : null;
+  if (ta && typeof ta === 'object') for (const id in ta) {
+    const x = ta[id];
+    if (!x || typeof x !== 'object' || !str(x.t, 120).trim()) { out.tasks[id] = null; continue; }
+    out.tasks[id] = { t: str(x.t, 120), f: str(x.f, 24), d: isKey(x.d) ? x.d : null, done: num(x.done) || null, c: num(x.c), n: str(x.n, 200) };
+  }
+  if (no && typeof no === 'object') for (const id in no) {
+    const x = no[id];
+    if (!x || typeof x !== 'object') { out.notes[id] = null; continue; }
+    const items = Array.isArray(x.items) ? x.items.filter(i => i && typeof i === 'object' && str(i.t, 200).trim()).slice(0, 100).map(i => ({ t: str(i.t, 200), d: !!i.d })) : [];
+    const t = str(x.t, 120), tx = str(x.x, 20000);
+    out.notes[id] = t.trim() || tx.trim() || items.length ? { t, x: tx, f: str(x.f, 24), pin: !!x.pin, c: num(x.c), m: num(x.m) || num(x.c), items } : null;
+  }
+  return out;
+}
+const ndoc = patchDoc(() => N, v => { N = normN(v); });
+const FOLDERS = [['uni', 'Uni'], ['prom', 'Promotion'], ['priv', 'Privat']];
+/* Feste Ordner plus eigene. Eigene Namen sind Nutzertext: allFolders() liefert sie schon sicher für HTML. */
+const allFolders = () => FOLDERS.concat(Object.keys(N.folders).filter(id => N.folders[id]).map(id => [id, esc(N.folders[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
+const folderName = id => { const f = id && allFolders().find(x => x[0] === id); return f ? f[1] : ''; };
+const taskList = () => Object.keys(N.tasks).filter(id => N.tasks[id]).map(id => Object.assign({ id }, N.tasks[id]));
+const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
+/* Eigene Ordner ohne Aufgabe und ohne Notiz verschwinden beim Start von selbst (wie eigene Kategorien) */
+function cleanFolders() {
+  const used = {}, p = { folders: {} }; let n = 0;
+  taskList().concat(noteList()).forEach(x => { used[x.f] = 1; });
+  for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
+  if (n) ndoc.patch(p);
+}
+let rSub = 'rout', nFolder = '', nDoneOpen = false;   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), „Erledigt“ aufgeklappt
+const inFolder = x => !nFolder || x.f === nFolder;
+const doneKey = t => t.done ? keyOf(new Date(t.done)) : '';
+const dueText = d => d === keyOf(addDays(new Date(), 1)) ? 'Morgen' : dRow(d);
+/* Aufgaben nach Abschnitten. Heute = alles Offene, das heute oder früher fällig ist: Was liegen bleibt, rutscht so von selbst auf den nächsten Tag.
+   Heute Abgehaktes bleibt bis Mitternacht durchgestrichen stehen, danach liegt es unter „Erledigt“. */
+function taskParts(list) {
+  const tk = todayKey(), open = list.filter(t => !t.done), byC = (a, b) => a.c - b.c;
+  return { today: open.filter(t => t.d && t.d <= tk).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), doneToday: list.filter(t => doneKey(t) === tk).sort((a, b) => a.done - b.done),
+    soon: open.filter(t => t.d && t.d > tk).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), none: open.filter(t => !t.d).sort(byC),
+    old: list.filter(t => t.done && doneKey(t) !== tk).sort((a, b) => b.done - a.done) };
+}
+function taskRow(t, when, late) {
+  const sub = [folderName(t.f), esc(t.n)].filter(Boolean).join(' · ');
+  return '<li class="trow' + (t.done ? ' done' : '') + '"><button type="button" class="tk" data-n="tog" data-id="' + esc(t.id) + '" aria-pressed="' + !!t.done + '" aria-label="' + esc(t.t) + (t.done ? ' wieder öffnen' : ' abhaken') + '"><i>' + (t.done ? CHECK : '') + '</i></button>' +
+    '<button type="button" class="two" data-n="task" data-id="' + esc(t.id) + '" aria-label="' + esc(t.t) + ' ändern"><span class="l"><span>' + esc(t.t) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
+    (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
+}
+const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['task', 'Aufgaben'], ['note', 'Notizen']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
+const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + f[0] + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
+function tasksHTML() {
+  if (!taskList().length) return emptyHTML('aufgaben', 'Noch keine Aufgabe', 'Schreib auf, was ansteht. Was offen bleibt, rutscht auf den nächsten Tag.', '<button type="button" class="primary" data-n="newtask">Aufgabe anlegen</button>');
+  const tk = todayKey(), p = taskParts(taskList().filter(inFolder)), n = p.today.length, all = n + p.doneToday.length;
+  let h = weekStripHTML('task') + folderBarHTML() + '<section class="hero w-hero"><p class="date">Heute</p><h1><span class="num">' + n + '</span><span class="unit">offen</span></h1><p class="sub">' + (all ? p.doneToday.length + ' von ' + all + ' erledigt' : 'Nichts für heute') + '</p></section>';
+  if (all) h += '<ul class="entries">' + p.today.map(t => taskRow(t, t.d < tk ? dRow(t.d) : '', true)).join('') + p.doneToday.map(t => taskRow(t)).join('') + '</ul>';
+  if (p.soon.length) h += '<h2 class="sec">Demnächst</h2><ul class="entries">' + p.soon.map(t => taskRow(t, dueText(t.d))).join('') + '</ul>';
+  if (p.none.length) h += '<h2 class="sec">Ohne Datum</h2><ul class="entries">' + p.none.map(t => taskRow(t)).join('') + '</ul>';
+  /* Erledigtes: eingeklappt, die letzten 50 */
+  if (p.old.length) h += '<ul class="entries"><li><button type="button" class="two" data-n="donefold" aria-expanded="' + nDoneOpen + '"><span class="l"><span>Erledigt</span></span><b class="dim fold">' + p.old.length + CHEV_D + '</b></button></li>' +
+    (nDoneOpen ? p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join('') : '') + '</ul>';
+  return h;
+}
+/* Aufgaben von heute auf der Seite Heute: abhaken geht direkt dort */
+function homeTasksHTML() {
+  const tk = todayKey(), p = taskParts(taskList()), list = p.today.concat(p.doneToday); if (!list.length) return '';
+  return '<h2 class="sec">Aufgaben<small>' + p.today.length + ' offen</small></h2><ul class="entries">' + list.slice(0, 6).map(t => taskRow(t, !t.done && t.d < tk ? dRow(t.d) : '', true)).join('') + '</ul>' +
+    (list.length > 6 ? '<button type="button" class="linkbtn" data-n="alltasks">Alle ' + list.length + ' Aufgaben</button>' : '');
+}
+const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
+function noteRow(x) {
+  const title = x.t.trim() || firstLine(x.x) || 'Ohne Titel', rest = String(x.x).split('\n').map(l => l.trim()).filter(l => l && l !== title)[0] || '';
+  const sub = rest || (x.items.length ? x.items.filter(i => i.d).length + ' von ' + x.items.length + ' erledigt' : ''), fn = nFolder ? '' : folderName(x.f);
+  return '<li><button type="button" class="two nrow" data-n="note" data-id="' + esc(x.id) + '" aria-label="' + esc(title) + ' öffnen"><span class="l"><span>' + esc(title) + '</span>' + (sub || fn ? '<small>' + [fn, esc(sub)].filter(Boolean).join(' · ') + '</small>' : '') + '</span>' +
+    '<small class="when">' + dRow(keyOf(new Date(x.m || x.c || Date.now()))) + '</small></button></li>';
+}
+function notesHTML() {
+  if (!noteList().length) return emptyHTML('notizen', 'Noch keine Notiz', 'Halte fest, was du nicht vergessen willst, auch mit Zeilen zum Abhaken.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>');
+  const list = noteList().filter(inFolder).sort((a, b) => b.m - a.m), pin = list.filter(x => x.pin), rest = list.filter(x => !x.pin), curY = todayKey().slice(0, 4);
+  let h = folderBarHTML();
+  if (!list.length) return h + '<p class="note">Keine Notiz in diesem Ordner.</p>';
+  if (pin.length) h += '<h2 class="sec">Angeheftet</h2><ul class="entries">' + pin.map(noteRow).join('') + '</ul>';
+  /* nach Monaten der letzten Änderung, neueste zuerst: so bleibt die Liste auch mit vielen Notizen übersichtlich */
+  let ym = '';
+  rest.forEach(x => { const k = keyOf(new Date(x.m || x.c || Date.now())).slice(0, 7); if (k !== ym) { h += (ym ? '</ul>' : '') + '<h2 class="sec">' + MONTHS[+k.slice(5) - 1] + (k.slice(0, 4) !== curY ? ' ' + k.slice(0, 4) : '') + '</h2><ul class="entries">'; ym = k; } h += noteRow(x); });
+  return h + (ym ? '</ul>' : '');
+}
+/* Tipp in einer Liste mit Aufgaben oder Notizen (im Bereich und auf Heute). Liefert true, wenn er hierher gehörte. */
+function nAct(e) {
+  const b = e.target.closest('[data-n]'); if (!b) return false;
+  const a = b.dataset.n, id = b.dataset.id;
+  if (a === 'tog') { const t = N.tasks[id]; if (t) { const p = { tasks: {} }; p.tasks[id] = { done: t.done ? null : Date.now() }; ndoc.patch(p); render(); } }
+  else if (a === 'task') openA(id);
+  else if (a === 'newtask') openA(null);
+  else if (a === 'note') openN(id);
+  else if (a === 'newnote') openN(null);
+  else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
+  else if (a === 'donefold') { nDoneOpen = !nDoneOpen; renderRoutines(); }
+  else if (a === 'alltasks') { rSub = 'task'; nFolder = ''; show('routinen', true); renderRoutines(); }
+  return true;
+}
+$('#n-main').addEventListener('click', nAct);
+$('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderRoutines(); } });
+
+/* Ordner-Chips in den Blättern: „Kein Ordner“, alle Ordner, „+ Ordner“ legt einen neuen an und wählt ihn */
+const folderPickHTML = st => [['', 'Kein Ordner']].concat(allFolders()).map(f => '<button type="button" class="chip" data-f="' + f[0] + '" aria-pressed="' + (st.f === f[0]) + '">' + f[1] + '</button>').join('') +
+  '<button type="button" class="chip" data-f="__new" aria-expanded="' + !!st.newF + '">' + (st.newF ? 'Abbrechen' : '+ Ordner') + '</button>';
+function folderClick(e, st, input) {
+  const b = e.target.closest('.chip'); if (!b) return false;
+  if (b.dataset.f === '__new') st.newF = !st.newF; else st.f = b.dataset.f;
+  if (st.newF && b.dataset.f === '__new') setTimeout(() => input.focus(), 0);
+  return true;
+}
+function folderAdd(st, input, err) {
+  const name = input.value.trim().slice(0, 24); if (!name) { input.focus(); return false; }
+  if (allFolders().some(f => f[1].toLowerCase() === esc(name).toLowerCase())) { err.textContent = 'Diesen Ordner gibt es schon.'; err.hidden = false; return false; }
+  const id = 'f' + Date.now().toString(36).slice(-7) + Math.random().toString(36).slice(2, 5), p = { folders: {} }; p.folders[id] = { n: name }; ndoc.patch(p);
+  err.hidden = true; input.value = ''; st.f = id; st.newF = false;
+  return true;
+}
+
+/* Blatt „Aufgabe“ */
+const adlg = $('#asheet');
+let aE = { id: null, f: '', due: 'today', newF: false };
+const DUE = [['today', 'Heute'], ['tomorrow', 'Morgen'], ['date', 'Anderer Tag'], ['none', 'Ohne Datum']];
+function paintA() {
+  $('#a-folder').innerHTML = folderPickHTML(aE); $('#a-fnew-row').hidden = !aE.newF;
+  $('#a-due').innerHTML = DUE.map(d => '<button type="button" class="chip" data-d="' + d[0] + '" aria-pressed="' + (aE.due === d[0]) + '">' + d[1] + '</button>').join('');
+  $('#a-date-fld').hidden = aE.due !== 'date';
+}
+function openA(id, date) {
+  const t = id ? N.tasks[id] : null, tk = todayKey(), tm = keyOf(addDays(new Date(), 1));
+  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : isKey(date) && date !== tk ? 'date' : 'today', newF: false };
+  $('#as-title').textContent = t ? 'Aufgabe ändern' : 'Neue Aufgabe';
+  $('#a-title').value = t ? t.t : ''; $('#a-note').value = t ? t.n : ''; $('#a-fnew').value = '';
+  $('#a-date').value = t && t.d ? t.d : isKey(date) ? date : tm;
+  $('#a-err').hidden = true; $('#a-del').hidden = !t;
+  paintA();
+  openDlg(adlg); adlg.scrollTop = 0;
+  if (!t) setTimeout(() => $('#a-title').focus(), 60);
+}
+function closeA() { if (adlg.open) adlg.close(); }
+$('#as-close').addEventListener('click', closeA);
+adlg.addEventListener('click', e => { if (e.target === adlg) closeA(); });
+$('#a-folder').addEventListener('click', e => { if (folderClick(e, aE, $('#a-fnew'))) paintA(); });
+$('#a-fnew-add').addEventListener('click', () => { if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); });
+$('#a-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); } });
+$('#a-due').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.due = b.dataset.d; paintA(); } });
+$('#aform').addEventListener('submit', e => {
+  e.preventDefault();
+  const err = m => { const x = $('#a-err'); x.textContent = m; x.hidden = false; };
+  const title = $('#a-title').value.trim(), old = aE.id ? N.tasks[aE.id] : null;
+  if (!title) return err('Schreib kurz auf, was zu tun ist.');
+  let d = null;
+  if (aE.due === 'today') d = todayKey(); else if (aE.due === 'tomorrow') d = keyOf(addDays(new Date(), 1));
+  else if (aE.due === 'date') { d = $('#a-date').value; if (!isKey(d)) return err('Wähle einen Tag.'); }
+  const p = { tasks: {} }; p.tasks[aE.id || newId()] = { t: title.slice(0, 120), f: aE.f, d, done: old ? old.done : null, c: old ? old.c : Date.now(), n: $('#a-note').value.trim().slice(0, 200) };
+  ndoc.patch(p); closeA(); render();
+});
+$('#a-del').addEventListener('click', () => { if (aE.id) { const p = { tasks: {} }; p.tasks[aE.id] = null; ndoc.patch(p); } closeA(); render(); });
+
+/* Blatt „Notiz“. Speichert von selbst: kurz nach jeder Eingabe, beim Verlassen eines Feldes und beim Schließen. So geht nichts verloren, auch wenn das Blatt
+   versehentlich weggezogen wird. Eine leere Notiz wird nicht angelegt, eine geleerte gelöscht. nE = null heißt: nichts zu speichern (z. B. nach dem Löschen). */
+const ndlg = $('#nsheet');
+let nE = null, nTimer = 0;
+const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.height = Math.max(96, t.scrollHeight) + 'px'; };
+function itemsN() {
+  $('#n-items').innerHTML = nE.items.map((it, i) => '<div class="nitem' + (it.d ? ' done' : '') + '"><button type="button" class="tk" data-i="' + i + '" aria-pressed="' + !!it.d + '" aria-label="Punkt ' + (i + 1) + (it.d ? ' wieder öffnen' : ' abhaken') + '"><i>' + (it.d ? CHECK : '') + '</i></button>' +
+    '<input type="text" data-i="' + i + '" maxlength="200" autocomplete="off" placeholder="Punkt" aria-label="Punkt ' + (i + 1) + '" value="' + esc(it.t) + '"></div>').join('');
+}
+/* Die Zeile „Geändert“ steht immer da, auch bei einer neuen Notiz: Erschiene sie erst beim ersten Speichern, verschöben sich die Knöpfe unter dem Finger. */
+function metaN() { const old = nE.id ? N.notes[nE.id] : null; $('#n-meta').textContent = old ? 'Geändert: ' + dRow(keyOf(new Date(old.m || old.c))) : 'Wird von selbst gespeichert'; }
+function paintN() {
+  $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF;
+  $('#n-pin').textContent = nE.pin ? 'Nicht mehr anheften' : 'Anheften';
+  metaN();
+}
+function openN(id) {
+  const x = id ? N.notes[id] : null;
+  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : nFolder, pin: x ? x.pin : false, items: x ? x.items.map(i => ({ t: i.t, d: i.d })) : [], newF: false };
+  $('#n-title').value = x ? x.t : ''; $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = '';
+  $('#n-err').hidden = true; $('#n-task').textContent = 'Als Aufgabe'; $('#n-task').disabled = false;
+  itemsN(); paintN();
+  openDlg(ndlg); ndlg.scrollTop = 0; growN();
+  if (!x) setTimeout(() => $('#n-title').focus(), 60);
+}
+function noteSave() {
+  clearTimeout(nTimer); if (!nE) return;
+  const t = $('#n-title').value.trim().slice(0, 120), x = $('#n-text').value.slice(0, 20000), items = nE.items.filter(i => i.t.trim()).map(i => ({ t: i.t.trim().slice(0, 200), d: !!i.d }));
+  const old = nE.id ? N.notes[nE.id] : null, p = { notes: {} };
+  if (!t && !x.trim() && !items.length) { if (old) { p.notes[nE.id] = null; ndoc.patch(p); } return; }
+  const same = old && old.t === t && old.x === x && JSON.stringify(old.items) === JSON.stringify(items);
+  if (same && old.f === nE.f && old.pin === nE.pin) return;
+  if (!nE.id) { nE.id = newId(); nE.c = Date.now(); }
+  p.notes[nE.id] = { t, x, f: nE.f, pin: nE.pin, c: nE.c, m: same ? old.m : Date.now(), items }; ndoc.patch(p);
+  metaN();   // nur der Text ändert sich; die Chips werden hier nicht neu gezeichnet, sonst ginge ein Tipp darauf verloren
+}
+const noteSoon = () => { clearTimeout(nTimer); nTimer = setTimeout(noteSave, 400); };
+function closeN() { if (ndlg.open) ndlg.close(); }
+/* Jeder Weg, das Blatt zu schließen, endet hier */
+ndlg.addEventListener('close', () => { noteSave(); nE = null; render(); });
+$('#ns-close').addEventListener('click', closeN);
+$('#n-done').addEventListener('click', closeN);
+ndlg.addEventListener('click', e => { if (e.target === ndlg) closeN(); });
+$('#nform').addEventListener('submit', e => e.preventDefault());
+$('#nform').addEventListener('input', e => {
+  if (!nE) return;
+  if (e.target.id === 'n-text') growN();
+  if (e.target.closest('#n-items') && e.target.dataset.i != null) nE.items[+e.target.dataset.i].t = e.target.value;
+  if (e.target.id !== 'n-fnew') noteSoon();
+});
+$('#nform').addEventListener('focusout', () => { if (nE) noteSave(); });
+$('#n-items').addEventListener('click', e => {
+  const b = e.target.closest('.tk'); if (!b || !nE) return;
+  const it = nE.items[+b.dataset.i]; it.d = !it.d; itemsN(); noteSave();
+});
+function addItemN(at) {
+  nE.items.splice(at, 0, { t: '', d: false }); itemsN();
+  const i = $('#n-items').querySelector('input[data-i="' + at + '"]'); if (i) i.focus();
+}
+$('#n-item-add').addEventListener('click', () => { if (nE && nE.items.length < 100) addItemN(nE.items.length); });
+$('#n-items').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.dataset.i != null) { e.preventDefault(); if (nE.items.length < 100) addItemN(+e.target.dataset.i + 1); } });
+$('#n-title').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#n-text').focus(); } });
+$('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
+$('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
+$('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });
+$('#n-pin').addEventListener('click', () => { if (!nE) return; nE.pin = !nE.pin; noteSave(); paintN(); });
+/* Aus der Notiz eine Aufgabe für heute machen; die Notiz bleibt */
+$('#n-task').addEventListener('click', () => {
+  if (!nE) return; noteSave();
+  const title = $('#n-title').value.trim() || firstLine($('#n-text').value);
+  if (!title) { const x = $('#n-err'); x.textContent = 'Gib der Notiz zuerst einen Titel.'; x.hidden = false; return; }
+  const p = { tasks: {} }; p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: '' }; ndoc.patch(p);
+  $('#n-err').hidden = true; $('#n-task').textContent = 'Aufgabe angelegt'; $('#n-task').disabled = true;
+});
+$('#n-del').addEventListener('click', () => {
+  const id = nE && nE.id; nE = null; clearTimeout(nTimer);
+  if (id) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); }
+  closeN();
+});
+
 /* ---------- Heute und Woche ---------- */
 const kvRow = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
 const monOf = d => addDays(d, -wd(d));
@@ -3523,7 +3882,9 @@ const AREA = {
   routinen: '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 4.9-5.2"/>',
   gewicht: '<path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/>',
   haushalt: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/>',
-  training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>'
+  training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>',
+  aufgaben: '<path d="M4 7l1.8 1.8L9 5.5M4 15.5l1.8 1.8L9 14"/><path d="M12.5 7.5H20M12.5 16H20"/>',
+  notizen: '<path d="M6.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M8.5 11.5h7M8.5 15h7M8.5 8h3"/>'
 };
 const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
@@ -3549,7 +3910,7 @@ function renderHome() {
   if (hMode === 'week') { el.innerHTML = seg + weekHTML(); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
   let h = seg + weekStripHTML('all');
-  h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme'], ['lauf', 'Lauf']]
+  h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['aufgabe', 'Aufgabe'], ['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe'], ['einnahme', 'Einnahme'], ['lauf', 'Lauf']]
     .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const bkDue = backupDue();
   if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
@@ -3580,12 +3941,14 @@ function renderHome() {
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false)).join('') + '</ul>';
+  h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   h += '<h2 class="sec">Daten</h2><div class="links"><button type="button" class="linkbtn" data-h="export">Sicherung speichern</button><button type="button" class="linkbtn" data-h="import">Sicherung einlesen</button></div>' +
     '<p class="note" id="bk-msg">' + esc(bkMsg || lastBackupText()) + '</p>';
   el.innerHTML = h;
 }
 $('#v-heute').addEventListener('click', e => {
+  if (nAct(e)) return;
   const n = e.target.closest('[data-m]');
   if (n) { hWeek = keyOf(addDays(parseKey(hWeek), n.dataset.m === 'prev' ? -7 : 7)); renderHome(); return; }
   const ra = e.target.closest('[data-act]');
@@ -3595,7 +3958,7 @@ $('#v-heute').addEventListener('click', e => {
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') show(v, true);
-  else if (a === 'q') { if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx'); else if (v === 'einnahme') openM('tx', null, 'in'); else if (v === 'lauf') openT(); }
+  else if (a === 'q') { if (v === 'aufgabe') openA(null); else if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx'); else if (v === 'einnahme') openM('tx', null, 'in'); else if (v === 'lauf') openT(); }
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
 });
@@ -3604,7 +3967,7 @@ document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () 
 /* ---------- Datensicherung ---------- */
 async function exportData() {
   /* app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
-  const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K });
+  const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
   const name = 'track-sicherung-' + todayKey() + '.json';
   const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); };
   try {
@@ -3640,6 +4003,7 @@ function importData(d) {
   tdoc.patch(stripNull(normT(d.T)));
   const kk = stripNull(normK(d.K)); delete kk.live;
   kdoc.patch(kk);
+  ndoc.patch(stripNull(normN(d.N)));
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
   const ex = Date.parse(d.exported);
   try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
@@ -3661,7 +4025,7 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : 'Neue Routine anlegen');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'task' ? 'Aufgabe anlegen' : rSub === 'note' ? 'Notiz schreiben' : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
 document.addEventListener('click', e => {
@@ -3828,6 +4192,7 @@ setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 loadLocal();
 healBal();
 cleanCats();
+cleanFolders();
 show(location.hash.slice(1));
 render();
 ensureTicker();

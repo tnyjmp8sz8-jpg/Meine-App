@@ -27,6 +27,11 @@ lauf(async () => {
       await versuch('gym-jahr', async () => { await page.click('#v-training [data-t="mode"][data-v="year"]'); });
       await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training [data-k="exs"]'); await page.click('#v-training [data-k="ex"]'); });
       await versuch('training-laeuft', async () => { await page.click('#v-training .row .go'); });
+      await versuch('aufgaben', async () => { await bereich(page, 'routinen'); await page.click('#r-subs [data-v="task"]'); await nachOben(page); });
+      await versuch('blatt-aufgabe', async () => { await page.click('#add'); });
+      await versuch('notizen', async () => { await page.click('#r-subs [data-v="note"]'); await nachOben(page); });
+      await versuch('blatt-notiz', async () => { await page.click('#n-main [data-n="note"]:has-text("Besprechung")'); });
+      await versuch('routinen-zurueck', async () => { await page.click('#r-subs [data-v="rout"]'); });
       await versuch('blatt-routine', async () => { await bereich(page, 'routinen'); await page.click('#add'); });
       await versuch('blatt-gewicht', async () => { await bereich(page, 'gewicht'); await page.click('#add'); });
     }

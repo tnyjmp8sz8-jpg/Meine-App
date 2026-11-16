@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v48)
+# Track. – Projektwissen (App-Stand v49)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -17,7 +17,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Name: „Track.“ mit Punkt (früher „Takt“). Oberfläche und Code-Kommentare auf Deutsch.
 - Kernfunktionen:
   - Heute: Wochenleiste, Schnell-Knöpfe, Routinen des Tages direkt startbar, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Sicherung speichern/einlesen mit Erinnerung.
-  - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender.
+  - Routinen: tägliche Zeitblöcke mit Timer, Serien, Kalender. Im selben Bereich (Umschalter oben) seit v49: „Aufgaben“ (To-do mit Datum und Ordnern) und „Notizen“ (Text mit Zeilen zum Abhaken). Der Nutzer will damit seine Notizen-App ersetzen, für Uni, Promotion und Alltag, und braucht alles nur auf dem Handy.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
   - Training: „Cardio“ (Läufe, Pace, Effizienz) und „Gym“ (Pläne, laufendes Training, Übungen, Recap für Monat und Jahr).
@@ -35,7 +35,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - `start/`: einfarbige Startbilder fürs iPhone (hell und dunkel, je Gerätegröße), erzeugt mit `tests/startbilder.py`; die Zeilen dazu stehen im `<head>`. Bewusst ohne Schriftzug, damit das Startbild nahtlos in die App übergeht. Neue iPhone-Größe: im Skript ergänzen und neu erzeugen.
 - `CLAUDE.md` (dieses Wissen), `PROGRESS.md` (Stand, Offenes, nächste Schritte).
 - `tests/`: Tests und Bildschirmfotos (siehe „Testen“ und `tests/LIESMICH.md`). Gehören nicht zur App; der Service Worker speichert sie nicht.
-- Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Heute und Woche, Datensicherung, Bereiche, Rückgängig, Graphen ablesen, Feinschliff, Wischgesten, boot.
+- Abschnitte im Script, markiert mit `/* ---------- Name ---------- */`: helpers, state, persistence, actions, render, sheet, Gewicht, Haushalt (= Finanzen), Finanzen: Vermögen und Sparziele, Training: Cardio, Training: Kraft (= Gym), Kraft: Pläne und laufendes Training, Aufgaben und Notizen, Heute und Woche, Datensicherung, Bereiche, Rückgängig, Graphen ablesen, Feinschliff, Wischgesten, boot.
 - Muster je Bereich: eine `render…`-Funktion schreibt das HTML ihrer `.view` neu; ein Klick-Listener je Bereich wertet `data-…`-Attribute aus (`data-h` Heute, `data-w` Gewicht, `data-m` Finanzen, `data-t` Training, `data-k` Gym, `data-la` laufendes Training, `data-x`/`data-xr` Blatt der Übung).
 - Bereiche und IDs im Code: `heute`, `routinen`, `gewicht`, `haushalt` (Finanzen), `training`. Im Code heißt Gym „kraft“.
 - Wochenleiste in jedem Bereich (Heute, Routinen, Gewicht, Budget, Cardio, Gym; im Vermögen gab es sie nie): Ein Tipp auf einen Tag öffnet den Kalender des Bereichs. In v44 hatte ich sie aus Gewicht, Finanzen und Training entfernt; der Nutzer wollte sie zurück (v46).
@@ -46,17 +46,22 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Konten an Buchungen: Im Blatt `msheet` gibt es bei Ausgabe, Einnahme und festen Posten Chips für das Konto (Vorbelegung `defAcc()`: zuletzt benutztes Konto, sonst das einzige; bei mehreren ohne Vorgeschichte muss gewählt werden) und „+ Konto“ zum Anlegen direkt beim Buchen (`addAccM()`, gemeinsam mit dem Blatt „Stand eintragen“ über `saveAcc()`; dort lässt sich der Name im Feld auch ändern), bei festen Posten dazu „Tag im Monat“. Umbuchungen zwischen Konten sind Buchungen mit `k: 'tr'` (`openM('tx', null, 'tr')`), sie stehen im Bereich Vermögen und zählen im Budget nicht (`txIn(monat, true)` liefert nur sie).
   - Zeile „Ohne Konto“ im Vermögen (v43): `noAcc(monat)` liefert Buchungen und fällige feste Posten ohne Konto, die nach einem eingetragenen Stand liegen; eingeklappt (`vNoOpen`), ein Tipp auf einen Eintrag öffnet ihn. Was vor dem Stand liegt, fehlt bewusst: Es steckt schon im Stand. Zeilen über `txRow()` und `fixedRow()`.
   - Budget: `monthHTML()`, `yearHTML()`, `mSum()`, `ySum()`, `rateHTML()` Sparquote, Blatt `msheet` mit `openM('tx'|'fixed'|'budget')`.
+- Aufgaben und Notizen (v49): Umschalter `rSub` (`rout`, `task`, `note`) in `#r-subs`; Inhalt in `#n-main` über `tasksHTML()` bzw. `notesHTML()`, die Routinen bleiben in `#main`. Der Plus-Knopf oben richtet sich nach `rSub`.
+  - Ordner gelten für beide: feste `FOLDERS` (Uni, Promotion, Privat) plus eigene in `N.folders` (`allFolders()`), Filter `nFolder`, Anlegen im Blatt über „+ Ordner“ (`folderAdd()`); unbenutzte eigene entfernt `cleanFolders()` beim Start.
+  - Aufgaben: `taskParts()` teilt in Heute (offen und heute oder früher fällig, dazu heute Abgehaktes), Demnächst, Ohne Datum, Erledigt (eingeklappt, letzte 50). `taskRow()` Zeile mit Kreis, `nAct()` wertet `data-n` aus (auch auf Heute), Blatt `asheet` mit `openA(id, datum)`. Auf Heute: `homeTasksHTML()` und Schnell-Knöpfe „Aufgabe“, „Notiz“. Kalender-Modus `task` zeigt, was an einem Tag erledigt wurde.
+  - Notizen: `noteRow()`, angeheftete oben, sonst nach Monat der letzten Änderung. Blatt `nsheet` mit `openN(id)`, Zustand `nE`, `noteSave()`, `itemsN()` Zeilen zum Abhaken, „Als Aufgabe“.
 - Training: gemeinsamer Zeitraum `tMode`, `tYM`, `tYear` für Cardio und Gym.
   - Gym: `kraftHTML()` (Monat), `kYearHTML()`, `kPeriod(zeitraum)` Kennzahlen, `kExFoldHTML()` Übungsliste, `kUnitRow()`.
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
   - Laufendes Training: Blatt `lsheet`, `paintL()`, `liveTick()`, Zustand `K.live`, Arbeitskopie `Lw`.
 
 ## Datenmodell
-- Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K }`.
+- Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K, N }`.
   - `S` Routinen und laufender Timer; `LY` Tagesprotokoll der Routinen je Jahr.
   - `W` Gewicht: `entries` je Datum, `goal`, `goalFrom`.
   - `MF`: `fixed` feste Posten (optional `acc` Konto und `day` Tag im Monat), `budgets`, `roll` (Rest mitnehmen), `cats` eigene Kategorien (id höchstens 12 Zeichen, wie `c` einer Buchung), `acc` Konten, `bal` eingetragene Stände je Monat und Konto in Cent (darf 0 oder negativ sein), `balT` Zeitpunkt des Eintragens in ms (fehlt er, gilt der Stand zum Monatsende), `goals` Sparziele.
   - `MY` Buchungen je Jahr: `d` Datum, `a` Betrag, `k` (`in`, `out`, `tr` = Umbuchung), `c` Kategorie, `n` Notiz, optional `acc` Konto, `to` Zielkonto der Umbuchung, `t` Zeitpunkt des Eintragens in ms.
+  - `N` Aufgaben und Notizen: `folders` eigene Ordner; `tasks` je id: `t` Titel, `f` Ordner, `d` fällig (Datum oder null), `done` Zeitpunkt des Abhakens oder null, `c` angelegt, `n` Notiz; `notes` je id: `t` Titel, `x` Text (bis 20.000 Zeichen), `f`, `pin`, `c`, `m` geändert, `items` Liste aus `{ t, d }` zum Abhaken.
   - `T` Läufe. `K` Gym: `ex` Übungen, `plans`, `log` je Datum und Übung als Liste von Sätzen [kg, Wdh], `meta` (Dauer, Plan), `live`.
 - Weitere Schlüssel: `takt.backup` (Zeitpunkt der letzten Sicherung), `takt.view`.
 - Datumsschlüssel `YYYY-MM-DD` in Ortszeit, Monate `YYYY-MM`, Geld in Cent.
@@ -76,6 +81,10 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Graphen ablesen (v44, Abschnitt „Graphen ablesen“): Jeder Graph trägt seine Punkte in `data-pts`; Tipp oder Zug zeigt Linie, Punkt und Schild (`scrubShow()`), ein Tipp daneben blendet es aus.
 - Rückgängig (v45, Abschnitt „Rückgängig“): ein Weg für alle Löschknöpfe (id endet auf `-del`, oder `data-vdel`). Vor dem Tipp wird der gespeicherte Stand gemerkt; hat sich danach etwas geändert, erscheint unten „Gelöscht · Rückgängig“ (`#toast`, 7 Sekunden). `saveLocal()` ruft `toastOff()`: Jede weitere Änderung nimmt den Hinweis weg, damit Rückgängig nie etwas Neueres überschreibt. Neue Löschknöpfe brauchen nur eine id auf `-del`.
 - Eigene Kategorien (v45): `MF.cats`, anlegen im Blatt über „+ Kategorie“ (`addCatM()`), `allCats()` = feste plus eigene. Unbenutzte (keine Buchung, kein Budget) entfernt `cleanCats()` beim Start. Warum: So braucht es keine Verwaltung zum Löschen. Umbenennen gibt es noch nicht.
+- Notizen speichern von selbst (v49): kurz nach jeder Eingabe, beim Verlassen eines Feldes und bei jedem Schließen (`close`-Ereignis des Blatts); kein „Speichern“-Knopf. Warum: Ein Blatt lässt sich wegziehen, dabei darf kein Text verloren gehen. Leere Notizen werden nicht angelegt, geleerte gelöscht. `nE = null` heißt „nichts zu speichern“ (nach dem Löschen), damit das Schließen die Notiz nicht wieder anlegt.
+- Im Blatt darf sich beim Speichern nichts verschieben und nichts neu gezeichnet werden, was man gerade antippt (v49): Die Zeile „Geändert“ und „Notiz löschen“ stehen von Anfang an da. Ein Test fand, dass sonst der Tipp auf „Fertig“ danebenging.
+- Offene Aufgaben mit Datum von gestern oder früher stehen unter „Heute“ mit rotem Datum: Liegengebliebenes rutscht von selbst weiter, ohne dass das Datum umgeschrieben wird.
+- Aufgaben und Notizen sind nur Text: keine Bilder, keine PDFs (kein Platz in `localStorage`). Dem Nutzer gesagt.
 - Blätter nur über `openDlg()`: Sonst zeichnet das iPhone einen Fokus-Rahmen um den ersten Knopf.
 - Gym nach Vorbild Alpha Progression: Im laufenden Training stehen unter den Sätzen „Letztes Mal“ und Kennzahlen; ein Tipp auf „Letztes Mal“ öffnet das Blatt der Übung mit Graph und Recap. Einheiten erscheinen dort als Karten mit Satz-Tabelle.
 - Vergleichswert im Gym ist das geschätzte Maximum für eine Wiederholung (Gewicht × (1 + Wdh/30)), ohne Gewicht die meisten Wiederholungen. Kein 10RM: Die App rechnete schon immer so, der Nutzer hat es so belassen.
@@ -141,12 +150,12 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v48` → `takt-v49`), `<span class="ver">v48</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v49` → `takt-v50`), `<span class="ver">v49</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
-- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Tests laufen mit „Bewegung reduzieren“, damit Zahlen sofort ihren Endwert zeigen; nur `gesten.js` läuft mit Bewegung (`bewegung: true`). Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
+- `node tests/alle.js` muss „Alle Tests stimmen“ melden: Ablauf, Aufbau, Gesten, Löschen und Kategorien, Aufgaben und Notizen, Finanzen, Gym, Speichern, Aktualisierung. Fingerzüge im Test: `oeffnen({ finger: true })` und `wischen()` aus `tests/lib.js`. Tests laufen mit „Bewegung reduzieren“, damit Zahlen sofort ihren Endwert zeigen; nur `gesten.js` läuft mit Bewegung (`bewegung: true`). Die Tests bedienen die App mit Playwright (vorinstalliertes Chromium), direkt als Datei geöffnet.
 - `node tests/bilder.js <ordner> [2]` macht Bildschirmfotos aller Bereiche und Blätter (dunkel, hell, 390 und 320 px, leer und mit Beispieldaten). Die betroffenen Ansichten ansehen; für den Nutzer mit Schärfe 2.
 - Nach dem Hochladen: `node tests/live.js` prüft die veröffentlichte App (Version, identisch mit dem Repository, offline). Das geht, weil die Umgebung „meine-app“ die Pages-Adresse erlaubt.
 - Zu jeder neuen Funktion und jedem behobenen Fehler eine Prüfung in `tests/` ergänzen, mit der Rechnung als Kommentar. Rechenwerte immer von Hand nachrechnen.
