@@ -18,8 +18,12 @@ defaults:
 jobs:
   bauen:
     # Mitte November 2026 starteten die Macs von GitHub zeitweise nicht (Lauf wartet 15 Minuten und wird abgebrochen), mal die einen, mal die anderen.
-    # Hängt ein Lauf in der Warteschlange: hier zwischen macos-15 und macos-15-intel wechseln.
-    runs-on: macos-15
+    # Deshalb wird auf beiden Sorten gebaut: Es reicht, wenn eine durchläuft. Laufen beide, ersetzt der spätere Download den früheren (gleicher Inhalt).
+    strategy:
+      fail-fast: false
+      matrix:
+        mac: [macos-15, macos-15-intel]
+    runs-on: ${{ matrix.mac }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -115,7 +119,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: Track-iPhone
+          name: Track-iPhone-${{ matrix.mac }}
           path: |
             ios/Track.ipa
             ios/simulator.png
