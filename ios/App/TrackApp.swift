@@ -127,18 +127,27 @@ final class Halter: NSObject, WKNavigationDelegate {
     }
 
     /// Selbsttest für den Bau (Start mit „-pruefen“): schreibt nach Documents/pruefung.json, ob die Seite geladen ist,
-    /// ob der Speicher den letzten Start überlebt hat und ob Teilen (für die Sicherung) verfügbar ist.
+    /// der wievielte Start es laut Speicher der Web-App ist (zählt er nicht hoch, überlebt der Speicher den Neustart nicht),
+    /// ob Teilen (für die Sicherung) verfügbar ist und wie die Seite im Fenster liegt.
     func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
         guard CommandLine.arguments.contains("-pruefen") else { return }
         let js = """
         (function () {
           try {
-            var alt = localStorage.getItem('takt.probe');
-            localStorage.setItem('takt.probe', String(Date.now()));
+            var starts = Number(localStorage.getItem('takt.probe') || 0) + 1;
+            localStorage.setItem('takt.probe', String(starts));
             var datei = new File(['{}'], 'a.json', { type: 'application/json' });
-            return JSON.stringify({ adresse: location.href, version: document.querySelector('.ver').textContent, vorherGespeichert: alt !== null,
+            var mass = document.createElement('div');
+            mass.style.cssText = 'position:fixed;top:0;left:0;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom) 0';
+            document.body.appendChild(mass);
+            var rand = getComputedStyle(mass), leiste = document.querySelector('.tabs').getBoundingClientRect();
+            var ergebnis = { adresse: location.href, herkunft: location.origin, version: document.querySelector('.ver').textContent, starts: starts,
               teilen: typeof navigator.share, dateienTeilen: !!(navigator.canShare && navigator.canShare({ files: [datei] })),
-              serviceWorker: 'serviceWorker' in navigator, bereiche: document.querySelectorAll('.tab').length });
+              serviceWorker: 'serviceWorker' in navigator, bereiche: document.querySelectorAll('.tab').length,
+              fenster: innerWidth + 'x' + innerHeight, randOben: rand.paddingTop, randUnten: rand.paddingBottom, leisteUnten: Math.round(leiste.bottom),
+              text: document.querySelector('#v-heute').innerText.replace(/\\s+/g, ' ').slice(0, 160) };
+            mass.remove();
+            return JSON.stringify(ergebnis);
           } catch (e) { return 'Fehler: ' + e; }
         })()
         """
