@@ -2,7 +2,9 @@
 // Die Hülle wird nachgestellt: window.webkit.messageHandlers.track sammelt, was die App schickt.
 const { tag, oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
 
-const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
+/* Dazu ein nachgestelltes visualViewport: So lässt sich die Tastatur vortäuschen (Höhe wird kleiner, dann „resize“). */
+const huelle = () => { window.__vv = new EventTarget(); window.__vv.height = 844; window.__vv.offsetTop = 0; Object.defineProperty(window, 'visualViewport', { value: window.__vv, configurable: true });
+  window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
 const post = page => page.evaluate(() => window.__post);
 const letzter = async page => (await post(page)).filter(m => m.art === 'stand').pop();
 const wi = n => { const d = new Date(); d.setDate(d.getDate() + n); return (d.getDay() + 6) % 7; };
@@ -29,6 +31,7 @@ lauf(async () => {
   p.ok('ohne Hülle: keine Schnittstelle', await o.page.evaluate(() => window.TrackHuelle === undefined));
   await bereich(o.page, 'training');
   p.ok('ohne Hülle: kein Health-Knopf, keine Zeile zur App', await o.page.evaluate(() => !document.querySelector('[data-t="health"]') && document.querySelector('#h-line').hidden));
+  p.ok('ohne Hülle: Blätter bleiben, wie sie sind (kein --kb)', await o.page.evaluate(() => document.documentElement.style.getPropertyValue('--kb') === ''));
   p.ok('ohne Hülle: keine Fehler', !o.fehler.length, o.fehler.join(' | '));
   await o.browser.close();
 
@@ -108,6 +111,17 @@ lauf(async () => {
   p.ok('Rückgängig: Notiz ist wieder da, alles andere bleibt', !!g.N.notes.n2 && Object.values(g.N.notes).some(n => n.x === 'Vom Home-Bildschirm') && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2);
   ids = await page.evaluate(l => window.TrackHuelle.eingang(l), befehle); g = await gespeichert(page);
   p.ok('Eingang: zweites Mal wird nichts doppelt angewendet', ids.length === 7 && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2 && !!g.N.notes.n2 && Object.values(g.N.notes).filter(n => n && n.x === 'Vom Home-Bildschirm').length === 1);
+
+  /* Tastatur in der iPhone-App: 844 hoch, die Tastatur verdeckt unten 336 → das Blatt endet bei 844 − 336 = 508 und ist höchstens 92 % von 844 − 336 = 440 hoch */
+  await page.evaluate(() => window.TrackHuelle.neu('notiz')); await page.waitForTimeout(200);
+  const unten = () => page.evaluate(() => { const r = document.querySelector('#nsheet').getBoundingClientRect(); return [Math.round(r.bottom), Math.round(r.height)]; });
+  p.ok('ohne Tastatur: Blatt sitzt unten', (await unten())[0] === 844, String(await unten()));
+  await page.evaluate(() => { window.__vv.height = 844 - 336; window.__vv.dispatchEvent(new Event('resize')); }); await page.waitForTimeout(500);
+  let u = await unten();
+  p.ok('mit Tastatur: Blatt rückt über die Tastatur', u[0] === 508 && u[1] <= 441, String(u));
+  await page.evaluate(() => { window.__vv.height = 844; window.__vv.dispatchEvent(new Event('resize')); }); await page.waitForTimeout(500);
+  p.ok('Tastatur weg: Blatt sitzt wieder unten', (await unten())[0] === 844, String(await unten()));
+  await page.keyboard.press('Enter'); await page.waitForTimeout(200);
 
   /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();
