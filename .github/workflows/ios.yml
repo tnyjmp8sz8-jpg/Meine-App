@@ -1,0 +1,58 @@
+# Baut die iPhone-Hülle auf einem Mac von GitHub: einmal für den Simulator (mit Bild als Beweis, dass sie startet)
+# und einmal unsigniert für das iPhone. Kostenlos, solange das Repository öffentlich ist.
+name: iPhone-App bauen
+on:
+  workflow_dispatch:
+  push:
+    branches: ['claude/**']
+    paths: ['ios/**', '.github/workflows/ios.yml']
+permissions:
+  contents: read
+defaults:
+  run:
+    shell: bash
+jobs:
+  bauen:
+    runs-on: macos-15
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Web-App in die Hülle legen
+        run: |
+          mkdir -p ios/web
+          cp index.html manifest.webmanifest icon-180.png icon-192.png icon-512.png ios/web/
+      - name: Projekt erzeugen
+        run: |
+          brew install xcodegen
+          cd ios && xcodegen generate
+      - name: Für den Simulator bauen
+        run: |
+          cd ios
+          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphonesimulator -configuration Debug -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build | tail -15
+      - name: Im Simulator starten und Bild machen
+        run: |
+          cd ios
+          GERAET=$(xcrun simctl list devices available | grep -m1 -E "iPhone 1[5-9]|iPhone [2-9][0-9]" | grep -oE "[0-9A-F-]{36}")
+          xcrun simctl list devices available | grep -m3 iPhone
+          xcrun simctl boot "$GERAET"
+          xcrun simctl bootstatus "$GERAET" -b
+          xcrun simctl ui "$GERAET" appearance dark
+          xcrun simctl install "$GERAET" build/sim/Build/Products/Debug-iphonesimulator/Track.app
+          xcrun simctl launch "$GERAET" de.trackapp.track
+          sleep 12
+          xcrun simctl io "$GERAET" screenshot simulator.png
+          sips -Z 900 -s format jpeg -s formatOptions 50 simulator.png --out simulator-klein.jpg >/dev/null
+          echo "BILD-ANFANG"; base64 -b 180 -i simulator-klein.jpg; echo "BILD-ENDE"
+      - name: Für das iPhone bauen (unsigniert)
+        run: |
+          cd ios
+          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphoneos -configuration Release -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -15
+          mkdir Payload && cp -R build/ios/Build/Products/Release-iphoneos/Track.app Payload/
+          zip -qr Track-unsigniert.ipa Payload
+          ls -la Track-unsigniert.ipa
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Track-iPhone
+          path: |
+            ios/Track-unsigniert.ipa
+            ios/simulator.png
