@@ -8,13 +8,18 @@ on:
     paths: ['ios/**', '.github/workflows/ios.yml']
 permissions:
   contents: write
+# Ein neuer Lauf bricht den vorigen ab: Es soll immer nur der neueste Stand zum Download werden
+concurrency:
+  group: iphone-bau
+  cancel-in-progress: true
 defaults:
   run:
     shell: bash
 jobs:
   bauen:
-    # Intel-Mac: Die anderen Macs von GitHub starteten Mitte November 2026 nicht (Lauf wartet 15 Minuten und wird abgebrochen)
-    runs-on: macos-15-intel
+    # Mitte November 2026 starteten die Macs von GitHub zeitweise nicht (Lauf wartet 15 Minuten und wird abgebrochen), mal die einen, mal die anderen.
+    # Hängt ein Lauf in der Warteschlange: hier zwischen macos-15 und macos-15-intel wechseln.
+    runs-on: macos-15
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
