@@ -58,6 +58,14 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Je Übung: `kScore()` Vergleichswert, `exLevel()`, `exDelta(hist, zeitraum)`, Blatt `xsheet` mit `openX(id, nurAnsehen)`, `paintX()`, `exFigsHTML()`, `exChartHTML()`, `exRecapHTML()` (Zustand `xMode`, `xYM`, `xYear`), `exCard()`.
   - Laufendes Training: Blatt `lsheet`, `paintL()`, `liveTick()`, Zustand `K.live`, Arbeitskopie `Lw`.
 
+## iPhone-App (in Arbeit, noch nicht auf dem Gerät)
+- Ordner `ios/`: Hülle in Swift (`App/TrackApp.swift`: ein `WKWebView`, der die mitgelieferte `web/index.html` zeigt), Symbol in `App/Assets.xcassets`, Projektbeschreibung `project.yml` für XcodeGen. Das Xcode-Projekt und `ios/web/` entstehen erst beim Bauen und liegen nicht im Repository.
+- Gebaut wird auf einem Mac von GitHub: `.github/workflows/ios.yml` (läuft bei Änderungen unter `ios/` auf `claude/…`-Zweigen oder von Hand). Für öffentliche Repositorys kostenlos. Ergebnis: unsignierte `Track-unsigniert.ipa` und ein Bild aus dem Simulator.
+- Die Web-App auf GitHub Pages bleibt, wie sie ist; die Hülle bekommt beim Bauen eine Kopie von `index.html`.
+- Signieren entscheidet der Nutzer: Apple Developer Program (99 € im Jahr; TestFlight oder App Store, nichts läuft nach 7 Tagen ab, Health/Widget/Mitteilungen sicher möglich) oder kostenlos mit SideStore (erneuert sich am iPhone, aber nur wenn LocalDevVPN und WLAN laufen; sonst öffnet die App nach 7 Tagen nicht mehr; Health und Widget mit kostenloser Apple-ID nicht gesichert). „Kostenlos und ohne Erneuerung“ gibt es auf aktuellem iOS nicht (TrollStore geht dort nicht, AltStore PAL verlangt das Bezahl-Konto). Zertifikate von Signier-Diensten nicht empfehlen: Sie werden oft gesperrt.
+- Schlüssel und Passwörter nie in den Chat und nie ins Repository: Der Nutzer trägt sie selbst bei GitHub unter „Secrets“ ein.
+- Die neue App hat einen eigenen Speicher: Umzug über die Sicherung.
+
 ## Datenmodell
 - Ein Eintrag `takt.v1` in `localStorage`: `{ S, LY, W, MF, MY, T, K, N }`.
   - `S` Routinen und laufender Timer; `LY` Tagesprotokoll der Routinen je Jahr.
@@ -148,7 +156,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - In Zeilen mit Wert (`kvRow()`: Letzter Lauf, Woche, Sparquote) steht der Vergleich in einer eigenen Zeile unter dem Wert, nicht daneben. Der Nutzer fand das ruhiger; „daneben“ war ein Vorschlag von mir (v26), den er nach dem Ausprobieren zurückgenommen hat. Kompakt heißt für ihn nicht: alles in eine Zeile quetschen.
 - Schnell-Knöpfe auf Heute nur für das, was er wirklich schnell einträgt (v56): Notiz, Gewicht, Ausgabe. „Aufgabe“, „Lauf“ und ein eigener Knopf „Einnahme“ flogen auf seinen Wunsch raus, ebenso das Tempo (km/h) beim Laufband. Lehre: lieber wenige Knöpfe und Felder, Seltenes eine Ebene tiefer.
 - Kein Tages-Check: Die Zeile „Schlaf“ auf Heute (ein Tipp, 1 bis 5, mit Zusammenhängen in der Woche; v57, zur Probe) wollte er nach einem Tag nicht („nimm das mit Schlaf raus“, v58). Nicht wieder vorschlagen. Lehre: Er will nichts, was er täglich zusätzlich von Hand eintragen muss; ihn interessiert, was die App von selbst erledigen kann („weitere Automatisierungen“).
-- Er will die App später „mit allem verknüpfen“ (echte iPhone-App: Health, Mitteilungen, Widgets), kostenlos, und kann mit einem IPA-Loader umgehen (v59). Ihm gesagt: geht ohne Bezahl-Konto nur als selbst signierte App, die alle 7 Tage erneuert werden muss; bauen ließe sie sich kostenlos über GitHub Actions (Mac-Rechner dort), installieren über Sideloadly, AltStore oder SideStore. Ob Health mit dem kostenlosen Konto geht, ist nicht gesichert. Noch nicht begonnen.
+- Er will eine echte iPhone-App „wie eine fertige perfekte App“: Health, Widget, Mitteilungen, und sie soll von selbst laufen, ohne Erneuerung alle 7 Tage. Er hat einen Windows-11-PC, ein iPhone 12 Pro mit der neuesten iOS-Version, keinen Mac (v59). Stand und Wege stehen unter „iPhone-App“.
 - Erfassen muss in Sekunden gehen: ein Tipp, tippen, fertig. Keine Pflichtfelder, keine Auswahl davor (Rückmeldung zu den Notizen, v51).
 - Die farbigen Symbole der Bereiche auf Heute findet er „schön und cool“ (v54) und fragte, wo Farbe noch Sinn ergibt. Farbe darf also etwas mehr vorkommen, solange sie eine Bedeutung trägt (Farbe = Bereich). Meinen Vorschlag dazu hat er nach Bildern genau so übernommen (v55).
 - Vorschaubilder kommen gut an: Für Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen (im Test-Browser per eingefügtem CSS, ohne die App zu ändern), dann bauen. So sind v48 und v55 entstanden.
