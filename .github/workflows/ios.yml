@@ -12,11 +12,6 @@ defaults:
   run:
     shell: bash
 jobs:
-  # Probe: startet überhaupt ein Rechner von GitHub für dieses Konto? (Linux geht schneller los als ein Mac)
-  probe:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo "Rechner von GitHub laufen"
   bauen:
     runs-on: macos-latest
     timeout-minutes: 30
