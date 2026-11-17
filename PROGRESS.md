@@ -2,11 +2,12 @@
 
 ## Aktueller Stand
 - Live ist v59 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
-- Der Arbeitszweig der Sitzung (`claude/app-entwicklung-verschieben-af0kew`) und `main` sind gleich, nichts liegt nur im Arbeitsordner.
+- Die App selbst ist auf dem Arbeitszweig (`claude/app-entwicklung-verschieben-af0kew`) und auf `main` gleich. Nur auf dem Arbeitszweig liegt zusätzlich der Anfang der iPhone-App (`ios/`, `.github/workflows/ios.yml`). Nichts liegt nur im Arbeitsordner.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
 - `node tests/alle.js`: alle 307 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Monat und Kurzbefehl 30, Speichern 8, Aktualisierung 10).
 - Keine beauftragte Arbeit offen. Offen ist die Rückmeldung des Nutzers, ob der Kurzbefehl am iPhone die installierte App mit dem Blatt öffnet (siehe Prüfpunkte).
+- iPhone-App: Die Hülle und der Bau über GitHub sind angelegt, aber noch nicht bewiesen. Die ersten zwei Läufe von „iPhone-App bauen“ (17.11.) standen über zehn Minuten in der Warteschlange von GitHub, ohne zu starten. Beim nächsten Mal zuerst nachsehen (GitHub-Werkzeug: Läufe von `ios.yml`), ob sie durchliefen; das Bild aus dem Simulator steht als Text zwischen „BILD-ANFANG“ und „BILD-ENDE“ im Protokoll. Startet nie ein Lauf, bekommt dieses Konto keine Mac-Rechner von GitHub, und der kostenlose Bau geht so nicht.
 
 ## Erledigt
 - v20–v43: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Monat/Jahr und Recap im Gym; App heißt „Track.“, Bereich „Finanzen“; Vermögen, Sparziele, Sparquote; Konten an Buchungen, Umbuchungen, Zeile „Ohne Konto“; Tests im Repository; Fehler behoben, dass Buchungen das Vermögen nicht veränderten (v42).
