@@ -1,12 +1,12 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- Live ist v58 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
+- Live ist v59 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`).
 - Der Arbeitszweig der Sitzung (`claude/app-entwicklung-verschieben-af0kew`) und `main` sind gleich, nichts liegt nur im Arbeitsordner.
 - Der Nutzer hat in dieser Sitzung erlaubt, getestete Änderungen direkt nach `main` zu veröffentlichen. In einer neuen Sitzung neu erfragen.
 - Die App aktualisiert sich seit v24 selbst; der Nutzer prüft die Version an der Fußzeile.
-- `node tests/alle.js`: alle 275 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Speichern 8, Aktualisierung 8).
-- Keine beauftragte Arbeit offen. Der Nutzer wartet auf nichts; die nächsten Schritte bestimmt er.
+- `node tests/alle.js`: alle 307 Prüfungen stimmen (Ablauf 16, Aufbau 68, Gesten 21, Löschen und Kategorien 20, Aufgaben und Notizen 61, Finanzen 54, Gym 19, Monat und Kurzbefehl 30, Speichern 8, Aktualisierung 10).
+- Keine beauftragte Arbeit offen. Offen ist die Rückmeldung des Nutzers, ob der Kurzbefehl am iPhone die installierte App mit dem Blatt öffnet (siehe Prüfpunkte).
 
 ## Erledigt
 - v20–v43: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Monat/Jahr und Recap im Gym; App heißt „Track.“, Bereich „Finanzen“; Vermögen, Sparziele, Sparquote; Konten an Buchungen, Umbuchungen, Zeile „Ohne Konto“; Tests im Repository; Fehler behoben, dass Buchungen das Vermögen nicht veränderten (v42).
@@ -22,6 +22,7 @@
 - v55: Kennfarben der Bereiche auch am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (nach Vorschaubild vom Nutzer gewählt: „genauso umsetzen“).
 - v56: Auf Wunsch des Nutzers entfernt: das Tempo (km/h) beim Laufband und die Schnell-Knöpfe „Aufgabe“, „Lauf“, „Einnahme“. Auf Heute bleiben Notiz, Gewicht, Ausgabe; im Blatt schaltet man oben zwischen Ausgabe und Einnahme um. Alte Laufband-Läufe mit Tempo behalten ihre Zahlen.
 - v57–v58: Tages-Check (Schlaf bewerten) zur Probe eingebaut und auf Wunsch des Nutzers wieder ganz entfernt. Bewertungen, die er eingetragen hat, fallen beim nächsten Speichern weg.
+- v59: Monatsabschluss: Ansicht „Monat“ auf Heute (neben Heute und Woche) mit Vergleich zum Vormonat; in den ersten sieben Tagen des Monats ein Hinweis „… ist abgeschlossen · Rückblick“. Kurzbefehl: Adresse mit `?neu=ausgabe`, `?neu=notiz`, `?neu=gewicht` öffnet die App mit dem Blatt, auch ohne Netz.
 
 ## Offene Probleme
 - Nichts ist auf einem echten iPhone getestet; alle Prüfungen laufen im Test-Browser.
@@ -35,6 +36,8 @@
 - Alte CSS-Regeln, die weiter unten überschrieben werden, sind noch nicht zusammengeführt (rein intern; nur mit Bildvergleich vorher/nachher anfassen).
 
 ## Am iPhone noch zu prüfen (Rückmeldung des Nutzers steht aus)
+- Kurzbefehl (v59): In der Kurzbefehle-App „URL öffnen“ mit `webapp://tnyjmp8sz8-jpg.github.io/Meine-App/?neu=ausgabe`. Öffnet sich die App vom Home-Bildschirm mit dem Fenster „Ausgabe“? Oder nur die App ohne Fenster (dann verliert iOS den Zusatz), oder Safari (dann geht es auf seinem iOS nicht, und der Kurzbefehl muss wieder raus, weil Einträge in Safari nicht in der App landen)?
+- Monatsabschluss (v59): Passt der dritte Umschalter „Monat“? Erscheint am Monatsanfang der Hinweis?
 - Ausgabe/Einnahme (v56): Ist der Umschalter oben im Blatt gut zu sehen? Geht die Tastatur beim Betrag weiter sofort auf?
 - „+ Notiz“ auf Heute (v51, v54): Geht die Tastatur sofort auf? Legt die Eingabetaste die Notiz an und bleibt das Feld für die nächste offen? Daran hängen die „5 Sekunden“.
 - Größen (v52): Ist alles klein genug, oder ist etwas zu klein zum Lesen oder Treffen? Trifft man den Kreis zum Abhaken gut?
@@ -51,7 +54,8 @@
 ## Nächste Schritte
 Der Nutzer entscheidet. Meine offenen Vorschläge (nur auf Zuruf umsetzen; bei Änderungen am Aufbau erst ein Bild zeigen):
 - Aufgaben und Notizen: Suche auch in den Aufgaben; Wiederholung „werktags“ oder „alle zwei Wochen“; Ordner umbenennen; Kalender der Aufgaben zeigt nur Erledigtes, keine künftigen Termine.
-- Automatisierungen (der Nutzer fragte danach, v58; ihm als Liste genannt, noch nichts gewählt): wiederkehrende Buchungen ohne festen Betrag vorschlagen; Kategorie und Konto aus der Notiz einer Buchung vorbelegen; Routine von selbst abhaken, wenn ein Lauf oder ein Gym-Training eingetragen wird; Monatsabschluss am Monatsersten (Zusammenfassung des Vormonats auf Heute); Sicherung beim Öffnen anbieten, sobald sie fällig ist; Kurzbefehle auf dem iPhone, die die App mit einem offenen Blatt starten (z. B. „Ausgabe“).
+- Automatisierungen (der Nutzer fragte danach, v58; ihm als Liste genannt, noch nichts gewählt): Monatsabschluss und Kurzbefehl sind gebaut (v59). Noch offen: Kategorie und Konto aus der Notiz einer Buchung vorbelegen (mein Favorit); Routine von selbst abhaken, wenn ein Lauf oder ein Gym-Training eingetragen wird; wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen; Sicherung beim Öffnen anbieten, sobald sie fällig ist.
+- Echte iPhone-App (Wunsch des Nutzers für später, kostenlos): Hülle um die Web-App (z. B. Capacitor), gebaut über GitHub Actions, installiert per Sideloadly, AltStore oder SideStore mit kostenloser Apple-ID (alle 7 Tage erneuern). Vorher klären: Welche Verknüpfung will er zuerst (Health, Mitteilungen, Widget)? Hat er einen Rechner für die erste Installation? Welche iOS-Version?
 - Laufband: Feld „Steigung“ auch entfernen, falls der Nutzer es nicht braucht (nachgefragt in v56, noch ohne Antwort).
 - Schnell-Knopf „Ausgabe“ in „Buchung“ umbenennen, falls er das klarer findet (nachgefragt in v56, noch ohne Antwort).
 - Kategorien: eigene Kategorie umbenennen (Name antippen, wie beim Konto).

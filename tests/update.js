@@ -40,6 +40,11 @@ lauf(async () => {
   await page.reload(); await page.waitForTimeout(400);
   await ctx.setOffline(true); let offline = true; try { await page.reload(); } catch (e) { offline = false; }
   P.ok('ohne Netz startet die App', offline && (await marke()) === 'Track.');
+  // Kurzbefehl ohne Netz: Die Adresse mit Zusatz findet die gespeicherte Seite, das Blatt geht auf, gespeichert bleibt nur die Seite ohne Zusatz
+  let kb = true; try { await page.goto(url + '?neu=ausgabe'); } catch (e) { kb = false; }
+  P.ok('ohne Netz startet auch der Kurzbefehl mit offenem Blatt', kb && await page.isVisible('#msheet[open]') && (await page.evaluate(() => location.search)) === '');
+  await page.evaluate(() => document.querySelector('#msheet').close());
+  P.ok('weiter sechs Dateien gespeichert', (await page.evaluate(async () => (await (await caches.open((await caches.keys())[0])).keys()).length)) === 6);
   await ctx.setOffline(false);
 
   // neue Version erscheint, während ein Blatt offen ist

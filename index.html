@@ -282,6 +282,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .tabs-in{grid-template-columns:repeat(5,1fr);padding-left:4px;padding-right:4px}
 .chips[hidden]{display:none}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
+.seg2.three{grid-template-columns:repeat(3,1fr)}
 .seg2 button{border:0;background:none;border-radius:10px;padding:9px;font-weight:600;font-size:15px;color:var(--muted)}
 .seg2 button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
 .mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-6px}
@@ -758,7 +759,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v58</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v59</span></footer>
 </div>
 </div>
 
@@ -1239,7 +1240,7 @@ let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Met
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '';
+let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '', hMonth = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -3889,6 +3890,69 @@ function weekHTML() {
   const ins = insightsHTML(c);
   return h + '<h2 class="sec">Zusammenhänge' + (ins.indexOf('info-ins') >= 0 ? INFO('ins') : '') + '</h2>' + ins;
 }
+/* Monatsabschluss: dieselben Größen wie in der Woche, für einen Monat. cut = nur bis zu diesem Tag zählen:
+   Der laufende Monat wird mit dem Vormonat bis zum selben Tag verglichen, sonst stünde bis zum Monatsende überall „weniger“. */
+function monthStats(ym, c, cut) {
+  const tk = todayKey(), last = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate(), to = ym + '-' + pad(Math.min(cut || 31, last)), inM = d => d.slice(0, 7) === ym && d <= to && d <= tk;
+  let plan = 0, done = 0;
+  for (let d = 1; d <= last; d++) { const k = ym + '-' + pad(d); if (!inM(k)) break; const wi = wd(parseKey(k)); S.routines.forEach(r => { if (k >= r.created && r.days[wi]) { plan++; if (doneOn(k, r.id)) done++; } }); }
+  let wEnd = null, flex = 0;
+  c.wl.forEach(e => { if (e.k.slice(0, 7) === ym) wEnd = e.m; });
+  txIn(ym).forEach(x => { if (x.t.k !== 'in' && inM(x.t.d)) flex += x.t.a; });
+  const g = tAgg(c.runs.filter(r => inM(r.d)));
+  return { plan, done, quote: plan ? done / plan : null, wEnd, flex, km: g.m / 1000, runs: g.n, kraft: c.kd.filter(inM).length, tasks: taskList().filter(t => t.done && inM(doneKey(t))).length,
+    money: !!c.firstTx && c.firstTx.slice(0, 7) <= ym, cardio: !!c.firstRun && c.firstRun.slice(0, 7) <= ym, gym: !!c.kd.length && c.kd[0].slice(0, 7) <= ym };
+}
+/* Zeilen des Monatsabschlusses; leer, wenn es für den Monat nichts gibt */
+function monthRowsHTML(ym, c) {
+  const tk = todayKey(), isCur = ym === tk.slice(0, 7), prevYM = ymOfIdx(ymIdx(ym) - 1), w = monthStats(ym, c), p = monthStats(prevYM, c, isCur ? +tk.slice(8) : 0);
+  const count = df => df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df), dir = df => df > 0 ? 'up' : df < 0 ? 'down' : '';
+  let rows = '';
+  if (w.plan) {
+    const q = Math.round(w.quote * 100), df = p.quote != null ? q - Math.round(p.quote * 100) : null;
+    rows += kvRow('Routinen', q + ' %', w.done + ' von ' + w.plan, df == null ? '' : df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte', df == null ? '' : dir(df));
+  }
+  if (w.tasks || p.tasks) rows += kvRow('Aufgaben', String(w.tasks), 'erledigt', count(w.tasks - p.tasks), dir(w.tasks - p.tasks));
+  if (w.wEnd != null) {
+    const df = p.wEnd != null ? w.wEnd - p.wEnd : null;
+    rows += kvRow('Gewicht', kg(w.wEnd), 'kg im Schnitt', df != null ? signed(df) + ' kg' : '', df != null && W.goal != null && Math.abs(df) >= 0.05 ? (Math.sign(W.goal - p.wEnd) === Math.sign(df) ? 'up' : 'down') : '');
+  }
+  const ve = wealthDelta(ym);
+  if (ve) rows += kvRow('Vermögen', minus(ve.end) + eur0(ve.end), '€', ve.d != null ? eurS(ve.d) : '', ve.d != null ? dir(Math.round(ve.d / 100)) : '');
+  /* Sparquote erst, wenn der Monat vorbei ist: Vorher fehlen Einnahmen oder Ausgaben, und die Zahl sagt nichts */
+  if (!isCur && hasMoney()) {
+    const s = mSum(ym), ps = mSum(prevYM);
+    if (s.inc > 0) {
+      const q = Math.round(s.bal / s.inc * 100), df = ps.inc > 0 ? q - Math.round(ps.bal / ps.inc * 100) : null;
+      rows += kvRow('Sparquote', (q < 0 ? '−' : '') + Math.abs(q) + ' %', '', df == null ? '' : df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte', df == null ? '' : dir(df));
+    }
+  }
+  if (w.money) {
+    const df = w.flex - p.flex;
+    rows += kvRow('Flexible Ausgaben', eur0(w.flex), '€', p.money ? (Math.abs(df) < 50 ? 'gleich' : eur0(df) + ' € ' + (df < 0 ? 'weniger' : 'mehr')) : '', p.money ? (df <= -50 ? 'up' : df >= 50 ? 'down' : '') : '');
+  }
+  if (w.cardio) {
+    const df = w.km - p.km;
+    rows += kvRow('Laufen', kg(w.km), 'km · ' + w.runs + (w.runs === 1 ? ' Lauf' : ' Läufe'), p.cardio ? (Math.abs(df) < 0.05 ? 'gleich' : signed(df) + ' km') : '', df >= 0.05 ? 'up' : df <= -0.05 ? 'down' : '');
+  }
+  if (w.gym) rows += kvRow('Gym', String(w.kraft), w.kraft === 1 ? 'Einheit' : 'Einheiten', p.gym ? count(w.kraft - p.kraft) : '', p.gym ? dir(w.kraft - p.kraft) : '');
+  return rows;
+}
+function homeMonthHTML() {
+  const c = weekCtx(), tk = todayKey(), cur = tk.slice(0, 7), name = ym => MONTHS[+ym.slice(5) - 1];
+  if (!isYM(hMonth) || hMonth > cur) hMonth = cur;
+  const isCur = hMonth === cur, rows = monthRowsHTML(hMonth, c);
+  return navHTML(name(hMonth) + ' ' + hMonth.slice(0, 4), !isCur, 'Einen Monat') + '<p class="note">Vergleich mit ' + name(ymOfIdx(ymIdx(hMonth) - 1)) + (isCur ? ' bis zum ' + (+tk.slice(8)) + '.' : '') + '</p>' +
+    (rows ? '<div class="card last" style="padding-top:2px">' + rows + '</div>' : '<p class="note">Für diesen Monat gibt es noch keine Einträge.</p>');
+}
+/* Hinweis auf Heute in den ersten sieben Tagen des Monats: Der Vormonat ist abgeschlossen. Liefert dessen Monat, solange der Rückblick
+   noch nicht geöffnet wurde (gemerkt in takt.recap) und es etwas zu zeigen gibt, sonst leer. */
+function recapDue() {
+  const tk = todayKey(); if (+tk.slice(8) > 7) return '';
+  const ym = ymOfIdx(ymIdx(tk.slice(0, 7)) - 1); let seen = '';
+  try { seen = localStorage.getItem('takt.recap') || ''; } catch (e) {}
+  return seen >= ym || !monthRowsHTML(ym, weekCtx()) ? '' : ym;
+}
 /* Symbole der Bereiche, dieselben wie in der Leiste unten */
 const AREA = {
   routinen: '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 4.9-5.2"/>',
@@ -3900,6 +3964,7 @@ const AREA = {
 };
 const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
+const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx'); };
 let bkMsg = '';
 function lastBackupText() {
   try { const t = Number(localStorage.getItem('takt.backup')); return t ? 'Letzte Sicherung: ' + DF_LONG.format(new Date(t)) + '.' : 'Noch keine Sicherung gespeichert.'; } catch (e) { return ''; }
@@ -3917,9 +3982,8 @@ function backupDue() {
 
 function renderHome() {
   const el = $('#v-heute'), today = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
-  const seg = '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" data-h="mode" data-v="day" aria-pressed="' + (hMode === 'day') + '">Heute</button>' +
-    '<button type="button" data-h="mode" data-v="week" aria-pressed="' + (hMode === 'week') + '">Woche</button></div>';
-  if (hMode === 'week') { el.innerHTML = seg + weekHTML(); return; }
+  const seg = '<div class="seg2 three" role="group" aria-label="Zeitraum">' + [['day', 'Heute'], ['week', 'Woche'], ['month', 'Monat']].map(m => '<button type="button" data-h="mode" data-v="' + m[0] + '" aria-pressed="' + (hMode === m[0]) + '">' + m[1] + '</button>').join('') + '</div>';
+  if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
   let h = seg + weekStripHTML('all');
   h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe']]
@@ -3927,6 +3991,8 @@ function renderHome() {
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
   if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
+  const rcYM = recapDue();
+  if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
   const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
   const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
@@ -3963,15 +4029,16 @@ function renderHome() {
 $('#v-heute').addEventListener('click', e => {
   if (nAct(e)) return;
   const n = e.target.closest('[data-m]');
-  if (n) { hWeek = keyOf(addDays(parseKey(hWeek), n.dataset.m === 'prev' ? -7 : 7)); renderHome(); return; }
+  if (n) { const d = n.dataset.m === 'prev' ? -1 : 1; if (hMode === 'month') hMonth = ymOfIdx(ymIdx(hMonth) + d); else hWeek = keyOf(addDays(parseKey(hWeek), 7 * d)); renderHome(); return; }
   const ra = e.target.closest('[data-act]');
   if (ra) { const row = ra.closest('.row'), rt = row ? byId(row.dataset.id) : null; if (rt) { if (ra.dataset.act === 'edit') openSheet(rt.id); else toggle(rt); } return; }
   if (e.target.closest('[data-k="live"]')) return openL();
   const t = e.target.closest('[data-h]'); if (!t) return;
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
+  else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') show(v, true);
-  else if (a === 'q') { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else openM('tx'); }
+  else if (a === 'q') quickOpen(v);
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
 });
@@ -4209,6 +4276,10 @@ cleanFolders();
 show(location.hash.slice(1));
 render();
 ensureTicker();
+/* Kurzbefehl: Die Adresse mit ?neu=ausgabe (oder notiz, gewicht) öffnet die App gleich mit diesem Blatt.
+   Der Zusatz kommt danach aus der Adresse, damit ein Neuladen das Blatt nicht noch einmal öffnet. */
+const neu = new URLSearchParams(location.search).get('neu');
+if (neu) { try { history.replaceState(null, '', location.pathname); } catch (e) {} show('heute'); quickOpen(neu); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 /* Neue Version: Beim Öffnen wird nach einem neuen Service Worker gesucht. Sobald er übernimmt, lädt die App einmal neu, aber nie, solange ein Blatt offen ist. */
 if ('serviceWorker' in navigator) {
