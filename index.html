@@ -760,7 +760,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v60</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v61</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -4290,7 +4290,9 @@ function hStand() {
     const auf = open.filter(t => t.d <= k);
     tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: auf.length, auf: auf.slice(0, 4).map(t => t.t.slice(0, 80)) });
   }
-  return { art: 'stand', sicherung: backupDay().due, tage, notizen: notesNew().map(x => firstLine(x.x).slice(0, 80)).filter(Boolean).slice(0, 4) };
+  /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
+  const nz = notesNew().map(x => ({ id: x.id, x: firstLine(x.x).slice(0, 80) })).filter(n => n.x).slice(0, 10);
+  return { art: 'stand', sicherung: backupDay().due, tage, notizen: nz.slice(0, 4).map(n => n.x), nz };
 }
 /* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
    Steht am selben Tag schon ein Lauf mit fast gleicher Strecke (bis 10 % Unterschied), gilt er als derselbe: Er wurde von Hand eingetragen und kommt nicht doppelt. */
@@ -4308,6 +4310,40 @@ function healthRuns(list) {
   if (Object.keys(p.hk).length) { tdoc.patch(p); renderTraining(); renderHome(); }
   return n;
 }
+/* Was außerhalb der App eingetragen wurde (Widget, Kurzbefehle), sammelt die Hülle und übergibt es beim Öffnen: [{ id, art, t (Zeitpunkt in ms), … }].
+   art: 'notiz' (x Text), 'notizWeg' (nid Kennung der Notiz), 'ausgabe' (a Cent, n Notiz, kat Kategorie als Wort), 'lauf' (lauf wie in healthRuns).
+   Jede Kennung wird nur einmal angewendet (takt.eingang merkt die letzten 100), falls die Hülle etwas doppelt übergibt.
+   Zurück gehen alle Kennungen: Die Hülle streicht sie dann aus ihrer Liste. */
+function hEingang(list) {
+  let seen = []; try { seen = JSON.parse(localStorage.getItem('takt.eingang') || '[]'); } catch (e) {}
+  if (!Array.isArray(seen)) seen = [];
+  const all = (Array.isArray(list) ? list : []).filter(c => c && typeof c.id === 'string'), neu = all.filter(c => !seen.includes(c.id));
+  neu.forEach(c => {
+    const t = isFinite(c.t) && c.t > 0 && c.t <= Date.now() ? c.t : Date.now();
+    if (c.art === 'notiz') {
+      const x = String(c.x || '').trim().slice(0, 20000), p = { notes: {} };
+      if (x) { p.notes[newId()] = { x, f: '', c: t, m: t }; ndoc.patch(p); }
+    } else if (c.art === 'ausgabe') {
+      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Konto: wie im Blatt vorbelegt (zuletzt benutztes oder das einzige), sonst keines. */
+      const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
+      const hit = kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(kat));
+      if (okCents(a)) { p.tx[newId()] = { d, a, k: 'out', c: hit ? hit[0] : 'sonst', n: String(c.n || '').trim().slice(0, 60), acc: defAcc() || null, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+    } else if (c.art === 'lauf') healthRuns([c.lauf]);
+  });
+  /* Abgehaktes zuletzt und mit „Rückgängig“: Ein Fehltipp im Widget soll nichts kosten */
+  let before = null; try { before = localStorage.getItem(LS); } catch (e) {}
+  const weg = neu.filter(c => c.art === 'notizWeg' && N.notes[c.nid]), p = { notes: {} };
+  if (weg.length) { weg.forEach(c => { p.notes[c.nid] = null; }); ndoc.patch(p); }
+  try { localStorage.setItem('takt.eingang', JSON.stringify(seen.concat(neu.map(c => c.id)).slice(-100))); } catch (e) {}
+  if (neu.length) render();
+  if (weg.length && before != null) {
+    toastEl.firstElementChild.textContent = weg.length === 1 ? 'Im Widget abgehakt' : weg.length + ' Notizen im Widget abgehakt';
+    (document.querySelector('dialog[open]') || document.body).appendChild(toastEl);
+    toastEl.hidden = false;
+    undo = { before, after: localStorage.getItem(LS), timer: setTimeout(toastOff, 7000) };
+  }
+  return all.map(c => c.id);
+}
 const healthBtnHTML = () => hInfo.health === 'kann' ? '<button type="button" class="ghost h-btn" data-t="health">Läufe aus Health übernehmen</button>' : '';
 function hPaint() {
   const el = $('#h-line'), t = [hInfo.app ? 'iPhone-App ' + hInfo.app : '', hInfo.ablauf ? 'gültig bis ' + new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long' }).format(new Date(hInfo.ablauf)) : '', hInfo.health === 'an' ? 'Health verbunden' : ''].filter(Boolean).join(' · ');
@@ -4316,6 +4352,7 @@ function hPaint() {
 if (HUELLE) window.TrackHuelle = {
   info(o) { hInfo = o && typeof o === 'object' ? o : {}; hPaint(); renderTraining(); },
   laeufe(list) { return healthRuns(list); },
+  eingang(list) { return hEingang(list); },
   neu(was) { if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
 };
 

@@ -84,6 +84,31 @@ lauf(async () => {
   await page.reload(); await page.waitForTimeout(400); g = await gespeichert(page);
   p.ok('Health: Kennungen überstehen das Neuladen', Object.keys(g.T.hk || {}).length === 3);
 
+  /* Stand: Notizen mit Kennung für das Widget */
+  st = await letzter(page);
+  p.ok('Stand: Notizen mit Kennung (nz), neueste zuerst', st.nz.length === 3 && st.nz[0].x === 'Aus dem Kurzbefehl' && st.nz.some(n => n.id === 'n1' && n.x === 'Milch kaufen') && st.notizen.length === 3, JSON.stringify(st.nz));
+
+  /* Eingang (Widget und Kurzbefehle): eine Notiz, zwei Ausgaben, ein Lauf, eine abgehakte Notiz.
+     Ausgabe 1: 12,50 € mit Wort „essen g“ → Kategorie „Essen gehen“ (aus). Ausgabe 2: 3 € ohne Wort → Sonstiges. Kein Konto angelegt → ohne Konto.
+     Lauf: vor fünf Tagen 8 km → neu. Abhaken: n2 („Idee für Kapitel 3“) verschwindet, mit „Rückgängig“. */
+  const vorher = await gespeichert(page), jetzt = Date.now();
+  const befehle = [{ id: 'c1', art: 'notiz', x: '  Vom Home-Bildschirm ', t: jetzt - 60000 }, { id: 'c2', art: 'ausgabe', a: 1250, n: 'Pizza', kat: 'Essen g', t: jetzt - 50000 },
+    { id: 'c3', art: 'ausgabe', a: 300, t: jetzt - 40000 }, { id: 'c4', art: 'lauf', lauf: { id: 'k123', t: mittag(5), m: 8000, s: 2700, hr: 148, k: 'out' }, t: jetzt },
+    { id: 'c5', art: 'notizWeg', nid: 'n2', t: jetzt }, { id: 'c6', art: 'ausgabe', a: 0, t: jetzt }, { id: 'c7', art: 'notizWeg', nid: 'gibtsnicht', t: jetzt }];
+  let ids = await page.evaluate(l => window.TrackHuelle.eingang(l), befehle); g = await gespeichert(page);
+  const tx = Object.values(g.MY[jahr].tx).filter(Boolean), notes = Object.values(g.N.notes).filter(Boolean);
+  p.ok('Eingang: alle Kennungen kommen zurück', ids.join('|') === 'c1|c2|c3|c4|c5|c6|c7', ids.join('|'));
+  p.ok('Eingang: Notiz angelegt, ohne Leerraum', notes.some(n => n.x === 'Vom Home-Bildschirm' && n.c === jetzt - 60000));
+  p.ok('Eingang: Ausgabe mit Kategorie aus dem Wort', tx.some(t => t.a === 1250 && t.k === 'out' && t.c === 'aus' && t.n === 'Pizza' && t.d === tag(0) && !t.acc), JSON.stringify(tx));
+  p.ok('Eingang: Ausgabe ohne Wort ist „Sonstiges“, Betrag 0 wird nichts', tx.some(t => t.a === 300 && t.c === 'sonst') && tx.length === 2, JSON.stringify(tx));
+  p.ok('Eingang: Lauf eingetragen', Object.values(g.T.runs).filter(Boolean).some(r => r.d === tag(5) && r.m === 8000) && g.T.hk.k123 === 1);
+  p.ok('Eingang: abgehakte Notiz ist weg', !g.N.notes.n2 && Object.keys(vorher.N.notes).includes('n2'));
+  p.enthaelt('Eingang: Hinweis mit „Rückgängig“', await text(page, '#toast'), ['Im Widget abgehakt', 'Rückgängig']);
+  await page.click('#toast button'); await page.waitForTimeout(200); g = await gespeichert(page);
+  p.ok('Rückgängig: Notiz ist wieder da, alles andere bleibt', !!g.N.notes.n2 && Object.values(g.N.notes).some(n => n.x === 'Vom Home-Bildschirm') && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2);
+  ids = await page.evaluate(l => window.TrackHuelle.eingang(l), befehle); g = await gespeichert(page);
+  p.ok('Eingang: zweites Mal wird nichts doppelt angewendet', ids.length === 7 && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2 && !!g.N.notes.n2 && Object.values(g.N.notes).filter(n => n && n.x === 'Vom Home-Bildschirm').length === 1);
+
   /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();
   await page.evaluate(t => window.TrackHuelle.info({ app: '0.2', ablauf: t, health: 'kann' }), ablauf);
