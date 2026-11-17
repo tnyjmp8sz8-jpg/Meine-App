@@ -122,6 +122,13 @@ lauf(async () => {
   await page.evaluate(() => { window.__vv.height = 844; window.__vv.dispatchEvent(new Event('resize')); }); await page.waitForTimeout(500);
   p.ok('Tastatur weg: Blatt sitzt wieder unten', (await unten())[0] === 844, String(await unten()));
   await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+  /* Beim nächsten Mal ist die Höhe bekannt (336): Das Blatt sitzt sofort oben, noch bevor die Tastatur sich meldet. Bleibt sie aus, fällt es nach gut einer Sekunde zurück. */
+  p.ok('Blatt zu: nichts bleibt angehoben', await page.evaluate(() => document.documentElement.style.getPropertyValue('--kb') === '0px' && localStorage.getItem('takt.kb') === '336'));
+  await page.evaluate(() => window.TrackHuelle.neu('notiz')); await page.waitForTimeout(450);
+  p.ok('zweites Mal: Blatt sitzt sofort über der Tastatur', (await unten())[0] === 508, String(await unten()));
+  await page.waitForTimeout(1200);
+  p.ok('Tastatur kommt nicht: Blatt fällt zurück', (await unten())[0] === 844, String(await unten()));
+  await page.keyboard.press('Enter'); await page.waitForTimeout(200);
 
   /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();

@@ -760,7 +760,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v62</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v63</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -4353,13 +4353,26 @@ function hPaint() {
    --kb ist die Höhe, die unten verdeckt ist. Blätter rücken um so viel nach oben und werden entsprechend niedriger (siehe dialog im CSS).
    Im Browser und als Web-App auf dem Home-Bildschirm bleibt --kb leer: Dort verschiebt iOS die Seite selbst. */
 if (HUELLE && window.visualViewport) {
-  const vv = window.visualViewport;
+  const vv = window.visualViewport, setze = h => document.documentElement.style.setProperty('--kb', h + 'px');
+  /* Felder, die die Tastatur öffnen (Datum und Ähnliches öffnen ein eigenes Rad, keine Tastatur) */
+  const feld = el => !!(el && el.matches && el.matches('textarea, input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=date]):not([type=month]):not([type=time])') && el.closest('dialog'));
+  let merk = 0; try { merk = Number(localStorage.getItem('takt.kb')) || 0; } catch (e) {}
+  const hoehe = () => Math.round(window.innerHeight - vv.height - vv.offsetTop);
   const kb = () => {
-    const h = Math.round(window.innerHeight - vv.height - vv.offsetTop), a = document.activeElement;
-    document.documentElement.style.setProperty('--kb', (h > 60 ? h : 0) + 'px');
-    if (h > 60 && a && a.closest && a.closest('dialog[open]')) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 250);
+    const h = hoehe(), a = document.activeElement;
+    if (h > 60 && h !== merk) { merk = h; try { localStorage.setItem('takt.kb', String(h)); } catch (e) {} }
+    setze(h > 60 ? h : 0);
+    if (h > 60 && feld(a)) setTimeout(() => { try { a.scrollIntoView({ block: 'nearest' }); } catch (e) {} }, 250);
   };
   vv.addEventListener('resize', kb); vv.addEventListener('scroll', kb);
+  /* Die Höhe der Tastatur ist vom letzten Mal bekannt: Das Blatt sitzt deshalb schon beim Antippen des Feldes an seinem Platz, statt erst nach der Tastatur zu springen.
+     Kommt die Tastatur doch nicht (z. B. mit einer angeschlossenen), fällt es nach gut einer Sekunde zurück. */
+  document.addEventListener('focusin', e => {
+    if (!merk || !feld(e.target)) return;
+    setze(merk);
+    setTimeout(() => { if (hoehe() <= 60) setze(0); }, 1300);
+  });
+  document.addEventListener('focusout', e => { if (feld(e.target)) setTimeout(() => { if (!feld(document.activeElement)) setze(0); }, 60); });
 }
 if (HUELLE) window.TrackHuelle = {
   info(o) { hInfo = o && typeof o === 'object' ? o : {}; hPaint(); renderTraining(); },
