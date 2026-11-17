@@ -1,0 +1,31 @@
+# Legt die bei Codemagic gebaute App-Datei als Download bei GitHub ab (Release „iphone-test“).
+# Warum: Safari auf dem iPhone will den Link von Codemagic „in iTunes öffnen“, statt die Datei zu laden. Der Download von GitHub wird als Datei ausgeliefert.
+# Läuft auf Linux (dort gibt es keinen Stau wie bei den Macs) und wird von Hand gestartet, mit dem öffentlichen Link von Codemagic.
+name: Download bereitstellen
+on:
+  workflow_dispatch:
+    inputs:
+      quelle:
+        description: Öffentlicher Link der App-Datei bei Codemagic
+        required: true
+permissions:
+  contents: write
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Laden, prüfen, bereitstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+          QUELLE: ${{ inputs.quelle }}
+        run: |
+          case "$QUELLE" in https://api.codemagic.io/artifacts/*) ;; *) echo "Nur Links von Codemagic"; exit 1;; esac
+          curl -sSL --fail -o Track.ipa "$QUELLE"
+          unzip -l Track.ipa | grep "Payload/Track.app/Info.plist"
+          ls -la Track.ipa
+          gh release delete iphone-test --yes --cleanup-tag -R "$GITHUB_REPOSITORY" 2>/dev/null || true
+          sleep 3
+          gh release create iphone-test Track.ipa --prerelease --target "$GITHUB_SHA" -R "$GITHUB_REPOSITORY" \
+            --title "Track. für das iPhone (Testfassung)" \
+            --notes "Unsignierte App-Datei zum Installieren mit AltStore. Sie wird bei jedem Bau ersetzt."
