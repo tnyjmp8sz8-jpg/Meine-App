@@ -79,6 +79,7 @@ lauf(async () => {
 
   /* Löschen: Der Lauf aus Health kommt nicht wieder */
   await bereich(page, 'training'); await page.click('[data-t="kind"][data-v="all"]');
+  await page.click('#v-training [data-t="more"]');   // Läufe aufklappen
   const zeile = page.locator('[data-t="edit"]').first(); await zeile.click(); await page.waitForTimeout(150);
   const geloescht = await page.evaluate(() => document.querySelector('#t-date').value);
   await page.click('#t-del'); await page.waitForTimeout(150);

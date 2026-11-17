@@ -24,6 +24,7 @@ lauf(async () => {
   P.enthaelt('Vormonat: 5 Einheiten, +14,3 % (erster Monat: gegenüber der ersten Einheit)', await gym(), ['5 Einheiten', '+14,3 %']);
   P.ok('Einheiten des Vormonats: fünf', (await page.$$('#v-training [data-k="day"]')).length === 5);
   await page.click('#v-training [data-t="mode"][data-v="year"]');
+  await page.click('#v-training [data-t="fold"][data-v="kmons"]');
   P.ok('Jahresansicht mit Monaten zum Antippen', (await page.$$('#v-training [data-t="goto"]')).length >= 1);
   await page.click('#v-training [data-t="mode"][data-v="month"]');
 

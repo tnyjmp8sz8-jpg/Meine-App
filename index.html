@@ -229,6 +229,7 @@ dialog{overscroll-behavior:contain}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin:0}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:12px;height:12px;border-radius:4px;display:inline-block}
+.legend[hidden]{display:none}
 
 /* Bereiche und Leiste */
 body{display:flex;flex-direction:column;overflow:hidden}
@@ -704,6 +705,27 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .sec{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--ink)}
 .view>.sec{margin:8px 2px -6px}
 .sec small{font-size:12px;font-weight:500;letter-spacing:0;color:var(--muted);margin-left:8px}
+/* Abschnittstitel mit Aktion rechts: ein kleines Plus (mit Wort, wo das Plus sonst missverständlich wäre) oder „Alle n“. Ersetzt die blauen Link-Zeilen unter den Listen. */
+.sec.has-a{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.sec-a{flex:none;position:relative;display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:0;margin:0 2px 0 0;font-family:var(--body);font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--at)}
+/* Tippfläche mindestens 40 px, nach oben in den freien Raum über dem Titel gelegt, damit sie die erste Zeile der Liste darunter nicht überdeckt */
+.sec-a::after{content:"";position:absolute;inset:-17px -12px -8px}
+.sec-a.solo::after{inset:-19px -15px -9px}
+.sec-a svg{width:10px;height:10px}
+.sec-a.go svg{width:9px;height:9px;margin-left:-2px;opacity:.8}
+.sec-a.solo svg{width:13px;height:13px}
+/* Eingeklappte Listen: eine Zeile mit Name und Anzahl. Mehrere hintereinander rücken zusammen wie die Monate einer langen Liste. */
+.folds{display:flex;flex-direction:column;gap:6px}
+.entries button.fo{min-height:42px;align-items:center}
+.entries button.fo .l>span{font-weight:600}
+.entries button.act{min-height:40px;align-items:center;color:var(--at);font-weight:600}
+.entries button.act svg{width:11px;height:11px;flex:none}
+.entries button.act .l{flex-direction:row;align-items:center;gap:7px}
+.fold.plus{color:var(--at)}
+.fold.plus svg{width:12px;height:12px}
+/* Heute zeigt die Kurzfassung: eine Zeile je Notiz und Aufgabe (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
+#v-heute .trow .two{min-height:42px}
+#v-heute .ntxt{-webkit-line-clamp:2}
 .fld>span,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
 .fld>span{font-size:13px;font-weight:500}
 .streak span{font-size:10.5px;font-weight:500}
@@ -1382,7 +1404,7 @@ function weekDots(r, tk) {
   return '<span class="week" aria-hidden="true">' + h + '</span>';
 }
 
-function rowHTML(r, tk, now, off) {
+function rowHTML(r, tk, now, off, slim) {
   const run = isRunning(r), done = !run && doneOn(tk, r.id);
   const g = goal(r), s = liveSecs(r, now), p = done ? 1 : s / g;
   const st = stats(r);
@@ -1397,7 +1419,7 @@ function rowHTML(r, tk, now, off) {
     '<div class="fill" style="width:' + (p * 100).toFixed(2) + '%"></div>' +
     '<button type="button" class="go" data-act="toggle" aria-label="' + label + '">' +
       '<span class="glyph">' + icon + '</span>' +
-      '<span class="txt"><span class="name">' + esc(r.name) + '</span><span class="meta">' + meta + '</span>' + weekDots(r, tk) + '</span>' +
+      '<span class="txt"><span class="name">' + esc(r.name) + '</span><span class="meta">' + meta + '</span>' + (slim ? '' : weekDots(r, tk)) + '</span>' +
     '</button>' +
     '<div class="side">' +
       '<span class="streak" title="Tage in Folge"><b>' + st.cur + '</b><span>' + (st.cur === 1 ? 'Tag' : 'Tage') + '</span></span>' +
@@ -1703,6 +1725,19 @@ function chartSVG(pts, t0) {
 const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic ' + area + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
 const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.5v3.6"/><circle cx="8" cy="4.9" r=".5" fill="currentColor"/></svg></button>';
 /* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
+/* Abschnittstitel; mit act steht rechts eine Aktion (secAct) */
+const secHTML = (title, small, act) => '<h2 class="sec' + (act ? ' has-a' : '') + '">' + (act ? '<span>' : '') + title + (small ? '<small>' + small + '</small>' : '') + (act ? '</span>' + act : '') + '</h2>';
+/* Aktion rechts im Abschnittstitel: Plus mit Wort (text) oder nur das Plus (dann nennt label, was es anlegt) */
+const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (text ? '' : ' solo') + '" ' + attr + (text ? '' : ' aria-label="' + label + '"') + '>' + PLUS + (text || '') + '</button>';
+/* Eingeklappte Liste: eine Zeile mit Name, kleiner Zeile (sub) und Anzahl (right); ein Tipp klappt rows darunter auf.
+   Auf und zu wird nicht gespeichert (fo, Regel siehe foldsShut): Der erste Blick in einen Bereich ist immer derselbe. */
+const fo = {};
+const foldHTML = (attr, open, title, sub, right, rows) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-expanded="' + !!open + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (open ? rows : '') + '</ul>';
+/* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
+   Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
+const addFoldHTML = (attr, title) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-label="' + title + ' hinzufügen"><span class="l"><span>' + title + '</span></span><b class="fold plus">' + PLUS + '</b></button></li></ul>';
+/* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile */
+const actRow = (attr, text, plus) => '<li><button type="button" class="two act" ' + attr + '><span class="l">' + (plus ? PLUS : '') + '<span>' + text + '</span></span></button></li>';
 const fig = (val, unit, label) => val === '–' ? '' : '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
 function renderWeight() {
@@ -1753,19 +1788,19 @@ function renderWeight() {
 
   const from = wRange === 'all' ? -Infinity : t0 - (Number(wRange) - 1);
   const pts = all.filter(e => e.t >= from);
-  h += '<div class="card chart"><div class="seg" role="group" aria-label="Zeitraum">' +
-    [['28', '4 Wochen'], ['90', '3 Monate'], ['all', 'Alles']].map(r => '<button type="button" class="chip" data-w="range" data-r="' + r[0] + '" aria-pressed="' + (wRange === r[0]) + '">' + r[1] + '</button>').join('') + '</div>' +
+  h += '<div class="card chart"><div class="card-head"><div class="seg" role="group" aria-label="Zeitraum">' +
+    [['28', '4 Wochen'], ['90', '3 Monate'], ['all', 'Alles']].map(r => '<button type="button" class="chip" data-w="range" data-r="' + r[0] + '" aria-pressed="' + (wRange === r[0]) + '">' + r[1] + '</button>').join('') + '</div>' + (pts.length >= 2 ? INFO('w-leg') : '') + '</div>' +
     (pts.length >= 2 ? chartSVG(pts, t0) +
-      '<p class="legend" aria-hidden="true"><span><i style="background:var(--at);width:16px;height:3px;border-radius:2px"></i>7-Tage-Schnitt</span><span><i style="background:var(--muted);opacity:.55;width:7px;height:7px;border-radius:50%"></i>einzelne Messung</span></p>'
+      '<p class="legend" id="info-w-leg" hidden><span><i style="background:var(--at);width:16px;height:3px;border-radius:2px"></i>7-Tage-Schnitt</span><span><i style="background:var(--muted);opacity:.55;width:7px;height:7px;border-radius:50%"></i>einzelne Messung</span></p>'
       : '<p class="note">' + (all.length < 2 ? 'Ab dem zweiten Eintrag siehst du hier deinen Verlauf.' : 'In diesem Zeitraum gibt es zu wenige Einträge.') + '</p>') +
     '</div>';
   h += goalHTML;
 
-  /* Einträge: zuerst nur die letzten drei, aufgeklappt nach Monaten (monthsHTML) */
+  /* Einträge: eine eingeklappte Zeile mit Anzahl (der letzte Wert steht schon oben), aufgeklappt nach Monaten (monthsHTML) */
   const rev = all.slice().reverse();
   const wRow = e => '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>';
-  h += '<h2 class="sec">Einträge</h2>' + (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"', false, (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; }) : '<ul class="entries">' + rev.slice(0, 3).map(wRow).join('') + '</ul>');
-  if (rev.length > 3) h += '<button type="button" class="linkbtn" data-w="more">' + (wAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Einträge zeigen') + '</button>';
+  h += '<div class="folds">' + foldHTML('data-w="more"', wAll, 'Einträge', '', rev.length, '') +
+    (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"', false, (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; }) : '') + '</div>';
   el.innerHTML = h;
 }
 
@@ -1999,17 +2034,9 @@ function txRow(x) {
   const t = x.t, title = (t.k === 'in' ? 'Einnahme' : catName(t.c)) + (t.n ? ' · ' + esc(t.n) : '');
   return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + accTag(t.acc) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
 }
-function fixedListHTML(ym) {
-  const rows = fixedIn(ym).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount);
-  return rows.length ? '<ul class="entries">' + rows.map(fixedRow).join('') + '</ul>' : '<p class="note">Noch keine Fixkosten eingetragen.</p>';
-}
-/* Einnahmen des Monats: einmalige Einträge und feste Posten in einer Liste */
-function incomeHTML(ym) {
-  const one = txIn(ym).filter(x => x.t.k === 'in'), fx = fixedIn(ym).filter(x => x.f.kind === 'in').sort((a, b) => b.f.amount - a.f.amount);
-  if (!one.length && !fx.length) return '<p class="note">Noch keine Einnahmen in diesem Monat.</p>';
-  return '<ul class="entries">' + one.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Einnahme ändern">' +
-    '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig' + accTag(x.t.acc) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + fx.map(fixedRow).join('') + '</ul>';
-}
+/* Einmalige Einnahme des Monats; die festen Einnahmen stehen als fixedRow in derselben Liste */
+const incomeRow = x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Einnahme ändern">' +
+  '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig' + accTag(x.t.acc) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>';
 
 function monthHTML(curYM) {
   const s = mSum(mYM), isCur = mYM === curYM, name = MONTHS[+mYM.slice(5) - 1];
@@ -2023,19 +2050,15 @@ function monthHTML(curYM) {
   h += DUO;
   h += barHTML(s) + sumTiles(s) + rateHTML(s, isCur ? null : mSum(ymOfIdx(ymIdx(mYM) - 1)), isCur ? 'Sparquote bisher' : 'Sparquote');
 
-  const tx = txIn(mYM).filter(x => x.t.k !== 'in'), shown = mAll ? tx : tx.slice(0, 7);
-  const bud = MF.budgets || {};
-  h += '<h2 class="sec">Flexible Kosten</h2>';
-  if (s.flex > 0 || live(bud)) h += catsHTML(s.cats, bud, mYM);
-  h += '<button type="button" class="linkbtn" data-m="budget">+ Budget festlegen</button>';
-  if (!tx.length) h += '<p class="note">Noch keine Ausgaben in diesem Monat.</p>';
-  else {
-    h += '<ul class="entries">' + shown.map(txRow).join('') + '</ul>';
-    if (tx.length > 7) h += '<button type="button" class="linkbtn" data-m="more">' + (mAll ? 'Weniger zeigen' : 'Alle ' + tx.length + ' Einträge zeigen') + '</button>';
-  }
-  h += '<h2 class="sec">Einnahmen</h2>' + incomeHTML(mYM) + '<button type="button" class="linkbtn" data-m="newin">+ Feste Einnahme hinzufügen</button>';
-  const fixYear = fixedIn(mYM).filter(x => x.f.kind === 'fix').reduce((t, x) => t + x.f.amount * 12 / x.f.every, 0);
-  h += '<h2 class="sec">Fixkosten' + (fixYear ? '<small>' + eur0(fixYear) + ' € im Jahr</small>' : '') + '</h2>' + fixedListHTML(mYM) + '<button type="button" class="linkbtn" data-m="newfix">+ Fixkosten hinzufügen</button>';
+  /* Kernblock: wohin das Geld im Monat geht, mit Budgets. Alles Weitere ist je eine eingeklappte Zeile mit Anzahl. */
+  const tx = txIn(mYM).filter(x => x.t.k !== 'in'), bud = MF.budgets || {}, hasCats = s.flex > 0 || live(bud);
+  if (hasCats) h += secHTML('Flexible Kosten', '', secAct('data-m="budget"', 'Budget')) + catsHTML(s.cats, bud, mYM);
+  const one = txIn(mYM).filter(x => x.t.k === 'in'), fxIn = fixedIn(mYM).filter(x => x.f.kind === 'in').sort((a, b) => b.f.amount - a.f.amount);
+  const fx = fixedIn(mYM).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount), fixYear = fx.reduce((t, x) => t + x.f.amount * 12 / x.f.every, 0);
+  h += '<div class="folds">' + (hasCats ? '' : addFoldHTML('data-m="budget"', 'Budgets')) +
+    (tx.length ? foldHTML('data-m="more"', mAll, 'Ausgaben', '', tx.length, tx.map(txRow).join('')) : '') +
+    (one.length || fxIn.length ? foldHTML('data-m="fold" data-v="inc"', fo.inc, 'Einnahmen', '', one.length + fxIn.length, one.map(incomeRow).join('') + fxIn.map(fixedRow).join('') + actRow('data-m="newin"', 'Feste Einnahme', true)) : addFoldHTML('data-m="newin"', 'Feste Einnahmen')) +
+    (fx.length ? foldHTML('data-m="fold" data-v="fix"', fo.fix, 'Fixkosten', fo.fix ? eur0(fixYear) + ' € im Jahr' : '', fx.length, fx.map(fixedRow).join('') + actRow('data-m="newfix"', 'Fixkosten', true)) : addFoldHTML('data-m="newfix"', 'Fixkosten')) + '</div>';
   return h;
 }
 
@@ -2080,10 +2103,11 @@ function yearHTML(curYM) {
   if (!first) return h;
   h += barHTML(tot) + sumTiles(tot) + rateHTML(tot, ySum(y - 1, 12).tot, 'Sparquote');
   h += '<div class="card chart"><p class="note">Bilanz pro Monat in €</p>' + yearSVG(ms) + '</div>';
-  h += '<h2 class="sec">Monate</h2><ul class="entries">' + ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  /* Der Graph zeigt die Monate schon; die Liste dazu (Sprung in den Monat) und die Kategorien sind je eine eingeklappte Zeile */
+  h += '<div class="folds">' + foldHTML('data-m="fold" data-v="mons"', fo.mons, 'Monate', '', ms.filter(Boolean).length, ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + eur0(s.inc) + ' € ein · ' + eur0(s.fix + s.flex) + ' € aus</small></span>' +
-    '<b' + (minus(s.bal) ? ' class="neg"' : '') + '>' + (minus(s.bal) || '+') + eur0(s.bal) + ' €</b></button></li>' : '').reverse().join('') + '</ul>';
-  if (tot.flex > 0) h += '<h2 class="sec">Flexible Kosten nach Kategorie</h2>' + catsHTML(tot.cats);
+    '<b' + (minus(s.bal) ? ' class="neg"' : '') + '>' + (minus(s.bal) || '+') + eur0(s.bal) + ' €</b></button></li>' : '').reverse().join('')) +
+    (tot.flex > 0 ? foldHTML('data-m="fold" data-v="cats"', fo.cats, 'Flexible Kosten nach Kategorie', '', Object.keys(tot.cats).length, '') + (fo.cats ? catsHTML(tot.cats) : '') : '') + '</div>';
   return h;
 }
 
@@ -2162,7 +2186,7 @@ function wealthDelta(pre, acc, endYM) {
 const dTile = (w, label) => fig(w && w.d != null ? '<span class="' + signCls(w.d) + '">' + eurS(w.d) + '</span>' : '–', '', label);
 function goalsHTML(curYM) {
   const gs = Object.keys(MF.goals || {}).filter(id => MF.goals[id]).map(id => ({ id, g: MF.goals[id] })).sort((a, b) => a.g.n.localeCompare(b.g.n, 'de'));
-  return '<h2 class="sec">Sparziele</h2>' + (gs.length ? '<ul class="rows">' + gs.map(x => {
+  return secHTML('Sparziele', '', secAct('data-m="newgoal"', '', 'Sparziel anlegen')) + (gs.length ? '<ul class="rows">' + gs.map(x => {
     const g = x.g, acc = g.acc && (MF.acc || {})[g.acc] ? g.acc : null, have = wealthAt(curYM, acc) || 0, p = clamp(have / g.amount, 0, 1), reached = have >= g.amount;
     /* Tempo: Schnitt der letzten drei Monate */
     const back = wealthAt(ymOfIdx(ymIdx(curYM) - 3), acc), rate = back != null ? (have - back) / 3 : null;
@@ -2174,7 +2198,7 @@ function goalsHTML(curYM) {
         '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
         '<span class="txt"><span class="name">' + esc(g.n) + ' · ' + eur0(g.amount) + ' €</span><span class="meta">' + meta + (acc ? ' · ' + esc(MF.acc[acc].n) : '') + '</span></span></button>' +
       '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(p * 100) + '</b><span>%</span></span></div></li>';
-  }).join('') + '</ul>' : '') + '<button type="button" class="linkbtn" data-m="newgoal">+ Sparziel</button>';
+  }).join('') + '</ul>' : '');
 }
 function wealthHTML(curYM) {
   if (!hasWealth()) return emptyHTML('haushalt', 'Noch kein Stand', 'Trag einmal ein, wie viel auf deinen Konten liegt. Danach siehst du, wie dein Vermögen wächst.',
@@ -2193,7 +2217,7 @@ function wealthHTML(curYM) {
   const pts = [];
   for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
   if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', '€', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
-  h += '<h2 class="sec">Konten</h2><ul class="entries">' + accList().map(a => {
+  h += secHTML('Konten', '', !year && accList().length > 1 ? secAct('data-m="newtr"', 'Umbuchung') : '') + '<ul class="entries">' + accList().map(a => {
     const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id);
     if (v == null) return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' eintragen"><span class="l"><span>' + esc(a.n) + '</span><small>noch kein Stand eingetragen</small></span><b class="dim">–</b></button></li>';
     return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span>' + (st.n ? '<small>gerechnet seit ' + dRow(st.aD) + '</small>' : '') + '</span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
@@ -2201,19 +2225,18 @@ function wealthHTML(curYM) {
   if (!year) {
     /* Umbuchungen des Monats, z. B. Geld abheben: vom Girokonto zum Bargeld */
     const trs = txIn(mYM, true);
-    if (trs.length) h += '<ul class="entries">' + trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + ' · Umbuchung</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('') + '</ul>';
-    if (accList().length > 1) h += '<button type="button" class="linkbtn" data-m="newtr">+ Umbuchung</button>';
     /* Ohne Konto gebucht: verändert kein Konto. Eingeklappte Zeile; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen des Kontos. */
     const na = noAcc(mYM), nn = na.tx.length + na.fx.length;
-    if (nn) h += '<ul class="entries"><li><button type="button" class="two" data-m="noacc" aria-expanded="' + vNoOpen + '"><span class="l"><span>Ohne Konto</span><small>zählt nicht zum Vermögen</small></span><b class="dim fold">' + nn + CHEV_D + '</b></button></li>' +
-      (vNoOpen ? na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('') : '') + '</ul>';
+    if (trs.length || nn) h += '<div class="folds">' +
+      (trs.length ? foldHTML('data-m="fold" data-v="tr"', fo.tr, 'Umbuchungen', '', trs.length, trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('')) : '') +
+      (nn ? foldHTML('data-m="noacc"', vNoOpen, 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') + '</div>';
     return h + goalsHTML(curYM);
   }
   /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
-  let rows = '';
-  for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue;
+  let rows = '', nm = 0;
+  for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue; nm++;
     rows += '<li><button type="button" class="two" data-m="goto" data-ym="' + ym + '" aria-label="' + MONTHS[m - 1] + ' öffnen"><span class="l"><span>' + MONTHS[m - 1] + '</span><small>Stand ' + minus(x.end) + eur0(x.end) + ' €</small></span>' + (x.d != null ? '<b class="' + signCls(x.d) + '">' + eurS(x.d) + '</b>' : '') + '</button></li>'; }
-  return h + '<h2 class="sec">Monate</h2><ul class="entries">' + rows + '</ul>';
+  return h + foldHTML('data-m="fold" data-v="vmons"', fo.vmons, 'Monate', '', nm, rows);
 }
 
 let vNoOpen = false;   // Zeile „Ohne Konto“ im Bereich Vermögen aufgeklappt
@@ -2255,12 +2278,13 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
   else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
   else if (a === 'more') mAll = !mAll;
+  else if (a === 'fold') fo[t.dataset.v] = !fo[t.dataset.v];
   else if (a === 'noacc') vNoOpen = !vNoOpen;
-  else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; mAll = false; $('#scroll').scrollTop = 0; }
+  else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
     const d = a === 'prev' ? -1 : 1;
     if (mMode === 'year') mYear += d;
-    else { mYM = ymOfIdx(ymIdx(mYM) + d); mAll = false; }
+    else mYM = ymOfIdx(ymIdx(mYM) + d);
   }
   renderMoney();
 });
@@ -2648,8 +2672,8 @@ function kmBarsSVG(vals, label) {
 
 function lastCardHTML(r) {
   const dp = dPace(r), de = dEff(r), kv = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
-  let h = '<div class="card last"><h3>Letzter Lauf <small>· ' + dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s) + '</small></h3>';
-  h += '<p class="note">' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ')' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p>';
+  let h = '<div class="card last"><h3>Letzter Lauf <small>· ' + dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s) + '</small>' + INFO('t-last') + '</h3>';
+  h += '<p class="note" id="info-t-last" hidden>' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ')' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p>';
   h += kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c);
   if (r.eff != null) h += kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c);
   if (r.hr) h += kv('Puls', r.hr, '', r.prev && r.prev.hr ? dHr(r.hr, r.prev.hr) : '', '');
@@ -2661,23 +2685,22 @@ function tMonthHTML(all, list0, kind, curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(list0.filter(r => r.d.slice(0, 7) === prevYM));
   let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g);
   h += '<button type="button" class="primary" data-t="add">Lauf eintragen</button>';
-  const last = list0[list0.length - 1];
-  if (tYM === curYM && last) h += lastCardHTML(last);
+  /* Reihenfolge wie in den anderen Bereichen: Zahl, Knopf, Kennzahlen des Monats, dann der eine Kernblock (letzter Lauf im Vergleich) */
   h += tTiles(g);
   if (kind !== 'all' && g.eff != null && gp.eff != null) { const p = (g.eff / gp.eff - 1) * 100; h += '<p class="note">Effizienz im Schnitt ' + (p >= 0 ? '+' : '−') + kg(Math.abs(p)) + ' % gegenüber ' + MONTHS[+prevYM.slice(5) - 1] + '.</p>'; }
+  const last = list0[list0.length - 1];
+  if (tYM === curYM && last) h += lastCardHTML(last);
   const ck = kind === 'all' ? (last ? last.k : 'out') : kind, svg = runSVG(all.filter(r => r.k === ck), tMetric);
   h += '<div class="card chart"><div class="card-head"><p class="note">Letzte ' + kindName(ck) + '-Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
     [['eff', 'Effizienz'], ['pace', 'Pace']].map(m => '<button type="button" class="chip" data-t="metric" data-v="' + m[0] + '" aria-pressed="' + (tMetric === m[0]) + '">' + m[1] + '</button>').join('') + '</div></div>' +
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
-  const rev = list.slice().reverse(), shown = tAll ? rev : rev.slice(0, 7);
-  h += '<h2 class="sec">Läufe</h2>';
-  if (!rev.length) h += '<p class="note">Noch kein Lauf in diesem Monat.</p>';
-  else h += '<ul class="entries">' + shown.map(r => {
+  /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht oben im Vergleich. */
+  const rev = list.slice().reverse();
+  if (rev.length) h += foldHTML('data-t="more"', tAll, 'Läufe', '', rev.length, rev.map(r => {
     const de = dEff(r), dp = dPace(r);
     return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (kind === 'all' ? ' · ' + kindName(r.k) : '') + (r.hr ? ' · Puls ' + r.hr : '') + (r.inc ? ' · ' + n1(r.inc) + ' % Steigung' : '') + '</small></span>' +
       '<span class="r"><b>' + fmtPace(r.pace) + ' /km</b>' + (r.eff != null ? '<small class="' + (de ? de.c : '') + '">Effizienz ' + kg(r.eff, 2) + (de ? ' · ' + de.t : '') + '</small>' : dp ? '<small class="' + dp.c + '">' + dp.t + '</small>' : '') + '</span></button></li>';
-  }).join('') + '</ul>';
-  if (rev.length > 7) h += '<button type="button" class="linkbtn" data-t="more">' + (tAll ? 'Weniger zeigen' : 'Alle ' + rev.length + ' Läufe zeigen') + '</button>';
+  }).join(''));
   return h;
 }
 function tYearHTML(list0, curYM) {
@@ -2686,8 +2709,8 @@ function tYearHTML(list0, curYM) {
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
   h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000)) + '</div>';
-  h += '<h2 class="sec">Monate</h2><ul class="entries">' + per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join('') + '</ul>';
+  h += foldHTML('data-t="fold" data-v="tmons"', fo.tmons, 'Monate', '', per.filter(p => p.n).length, per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join(''));
   return h;
 }
 const segT = () => segMY(tMode === 'year', 'data-t="mode" data-v="month"', 'data-t="mode" data-v="year"');
@@ -2715,11 +2738,12 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'health') return hPost({ art: 'health' });
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
-  else if (a === 'kind') { tKind = t.dataset.v; tAll = false; }
+  else if (a === 'kind') tKind = t.dataset.v;
   else if (a === 'metric') tMetric = t.dataset.v;
   else if (a === 'more') tAll = !tAll;
-  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; tAll = false; $('#scroll').scrollTop = 0; }
-  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else { tYM = ymOfIdx(ymIdx(tYM) + d); tAll = false; } }
+  else if (a === 'fold') fo[t.dataset.v] = !fo[t.dataset.v];
+  else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; $('#scroll').scrollTop = 0; }
+  else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else tYM = ymOfIdx(ymIdx(tYM) + d); }
   renderTraining();
 });
 
@@ -2909,12 +2933,11 @@ function kExFoldHTML() {
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
   if (!rows.length) return '';
-  return '<ul class="entries"><li><button type="button" class="two" data-k="exs" aria-expanded="' + kExOpen + '"><span class="l"><span>Übungen</span></span><b class="dim fold">' + rows.length + CHEV_D + '</b></button></li>' +
-    (kExOpen ? rows.map(o => {
+  return foldHTML('data-k="exs"', kExOpen, 'Übungen', '', rows.length, rows.map(o => {
       const d = exDelta(o.hist, pre);
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
-    }).join('') : '') + '</ul>';
+    }).join(''));
 }
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
@@ -2923,9 +2946,8 @@ function kYearHTML(curYM) {
   if (!s.n) return h;
   h += kTiles(s) + kNote(s);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
-  h += '<h2 class="sec">Monate</h2><ul class="entries">' + per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('') + '</ul>';
-  return h + kExFoldHTML();
+  return h + '<div class="folds">' + foldHTML('data-t="fold" data-v="kmons"', fo.kmons, 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFoldHTML() + '</div>';
 }
 function kraftHTML(curYM) {
   const dates = kDates(), exs = kExs(), plans = kPlans();
@@ -2936,20 +2958,16 @@ function kraftHTML(curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
   if (s.n) h += kTiles(s) + kNote(s);
-  h += '<h2 class="sec">Pläne</h2>';
+  h += secHTML('Pläne', '', secAct('data-k="plan"', '', 'Plan anlegen'));
   h += plans.length ? '<ul class="rows">' + plans.map(pl => {
     const last = planLast(pl.id);
     return '<li class="row is-idle"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten"><span class="glyph">' + ICON.play + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
       '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
-  h += '<div class="links"><button type="button" class="linkbtn" data-k="plan">+ Plan anlegen</button></div>';
-  h += kExFoldHTML();
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  if (rev.length) h += '<ul class="entries"><li><button type="button" class="two" data-k="units" aria-expanded="' + kUnOpen + '"><span class="l"><span>Einheiten</span></span><b class="dim fold">' + rev.length + CHEV_D + '</b></button></li>' +
-    (kUnOpen ? rev.map(kUnitRow).join('') : '') + '</ul>';
-  return h;
+  return h + '<div class="folds">' + kExFoldHTML() + (rev.length ? foldHTML('data-k="units"', kUnOpen, 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -3597,8 +3615,8 @@ function taskParts(list) {
     soon: open.filter(t => t.d && t.d > tk).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), none: open.filter(t => !t.d).sort(byC),
     old: list.filter(t => t.done && doneKey(t) !== tk).sort((a, b) => b.done - a.done) };
 }
-function taskRow(t, when, late) {
-  const sub = [folderName(t.f), t.r ? RNAME[t.r] : '', esc(t.n)].filter(Boolean).join(' · ');
+function taskRow(t, when, late, slim) {
+  const sub = slim ? '' : [folderName(t.f), t.r ? RNAME[t.r] : '', esc(t.n)].filter(Boolean).join(' · ');
   return '<li class="trow' + (t.done ? ' done' : '') + '"><button type="button" class="tk" data-n="tog" data-id="' + esc(t.id) + '" aria-pressed="' + !!t.done + '" aria-label="' + esc(t.t) + (t.done ? ' wieder öffnen' : ' abhaken') + '"><i>' + (t.done ? CHECK : '') + '</i></button>' +
     '<button type="button" class="two" data-n="task" data-id="' + esc(t.id) + '" aria-label="' + esc(t.t) + ' ändern"><span class="l"><span>' + esc(t.t) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
     (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
@@ -3613,23 +3631,23 @@ function tasksHTML() {
   if (p.soon.length) h += '<h2 class="sec">Demnächst</h2><ul class="entries">' + p.soon.map(t => taskRow(t, dueText(t.d))).join('') + '</ul>';
   if (p.none.length) h += '<h2 class="sec">Ohne Datum</h2><ul class="entries">' + p.none.map(t => taskRow(t)).join('') + '</ul>';
   /* Erledigtes: eingeklappt, die letzten 50 */
-  if (p.old.length) h += '<ul class="entries"><li><button type="button" class="two" data-n="donefold" aria-expanded="' + nDoneOpen + '"><span class="l"><span>Erledigt</span></span><b class="dim fold">' + p.old.length + CHEV_D + '</b></button></li>' +
-    (nDoneOpen ? p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join('') : '') + '</ul>';
+  if (p.old.length) h += foldHTML('data-n="donefold"', nDoneOpen, 'Erledigt', '', p.old.length, p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join(''));
   return h;
 }
-/* Aufgaben von heute auf der Seite Heute: abhaken geht direkt dort */
+/* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
+const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
+/* Aufgaben von heute auf der Seite Heute, als Kurzfassung in einer Zeile: abhaken geht direkt dort */
 function homeTasksHTML() {
   const tk = todayKey(), p = taskParts(taskList()), list = p.today.concat(p.doneToday); if (!list.length) return '';
-  return '<h2 class="sec">Aufgaben<small>' + p.today.length + ' offen</small></h2><ul class="entries">' + list.slice(0, 6).map(t => taskRow(t, !t.done && t.d < tk ? dRow(t.d) : '', true)).join('') + '</ul>' +
-    (list.length > 6 ? '<button type="button" class="linkbtn" data-n="alltasks">Alle ' + list.length + ' Aufgaben</button>' : '');
+  return secHTML('Aufgaben', p.today.length + ' offen', list.length > 6 ? allAct('alltasks', list.length) : '') + '<ul class="entries">' + list.slice(0, 6).map(t => taskRow(t, !t.done && t.d < tk ? dRow(t.d) : '', true, true)).join('') + '</ul>';
 }
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 const notesNew = () => noteList().sort((a, b) => b.m - a.m);
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
-function noteRow(x, folder) {
-  const sub = [folder ? folderName(x.f) : '', dRow(keyOf(new Date(x.m || x.c || Date.now())))].filter(Boolean).join(' · ');
+function noteRow(x, folder, slim) {
+  const sub = slim ? '' : [folder ? folderName(x.f) : '', dRow(keyOf(new Date(x.m || x.c || Date.now())))].filter(Boolean).join(' · ');
   return '<li class="trow nrow"><button type="button" class="tk" data-n="notedone" data-undo data-id="' + esc(x.id) + '" aria-label="Notiz abhaken und löschen"><i></i></button>' +
-    '<button type="button" class="two" data-n="note" data-id="' + esc(x.id) + '" aria-label="Notiz ändern"><span class="l"><span class="ntxt">' + esc(x.x) + '</span><small>' + sub + '</small></span></button></li>';
+    '<button type="button" class="two" data-n="note" data-id="' + esc(x.id) + '" aria-label="Notiz ändern"><span class="l"><span class="ntxt">' + esc(x.x) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></button></li>';
 }
 /* Liste der Notizen: gewählter Ordner und Suchtext. Steht in #n-list, damit beim Tippen nur die Liste neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
 function noteListHTML() {
@@ -3647,8 +3665,7 @@ function notesHTML() {
 /* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
 function homeNotesHTML() {
   const list = notesNew(); if (!list.length) return '';
-  return '<h2 class="sec">Notizen<small>' + list.length + '</small></h2><ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>' +
-    (list.length > 5 ? '<button type="button" class="linkbtn" data-n="allnotes">Alle ' + list.length + ' Notizen</button>' : '');
+  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true, true)).join('') + '</ul>';
 }
 /* Tipp in einer Liste mit Aufgaben oder Notizen (im Bereich und auf Heute). Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
@@ -4026,11 +4043,12 @@ function renderHome() {
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
-  if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false)).join('') + '</ul>';
+  if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false, true)).join('') + '</ul>';
   h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
-  h += '<h2 class="sec">Daten</h2><div class="links"><button type="button" class="linkbtn" data-h="export">Sicherung speichern</button><button type="button" class="linkbtn" data-h="import">Sicherung einlesen</button></div>' +
-    '<p class="note" id="bk-msg">' + esc(bkMsg || lastBackupText()) + '</p>';
+  /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal. */
+  h += foldHTML('data-h="fold" data-v="bk"', fo.bk, 'Sicherung', '<span id="bk-msg">' + esc(bkMsg || (bkDue ? '' : lastBackupText())) + '</span>', '',
+    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen'));
   el.innerHTML = h;
 }
 $('#v-heute').addEventListener('click', e => {
@@ -4043,6 +4061,7 @@ $('#v-heute').addEventListener('click', e => {
   const t = e.target.closest('[data-h]'); if (!t) return;
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
+  else if (a === 'fold') { fo[v] = !fo[v]; renderHome(); }
   else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') show(v, true);
   else if (a === 'q') quickOpen(v);
@@ -4120,11 +4139,16 @@ document.addEventListener('click', e => {
   p.hidden = !p.hidden; b.setAttribute('aria-expanded', String(!p.hidden));
 });
 
+/* Jeder Besuch eines Bereichs beginnt eingeklappt: Wechselt man über die Leiste unten, klappt alles Aufgeklappte wieder zu.
+   Im Bereich selbst bleibt es offen, auch beim Blättern durch Monate und nach einem Blatt. Gespeichert wird davon nichts. */
+function foldsShut() { for (const k in fo) fo[k] = false; mAll = wAll = tAll = vNoOpen = kExOpen = kUnOpen = nDoneOpen = false; }
 function show(v, user) {
+  const was = view;
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
+  if (user && view !== was) { foldsShut(); render(); }
   if (user) {
     $('#scroll').scrollTop = 0;
     try { localStorage.setItem('takt.view', view); } catch (e) {}
