@@ -25,8 +25,10 @@ kopf = ['-H', 'x-auth-token: proxy-injected']
 for a in b.get('buildActions', []):
     print(' ', a.get('name'), '|', a.get('status'))
     # Protokoll des Schritts, der nicht durchlief: die letzten 120 Zeilen
-    if a.get('status') not in ('success', None, 'skipped') and a.get('logUrl'):
-        log = subprocess.run(['curl', '-sS', '-L', '-m', '60'] + kopf + [a['logUrl']], capture_output=True, text=True).stdout
+    # (für den eigenen Schritt nennt Codemagic keine Adresse; sie lässt sich aus Bau und Schritt zusammensetzen)
+    if a.get('status') not in ('success', None, 'skipped'):
+        adresse = a.get('logUrl') or 'https://api.codemagic.io/builds/%s/step/%s' % (b.get('_id'), a.get('_id'))
+        log = subprocess.run(['curl', '-sS', '-L', '-m', '60'] + kopf + [adresse], capture_output=True, text=True).stdout
         open(ziel + '/fehler.log', 'w').write(log); print('\n'.join(log.splitlines()[-120:]))
 for x in b.get('artefacts', []):
     name = os.path.basename(x.get('name') or 'datei'); print('ARTEFAKT', name, x.get('size'), x.get('url'))

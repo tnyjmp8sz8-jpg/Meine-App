@@ -18,7 +18,8 @@ enum Schnell: String {
 /// Ob gerade die Schnelleingabe über der App liegt
 final class Lage: ObservableObject {
     static let shared = Lage()
-    @Published var schnell: Schnell?
+    /// Für den Selbsttest lässt sich die Schnelleingabe auch beim Start zeigen („-schnell notiz“): Im Simulator fragt das Öffnen über die Adresse erst nach.
+    @Published var schnell: Schnell? = UserDefaults.standard.string(forKey: "schnell").flatMap { Schnell(rawValue: $0) }
 }
 
 struct Schnelleingabe: View {

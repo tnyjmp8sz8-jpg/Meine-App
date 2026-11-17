@@ -68,18 +68,20 @@ xcrun simctl io "$GERAET" screenshot widget.png
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen; sleep 6
 xcrun simctl io "$GERAET" screenshot simulator.png
-# Schnelleingabe aus dem Widget: Die Adresse zeigt nur das Eingabefeld (Bilder für Notiz und Ausgabe).
-xcrun simctl openurl "$GERAET" "trackpunkt://schnell/notiz"; sleep 4
+# Schnelleingabe aus dem Widget (Bilder für Notiz und Ausgabe). Gestartet mit „-schnell …“ statt über die Adresse: Im Simulator fragt die Adresse erst „Open in Track.?“.
+xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell notiz; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-notiz.png
-xcrun simctl openurl "$GERAET" "trackpunkt://schnell/ausgabe"; sleep 3
+xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-ausgabe.png
 # Mit „-schnellprobe“ trägt sie von selbst „Schnell notiert“ ein und geht zurück auf den Home-Bildschirm (Bild danach).
 # Die Notiz muss dann im gemeinsamen Ordner für das Widget stehen.
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
-xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnellprobe; sleep 5
-xcrun simctl openurl "$GERAET" "trackpunkt://schnell/notiz"; sleep 6
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell notiz -schnellprobe; sleep 7
 xcrun simctl io "$GERAET" screenshot schnell-danach.png
 GRUPPE=$(xcrun simctl get_app_container "$GERAET" de.trackapp.track groups | awk '{print $2}' | head -1)
+echo "Gruppe: $GRUPPE"; cat "$GRUPPE/stand.json" | head -c 600; echo
 grep -q "Schnell notiert" "$GRUPPE/stand.json"
 # Speicher übersteht Neustarts · Web-App und Hülle sind verbunden · der Stand liegt für das Widget bereit (8 Tage) · Plan der Mitteilungen stimmt
 grep -q '"starts":3' pruefung-3.json
