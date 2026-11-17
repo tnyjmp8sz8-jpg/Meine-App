@@ -64,12 +64,9 @@ function beispiel() {
     n6: { x: 'Geschenk für Mama: Buch über Gärten', f: 'priv', c: vor(8), m: vor(8) },
     n7: { x: 'Druckerpapier kaufen', f: '', c: vor(12), m: vor(12) } } };
   for (let i = 0; i < 14; i++) N.tasks['d' + i] = { t: 'Erledigte Aufgabe ' + (i + 1), f: i % 2 ? 'uni' : 'prom', d: tag(i + 1), done: vor(i + 1), c: vor(i + 3), n: '' };
-  /* Tages-Check: Schlaf der letzten 40 Tage (heute noch offen), nach Trainingstagen etwas besser */
-  const DC = { sleep: {} };
-  for (let i = 1; i <= 40; i++) DC.sleep[tag(i)] = [4, 3, 5, 4, 2, 4, 3][i % 7];
-  return { S, LY, W, MF, MY, T, K, N, DC };
+  return { S, LY, W, MF, MY, T, K, N };
 }
 /* Dieselben Daten in der Form einer Sicherungsdatei */
-const alsSicherung = d => ({ app: 'takt', v: 1, exported: new Date(Date.now() - 5 * 864e5).toISOString(), routines: d.S.routines, LY: d.LY, W: d.W, MF: d.MF, MY: d.MY, T: d.T, K: d.K, N: d.N, DC: d.DC });
+const alsSicherung = d => ({ app: 'takt', v: 1, exported: new Date(Date.now() - 5 * 864e5).toISOString(), routines: d.S.routines, LY: d.LY, W: d.W, MF: d.MF, MY: d.MY, T: d.T, K: d.K, N: d.N });
 
 module.exports = { beispiel, alsSicherung };

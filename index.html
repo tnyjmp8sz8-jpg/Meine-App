@@ -368,15 +368,6 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
-/* Tages-Check auf Heute: eine Zeile, fünf Kreise, ein Tipp */
-.chk{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:48px;padding:7px 12px 7px 14px;border-radius:14px;background:var(--surface)}
-.chk .l{display:flex;flex-direction:column;gap:1px;min-width:0}
-.chk b{font-size:13.5px;font-weight:600}
-.chk small{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.chk .dots{flex:none;display:flex;gap:6px}
-.chk .dots button{position:relative;width:30px;height:30px;padding:0;border:0;border-radius:50%;background:var(--fill);color:var(--muted);font-size:13px;font-weight:600;font-variant-numeric:tabular-nums}
-.chk .dots button::after{content:"";position:absolute;inset:-7px -3px}
-.chk .dots button[aria-pressed="true"]{background:var(--accent);color:#fff}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
 .ins+.ins{border-top:1px solid var(--line)}
 .ins b{font-size:14px;font-weight:600}
@@ -767,7 +758,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v57</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v58</span></footer>
 </div>
 </div>
 
@@ -1247,7 +1238,6 @@ const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
-let DC = { sleep: {} };                    // Tages-Check: Schlaf { Datum: 1 bis 5 }
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '';
 
@@ -1255,11 +1245,11 @@ const LS = 'takt.v1';
 function loadLocal() {
   try {
     const o = JSON.parse(localStorage.getItem(LS) || 'null');
-    if (o && o.S && Array.isArray(o.S.routines)) { S = normApp(o.S); LY = (o.LY && typeof o.LY === 'object') ? o.LY : {}; W = normW(o.W); T = normT(o.T); K = normK(o.K); N = normN(o.N); DC = normDC(o.DC); MF = normMF(o.MF); MY = {}; if (o.MY && typeof o.MY === 'object') for (const y in o.MY) if (/^\d{4}$/.test(y)) MY[y] = normMY(o.MY[y]); return true; }
+    if (o && o.S && Array.isArray(o.S.routines)) { S = normApp(o.S); LY = (o.LY && typeof o.LY === 'object') ? o.LY : {}; W = normW(o.W); T = normT(o.T); K = normK(o.K); N = normN(o.N); MF = normMF(o.MF); MY = {}; if (o.MY && typeof o.MY === 'object') for (const y in o.MY) if (/^\d{4}$/.test(y)) MY[y] = normMY(o.MY[y]); return true; }
   } catch (e) {}
   return false;
 }
-function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N, DC })); } catch (e) {} toastOff(); }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); }
 
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
@@ -3821,40 +3811,6 @@ function homeRoutine() {
   const run = S.running ? byId(S.running.id) : null;
   return { v: done === due.length ? 'Alles erledigt' : Math.ceil(open / 60) + ' min offen', s: done + ' von ' + due.length + ' erledigt' + (run ? ' · ' + run.name + ' läuft' : '') };
 }
-/* Tages-Check: einmal am Tag den Schlaf bewerten, 1 (schlecht) bis 5 (sehr gut). Ein zweiter Tipp auf dieselbe Zahl nimmt die Bewertung zurück. */
-function normDC(o) {
-  const out = { sleep: {} }, s = o && o.sleep;
-  if (s && typeof s === 'object') for (const d in s) if (isKey(d) && [1, 2, 3, 4, 5].indexOf(s[d]) >= 0) out.sleep[d] = s[d];
-  return out;
-}
-const dcdoc = patchDoc(() => DC, v => { DC = normDC(v); });
-const SLEEP = ['Schlecht', 'Eher schlecht', 'Okay', 'Gut', 'Sehr gut'];
-function checkHTML() {
-  const v = DC.sleep[todayKey()] || 0;
-  return '<div class="chk" role="group" aria-label="Schlaf bewerten"><span class="l"><b>Schlaf</b><small>' + (v ? SLEEP[v - 1] : 'Noch offen') + '</small></span><span class="dots">' +
-    SLEEP.map((t, i) => '<button type="button" data-h="sleep" data-v="' + (i + 1) + '" aria-pressed="' + (v === i + 1) + '" aria-label="' + (i + 1) + ' von 5, ' + t + '">' + (i + 1) + '</button>').join('') + '</span></div>';
-}
-/* Zusammenhänge mit dem Schlaf rechnen mit Tagen statt Wochen (die letzten 12 Wochen) und brauchen je Seite 5 Tage.
-   Training und Schlaf: Die Bewertung von heute gehört zur Nacht nach gestern, verglichen wird also mit dem Training am Vortag.
-   Schlaf und Routinen: Anteil der geplanten Routinen, die an Tagen nach gutem Schlaf (4 oder 5) erledigt wurden; heute zählt noch nicht. */
-function sleepInsights(c) {
-  const t0 = parseKey(todayKey()), train = {}, A = { n: 0, s: 0 }, B = { n: 0, s: 0 }, G = { n: 0, p: 0, d: 0 }, O = { n: 0, p: 0, d: 0 };
-  c.runs.forEach(r => { train[r.d] = 1; }); c.kd.forEach(d => { train[d] = 1; });
-  let rated = 0;
-  for (let i = 0; i < 84; i++) {
-    const day = addDays(t0, -i), k = keyOf(day), v = DC.sleep[k]; if (!v) continue;
-    rated++;
-    const side = train[keyOf(addDays(day, -1))] ? A : B; side.n++; side.s += v;
-    if (!i) continue;
-    let plan = 0, done = 0; const wi = wd(day);
-    S.routines.forEach(r => { if (k >= r.created && r.days[wi]) { plan++; if (doneOn(k, r.id)) done++; } });
-    if (plan) { const g = v >= 4 ? G : O; g.n++; g.p += plan; g.d += done; }
-  }
-  let h = '';
-  if (A.n >= 5 && B.n >= 5) h += '<div class="ins"><b>Training und Schlaf</b><span>Nach Tagen mit Training: Schlaf ' + kg(A.s / A.n) + ' von 5. Nach den anderen Tagen: ' + kg(B.s / B.n) + '. Grundlage: ' + (A.n + B.n) + ' Nächte.</span></div>';
-  if (G.n >= 5 && O.n >= 5) h += '<div class="ins"><b>Schlaf und Routinen</b><span>Nach gutem Schlaf (4 oder 5): ' + Math.round(G.d / G.p * 100) + ' % der Routinen erledigt. An den anderen Tagen: ' + Math.round(O.d / O.p * 100) + ' %. Grundlage: ' + (G.n + O.n) + ' Tage.</span></div>';
-  return { h, wait: rated && !h ? '<p class="note">Vergleiche mit dem Schlaf erscheinen, sobald es je 5 Tage zum Vergleichen gibt. Bisher bewertet: ' + rated + (rated === 1 ? ' Tag' : ' Tage') + '.</p>' : '' };
-}
 function weekCtx() {
   const runs = tRuns(); let firstTx = null;
   for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && (!firstTx || t.d < firstTx)) firstTx = t.d; }
@@ -3870,9 +3826,7 @@ function weekStats(mk, c) {
   let flex = 0, eat = 0;
   for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && t.d >= mk && t.d <= end) { flex += t.a; if (t.c === 'aus') eat += t.a; } }
   const g = tAgg(c.runs.filter(r => r.d >= mk && r.d <= end));
-  let sn = 0, ss = 0;
-  for (let i = 0; i < 7; i++) { const v = DC.sleep[keyOf(addDays(mon, i))]; if (v) { sn++; ss += v; } }
-  return { mk, end, plan, done, sleep: sn ? ss / sn : null, sn, quote: plan ? done / plan : null, wEnd, wDelta: wEnd != null && wPrev != null ? wEnd - wPrev : null, flex, eat, km: g.m / 1000, runs: g.n,
+  return { mk, end, plan, done, quote: plan ? done / plan : null, wEnd, wDelta: wEnd != null && wPrev != null ? wEnd - wPrev : null, flex, eat, km: g.m / 1000, runs: g.n,
     kraft: c.kd.filter(d => d >= mk && d <= end).length, money: !!c.firstTx && c.firstTx <= end, cardio: !!c.firstRun && c.firstRun <= end };
 }
 /* Zusammenhänge: die letzten 12 abgeschlossenen Wochen am Median einer Größe teilen und die andere Größe vergleichen */
@@ -3898,9 +3852,8 @@ function insightsHTML(c) {
     if (r.hi != null) h += '<div class="ins"><b>' + d[0] + '</b><span>Wochen mit ' + d[3] + ': ' + d[4](r.hi) + '. Die anderen Wochen: ' + d[4](r.lo) + '. Grundlage: ' + r.n + ' Wochen.</span></div>';
     else if (r.flat) h += '<div class="ins"><b>' + d[0] + '</b><span>Die Wochen sind sich zu ähnlich für einen Vergleich.</span></div>';
   });
-  const sl = sleepInsights(c); h += sl.h;
-  if (!h) return '<p class="note">Zusammenhänge erscheinen, sobald es 6 abgeschlossene Wochen mit Daten aus zwei Bereichen gibt. Bisher: ' + maxN + '.</p>' + sl.wait;
-  return '<p class="note" id="info-ins" hidden>Das sind Auffälligkeiten aus wenigen Wochen, kein Beweis für Ursache und Wirkung.</p><div class="card" style="gap:0;padding-top:4px;padding-bottom:4px">' + h + '</div>' + sl.wait;
+  if (!h) return '<p class="note">Zusammenhänge erscheinen, sobald es 6 abgeschlossene Wochen mit Daten aus zwei Bereichen gibt. Bisher: ' + maxN + '.</p>';
+  return '<p class="note" id="info-ins" hidden>Das sind Auffälligkeiten aus wenigen Wochen, kein Beweis für Ursache und Wirkung.</p><div class="card" style="gap:0;padding-top:4px;padding-bottom:4px">' + h + '</div>';
 }
 function weekHTML() {
   const c = weekCtx(), cur = keyOf(monOf(new Date()));
@@ -3931,10 +3884,6 @@ function weekHTML() {
   if (c.kd.length) {
     const df = w.kraft - p.kraft;
     rows += kvRow('Gym', String(w.kraft), w.kraft === 1 ? 'Einheit' : 'Einheiten', df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df), df > 0 ? 'up' : df < 0 ? 'down' : '');
-  }
-  if (w.sleep != null) {
-    const df = p.sleep != null ? w.sleep - p.sleep : null;
-    rows += kvRow('Schlaf', kg(w.sleep), 'von 5 · ' + w.sn + (w.sn === 1 ? ' Nacht' : ' Nächte'), df == null ? '' : Math.abs(df) < 0.05 ? 'gleich' : signed(df), df >= 0.05 ? 'up' : df <= -0.05 ? 'down' : '');
   }
   h += rows ? '<div class="card last" style="padding-top:2px">' + rows + '</div>' : '<p class="note">Für diese Woche gibt es noch keine Einträge.</p>';
   const ins = insightsHTML(c);
@@ -3978,7 +3927,6 @@ function renderHome() {
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
   if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
-  h += checkHTML();
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
   const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
   const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
@@ -4024,7 +3972,6 @@ $('#v-heute').addEventListener('click', e => {
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') show(v, true);
   else if (a === 'q') { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else openM('tx'); }
-  else if (a === 'sleep') { const p = { sleep: {} }, tk = todayKey(); p.sleep[tk] = DC.sleep[tk] === +v ? null : +v; dcdoc.patch(p); renderHome(); }
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
 });
@@ -4033,7 +3980,7 @@ document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () 
 /* ---------- Datensicherung ---------- */
 async function exportData() {
   /* app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
-  const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N, DC });
+  const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
   const name = 'track-sicherung-' + todayKey() + '.json';
   const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); };
   try {
@@ -4070,7 +4017,6 @@ function importData(d) {
   const kk = stripNull(normK(d.K)); delete kk.live;
   kdoc.patch(kk);
   ndoc.patch(stripNull(normN(d.N)));
-  dcdoc.patch(normDC(d.DC));
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
   const ex = Date.parse(d.exported);
   try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
