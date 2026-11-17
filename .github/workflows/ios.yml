@@ -13,7 +13,13 @@ defaults:
     shell: bash
 jobs:
   bauen:
-    runs-on: macos-latest
+    # Mitte November 2026 bekamen viele Projekte keinen Mac von GitHub (Lauf wartet 15 Minuten und wird abgebrochen).
+    # Deshalb mehrere Mac-Sorten nebeneinander: Es genügt, wenn eine startet.
+    strategy:
+      fail-fast: false
+      matrix:
+        mac: [macos-15-intel, macos-26, macos-14]
+    runs-on: ${{ matrix.mac }}
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -52,7 +58,7 @@ jobs:
           ls -la Track-unsigniert.ipa
       - uses: actions/upload-artifact@v4
         with:
-          name: Track-iPhone
+          name: Track-iPhone-${{ matrix.mac }}
           path: |
             ios/Track-unsigniert.ipa
             ios/simulator.png
