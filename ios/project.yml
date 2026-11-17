@@ -5,11 +5,12 @@ name: Track
 options:
   bundleIdPrefix: de.trackapp
   deploymentTarget:
-    iOS: "16.0"
+    iOS: "17.0"
+  developmentLanguage: de
 settings:
   base:
-    MARKETING_VERSION: "0.2"
-    CURRENT_PROJECT_VERSION: "2"
+    MARKETING_VERSION: "0.3"
+    CURRENT_PROJECT_VERSION: "3"
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1"
     GENERATE_INFOPLIST_FILE: YES

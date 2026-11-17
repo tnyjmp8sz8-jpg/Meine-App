@@ -34,6 +34,9 @@ codesign -d --entitlements - Payload/Track.app 2>&1 | grep -E "application-group
 codesign -d --entitlements - Payload/Track.app/PlugIns/TrackWidget.appex 2>&1 | grep -E "application-groups|group\."
 plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|NSHealthShare|CFBundleShortVersionString|CFBundleIdentifier|UILaunchScreen"
 plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
+# Aktionen für Kurzbefehle (Notiz, Ausgabe, Lauf) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
+ls Payload/Track.app/Metadata.appintents
+grep -c -E "NotizHinzufuegen|AusgabeEintragen|LaufEintragen" Payload/Track.app/Metadata.appintents/extract.actionsdata
 zip -qr Track.ipa.neu Payload
 ls -la Track.ipa.neu
 
@@ -69,6 +72,9 @@ xcrun simctl io "$GERAET" screenshot simulator.png
 grep -q '"starts":3' pruefung-3.json
 grep -q '"bruecke":true' pruefung-3.json
 grep -q '"widgetTage":8' pruefung-3.json
+# Eingang (Widget, Kurzbefehle): drei Notizen vorgemerkt, eine abgehakt → 2 Notizen in der Web-App, nichts bleibt vorgemerkt
+grep -q '"notizenZahl":2' pruefung-3.json
+grep -q '"eingangRest":0' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa

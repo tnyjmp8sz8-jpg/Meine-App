@@ -109,15 +109,13 @@ final class Gesundheit {
 struct WidgetVorschau: View {
     var body: some View {
         let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel, tag = stand.tage[0]
-        let fertig = Stand.Tag(d: tag.d, rn: 4, rd: 4, an: 0, auf: [])
-        let frei = Stand.Tag(d: tag.d, rn: 0, rd: 0, an: 1, auf: ["Paket abholen"])
         ZStack {
             LinearGradient(colors: [Color(0x27324A), Color(0x0B0D14)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             VStack(spacing: 16) {
-                HStack(spacing: 22) { kachel(Klein(tag: tag, f: dunkel), dunkel, 158); kachel(Klein(tag: fertig, f: dunkel), dunkel, 158) }
+                kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: dunkel), dunkel, 338)
+                HStack(spacing: 22) { kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: dunkel), dunkel, 158); kachel(Klein(tag: tag, f: dunkel), dunkel, 158) }
                 kachel(Mittel(tag: tag, notizen: stand.notizen, f: dunkel), dunkel, 338)
-                HStack(spacing: 22) { kachel(Klein(tag: frei, f: hell), hell, 158); kachel(Leer(f: hell), hell, 158) }
-                kachel(Mittel(tag: frei, notizen: stand.notizen, f: hell), hell, 338)
+                kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: hell), hell, 338)
             }
         }
     }

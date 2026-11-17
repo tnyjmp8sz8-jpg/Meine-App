@@ -24,18 +24,7 @@ struct Quelle: TimelineProvider {
     }
 }
 
-extension View {
-    /// Ab iOS 17 setzt das System Hintergrund und Rand des Widgets, davor die Ansicht selbst
-    @ViewBuilder func widgetGrund(_ farbe: Color) -> some View {
-        if #available(iOS 17.0, *) {
-            containerBackground(for: .widget) { farbe }
-        } else {
-            padding(16).frame(maxWidth: .infinity, maxHeight: .infinity).background(farbe)
-        }
-    }
-}
-
-struct WidgetAnsicht: View {
+struct HeuteAnsicht: View {
     @Environment(\.widgetFamily) private var groesse
     @Environment(\.colorScheme) private var schema
     let eintrag: Eintrag
@@ -44,21 +33,56 @@ struct WidgetAnsicht: View {
         let f = Farben(dunkel: schema == .dark)
         Group {
             if let stand = eintrag.stand, let tag = stand.tag(eintrag.date) {
-                if groesse == .systemMedium { Mittel(tag: tag, notizen: stand.notizen, f: f) } else { Klein(tag: tag, f: f) }
+                if groesse == .systemMedium { Mittel(tag: tag, notizen: (stand.nz ?? []).map { $0.x }, f: f) } else { Klein(tag: tag, f: f) }
             } else {
                 Leer(f: f)
             }
         }
-        .widgetGrund(f.grund)
+        .containerBackground(for: .widget) { f.grund }
+    }
+}
+
+struct NotizenWidgetAnsicht: View {
+    @Environment(\.widgetFamily) private var groesse
+    @Environment(\.colorScheme) private var schema
+    let eintrag: Eintrag
+
+    var body: some View {
+        let f = Farben(dunkel: schema == .dark)
+        Group {
+            if let stand = eintrag.stand {
+                // Zeilen je Größe: klein und mittel 3, groß 9
+                NotizenAnsicht(notizen: stand.nz ?? [], zeilen: groesse == .systemLarge ? 9 : 3, knoepfe: groesse != .systemSmall, f: f)
+            } else {
+                Leer(f: f)
+            }
+        }
+        .containerBackground(for: .widget) { f.grund }
+    }
+}
+
+struct NotizenWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "notizen", provider: Quelle()) { NotizenWidgetAnsicht(eintrag: $0) }
+            .configurationDisplayName("Notizen")
+            .description("Deine neuesten Notizen. Der Kreis hakt ab, ohne die App zu öffnen.")
+            .supportedFamilies([.systemSmall, .systemMedium, .systemLarge])
+    }
+}
+
+struct HeuteWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "heute", provider: Quelle()) { HeuteAnsicht(eintrag: $0) }
+            .configurationDisplayName("Heute")
+            .description("Routinen, Aufgaben und Notizen von heute.")
+            .supportedFamilies([.systemSmall, .systemMedium])
     }
 }
 
 @main
-struct HeuteWidget: Widget {
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "heute", provider: Quelle()) { WidgetAnsicht(eintrag: $0) }
-            .configurationDisplayName("Heute")
-            .description("Routinen, Aufgaben und Notizen von heute.")
-            .supportedFamilies([.systemSmall, .systemMedium])
+struct TrackWidgets: WidgetBundle {
+    var body: some Widget {
+        NotizenWidget()
+        HeuteWidget()
     }
 }

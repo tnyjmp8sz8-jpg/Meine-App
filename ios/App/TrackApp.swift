@@ -97,12 +97,14 @@ struct WebView: UIViewRepresentable {
         view.scrollView.bounces = false
         view.allowsBackForwardNavigationGestures = false
         view.navigationDelegate = context.coordinator
+        if CommandLine.arguments.contains("-pruefen") { Halter.probeEingang() }
         view.load(URLRequest(url: Web.start))
         context.coordinator.view = view
         context.coordinator.aktualisieren()
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.aktualisieren), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.zurueck), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.adresse), name: Halter.eingang, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.eingangHolen), name: Halter.eingangDa, object: nil)
         return view
     }
 
@@ -111,6 +113,8 @@ struct WebView: UIViewRepresentable {
 
 final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     static let eingang = Notification.Name("track.adresse")
+    /// Ein Kurzbefehl hat etwas vorgemerkt, während die App läuft
+    static let eingangDa = Notification.Name("track.eingang")
     /// Adresse, mit der die App geöffnet wurde; wartet, bis die Web-App geladen ist
     static var wartend: URL?
 
@@ -132,7 +136,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         guard let inhalt = nachricht.body as? [String: Any], let art = inhalt["art"] as? String else { return }
         if art == "bereit" {
             bereit = true
-            auskunft(); laeufeHolen(); adresse()
+            auskunft(); eingangHolen(); laeufeHolen(); adresse()
         } else if art == "stand" {
             stand(inhalt)
         } else if art == "health" {
@@ -153,7 +157,20 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     @objc func zurueck() {
         guard bereit else { return }
-        auskunft(); laeufeHolen()
+        auskunft(); eingangHolen(); laeufeHolen()
+    }
+
+    /// Übergibt der Web-App, was im Widget oder per Kurzbefehl vorgemerkt wurde. Gestrichen wird nur, was sie als übernommen zurückmeldet.
+    @objc func eingangHolen() {
+        DispatchQueue.main.async {
+            let liste = Ablage.eingang()
+            guard self.bereit, !liste.isEmpty, JSONSerialization.isValidJSONObject(liste), let daten = try? JSONSerialization.data(withJSONObject: liste),
+                  let json = String(data: daten, encoding: .utf8) else { return }
+            self.view?.evaluateJavaScript("JSON.stringify(window.TrackHuelle.eingang(\(json)))") { ergebnis, _ in
+                guard let text = ergebnis as? String, let ids = (try? JSONSerialization.jsonObject(with: Data(text.utf8))) as? [String] else { return }
+                Ablage.erledigt(ids)
+            }
+        }
     }
 
     /// Neuer Stand der Web-App: Mitteilungen planen (nur wenn sich etwas daran geändert hat) und für das Widget ablegen
@@ -165,7 +182,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             geplant = schluessel
             Mitteilungen.planen(sicherung: sicherung, ablauf: Profil.ablauf)
         }
-        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? []]
+        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? []]
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
         }
@@ -223,6 +240,9 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             alles["bruecke"] = standDa
             alles["gruppe"] = Ablage.datei != nil
             alles["widgetTage"] = Ablage.lesen()?.tage.count ?? -1
+            // Eingang: Jeder Start merkt eine Notiz vor, der dritte hakt vorher eine ab (siehe probeEingang). Nach dem dritten Start: 2 Notizen, nichts mehr vorgemerkt.
+            alles["notizenZahl"] = Ablage.lesen()?.nz?.count ?? -1
+            alles["eingangRest"] = Ablage.eingang().count
             alles["health"] = Gesundheit.shared.zustand
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()
@@ -233,6 +253,13 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         }
         let datei = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("pruefung.json")
         try? text.write(to: datei, atomically: true, encoding: .utf8)
+    }
+
+    /// Selbsttest: stellt nach, was Widget und Kurzbefehle tun. Jeder Start merkt eine Notiz vor; gibt es schon zwei, wird vorher die älteste abgehakt.
+    /// Läuft vor dem Laden der Seite, damit die Web-App alles beim Start übernimmt.
+    static func probeEingang() {
+        if let notizen = Ablage.lesen()?.nz, notizen.count >= 2, let letzte = notizen.last { Ablage.notizWeg(letzte.id) }
+        Ablage.notizDazu("Notiz aus dem Selbsttest")
     }
 
     /// Selbsttest für den Bau (Start mit „-pruefen“): schreibt nach Documents/pruefung.json, ob die Seite geladen ist,
