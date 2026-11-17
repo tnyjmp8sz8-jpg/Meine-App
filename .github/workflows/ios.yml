@@ -1,5 +1,5 @@
-# Baut die iPhone-Hülle auf einem Mac von GitHub: einmal für den Simulator (mit Bild als Beweis, dass sie startet)
-# und einmal unsigniert für das iPhone. Kostenlos, solange das Repository öffentlich ist.
+# Baut die iPhone-Hülle auf einem Mac von GitHub (kostenlos, solange das Repository öffentlich ist):
+# unsigniert für das iPhone, als Download unter „Releases“, dazu ein Selbsttest und ein Bild aus dem Simulator.
 name: iPhone-App bauen
 on:
   workflow_dispatch:
@@ -7,19 +7,14 @@ on:
     branches: ['claude/**']
     paths: ['ios/**', '.github/workflows/ios.yml']
 permissions:
-  contents: read
+  contents: write
 defaults:
   run:
     shell: bash
 jobs:
   bauen:
-    # Mitte November 2026 bekamen viele Projekte keinen Mac von GitHub (Lauf wartet 15 Minuten und wird abgebrochen).
-    # Deshalb mehrere Mac-Sorten nebeneinander: Es genügt, wenn eine startet.
-    strategy:
-      fail-fast: false
-      matrix:
-        mac: [macos-15-intel, macos-26, macos-14]
-    runs-on: ${{ matrix.mac }}
+    # Intel-Mac: Die anderen Macs von GitHub starteten Mitte November 2026 nicht (Lauf wartet 15 Minuten und wird abgebrochen)
+    runs-on: macos-15-intel
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
@@ -40,11 +35,10 @@ jobs:
           cd ios
           xcodebuild -project Track.xcodeproj -scheme Track -sdk iphoneos -configuration Release -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -15
           mkdir Payload && cp -R build/ios/Build/Products/Release-iphoneos/Track.app Payload/
-          zip -qr Track-unsigniert.ipa Payload
-          ls -la Track-unsigniert.ipa
-      - name: Im Simulator starten und Bild machen
-        timeout-minutes: 12
-        continue-on-error: true
+          zip -qr Track.ipa Payload
+          ls -la Track.ipa
+      - name: Im Simulator prüfen und Bild machen
+        timeout-minutes: 14
         run: |
           cd ios
           GERAET=$(xcrun simctl list devices available | grep -m1 -E "iPhone 1[5-9]|iPhone [2-9][0-9]" | grep -oE "[0-9A-F-]{36}")
@@ -53,14 +47,31 @@ jobs:
           xcrun simctl bootstatus "$GERAET" -b
           xcrun simctl ui "$GERAET" appearance dark
           xcrun simctl install "$GERAET" build/sim/Build/Products/Debug-iphonesimulator/Track.app
-          xcrun simctl launch "$GERAET" de.trackapp.track
-          sleep 12
+          # Zweimal starten: Beim zweiten Mal muss der Speicher den ersten Start überlebt haben
+          for LAUF in 1 2; do
+            xcrun simctl launch "$GERAET" de.trackapp.track -pruefen
+            sleep 15
+            DATEN=$(xcrun simctl get_app_container "$GERAET" de.trackapp.track data)
+            echo "PRUEFUNG $LAUF: $(cat "$DATEN/Documents/pruefung.json" 2>/dev/null || echo 'keine Datei')"
+            if [ "$LAUF" = 1 ]; then xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 3; fi
+          done
           xcrun simctl io "$GERAET" screenshot simulator.png
-          sips -Z 900 -s format jpeg -s formatOptions 50 simulator.png --out simulator-klein.jpg >/dev/null
+          sips -Z 560 -s format jpeg -s formatOptions 40 simulator.png --out simulator-klein.jpg >/dev/null
           echo "BILD-ANFANG"; base64 -b 180 -i simulator-klein.jpg; echo "BILD-ENDE"
+          grep -q '"vorherGespeichert":true' "$DATEN/Documents/pruefung.json"
+      - name: Als Download bereitstellen
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          cd ios
+          gh release delete iphone-test --yes --cleanup-tag 2>/dev/null || true
+          gh release create iphone-test Track.ipa --prerelease --target "$GITHUB_SHA" \
+            --title "Track. für das iPhone (Testfassung)" \
+            --notes "Unsignierte App-Datei zum Installieren mit AltStore. Sie wird bei jedem Bau ersetzt."
       - uses: actions/upload-artifact@v4
+        if: always()
         with:
-          name: Track-iPhone-${{ matrix.mac }}
+          name: Track-iPhone
           path: |
-            ios/Track-unsigniert.ipa
+            ios/Track.ipa
             ios/simulator.png
