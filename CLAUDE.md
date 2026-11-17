@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v59)
+# Track. – Projektwissen (App-Stand v60)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:

@@ -175,6 +175,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .primary{border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px}
 .ghost{border:1px solid var(--line);border-radius:14px;background:var(--fill);font-weight:500;font-size:15px;padding:12px 16px;min-height:46px;text-align:left}
+.h-btn{display:block;width:100%;margin-top:14px;text-align:center}
 .ghost.danger{color:var(--danger)}
 
 .foot{margin-top:auto;padding-top:8px;color:var(--muted);font-size:13px;text-align:center}
@@ -759,7 +760,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v59</span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v60</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1236,7 +1237,7 @@ let MF = { fixed: {} };                    // Haushalt: feste Posten { id: {...}
 let MY = {};                               // Haushalt: Jahr -> { tx: { id: {...} } }
 let mMode = 'month', mYM = '', mYear = 0, mAll = false;
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
-let T = { runs: {} };                      // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }
+let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
 let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
 let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
@@ -1250,7 +1251,7 @@ function loadLocal() {
   } catch (e) {}
   return false;
 }
-function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); hSoon(); }
 
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
@@ -2542,7 +2543,9 @@ $('#m-del').addEventListener('click', () => {
 
 /* ---------- Training: Cardio ---------- */
 function normT(o) {
-  const out = { runs: {} }, r = o && o.runs;
+  const out = { runs: {}, hk: {} }, r = o && o.runs, hk = o && o.hk;
+  /* hk: Kennungen der Läufe, die schon aus Health übernommen wurden. So kommt ein gelöschter Lauf nicht wieder. */
+  if (hk && typeof hk === 'object') for (const id in hk) if (hk[id] && /^[A-Za-z0-9-]{1,40}$/.test(id)) out.hk[id] = 1;
   const num = (n, a, b) => typeof n === 'number' && isFinite(n) && n >= a && n <= b;
   if (r && typeof r === 'object') for (const id in r) {
     const x = r[id];
@@ -2697,18 +2700,19 @@ function renderTraining() {
   const all = tRuns();
   if (!all.length) {
     el.innerHTML = '<div class="card-head">' + subs + '</div>' + emptyHTML('training', 'Noch kein Lauf', 'Trag Strecke, Dauer und Puls ein. Du siehst Pace und Effizienz im Vergleich zum Lauf davor.',
-      '<button type="button" class="primary" data-t="add">Lauf eintragen</button>');
+      '<button type="button" class="primary" data-t="add">Lauf eintragen</button>') + healthBtnHTML();
     return;
   }
   const kind = tKind || all[all.length - 1].k, list0 = kind === 'all' ? all : all.filter(r => r.k === kind);
   el.innerHTML = '<div class="card-head">' + subs + '<div class="seg" role="group" aria-label="Art">' +
-    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM));
+    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM)) + healthBtnHTML();
 }
 $('#v-training').addEventListener('click', e => {
   const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
   const a = nav ? nav.dataset.m : t.dataset.t;
   if (a === 'add') return openT();
   if (a === 'edit') return openT(t.dataset.id);
+  if (a === 'health') return hPost({ art: 'health' });
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
   else if (a === 'kind') { tKind = t.dataset.v; tAll = false; }
@@ -3972,12 +3976,15 @@ function lastBackupText() {
 function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
 /* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer */
 const BK_DAYS = 7;
-function backupDue() {
+/* from: Tag der letzten Sicherung, ohne Sicherung der Tag des ältesten Eintrags (leer, solange nichts eingetragen ist). due: der Tag, an dem die Sicherung fällig wird. */
+function backupDay() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
-  const today = dayNum(todayKey());
-  if (t) { const n = today - dayNum(keyOf(new Date(t))); return n >= BK_DAYS ? 'Letzte Sicherung vor ' + n + ' Tagen' : ''; }
-  const first = [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : ''].filter(Boolean).sort()[0];
-  return first && today - dayNum(first) >= BK_DAYS ? 'Noch keine Sicherung gespeichert' : '';
+  const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : ''].filter(Boolean).sort()[0] || '';
+  return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
+}
+function backupDue() {
+  const b = backupDay(), n = b.from ? dayNum(todayKey()) - dayNum(b.from) : 0;
+  return n < BK_DAYS ? '' : b.saved ? 'Letzte Sicherung vor ' + n + ' Tagen' : 'Noch keine Sicherung gespeichert';
 }
 
 function renderHome() {
@@ -4049,7 +4056,7 @@ async function exportData() {
   /* app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
   const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
   const name = 'track-sicherung-' + todayKey() + '.json';
-  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); };
+  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); hSoon(); };
   try {
     const f = new File([text], name, { type: 'application/json' });
     if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Sicherung von Track.' }); return ok(); }
@@ -4265,6 +4272,53 @@ document.addEventListener('click', e => {
   document.querySelectorAll('.view').forEach(v => v.addEventListener('animationend', () => v.classList.remove('go-p', 'go-n')));
 })();
 
+/* ---------- iPhone-Hülle ---------- */
+/* Die iPhone-App zeigt diese Seite in einem eigenen Fenster und stellt eine Verbindung bereit (HUELLE). Im Browser gibt es sie nicht: Dann bleibt alles hier ohne Wirkung.
+   Hin: Nach jedem Speichern geht ein kleiner Stand an die Hülle, für das Widget und die Mitteilung zur Sicherung.
+   Zurück: Die Hülle ruft window.TrackHuelle auf (Läufe aus Health, Auskunft über die App, Kurzbefehl). */
+const HUELLE = (() => { try { return window.webkit.messageHandlers.track || null; } catch (e) { return null; } })();
+let hInfo = {}, hTimer = 0;
+function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
+function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeout(() => hPost(hStand()), 300); }
+/* Stand für heute und die nächsten sieben Tage: So stimmt das Widget auch nach Mitternacht, ohne dass die App geöffnet wurde.
+   Je Tag: Routinen geplant (rn) und erledigt (rd), offene Aufgaben, die bis dahin fällig sind (an, die ersten vier Titel in auf). */
+function hStand() {
+  const tk = todayKey(), open = taskList().filter(t => !t.done && t.d).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), tage = [];
+  for (let i = 0; i < 8; i++) {
+    const dt = addDays(parseKey(tk), i), k = keyOf(dt), wi = wd(dt);
+    const due = S.routines.filter(r => r.days[wi] || doneOn(k, r.id) || (!i && (isRunning(r) || secsOf(k, r.id) > 0)));
+    const auf = open.filter(t => t.d <= k);
+    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: auf.length, auf: auf.slice(0, 4).map(t => t.t.slice(0, 80)) });
+  }
+  return { art: 'stand', sicherung: backupDay().due, tage, notizen: notesNew().map(x => firstLine(x.x).slice(0, 80)).filter(Boolean).slice(0, 4) };
+}
+/* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
+   Steht am selben Tag schon ein Lauf mit fast gleicher Strecke (bis 10 % Unterschied), gilt er als derselbe: Er wurde von Hand eingetragen und kommt nicht doppelt. */
+function healthRuns(list) {
+  const p = { runs: {}, hk: {} }, have = tRuns(), tk = todayKey(); let n = 0;
+  (Array.isArray(list) ? list : []).forEach(x => {
+    const id = String((x && x.id) || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
+    if (!id || T.hk[id] || p.hk[id] || !isFinite(x.t)) return;
+    const r = normT({ runs: { a: { d: keyOf(new Date(x.t)), m: Math.round(x.m), s: Math.round(x.s), hr: x.hr, k: x.k } } }).runs.a;
+    if (!r || r.d > tk) return;
+    p.hk[id] = 1;
+    if (have.some(o => o.d === r.d && Math.abs(o.m - r.m) <= r.m * 0.1)) return;
+    p.runs[newId()] = r; have.push(r); n++;
+  });
+  if (Object.keys(p.hk).length) { tdoc.patch(p); renderTraining(); renderHome(); }
+  return n;
+}
+const healthBtnHTML = () => hInfo.health === 'kann' ? '<button type="button" class="ghost h-btn" data-t="health">Läufe aus Health übernehmen</button>' : '';
+function hPaint() {
+  const el = $('#h-line'), t = [hInfo.app ? 'iPhone-App ' + hInfo.app : '', hInfo.ablauf ? 'gültig bis ' + new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long' }).format(new Date(hInfo.ablauf)) : '', hInfo.health === 'an' ? 'Health verbunden' : ''].filter(Boolean).join(' · ');
+  el.textContent = t; el.hidden = !t;
+}
+if (HUELLE) window.TrackHuelle = {
+  info(o) { hInfo = o && typeof o === 'object' ? o : {}; hPaint(); renderTraining(); },
+  laeufe(list) { return healthRuns(list); },
+  neu(was) { if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
+};
+
 /* ---------- boot ---------- */
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { ensureTicker(); render(); if (ldlg.open) wakeOn(); } });
 setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
@@ -4281,6 +4335,7 @@ ensureTicker();
 const neu = new URLSearchParams(location.search).get('neu');
 if (neu) { try { history.replaceState(null, '', location.pathname); } catch (e) {} show('heute'); quickOpen(neu); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
+if (HUELLE) { hPost({ art: 'bereit' }); hSoon(); }
 /* Neue Version: Beim Öffnen wird nach einem neuen Service Worker gesucht. Sobald er übernimmt, lädt die App einmal neu, aber nie, solange ein Blatt offen ist. */
 if ('serviceWorker' in navigator) {
   const sw = navigator.serviceWorker, hadSW = !!sw.controller;

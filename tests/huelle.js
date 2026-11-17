@@ -1,0 +1,101 @@
+// Verbindung zur iPhone-Hülle (v60): Stand für Widget und Mitteilung, Läufe aus Health, Auskunft über die App.
+// Die Hülle wird nachgestellt: window.webkit.messageHandlers.track sammelt, was die App schickt.
+const { tag, oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
+
+const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
+const post = page => page.evaluate(() => window.__post);
+const letzter = async page => (await post(page)).filter(m => m.art === 'stand').pop();
+const wi = n => { const d = new Date(); d.setDate(d.getDate() + n); return (d.getDay() + 6) % 7; };
+const nur = i => [0, 1, 2, 3, 4, 5, 6].map(x => x === i);
+
+/* Beispieldaten: zwei tägliche Routinen (eine heute erledigt), eine nur am morgigen Wochentag.
+   Aufgaben: eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte. Zwei Notizen. Ein Lauf von Hand vor zwei Tagen (5 km). */
+const jahr = tag(0).slice(0, 4), LY = {}; LY[jahr] = {}; LY[jahr][tag(0)] = { r1: { s: 1800, d: 1 } };
+const daten = {
+  S: { routines: [{ id: 'r1', name: 'Lesen', minutes: 30, days: Array(7).fill(true), created: tag(20) }, { id: 'r2', name: 'Dehnen', minutes: 10, days: Array(7).fill(true), created: tag(20) }, { id: 'r3', name: 'Putzen', minutes: 20, days: nur(wi(1)), created: tag(20) }], running: null },
+  LY, W: {}, MF: {}, MY: {}, K: {},
+  T: { runs: { a1: { d: tag(2), m: 5000, s: 1500, hr: 150, k: 'out' } } },
+  N: { folders: {}, tasks: {
+    t1: { t: 'Seminararbeit abgeben', f: '', d: tag(2), done: null, c: 1 }, t2: { t: 'Zahnarzt anrufen', f: '', d: tag(-3), done: null, c: 2 },
+    t3: { t: 'Irgendwann', f: '', d: null, done: null, c: 3 }, t4: { t: 'Schon fertig', f: '', d: tag(0), done: Date.now(), c: 4 } },
+    notes: { n1: { x: 'Milch kaufen\nund Brot', f: '', c: 1, m: 2 }, n2: { x: 'Idee für Kapitel 3', f: '', c: 3, m: 4 } } }
+};
+
+lauf(async () => {
+  const p = pruefer('Verbindung zur iPhone-Hülle');
+
+  /* Im Browser ohne Hülle: nichts davon ist da */
+  let o = await oeffnen({ daten });
+  p.ok('ohne Hülle: keine Schnittstelle', await o.page.evaluate(() => window.TrackHuelle === undefined));
+  await bereich(o.page, 'training');
+  p.ok('ohne Hülle: kein Health-Knopf, keine Zeile zur App', await o.page.evaluate(() => !document.querySelector('[data-t="health"]') && document.querySelector('#h-line').hidden));
+  p.ok('ohne Hülle: keine Fehler', !o.fehler.length, o.fehler.join(' | '));
+  await o.browser.close();
+
+  o = await oeffnen({ daten, skript: huelle });
+  const page = o.page; await page.waitForTimeout(500);
+  let m = await post(page), st = await letzter(page);
+  p.ok('beim Start: „bereit“ und ein Stand', m[0] && m[0].art === 'bereit' && !!st, JSON.stringify(m).slice(0, 200));
+  p.ok('Stand für heute und sieben weitere Tage', st.tage.length === 8 && st.tage[0].d === tag(0) && st.tage[7].d === tag(-7), JSON.stringify(st.tage.map(t => t.d)));
+  /* heute: 2 Routinen geplant (r3 nur morgen), 1 erledigt; 1 Aufgabe offen (die überfällige) */
+  p.ok('heute: 2 Routinen, 1 erledigt, 1 Aufgabe', st.tage[0].rn === 2 && st.tage[0].rd === 1 && st.tage[0].an === 1 && st.tage[0].auf[0] === 'Seminararbeit abgeben', JSON.stringify(st.tage[0]));
+  /* morgen: 3 Routinen (r3 kommt dazu), nichts erledigt */
+  p.ok('morgen: 3 Routinen, 0 erledigt', st.tage[1].rn === 3 && st.tage[1].rd === 0, JSON.stringify(st.tage[1]));
+  /* in drei Tagen ist auch „Zahnarzt“ fällig: 2 Aufgaben, die ältere zuerst; ohne Datum und Erledigtes zählen nie */
+  p.ok('in drei Tagen: 2 Aufgaben, ältere zuerst', st.tage[2].an === 1 && st.tage[3].an === 2 && st.tage[3].auf.join('|') === 'Seminararbeit abgeben|Zahnarzt anrufen', JSON.stringify(st.tage[3]));
+  p.ok('Notizen: neueste zuerst, nur die erste Zeile', st.notizen.join('|') === 'Idee für Kapitel 3|Milch kaufen', st.notizen.join('|'));
+  /* ohne Sicherung zählt der älteste Eintrag: die Routinen von vor 20 Tagen, also fällig seit 13 Tagen */
+  p.ok('Sicherung fällig: ältester Eintrag plus 7 Tage', st.sicherung === tag(13), st.sicherung);
+
+  /* Sicherung vor 2 Tagen gespeichert: fällig in 5 Tagen. Der neue Stand geht nach dem nächsten Speichern raus. */
+  await page.evaluate(() => { localStorage.setItem('takt.backup', String(Date.now() - 2 * 86400000)); window.TrackHuelle.neu('notiz'); });
+  await page.waitForTimeout(200);
+  p.ok('Kurzbefehl „notiz“ öffnet das Blatt', await page.evaluate(() => document.querySelector('#nsheet').open));
+  await page.keyboard.type('Aus dem Kurzbefehl'); await page.keyboard.press('Enter'); await page.keyboard.press('Enter');
+  await page.waitForTimeout(700);
+  st = await letzter(page);
+  p.ok('nach dem Speichern: neuer Stand mit der Notiz', st.notizen[0] === 'Aus dem Kurzbefehl', st.notizen.join('|'));
+  p.ok('Sicherung vor 2 Tagen: fällig in 5 Tagen', st.sicherung === tag(-5), st.sicherung);
+
+  /* Läufe aus Health:
+     A neu (gestern 5,23 km) → wird eingetragen. B am Tag des Laufs von Hand, 5,3 km statt 5,0 (6 % Unterschied) → derselbe Lauf, nicht doppelt.
+     C ohne Strecke → ungültig. D in der Zukunft → nein. A noch einmal → nein. E Laufband vor drei Tagen → wird eingetragen. */
+  const mittag = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getTime(); };
+  const A = { id: 'AAAA1111-22', t: mittag(1), m: 5230.4, s: 1800.2, hr: 151.6, k: 'out' };
+  const liste = [A, { id: 'BBBB', t: mittag(2), m: 5300, s: 1600, hr: 140, k: 'out' }, { id: 'CCCC', t: mittag(1), m: 0, s: 900, k: 'out' },
+    { id: 'DDDD', t: mittag(-2), m: 4000, s: 1300, k: 'out' }, A, { id: 'EEEE', t: mittag(3), m: 3000, s: 1200, hr: null, k: 'in' }];
+  let n = await page.evaluate(l => window.TrackHuelle.laeufe(l), liste), g = await gespeichert(page);
+  const runs = () => Object.values(g.T.runs).filter(Boolean);
+  p.ok('Health: 2 von 6 werden eingetragen', n === 2 && runs().length === 3, n + ' · ' + JSON.stringify(g.T.runs));
+  const a = runs().find(r => r.d === tag(1));
+  p.ok('Health: Werte gerundet übernommen', a && a.m === 5230 && a.s === 1800 && a.hr === 152 && a.k === 'out', JSON.stringify(a));
+  p.ok('Health: Laufband bleibt Laufband', runs().some(r => r.d === tag(3) && r.k === 'in' && r.m === 3000));
+  p.ok('Health: gemerkt sind A, B, E (nicht Ungültiges, nicht die Zukunft)', Object.keys(g.T.hk).sort().join('|') === 'AAAA1111-22|BBBB|EEEE', Object.keys(g.T.hk).join('|'));
+  n = await page.evaluate(l => window.TrackHuelle.laeufe(l), liste);
+  p.ok('Health: zweites Mal kommt nichts doppelt', n === 0);
+
+  /* Löschen: Der Lauf aus Health kommt nicht wieder */
+  await bereich(page, 'training'); await page.click('[data-t="kind"][data-v="all"]');
+  const zeile = page.locator('[data-t="edit"]').first(); await zeile.click(); await page.waitForTimeout(150);
+  const geloescht = await page.evaluate(() => document.querySelector('#t-date').value);
+  await page.click('#t-del'); await page.waitForTimeout(150);
+  n = await page.evaluate(l => window.TrackHuelle.laeufe(l), liste); g = await gespeichert(page);
+  p.ok('Health: ein gelöschter Lauf kommt nicht wieder', n === 0 && runs().length === 2 && !runs().some(r => r.d === geloescht && geloescht !== tag(2)), n + ' · ' + geloescht + ' · ' + JSON.stringify(g.T.runs));
+  await page.reload(); await page.waitForTimeout(400); g = await gespeichert(page);
+  p.ok('Health: Kennungen überstehen das Neuladen', Object.keys(g.T.hk || {}).length === 3);
+
+  /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
+  const ablauf = new Date(2026, 10, 24, 9, 0).getTime();
+  await page.evaluate(t => window.TrackHuelle.info({ app: '0.2', ablauf: t, health: 'kann' }), ablauf);
+  p.enthaelt('Fußzeile nennt App und Ablauf', await text(page, '#h-line'), ['iPhone-App 0.2', 'gültig bis 24. November']);
+  await bereich(page, 'training');
+  p.ok('Health freigegeben: Knopf im Cardio-Bereich', await page.locator('[data-t="health"]').count() === 1);
+  await page.click('[data-t="health"]');
+  p.ok('Tipp auf den Knopf bittet die Hülle um Health', (await post(page)).some(x => x.art === 'health'));
+  await page.evaluate(t => window.TrackHuelle.info({ app: '0.2', ablauf: t, health: 'an' }), ablauf);
+  p.ok('Health verbunden: Knopf weg, Fußzeile sagt es', await page.locator('[data-t="health"]').count() === 0 && (await text(page, '#h-line')).includes('Health verbunden'));
+  await page.evaluate(() => window.TrackHuelle.info({ app: '0.2', health: 'fehlt' }));
+  p.ok('Health nicht freigegeben: kein Knopf', await page.locator('[data-t="health"]').count() === 0 && (await text(page, '#h-line')) === 'iPhone-App 0.2');
+
+  await p.ende(o.browser, o.fehler);
+});

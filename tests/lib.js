@@ -16,6 +16,7 @@ const zahl = n => Math.round(n).toLocaleString('de-DE');
 async function oeffnen(o = {}) {
   const browser = await chromium.launch(o.start || {});
   const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger, reducedMotion: o.bewegung ? 'no-preference' : 'reduce' });
+  if (o.skript) await ctx.addInitScript(o.skript);   // läuft vor jedem Laden der Seite, z. B. um die iPhone-Hülle nachzustellen
   const page = await ctx.newPage(), fehler = [];
   page.on('pageerror', e => fehler.push('Seitenfehler: ' + e.message));
   await page.goto(o.url || APP); await page.waitForTimeout(300);
