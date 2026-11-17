@@ -9,8 +9,8 @@ options:
   developmentLanguage: de
 settings:
   base:
-    MARKETING_VERSION: "0.3"
-    CURRENT_PROJECT_VERSION: "3"
+    MARKETING_VERSION: "0.4"
+    CURRENT_PROJECT_VERSION: "4"
     SWIFT_VERSION: "5.0"
     TARGETED_DEVICE_FAMILY: "1"
     GENERATE_INFOPLIST_FILE: YES
@@ -32,7 +32,6 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: de.trackapp.track
         PRODUCT_NAME: Track
         INFOPLIST_FILE: Info/App.plist
-        INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Track. trägt deine Läufe aus Health von selbst ein: Strecke, Dauer und Puls."
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon

@@ -8,19 +8,32 @@ import WidgetKit
 // der Web-App (localStorage): Sie darf sich deshalb nie mehr ändern, sonst wären die Daten des Nutzers weg.
 @main
 struct TrackApp: App {
+    @StateObject private var lage = Lage.shared
+    @Environment(\.scenePhase) private var phase
+
     var body: some Scene {
         WindowGroup {
             if CommandLine.arguments.contains("-widgetbild") {
                 WidgetVorschau()
             } else {
-                WebView()
-                    .ignoresSafeArea()
-                    .background(Color(red: 14 / 255, green: 15 / 255, blue: 19 / 255))
-                    // Eigene Adresse der App, z. B. für Kurzbefehle: trackpunkt://neu/ausgabe
-                    .onOpenURL { adresse in
+                ZStack {
+                    WebView()
+                        .ignoresSafeArea()
+                        .background(Color(red: 14 / 255, green: 15 / 255, blue: 19 / 255))
+                    if let art = lage.schnell { Schnelleingabe(art: art) }
+                }
+                // Eigene Adresse der App: trackpunkt://schnell/notiz (oder ausgabe) zeigt nur die Schnelleingabe, z. B. aus dem Widget;
+                // trackpunkt://neu/ausgabe öffnet das Blatt in der App, trackpunkt://lauf?… trägt einen Lauf ein (für Kurzbefehle).
+                .onOpenURL { adresse in
+                    if adresse.host == "schnell", let art = Schnell(rawValue: adresse.lastPathComponent) {
+                        lage.schnell = art
+                    } else {
                         Halter.wartend = adresse
                         NotificationCenter.default.post(name: Halter.eingang, object: nil)
                     }
+                }
+                // Sobald die App im Hintergrund ist, ist die Schnelleingabe vorbei: Beim nächsten Öffnen steht wieder die App da
+                .onChange(of: phase) { _, neu in if neu == .background { lage.schnell = nil } }
             }
         }
     }

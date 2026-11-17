@@ -9,8 +9,9 @@ extension Color {
 
 /// Farben wie in der Web-App (dunkel und hell)
 struct Farben {
-    let grund, schrift, blass, blau, gruen, orange, spur: Color
+    let seite, grund, schrift, blass, blau, gruen, orange, spur: Color
     init(dunkel: Bool) {
+        seite = Color(dunkel ? 0x0E0F13 : 0xF2F2F7)
         grund = Color(dunkel ? 0x1A1C22 : 0xFFFFFF)
         schrift = Color(dunkel ? 0xF5F6F8 : 0x111114)
         blass = Color(dunkel ? 0x9296A3 : 0x6C6C72)
@@ -121,7 +122,7 @@ struct NotizAbhaken: AppIntent {
     }
 }
 
-/// Widget „Notizen“: die neuesten Notizen, jede mit Kreis zum Abhaken. Mit Knöpfen (mittel, groß) öffnen „Notiz“ und „Ausgabe“ die App gleich im richtigen Blatt.
+/// Widget „Notizen“: die neuesten Notizen, jede mit Kreis zum Abhaken. Die Knöpfe „Notiz“ und „Ausgabe“ (mittel, groß) öffnen die Schnelleingabe der App (siehe Schnell.swift).
 struct NotizenAnsicht: View {
     let notizen: [Stand.Notiz]
     let zeilen: Int
@@ -134,8 +135,8 @@ struct NotizenAnsicht: View {
                 Text("Notizen").font(.system(size: 15, weight: .semibold)).foregroundColor(f.schrift)
                 Spacer(minLength: 0)
                 if knoepfe {
-                    knopf("Notiz", "trackpunkt://neu/notiz", f.blau)
-                    knopf("Ausgabe", "trackpunkt://neu/ausgabe", f.orange)
+                    knopf("Notiz", "trackpunkt://schnell/notiz", f.blau)
+                    knopf("Ausgabe", "trackpunkt://schnell/ausgabe", f.orange)
                 }
             }
             .frame(height: 28)
