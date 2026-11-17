@@ -1,3 +1,10 @@
 web/
+Payload/
+*.ipa
+*.ipa.neu
+*.log
+simulator.png
+widget.png
+pruefung-*.json
 build/
 *.xcodeproj

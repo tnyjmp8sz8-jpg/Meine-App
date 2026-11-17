@@ -1,0 +1,16 @@
+# Zweiter Weg zum Bauen der iPhone-App (codemagic.io), falls die Macs von GitHub nicht starten.
+# Gestartet wird über die Schnittstelle von Codemagic, nicht von selbst. Die Schritte stehen in ios/bau.sh, dieselben wie bei GitHub.
+workflows:
+  iphone:
+    name: iPhone-App bauen
+    instance_type: mac_mini_m2
+    max_build_duration: 30
+    environment:
+      xcode: 16.4
+    scripts:
+      - name: Bauen und im Simulator pruefen
+        script: bash ios/bau.sh
+    artifacts:
+      - ios/Track.ipa
+      - ios/*.png
+      - ios/pruefung-*.json
