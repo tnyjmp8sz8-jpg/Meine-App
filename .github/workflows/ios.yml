@@ -29,12 +29,24 @@ jobs:
       - name: Für den Simulator bauen
         run: |
           cd ios
-          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphonesimulator -configuration Debug -derivedDataPath build/sim CODE_SIGNING_ALLOWED=NO build | tail -15
+          # Für den Simulator signiert Xcode von selbst „zum lokalen Ausführen“; nur so kommen die Freigaben (App-Gruppe für das Widget) in die App
+          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphonesimulator -configuration Debug -derivedDataPath build/sim CODE_SIGN_IDENTITY=- build > sim.log 2>&1 || { grep -E "error|BUILD" -B2 -A6 sim.log | head -150; exit 1; }
+          tail -3 sim.log
+          test -d build/sim/Build/Products/Debug-iphonesimulator/Track.app/PlugIns/TrackWidget.appex
       - name: Für das iPhone bauen (unsigniert)
         run: |
           cd ios
-          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphoneos -configuration Release -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build | tail -15
+          xcodebuild -project Track.xcodeproj -scheme Track -sdk iphoneos -configuration Release -derivedDataPath build/ios CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build > ios.log 2>&1 || { grep -E "error|BUILD" -B2 -A6 ios.log | head -150; exit 1; }
+          tail -3 ios.log
           mkdir Payload && cp -R build/ios/Build/Products/Release-iphoneos/Track.app Payload/
+          # Freigaben (App-Gruppe, Health) ohne Zertifikat in die App schreiben: AltStore liest sie beim Installieren und richtet die App-Gruppe dafür ein.
+          # Erst das Widget, dann die App.
+          codesign --force --sign - --entitlements Info/Widget.entitlements Payload/Track.app/PlugIns/TrackWidget.appex
+          codesign --force --sign - --entitlements Info/Track.entitlements Payload/Track.app
+          codesign -d --entitlements - Payload/Track.app 2>&1 | grep -E "application-groups|healthkit|group\."
+          codesign -d --entitlements - Payload/Track.app/PlugIns/TrackWidget.appex 2>&1 | grep -E "application-groups|group\."
+          plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|NSHealthShare|CFBundleShortVersionString|CFBundleIdentifier|UILaunchScreen"
+          plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
           zip -qr Track.ipa Payload
           ls -la Track.ipa
       - name: Im Simulator prüfen und Bild machen
@@ -61,9 +73,20 @@ jobs:
             xcrun simctl launch "$GERAET" com.apple.Preferences; sleep 4
             xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
           done
-          xcrun simctl launch "$GERAET" de.trackapp.track; sleep 6
+          cp "$DATEN/Documents/pruefung.json" pruefung-3.json
+          # Inhalt des Widgets (dunkel und hell) als Bild, dann die App selbst
+          xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+          xcrun simctl launch "$GERAET" de.trackapp.track -widgetbild; sleep 6
+          xcrun simctl io "$GERAET" screenshot widget.png
+          xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+          xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen; sleep 6
           xcrun simctl io "$GERAET" screenshot simulator.png
-          grep -q '"starts":3' "$DATEN/Documents/pruefung.json"
+          # Speicher übersteht Neustarts · Web-App und Hülle sind verbunden · der Stand liegt für das Widget bereit (8 Tage) · Plan der Mitteilungen stimmt
+          grep -q '"starts":3' pruefung-3.json
+          grep -q '"bruecke":true' pruefung-3.json
+          grep -q '"widgetTage":8' pruefung-3.json
+          grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
+          grep -q 'ablauf 20.11. 12:00' pruefung-3.json
       - name: Bild aus dem Simulator ablegen
         if: always()
         env:
@@ -71,7 +94,8 @@ jobs:
         run: |
           # Das Bild kommt auf einen eigenen Zweig (ios-bild), damit es sich ohne Anmeldung ansehen lässt
           mkdir "$RUNNER_TEMP/bild" && cd "$RUNNER_TEMP/bild" && git init -q
-          cp "$GITHUB_WORKSPACE/ios/simulator.png" . 2>/dev/null || echo "kein Bild" > kein-bild.txt
+          cp "$GITHUB_WORKSPACE/ios/simulator.png" "$GITHUB_WORKSPACE/ios/widget.png" "$GITHUB_WORKSPACE"/ios/pruefung-*.json . 2>/dev/null || true
+          echo "Bau $GITHUB_SHA" > stand.txt
           git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Bild aus dem Simulator"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ios-bild
       - name: Als Download bereitstellen
@@ -90,3 +114,4 @@ jobs:
           path: |
             ios/Track.ipa
             ios/simulator.png
+            ios/widget.png

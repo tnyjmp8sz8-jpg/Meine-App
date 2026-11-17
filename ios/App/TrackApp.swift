@@ -1,6 +1,7 @@
 import SwiftUI
 import UIKit
 import WebKit
+import WidgetKit
 
 // Die App ist die Web-App, gezeigt in einem Fenster ohne Browser-Leisten.
 // Sie liegt unter einer eigenen, festen Adresse (trackapp://lokal/). An dieser Adresse hängt der Speicher
@@ -9,9 +10,18 @@ import WebKit
 struct TrackApp: App {
     var body: some Scene {
         WindowGroup {
-            WebView()
-                .ignoresSafeArea()
-                .background(Color(red: 14 / 255, green: 15 / 255, blue: 19 / 255))
+            if CommandLine.arguments.contains("-widgetbild") {
+                WidgetVorschau()
+            } else {
+                WebView()
+                    .ignoresSafeArea()
+                    .background(Color(red: 14 / 255, green: 15 / 255, blue: 19 / 255))
+                    // Eigene Adresse der App, z. B. für Kurzbefehle: trackpunkt://neu/ausgabe
+                    .onOpenURL { adresse in
+                        Halter.wartend = adresse
+                        NotificationCenter.default.post(name: Halter.eingang, object: nil)
+                    }
+            }
         }
     }
 }
@@ -77,6 +87,8 @@ struct WebView: UIViewRepresentable {
     func makeUIView(context: Context) -> WKWebView {
         let einstellung = WKWebViewConfiguration()
         einstellung.setURLSchemeHandler(Lokal(), forURLScheme: Web.scheme)
+        // Verbindung zur Web-App: Sie schickt über window.webkit.messageHandlers.track, die Hülle antwortet über window.TrackHuelle
+        einstellung.userContentController.add(context.coordinator, name: "track")
         let view = WKWebView(frame: .zero, configuration: einstellung)
         view.isOpaque = false
         view.backgroundColor = .clear
@@ -89,15 +101,93 @@ struct WebView: UIViewRepresentable {
         context.coordinator.view = view
         context.coordinator.aktualisieren()
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.aktualisieren), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.zurueck), name: UIApplication.willEnterForegroundNotification, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.adresse), name: Halter.eingang, object: nil)
         return view
     }
 
     func updateUIView(_ uiView: WKWebView, context: Context) {}
 }
 
-final class Halter: NSObject, WKNavigationDelegate {
+final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
+    static let eingang = Notification.Name("track.adresse")
+    /// Adresse, mit der die App geöffnet wurde; wartet, bis die Web-App geladen ist
+    static var wartend: URL?
+
     weak var view: WKWebView?
     private var zuletzt = Date.distantPast
+    private var bereit = false        // die Web-App hat sich gemeldet
+    private var standDa = false       // sie hat einen Stand geschickt
+    private var geplant = ""          // wofür die Mitteilungen zuletzt geplant wurden
+    /// Im Selbsttest und für das Bild aus dem Simulator keine Abfrage von iOS („Mitteilungen erlauben?“)
+    private let still = CommandLine.arguments.contains("-pruefen") || CommandLine.arguments.contains("-ohneFragen")
+
+    /// Ruft eine Funktion der Web-App auf (window.TrackHuelle)
+    private func rufe(_ name: String, _ wert: Any) {
+        guard JSONSerialization.isValidJSONObject([wert]), let daten = try? JSONSerialization.data(withJSONObject: [wert]), let json = String(data: daten, encoding: .utf8) else { return }
+        view?.evaluateJavaScript("window.TrackHuelle && window.TrackHuelle.\(name).apply(null, \(json)) && 0", completionHandler: nil)
+    }
+
+    func userContentController(_ userContentController: WKUserContentController, didReceive nachricht: WKScriptMessage) {
+        guard let inhalt = nachricht.body as? [String: Any], let art = inhalt["art"] as? String else { return }
+        if art == "bereit" {
+            bereit = true
+            auskunft(); laeufeHolen(); adresse()
+        } else if art == "stand" {
+            stand(inhalt)
+        } else if art == "health" {
+            Gesundheit.shared.verbinden { self.auskunft(); self.laeufeHolen() }
+        }
+    }
+
+    /// Sagt der Web-App, welche Fassung der Hülle läuft, bis wann sie gültig ist und ob Health freigegeben ist
+    private func auskunft() {
+        var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand]
+        if let ablauf = Profil.ablauf { info["ablauf"] = ablauf.timeIntervalSince1970 * 1000 }
+        rufe("info", info)
+    }
+
+    private func laeufeHolen() {
+        Gesundheit.shared.laeufe { liste in if !liste.isEmpty { self.rufe("laeufe", liste) } }
+    }
+
+    @objc func zurueck() {
+        guard bereit else { return }
+        auskunft(); laeufeHolen()
+    }
+
+    /// Neuer Stand der Web-App: Mitteilungen planen (nur wenn sich etwas daran geändert hat) und für das Widget ablegen
+    private func stand(_ inhalt: [String: Any]) {
+        standDa = true
+        let sicherung = inhalt["sicherung"] as? String ?? ""
+        let schluessel = sicherung + "|" + String(Profil.ablauf?.timeIntervalSince1970 ?? 0)
+        if schluessel != geplant && !still {
+            geplant = schluessel
+            Mitteilungen.planen(sicherung: sicherung, ablauf: Profil.ablauf)
+        }
+        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? []]
+        if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
+            WidgetCenter.shared.reloadAllTimelines()
+        }
+    }
+
+    /// trackpunkt://neu/ausgabe (oder notiz, gewicht) öffnet das Blatt. trackpunkt://lauf?km=5,2&min=31&puls=150 trägt einen Lauf ein
+    /// (dazu wahlweise t = Beginn in Sekunden seit 1970 und laufband=1); gedacht für Kurzbefehle.
+    @objc func adresse() {
+        guard bereit, let url = Halter.wartend else { return }
+        Halter.wartend = nil
+        let angaben = URLComponents(url: url, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        let wert = { (name: String) -> String? in angaben.first(where: { $0.name == name })?.value }
+        let zahl = { (name: String) -> Double? in Double((wert(name) ?? "").replacingOccurrences(of: ",", with: ".")) }
+        if url.host == "neu" {
+            rufe("neu", wert("was") ?? url.lastPathComponent)
+        } else if url.host == "lauf", let km = zahl("km"), let minuten = zahl("min") {
+            let beginn = (zahl("t") ?? Date().timeIntervalSince1970) * 1000
+            var lauf: [String: Any] = ["id": "k\(Int(beginn / 60000))", "t": beginn, "m": km * 1000, "s": minuten * 60, "k": wert("laufband") == "1" ? "in" : "out"]
+            if let puls = zahl("puls") { lauf["hr"] = puls }
+            rufe("laeufe", [lauf])
+        }
+    }
 
     /// Holt die neueste Web-App. Ist sie neuer als die gezeigte, wird sie gespeichert und geladen,
     /// aber nie, solange ein Blatt offen ist (dann beim nächsten Öffnen): dieselbe Regel wie in der Web-App.
@@ -126,6 +216,25 @@ final class Halter: NSObject, WKNavigationDelegate {
         decisionHandler(.cancel)
     }
 
+    /// Ergänzt das Ergebnis aus der Web-App um das, was die Hülle selbst weiß: Verbindung, Ablage für das Widget, Plan der Mitteilungen
+    private func pruefungSchreiben(_ ausWeb: String) {
+        var text = ausWeb
+        if var alles = (try? JSONSerialization.jsonObject(with: Data(ausWeb.utf8))) as? [String: Any] {
+            alles["bruecke"] = standDa
+            alles["gruppe"] = Ablage.datei != nil
+            alles["widgetTage"] = Ablage.lesen()?.tage.count ?? -1
+            alles["health"] = Gesundheit.shared.zustand
+            // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
+            let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()
+            let plan = Mitteilungen.plan(sicherung: "2026-11-20", ablauf: jetzt.addingTimeInterval(4 * 86400), jetzt: jetzt)
+            let form = DateFormatter(); form.dateFormat = "dd.MM. HH:mm"
+            alles["plan"] = plan.map { $0.id + " " + form.string(from: $0.wann) }.joined(separator: ", ")
+            if let daten = try? JSONSerialization.data(withJSONObject: alles), let neu = String(data: daten, encoding: .utf8) { text = neu }
+        }
+        let datei = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("pruefung.json")
+        try? text.write(to: datei, atomically: true, encoding: .utf8)
+    }
+
     /// Selbsttest für den Bau (Start mit „-pruefen“): schreibt nach Documents/pruefung.json, ob die Seite geladen ist,
     /// der wievielte Start es laut Speicher der Web-App ist (zählt er nicht hoch, überlebt der Speicher den Neustart nicht),
     /// ob Teilen (für die Sicherung) verfügbar ist und wie die Seite im Fenster liegt.
@@ -143,7 +252,7 @@ final class Halter: NSObject, WKNavigationDelegate {
             var rand = getComputedStyle(mass), leiste = document.querySelector('.tabs').getBoundingClientRect();
             var ergebnis = { adresse: location.href, herkunft: location.origin, version: document.querySelector('.ver').textContent, starts: starts,
               teilen: typeof navigator.share, dateienTeilen: !!(navigator.canShare && navigator.canShare({ files: [datei] })),
-              serviceWorker: 'serviceWorker' in navigator, bereiche: document.querySelectorAll('.tab').length,
+              serviceWorker: 'serviceWorker' in navigator, huelle: typeof window.TrackHuelle, bereiche: document.querySelectorAll('.tab').length,
               fenster: innerWidth + 'x' + innerHeight, randOben: rand.paddingTop, randUnten: rand.paddingBottom, leisteUnten: Math.round(leiste.bottom),
               text: document.querySelector('#v-heute').innerText.replace(/\\s+/g, ' ').slice(0, 160) };
             mass.remove();
@@ -152,9 +261,8 @@ final class Halter: NSObject, WKNavigationDelegate {
         })()
         """
         webView.evaluateJavaScript(js) { ergebnis, fehler in
-            let text = (ergebnis as? String) ?? "Fehler: \(String(describing: fehler))"
-            let datei = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("pruefung.json")
-            try? text.write(to: datei, atomically: true, encoding: .utf8)
+            // Kurz warten: Die Web-App schickt ihren Stand 0,3 Sekunden nach dem Laden
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))") }
         }
     }
 }

@@ -1,32 +1,53 @@
-# iPhone-Hülle um die Web-App. Das Xcode-Projekt wird daraus mit XcodeGen erzeugt (auf GitHub, siehe .github/workflows/ios.yml).
+# iPhone-Hülle um die Web-App, dazu das Widget. Das Xcode-Projekt wird daraus mit XcodeGen erzeugt (auf GitHub, siehe .github/workflows/ios.yml).
 # Der Ordner web/ entsteht erst beim Bauen: Er bekommt eine Kopie von index.html, damit es die App nur einmal im Projekt gibt.
+# Die Kennungen (de.trackapp.track, das Widget darunter) dürfen sich nicht ändern: Nur so ersetzt eine neue Fassung die alte, und die Daten bleiben.
 name: Track
 options:
   bundleIdPrefix: de.trackapp
   deploymentTarget:
     iOS: "16.0"
+settings:
+  base:
+    MARKETING_VERSION: "0.2"
+    CURRENT_PROJECT_VERSION: "2"
+    SWIFT_VERSION: "5.0"
+    TARGETED_DEVICE_FAMILY: "1"
+    GENERATE_INFOPLIST_FILE: YES
+    INFOPLIST_KEY_CFBundleDisplayName: "Track."
 targets:
   Track:
     type: application
     platform: iOS
     sources:
       - path: App
+      - path: Gemeinsam
       - path: web
         type: folder
         buildPhase: resources
+    dependencies:
+      - target: TrackWidget
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: de.trackapp.track
         PRODUCT_NAME: Track
-        MARKETING_VERSION: "0.1"
-        CURRENT_PROJECT_VERSION: "1"
-        GENERATE_INFOPLIST_FILE: YES
-        INFOPLIST_KEY_CFBundleDisplayName: "Track."
+        INFOPLIST_FILE: Info/App.plist
         INFOPLIST_KEY_UILaunchScreen_Generation: YES
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Track. trägt deine Läufe aus Health von selbst ein: Strecke, Dauer und Puls."
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
-        TARGETED_DEVICE_FAMILY: "1"
-        SWIFT_VERSION: "5.0"
+        CODE_SIGN_ENTITLEMENTS: Info/Track.entitlements
+  TrackWidget:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widget
+      - path: Gemeinsam
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: de.trackapp.track.Widget
+        PRODUCT_NAME: TrackWidget
+        INFOPLIST_FILE: Info/Widget.plist
+        CODE_SIGN_ENTITLEMENTS: Info/Widget.entitlements
 schemes:
   Track:
     build:
