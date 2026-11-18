@@ -771,7 +771,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v66</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v67</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2676,13 +2676,15 @@ function kmBarsSVG(vals, label) {
 }
 
 /* Letzter Lauf im Vergleich mit dem Lauf derselben Art davor: eine Klappzeile unter dem Graphen (v66; als offene Karte schob er den Graphen aus dem ersten Blick).
-   Zu sehen sind Tag, Art, Strecke und Zeit, rechts der Vergleich der Pace in Grün oder Rot. Aufgeklappt: Pace, Effizienz und Puls je mit Vergleich, darunter, womit verglichen wird. */
-function lastFoldHTML(r) {
+   Zu sehen sind Tag, Art, Strecke und Zeit, rechts der Vergleich der Effizienz in Grün oder Rot (v67, Wunsch des Nutzers: Man kann langsamer sein und trotzdem effizienter;
+   ohne Puls gibt es keine Effizienz, dann steht dort die Pace). Aufgeklappt: Pace, Effizienz und Puls je mit Vergleich, darunter, womit verglichen wird. */
+function lastFoldHTML(r, mitArt) {
   const dp = dPace(r), de = dEff(r), kv = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
   const rows = '<li class="kvs">' + kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c) + (r.eff != null ? kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c) : '') +
     (r.hr ? kv('Puls', r.hr, '', r.prev && r.prev.hr ? dHr(r.hr, r.prev.hr) : '', '') : '') +
     '<p class="note">' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ').' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p></li>';
-  return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
+  /* Die Art steht nur bei „Alle“ dabei (wie in der Liste der Läufe): Sonst zeigt sie schon der Filter oben, und die Zeile bräche bei 390 px um. */
+  return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + (mitArt ? ' · ' + kindName(r.k) : '') + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), de && de.c ? 'Effizienz <span class="' + de.c + '">' + de.t + '</span>' : dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
 }
 
 function tMonthHTML(all, list0, kind, curYM) {
@@ -2702,7 +2704,7 @@ function tMonthHTML(all, list0, kind, curYM) {
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
   /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht in der Zeile darüber im Vergleich. */
   const rev = list.slice().reverse();
-  h += '<div class="folds">' + (tYM === curYM && last ? lastFoldHTML(last) : '');
+  h += '<div class="folds">' + (tYM === curYM && last ? lastFoldHTML(last, kind === 'all') : '');
   if (rev.length) h += foldHTML('laeufe', 'Läufe', '', rev.length, rev.map(r => {
     const de = dEff(r), dp = dPace(r);
     return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (kind === 'all' ? ' · ' + kindName(r.k) : '') + (r.hr ? ' · Puls ' + r.hr : '') + (r.inc ? ' · ' + n1(r.inc) + ' % Steigung' : '') + '</small></span>' +
@@ -4447,6 +4449,13 @@ function uhrFoldHTML() {
    und acc für das Konto), 'lauf' (lauf wie in healthRuns).
    Jede Kennung wird nur einmal angewendet (takt.eingang merkt die letzten 100), falls die Hülle etwas doppelt übergibt.
    Zurück gehen alle Kennungen: Die Hülle streicht sie dann aus ihrer Liste. */
+/* Kategorie eines Händlers: die der jüngsten Ausgabe mit derselben Notiz (Groß und klein egal), die schon einsortiert ist. So landet eine Zahlung, die von selbst gebucht wird
+   (Apple Pay über den Kurzbefehl), dort, wo man den Händler zuletzt einsortiert hat. „Sonstiges“ zählt nicht als einsortiert: Sonst bliebe ein Händler dort hängen. */
+function katVon(name) {
+  const n = String(name || '').trim().toLowerCase(); let best = null;
+  if (n) for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c && t.c !== 'sonst' && String(t.n || '').trim().toLowerCase() === n && (!best || t.d > best.d || (t.d === best.d && (t.t || 0) > (best.t || 0)))) best = t; } }
+  return best && allCats().some(k => k[0] === best.c) ? best.c : '';
+}
 function hEingang(list) {
   let seen = []; try { seen = JSON.parse(localStorage.getItem('takt.eingang') || '[]'); } catch (e) {}
   if (!Array.isArray(seen)) seen = [];
@@ -4457,14 +4466,15 @@ function hEingang(list) {
       const x = String(c.x || '').trim().slice(0, 20000), p = { notes: {} };
       if (x) { p.notes[newId()] = { x, f: '', c: t, m: t }; ndoc.patch(p); }
     } else if (c.art === 'ausgabe') {
-      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Eine Einnahme (k 'in') hat keine Kategorie.
+      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens; ohne Wort die, unter der derselbe Händler (Notiz) zuletzt einsortiert wurde (katVon); sonst „Sonstiges“.
+         Eine Einnahme (k 'in') hat keine Kategorie.
          Die Namen aus allCats() sind schon für HTML umgeschrieben (& ist dort &amp;): Das Wort wird deshalb genauso umgeschrieben, bevor verglichen wird.
          Konto: das gewählte (acc), wenn es das Konto gibt; ein leeres acc heißt ausdrücklich „Kein Konto“. Fehlt acc (Kurzbefehl, iPhone-App bis 0.4) oder ist das Konto
          inzwischen gelöscht, gilt die Vorbelegung des Blatts (zuletzt benutztes oder das einzige), sonst keines. */
       const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), ein = c.k === 'in', kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
       const hit = !ein && kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
-      const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null;
-      if (okCents(a)) { p.tx[newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : 'sonst', n: String(c.n || '').trim().slice(0, 60), acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+      const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null, n = String(c.n || '').trim().slice(0, 60);
+      if (okCents(a)) { p.tx[newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
   });
   /* Abgehaktes zuletzt und mit „Rückgängig“: Ein Fehltipp im Widget soll nichts kosten */

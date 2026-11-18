@@ -107,6 +107,18 @@ async function schnelleingabe(p) {
   /* 6. Gewähltes Konto gegen die Vorbelegung, und ein unbekanntes k gilt als Ausgabe: 1 € vom Bargeld, obwohl das Girokonto vorbelegt wäre. Bargeld 42 − 1 = 41, Vermögen 1.251. */
   t = await auftrag({ id: 'b6', art: 'ausgabe', k: 'quatsch', a: 100, acc: 'bar' }); v = await verm();
   p.ok('gewähltes Konto zählt, nicht die Vorbelegung; unbekanntes k ist eine Ausgabe', t.k === 'out' && t.acc === 'bar' && v === '1.251 € || Bargeld gerechnet seit Heute 41 € | Girokonto gerechnet seit Heute 1.210 €', z(t) + ' · ' + v);
+  /* 7. Der Händler merkt sich die Kategorie (v67): „Rewe“ wird einmal mit dem Wort „essen“ gebucht. Die nächste Zahlung bei „rewe“ ohne Wort (so kommt sie aus Apple Pay) landet von selbst unter „essen“.
+     Alle ohne Konto, damit sich kein Stand ändert. */
+  t = await auftrag({ id: 'b7', art: 'ausgabe', a: 1200, acc: '', n: 'Rewe', kat: 'essen' });
+  const t8 = await auftrag({ id: 'b8', art: 'ausgabe', a: 800, acc: '', n: ' rewe ' });
+  p.ok('Händler merkt sich die Kategorie: zweite Zahlung bei „rewe“ ohne Wort landet unter „essen“', t.c === 'essen' && t8.a === 800 && t8.c === 'essen' && t8.n === 'rewe', z(t) + ' · ' + z(t8));
+  /* 8. Unbekannter Händler bleibt „Sonstiges“, auch beim zweiten Mal: „Sonstiges“ zählt nicht als einsortiert. Ein Wort geht immer vor (Rewe mit „frei“ → frei), und danach gilt für Rewe „frei“. */
+  await auftrag({ id: 'b9', art: 'ausgabe', a: 150, acc: '', n: 'Kiosk' });
+  const t10 = await auftrag({ id: 'b10', art: 'ausgabe', a: 160, acc: '', n: 'Kiosk' }), t11 = await auftrag({ id: 'b11', art: 'ausgabe', a: 900, acc: '', n: 'Rewe', kat: 'frei' }), t12 = await auftrag({ id: 'b12', art: 'ausgabe', a: 910, acc: '', n: 'REWE' });
+  p.ok('unbekannter Händler bleibt „Sonstiges“; ein Wort geht vor, danach gilt die neue Kategorie', t10.c === 'sonst' && t11.c === 'frei' && t12.c === 'frei', z(t10) + ' · ' + z(t11) + ' · ' + z(t12));
+  /* 9. Eine Einnahme vom selben Händler bekommt keine Kategorie */
+  const t13 = await auftrag({ id: 'b13', art: 'ausgabe', k: 'in', a: 500, acc: '', n: 'Rewe' });
+  p.ok('Einnahme vom selben Händler: keine Kategorie', t13.k === 'in' && t13.c === 'sonst', z(t13));
   await o.browser.close();
   return o.fehler;
 }

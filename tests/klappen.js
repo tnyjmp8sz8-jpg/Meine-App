@@ -329,10 +329,11 @@ lauf(async () => {
   P.ok('Gewicht: … auch beim Zuklappen eines Monats; ein Tipp auf das „i“ verbirgt sie dann', nachMonat && !(await page.isVisible('#info-w-leg')) && !(await infoAuf('w-leg')));
   await page.click('#v-gewicht [data-info="w-leg"]');
   await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
-  /* Cardio „Letzter Lauf“ ist seit v66 eine Klappzeile unter dem Graphen. Zu: Tag, Art, Strecke und Zeit, rechts der Vergleich der Pace. Aufgeklappt: Pace, Effizienz, Puls und womit verglichen wird.
-     Lauf von heute: 5000 m in 1500 s → „5,0 km in 25:00“, 5:00 /km. Der Outdoor-Lauf davor ist der von gestern: 5000 m in 1620 s → 5:24 /km. Unterschied 24 s pro km, heute schneller. */
+  /* Cardio „Letzter Lauf“ ist seit v66 eine Klappzeile unter dem Graphen. Zu: Tag, Art, Strecke und Zeit, rechts der Vergleich der Effizienz (v67). Aufgeklappt: Pace, Effizienz, Puls und womit verglichen wird.
+     Lauf von heute: 5000 m in 1500 s mit Puls 150 → „5,0 km in 25:00“, 5:00 /km, Effizienz 5000 / (25 × 150) = 1,333. Der Outdoor-Lauf davor ist der von gestern: 5000 m in 1620 s
+     mit Puls 152 → 5:24 /km, Effizienz 5000 / (27 × 152) = 1,218. Pace 24 s pro km schneller, Effizienz 1,333 / 1,218 = 1,094 → +9,4 %. */
   const ll = '#v-training [data-fold="letzterLauf"]', llZu = (await text(page, ll)).replace(/\s+/g, ' ');
-  P.ok('Cardio „Letzter Lauf“: zuerst zu, mit Tag, Art, Strecke, Zeit und dem Vergleich der Pace', (await page.getAttribute(ll, 'aria-expanded')) === 'false' && llZu.includes('Letzter Lauf') && llZu.includes('Heute · Outdoor · 5,0 km in 25:00') && llZu.includes('24 s schneller') && (await z('#v-training .kvs')) === 0, llZu);
+  P.ok('Cardio „Letzter Lauf“: zuerst zu, mit Tag, Art, Strecke, Zeit und dem Vergleich der Effizienz', (await page.getAttribute(ll, 'aria-expanded')) === 'false' && llZu.includes('Letzter Lauf') && llZu.includes('Heute · 5,0 km in 25:00') && !llZu.includes('Outdoor') && llZu.includes('Effizienz +9,4 %') && !llZu.includes('schneller') && (await z('#v-training .kvs')) === 0, llZu);
   P.ok('Cardio „Letzter Lauf“: der Vergleich ist grün, die Zeile steht unter dem Graphen und über „Läufe“', await page.evaluate(() => {
     const v = document.querySelector('#v-training'), z = v.querySelector('[data-fold="letzterLauf"]'), probe = document.createElement('i'); document.body.appendChild(probe); probe.style.color = 'var(--good)';
     const gut = getComputedStyle(probe).color; probe.remove();
@@ -475,7 +476,16 @@ lauf(async () => {
       return { text: f.textContent, delta: d ? d.textContent : '', gruen: !!f.querySelector('b .up'), satz: v.textContent.includes('Effizienz im Schnitt'), passt: f.querySelector('b').scrollWidth <= f.clientWidth, seite: document.querySelector('#scroll').scrollWidth <= document.querySelector('#scroll').clientWidth };
     });
     P.ok('Cardio, Kachel „Effizienz“: ' + soll + ' zum Vormonat neben dem Wert, grün, kein loser Satz, passt bei 320 px', kachel.delta === soll && kachel.gruen && kachel.text.includes('1,33') && !kachel.satz && kachel.passt && kachel.seite, JSON.stringify(kachel));
-    if (soll !== '+28 %') await browser.close();
+    await browser.close();
+  }
+  /* Ohne Puls gibt es keine Effizienz: Dann steht rechts in der Zeile „Letzter Lauf“ der Vergleich der Pace. Läufe am 10. (5000 m in 1620 s) und am 12. (5000 m in 1500 s): 24 s pro km schneller. */
+  {
+    const c = leer(), M = monat(0);
+    c.T = { hk: {}, runs: { a: { d: M + '-10', m: 5000, s: 1620, hr: null, k: 'out' }, b: { d: M + '-12', m: 5000, s: 1500, hr: null, k: 'out' } } };
+    ({ browser, page, fehler } = await oeffnen({ daten: c, uhr: new Date(+M.slice(0, 4), +M.slice(5) - 1, 15, 12) }));
+    await bereich(page, 'training'); await kurz();
+    const ohne = (await text(page, '#v-training [data-fold="letzterLauf"]')).replace(/\s+/g, ' ');
+    P.ok('Cardio „Letzter Lauf“ ohne Puls: rechts steht der Vergleich der Pace', ohne.includes('24 s schneller') && !ohne.includes('Effizienz'), ohne);
   }
   await P.ende(browser, fehler);
 });
