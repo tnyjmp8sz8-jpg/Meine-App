@@ -776,7 +776,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v70</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v71</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1297,6 +1297,9 @@ function normApp(d) {
 const byId = id => S.routines.find(r => r.id === id) || null;
 /* Blatt öffnen. Der Browser setzt den Fokus sonst auf den ersten Knopf und zeichnet auf dem iPhone einen Rahmen darum; der Fokus gehört dann aufs Blatt selbst. */
 function openDlg(d) { if (!d.open) d.showModal(); const a = document.activeElement; if (a && a !== d && a.tagName === 'BUTTON') d.focus(); }
+/* Ins erste Feld eines Blatts, sofort und ohne Verzögerung: Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp heraus gesetzt wird.
+   Mit einer kurzen Wartezeit davor bekam das Feld in der iPhone-App zwar den blauen Rand, die Tastatur blieb aber aus (Bildschirmfoto des Nutzers, 18.11.). */
+function fokus(i) { i.focus(); try { i.select(); } catch (e) {} }
 const entry = (date, rid) => { const y = LY[date.slice(0, 4)]; const d = y && y[date]; return (d && d[rid]) || null; };
 const secsOf = (date, rid) => { const e = entry(date, rid); return Math.max(0, Number(e && e.s) || 0); };
 const doneOn = (date, rid) => { const e = entry(date, rid); return !!(e && e.d); };
@@ -1572,7 +1575,7 @@ function openSheet(id) {
   }
   openDlg(dlg);
   dlg.scrollTop = 0;
-  if (!r) setTimeout(() => $('#f-name').focus(), 60);
+  if (!r) fokus($('#f-name'));
 }
 function closeSheet() { if (dlg.open) dlg.close(); }
 
@@ -1850,7 +1853,7 @@ function openW(mode, date) {
     fillEntry(k);
   }
   openDlg(wdlg);
-  setTimeout(() => { const i = $('#w-val'); i.focus(); try { i.select(); } catch (e) {} }, 60);
+  fokus($('#w-val'));
 }
 function closeW() { if (wdlg.open) wdlg.close(); }
 $('#ws-close').addEventListener('click', closeW);
@@ -2462,7 +2465,7 @@ function openM(mode, id, kind, date) {
     paintM();
     openDlg(mdlg);
     mdlg.scrollTop = 0;
-    setTimeout(() => { const i = $('#m-amt'); i.focus(); try { i.select(); } catch (e) {} }, 60);
+    fokus($('#m-amt'));
     return;
   }
   if (mode === 'tx') {
@@ -2491,7 +2494,7 @@ function openM(mode, id, kind, date) {
   paintM();
   openDlg(mdlg);
   mdlg.scrollTop = 0;
-  setTimeout(() => { const i = mode === 'fixed' && !mE.id ? $('#m-name') : $('#m-amt'); i.focus(); try { i.select(); } catch (e) {} }, 60);
+  fokus(mode === 'fixed' && !mE.id ? $('#m-name') : $('#m-amt'));
 }
 function closeM() { if (mdlg.open) mdlg.close(); }
 $('#ms-close').addEventListener('click', closeM);
@@ -2801,7 +2804,7 @@ function openT(id, date, sek) {
   paintTK();
   openDlg(tdlg);
   tdlg.scrollTop = 0;
-  setTimeout(() => { const i = $('#t-km'); i.focus(); try { i.select(); } catch (e) {} }, 60);
+  fokus($('#t-km'));
 }
 function closeT() { if (tdlg.open) tdlg.close(); }
 $('#ts-close').addEventListener('click', closeT);
@@ -3532,7 +3535,7 @@ function openP(id) {
   paintP();
   openDlg(pdlg);
   pdlg.scrollTop = 0;
-  if (!pl) setTimeout(() => $('#p-name').focus(), 60);
+  if (!pl) fokus($('#p-name'));
 }
 function closeP() { if (pdlg.open) pdlg.close(); }
 $('#ps-close').addEventListener('click', closeP);

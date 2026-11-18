@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v70)
+# Track. – Projektwissen (App-Stand v71)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -108,7 +108,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Rückgängig (v45, Abschnitt „Rückgängig“): ein Weg für alle Löschknöpfe (id endet auf `-del`, oder `data-vdel`, oder `data-undo`). Vor dem Tipp wird der gespeicherte Stand gemerkt; hat sich danach etwas geändert, erscheint unten „Gelöscht · Rückgängig“ (`#toast`, 7 Sekunden). `saveLocal()` ruft `toastOff()`: Jede weitere Änderung nimmt den Hinweis weg, damit Rückgängig nie etwas Neueres überschreibt. Neue Löschknöpfe brauchen nur eine id auf `-del`.
 - Eigene Kategorien (v45): `MF.cats`, anlegen im Blatt über „+ Kategorie“ (`addCatM()`), `allCats()` = feste plus eigene. Unbenutzte (keine Buchung, kein Budget) entfernt `cleanCats()` beim Start. Warum: So braucht es keine Verwaltung zum Löschen. Umbenennen gibt es noch nicht.
 - Notizen sind eine schnelle Aufnahme (v51, Wunsch des Nutzers: „in 5 Sekunden“): kein Titel, keine Unterpunkte, kein Anheften. „+ Notiz“ öffnet nur ein Textfeld mit Tastatur, Enter schließt ab, jede Notiz hat einen Kreis, Abhaken löscht sie (mit „Rückgängig“, damit ein Fehltipp nichts kostet). Sie stehen auch auf Heute, sonst wäre das schnell Notierte außer Sicht. Mein Entwurf aus v49 (Titel, Text, Zeilen zum Abhaken, Anheften, nach Monaten) war ihm zu schwer.
-- Der Fokus ins Textfeld wird beim Öffnen sofort gesetzt, nicht verzögert (`openN()`, `openA()`): Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp kommt. Am Gerät noch nicht bestätigt.
+- Der Fokus ins erste Feld eines Blatts wird beim Öffnen sofort gesetzt, nie verzögert (`fokus(feld)` in allen Blättern, seit v71; `openN()` und `openA()` schon vorher): Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp kommt. Am Gerät belegt (18.11., Bildschirmfoto): Mit 60 ms Wartezeit hatte der Betrag im Budget in der iPhone-App den blauen Rand, aber keine Tastatur; bei den Notizen (sofort) ging sie auf. Kein `setTimeout` vor einem Fokus, der eine Tastatur öffnen soll; `tests/eingabe.js` prüft es ohne Warten gleich nach dem Klick.
 - Notizen speichern von selbst (v49): kurz nach jeder Eingabe, beim Verlassen eines Feldes und bei jedem Schließen (`close`-Ereignis des Blatts); kein „Speichern“-Knopf. Warum: Ein Blatt lässt sich wegziehen, dabei darf kein Text verloren gehen. Leere Notizen werden nicht angelegt, geleerte gelöscht. `nE = null` heißt „nichts zu speichern“ (nach dem Löschen), damit das Schließen die Notiz nicht wieder anlegt.
 - Im Blatt darf sich beim Speichern nichts verschieben und nichts neu gezeichnet werden, was man gerade antippt (v49): Was im Blatt verborgen ist, bleibt es, solange es offen ist (bei einer neuen Notiz: Ordner, „Als Aufgabe“, Löschen). Ein Test fand, dass sonst der Tipp auf „Fertig“ danebenging.
 - Offene Aufgaben mit Datum von gestern oder früher stehen unter „Heute“ mit rotem Datum: Liegengebliebenes rutscht von selbst weiter, ohne dass das Datum umgeschrieben wird.
@@ -200,7 +200,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v70` → `takt-v71`), `<span class="ver">v70</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v71` → `takt-v72`), `<span class="ver">v71</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 

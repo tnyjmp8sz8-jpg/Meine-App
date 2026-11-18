@@ -61,5 +61,31 @@ lauf(async () => {
   e = (await gw()).entries;
   P.ok('gespeichert: 77,7 kg vor fünf Tagen, der Tag dazwischen bleibt leer', e[tag(5)] === 77.7 && e[tag(2)] == null && e[tag(3)] === 79, JSON.stringify(e));
 
+  // --- Tastatur: Das erste Feld hat den Fokus schon im selben Schritt wie der Tipp ---
+  /* Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp kommt. Bis v70 kam er 60 ms später: In der iPhone-App hatte das Feld
+     dann den blauen Rand, aber keine Tastatur (Bildschirmfoto des Nutzers, 18.11.). Geprüft wird deshalb ohne Warten, gleich nach dem Klick. */
+  const sofort = async (knopf, wo) => {
+    await page.keyboard.press('Escape'); await kurz();
+    if (wo) { await bereich(page, wo); await kurz(); }
+    return page.evaluate(sel => {
+      const b = [...document.querySelectorAll(sel)].find(x => x.offsetParent);
+      if (!b) return 'kein Knopf';
+      b.click();
+      const a = document.activeElement;
+      return a && a.id + (a.closest('dialog[open]') ? '' : ' (nicht im Blatt)');
+    }, knopf);
+  };
+  P.ok('Schnell-Knopf „Ausgabe“ auf Heute: Betrag hat sofort den Fokus', (await sofort('#v-heute .quick [data-v="ausgabe"]', 'heute')) === 'm-amt');
+  P.ok('Schnell-Knopf „Gewicht“ auf Heute: Feld hat sofort den Fokus', (await sofort('#v-heute .quick [data-v="gewicht"]', 'heute')) === 'w-val');
+  P.ok('Gewicht eintragen: Feld hat sofort den Fokus', (await sofort('#v-gewicht [data-w="add"]', 'gewicht')) === 'w-val');
+  await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'haushalt'); await kurz();
+  await page.evaluate(() => { const b = [...document.querySelectorAll('#v-haushalt [data-m="sub"]')].find(x => x.dataset.v === 'budget'); if (b) b.click(); });
+  await kurz();
+  P.ok('Budget, Knopf „Ausgabe“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="add"]')) === 'm-amt');
+  P.ok('Budget, Knopf „Einnahme“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="income"]')) === 'm-amt');
+  P.ok('Lauf eintragen: Strecke hat sofort den Fokus', (await sofort('#v-training [data-t="add"]', 'training')) === 't-km');
+  P.ok('Neue Routine: Name hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'f-name');
+  await page.keyboard.press('Escape'); await kurz();
+
   await P.ende(browser, fehler);
 });

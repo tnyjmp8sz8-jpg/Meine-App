@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v70 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, Commit `8d26754`, veröffentlicht am 18.11.2026, Pages-Lauf 60 erfolgreich). `node tests/alle.js` (v70): alle 716 Prüfungen in 14 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 154, Gesten 21, Eingaben 17, Löschen 22, Aufgaben und Notizen 80, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10).
+- App-Inhalt (`index.html`): live ist v71 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 18.11.2026 spätabends). `node tests/alle.js` (v71): alle 723 Prüfungen in 14 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 154, Gesten 21, Eingaben 24, Löschen 22, Aufgaben und Notizen 80, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10).
+- v71 behebt seinen Fund (Bildschirmfoto 18.11., 23:47: Blatt „Ausgabe eintragen“ im Budget, Betrag mit blauem Rand, keine Tastatur): Der Fokus kam 60 ms nach dem Tipp. Jetzt sofort, in allen Blättern (Buchung, Gewicht, Lauf, neue Routine, neuer Plan). Am iPhone noch nicht bestätigt: Bildschirmfoto erbitten. Auf seinem Foto standen die Konten „Girokonto“ und „PayPal“ (noch nicht in „Trade Republic“ umbenannt).
 - iPhone-App: Bei ihm läuft 0.4 („gültig bis 24. November“), soweit bekannt. Im Release „iphone-test“ liegt seit 18.11. abends Fassung 0.6 (Schnelleingabe mit Ausgabe/Einnahme und Konto, Sicherung von selbst, Läufe von der Apple Watch über Kurzbefehle, „Ausgabe eintragen“ mit Konto, neues Symbol). Gebaut bei Codemagic (Bau `6afdebc71ae4e76cb30891f0`, Selbsttest bestanden, `Track.ipa` 1.907.012 Bytes, Prüfsumme im Release geprüft). Die Bilder auf dem Zweig `ios-bild` stammen noch vom GitHub-Bau von 0.5. Ihm gemeldet; ob er installiert hat, ist offen. Am iPhone ist von 0.5/0.6 noch nichts geprüft.
 - Kurzbefehle: Er hat bisher nur den zum Erneuern („habe nur befehl für auto refresh“, 18.11. abends). Die Anleitung für die drei Automationen (Apple Pay, „Lauf merken“, „Läufe übernehmen“ mit Strecke und Puls) und die drei Einstellungen in der App (Konto in „Trade Republic“ umbenennen, feste Posten mit Konto und Tag, Ordner für die Sicherung in iCloud) hat er in einem Stück bekommen. Rat an ihn: mit Apple Pay anfangen. Hakt etwas: Bildschirmfoto der Automation bzw. der aufgeklappten Zeile „Apple Watch“ erbitten.
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
@@ -42,6 +43,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v67: In „Letzter Lauf“ steht rechts die Effizienz statt der Pace; von selbst gebuchte Ausgaben bekommen die Kategorie des Händlers.
 - v68–v69: Aufgaben mit eigenem Takt „Alle … Tage/Wochen“, gezählt ab dem Starttag.
 - v70 mit iPhone-App 0.6: neues App-Symbol (schwarz mit blauem Schein).
+- v71: Die Tastatur geht in allen Blättern sofort auf (Fokus ohne Wartezeit).
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.
@@ -66,7 +68,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Erneuern: Steht der Zähler in AltStore nach einigen Tagen von selbst wieder bei 7?
 - Oberfläche (v64, v66): übersichtlich genug, oder fehlt eine eingeklappte Liste? Trifft man das kleine Plus und „Alle n“, ohne die erste Zeile zu erwischen? Reicht eine Zeile je Notiz auf Heute?
 - Monatsabschluss (v59): dritter Umschalter „Monat“; Hinweis am Monatsanfang.
-- Eingaben: Umschalter Ausgabe/Einnahme im Blatt gut zu sehen (v56)? Geht bei „+ Notiz“ und beim Betrag die Tastatur sofort auf, legt Enter die Notiz an und bleibt das Feld offen (v51, v54)?
+- Eingaben: Umschalter Ausgabe/Einnahme im Blatt gut zu sehen (v56)? Geht seit v71 beim Betrag (Budget, Schnell-Knopf), beim Gewicht und beim Lauf die Tastatur sofort auf? Geht sie bei „+ Notiz“ sofort auf, legt Enter die Notiz an und bleibt das Feld offen (v51, v54)?
 - Größen und Farben (v52, v55): etwas zu klein zum Lesen oder Treffen? Kreis zum Abhaken? Farbiges Plus in den Schnell-Knöpfen?
 - Gesten (v44, v45): Blatt wegziehen, zwischen Monaten wischen (löst es beim Scrollen aus?), Graph ablesen, „Rückgängig“ über der Leiste unten.
 - Aufgaben (v50, v69): erscheint nach dem Abhaken die nächste unter „Demnächst“? Bleibt die Tastatur bei der Suche in den Notizen offen?
