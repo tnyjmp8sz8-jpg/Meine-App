@@ -10,6 +10,13 @@
 - Wortwahl gegenüber dem Nutzer: „App“ für den Inhalt, „neue Installation“ für eine neue IPA (nicht „Web-App“ oder „Hülle“).
 - Veröffentlichung v64 geprüft über GitHub: Lauf 52 von „pages build and deployment“ zum Commit `78ff1fd` erfolgreich (bauen, ausliefern). `node tests/live.js` ging in dieser Umgebung nicht. Ob v64 auf seinem iPhone angekommen ist, zeigt die Fußzeile; Rückmeldung steht aus. Zurück auf den alten Aufbau ginge über eine neue Version aus dem Stand `e238d31`.
 
+## Laufender Auftrag (18.11.2026, morgens): Schnelleingabe mit Konten, Sicherung von selbst
+Wortlaut (mit Bildschirmfoto der Schnelleingabe „Ausgabe“ am Gerät, also läuft Fassung 0.4 bei ihm): „füge deinen vorschlag mit ein / dazu: wenn ich auf dem widget auf ausgabe klicke kommt das, ich will wählen können zwischen ausgabe und einnahme (standard is ausgabe) und meine hinzugefügten konten auswählen können damit es direkt richtig mit meinem vermögen verrechnet wird / findest du die app übersichtlich genug?“
+- „Vorschlag“ = die iPhone-App legt von selbst eine Sicherung in „Dateien“ ab, die Erinnerung entfällt.
+- Plan: App-Inhalt v65 (Konten im Stand für die Schnelleingabe; Einnahme und Konto aus der Schnelleingabe übernehmen; Sicherung von selbst an den iPhone-Teil schicken, Zeile „Sicherung“ zeigt den Stand) und iPhone-App 0.5 (Schnelleingabe mit Pillen Ausgabe/Einnahme und Konten; Sicherung je Tag in den Ordner der App, sichtbar in „Dateien“, die letzten 14; wahlweise zusätzlich ein Ordner in iCloud Drive; dazu die offenen Punkte für 0.5). Der Vertrag zwischen beiden Seiten steht im Skript des Arbeitsablaufs der Sitzung und kommt nach dem Bau in `CLAUDE.md`.
+- Ablauf: zwei Helfer bauen parallel (Commits mit „[skip ci]“, damit der Bau bei GitHub nicht mit halbem Stand startet), fünf Prüfer, Nachbessern; dann v65 veröffentlichen, Bau der iPhone-App bei GitHub von Hand starten, Bilder aus dem Simulator ansehen, dem Nutzer die neue Installation nennen.
+- Seine Frage nach der Übersicht: beantwortet (im Wesentlichen ja; zwei kleine Stellen genannt, nichts gebaut).
+
 ## Letzter Auftrag (17./18.11.2026): Oberfläche aufräumen, erledigt in v64
 Wortlaut: „meine app muss cleaner aussehen; da ist noch zu viel zu unübersichtlich aber ich mag alle funktionen überleg dir was wie alles enthalten bleibt aber auf den ersten blick übersichtlich bleibt und baue es bis es fertig ist. überprüfe dich selbst ob es passt und passe gegebenenfalls an“.
 - Weg: Bilder aller Ansichten; drei gebaute Entwürfe; gewählt „Erst das Wichtigste, der Rest eingeklappt“ (Regeln in `CLAUDE.md` unter Entscheidungen, Klappzeilen, Design-Regeln); danach Klappzeilen vereinheitlicht, Fehler behoben, drei unabhängige Prüfungen (Code, „nichts verloren“, Bilder) und Nachbessern.
