@@ -44,6 +44,8 @@ enum Web {
     static let start = URL(string: "trackapp://lokal/index.html")!
     /// Hier liegt immer die neueste Web-App (GitHub Pages, Zweig main)
     static let quelle = URL(string: "https://tnyjmp8sz8-jpg.github.io/Meine-App/index.html")!
+    /// Versionsnummer der Seite, die zuletzt an das Fenster ausgeliefert wurde, also der gezeigten (siehe Lokal)
+    static var gezeigt = 0
 
     /// Mit der App ausgelieferte Fassung
     static var mitgeliefert: URL? { Bundle.main.resourceURL?.appendingPathComponent("web", isDirectory: true) }
@@ -81,6 +83,7 @@ final class Lokal: NSObject, WKURLSchemeHandler {
         var daten: Data?
         if name == "index.html" {
             daten = Web.seite()
+            Web.gezeigt = Web.version(daten)
         } else if !name.contains(".."), let ordner = Web.mitgeliefert {
             daten = try? Data(contentsOf: ordner.appendingPathComponent(name))
         }
@@ -118,6 +121,10 @@ struct WebView: UIViewRepresentable {
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.zurueck), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.adresse), name: Halter.eingang, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.eingangHolen), name: Halter.eingangDa, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.verlassen), name: UIApplication.willResignActiveNotification, object: nil)
+        // Sicherung von selbst: Das Ergebnis jedes Schreibversuchs geht an die Web-App zurück
+        let halter = context.coordinator
+        Sicherung.shared.melden = { [weak halter] mitAuskunft in halter?.gesichert(mitAuskunft) }
         return view
     }
 
@@ -136,13 +143,15 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     private var bereit = false        // die Web-App hat sich gemeldet
     private var standDa = false       // sie hat einen Stand geschickt
     private var geplant = ""          // wofür die Mitteilungen zuletzt geplant wurden
+    private var wartet = 0            // Version einer nachgeladenen Web-App, die wegen eines offenen Blatts noch nicht gezeigt wird
+    private var aufschub = UIBackgroundTaskIdentifier.invalid   // Aufschub von iOS beim Verlassen der App, solange die Sicherung geschrieben wird
     /// Im Selbsttest und für das Bild aus dem Simulator keine Abfrage von iOS („Mitteilungen erlauben?“)
     private let still = CommandLine.arguments.contains("-pruefen") || CommandLine.arguments.contains("-ohneFragen")
 
-    /// Ruft eine Funktion der Web-App auf (window.TrackHuelle)
-    private func rufe(_ name: String, _ wert: Any) {
-        guard JSONSerialization.isValidJSONObject([wert]), let daten = try? JSONSerialization.data(withJSONObject: [wert]), let json = String(data: daten, encoding: .utf8) else { return }
-        view?.evaluateJavaScript("window.TrackHuelle && window.TrackHuelle.\(name).apply(null, \(json)) && 0", completionHandler: nil)
+    /// Ruft eine Funktion der Web-App auf (window.TrackHuelle), mit den Werten als ihren Angaben. Kennt die Web-App die Funktion nicht, passiert nichts.
+    private func rufe(_ name: String, _ werte: Any...) {
+        guard JSONSerialization.isValidJSONObject(werte), let daten = try? JSONSerialization.data(withJSONObject: werte), let json = String(data: daten, encoding: .utf8) else { return }
+        view?.evaluateJavaScript("window.TrackHuelle && window.TrackHuelle.\(name) && window.TrackHuelle.\(name).apply(null, \(json)) && 0", completionHandler: nil)
     }
 
     func userContentController(_ userContentController: WKUserContentController, didReceive nachricht: WKScriptMessage) {
@@ -154,14 +163,44 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             stand(inhalt)
         } else if art == "health" {
             Gesundheit.shared.verbinden { self.auskunft(); self.laeufeHolen() }
+        } else if art == "sicherung" {
+            Sicherung.shared.annehmen(inhalt)
+        } else if art == "ordner" {
+            ordnerWaehlen()
         }
     }
 
-    /// Sagt der Web-App, welche Fassung der Hülle läuft, bis wann sie gültig ist und ob Health freigegeben ist
+    /// Sagt der Web-App, welche Fassung der Hülle läuft, bis wann sie gültig ist, ob Health freigegeben ist und wie es um die Sicherung von selbst steht.
+    /// An „sicherung“ erkennt die Web-App, dass sie ihre Sicherung schicken darf (ab 0.5).
     private func auskunft() {
-        var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand]
+        var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand,
+                                   "sicherung": Sicherung.shared.auskunft]
         if let ablauf = Profil.ablauf { info["ablauf"] = ablauf.timeIntervalSince1970 * 1000 }
         rufe("info", info)
+    }
+
+    /// Ergebnis eines Schreibversuchs der Sicherung an die Web-App. Nach der Wahl eines Ordners geht vorher die Auskunft neu hinaus (dort steht sein Name).
+    func gesichert(_ mitAuskunft: Bool) {
+        guard bereit else { return }
+        if mitAuskunft { auskunft() }
+        rufe("gesichert", Sicherung.shared.auskunft)
+    }
+
+    /// Die App wird verlassen: Die Web-App schickt jetzt ihre Sicherung, falls seit der letzten etwas geändert wurde.
+    /// Dazu vier Sekunden Aufschub von iOS, damit die Datei noch geschrieben wird, auch wenn die App gleich im Hintergrund ist.
+    @objc func verlassen() {
+        guard bereit else { return }
+        if aufschub == .invalid {
+            aufschub = UIApplication.shared.beginBackgroundTask(withName: "sicherung", expirationHandler: nil)
+            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { self.aufschubEnde() }
+        }
+        rufe("sichern")
+    }
+
+    private func aufschubEnde() {
+        guard aufschub != .invalid else { return }
+        UIApplication.shared.endBackgroundTask(aufschub)
+        aufschub = .invalid
     }
 
     private func laeufeHolen() {
@@ -170,7 +209,20 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     @objc func zurueck() {
         guard bereit else { return }
+        zeigen()
         auskunft(); eingangHolen(); laeufeHolen()
+    }
+
+    /// Zeigt eine nachgeladene Web-App, die neuer ist als die gezeigte, aber nie, solange ein Blatt offen ist:
+    /// Dann bleibt sie vorgemerkt und kommt beim nächsten Zurückkommen in die App. Je nachgeladener Fassung wird höchstens einmal neu geladen.
+    private func zeigen() {
+        guard wartet > Web.gezeigt else { return }
+        view?.evaluateJavaScript("document.querySelector('dialog[open]') ? 0 : 1") { ergebnis, _ in
+            if (ergebnis as? Int) == 1 {
+                self.wartet = 0
+                self.view?.reload()
+            }
+        }
     }
 
     /// Übergibt der Web-App, was im Widget oder per Kurzbefehl vorgemerkt wurde. Gestrichen wird nur, was sie als übernommen zurückmeldet.
@@ -225,20 +277,20 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         }
     }
 
-    /// Holt die neueste Web-App. Ist sie neuer als die gezeigte, wird sie gespeichert und geladen,
-    /// aber nie, solange ein Blatt offen ist (dann beim nächsten Öffnen): dieselbe Regel wie in der Web-App.
+    /// Holt die neueste Web-App. Ist sie neuer als die gespeicherte, wird sie gespeichert und geladen,
+    /// aber nie, solange ein Blatt offen ist (dann beim nächsten Zurückkommen in die App, siehe zeigen): dieselbe Regel wie in der Web-App.
     @objc func aktualisieren() {
         guard Date().timeIntervalSince(zuletzt) > 600 else { return }
         zuletzt = Date()
         let anfrage = URLRequest(url: Web.quelle, cachePolicy: .reloadIgnoringLocalCacheData, timeoutInterval: 20)
         URLSession.shared.dataTask(with: anfrage) { daten, antwort, _ in
-            guard let daten = daten, (antwort as? HTTPURLResponse)?.statusCode == 200, daten.count > 50_000,
-                  Web.version(daten) > Web.version(Web.seite()) else { return }
+            guard let daten = daten, (antwort as? HTTPURLResponse)?.statusCode == 200, daten.count > 50_000 else { return }
+            let neu = Web.version(daten)
+            guard neu > Web.version(Web.seite()) else { return }
             try? daten.write(to: Web.geladen, options: .atomic)
             DispatchQueue.main.async {
-                self.view?.evaluateJavaScript("document.querySelector('dialog[open]') ? 0 : 1") { ergebnis, _ in
-                    if (ergebnis as? Int) == 1 { self.view?.reload() }
-                }
+                self.wartet = neu
+                self.zeigen()
             }
         }.resume()
     }
@@ -262,6 +314,10 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             // Eingang: Jeder Start merkt eine Notiz vor, der dritte hakt vorher eine ab (siehe probeEingang). Nach dem dritten Start: 2 Notizen, nichts mehr vorgemerkt.
             alles["notizenZahl"] = Ablage.lesen()?.nz?.count ?? -1
             alles["eingangRest"] = Ablage.eingang().count
+            // Sicherung von selbst: Spätestens beim Verlassen nach dem ersten Start schickt die Web-App ihre Sicherung (dann ist eine Notiz da).
+            // Je Tag gibt es eine Datei: Nach dem dritten Start liegt genau eine in „Dokumente“, lesbar und von Track.
+            alles["sicherungen"] = Sicherung.dateien(in: Sicherung.ordner).count
+            alles["sicherungOk"] = Sicherung.neuesteLesbar()
             alles["health"] = Gesundheit.shared.zustand
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()

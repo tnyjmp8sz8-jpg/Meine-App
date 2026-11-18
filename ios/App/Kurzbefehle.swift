@@ -1,5 +1,6 @@
 import AppIntents
 import Foundation
+import WidgetKit
 
 // Aktionen für die App „Kurzbefehle“, Siri und ein Symbol auf dem Home-Bildschirm. Sie laufen, ohne dass Track. aufgeht:
 // Was eingetragen wird, merkt die Ablage vor, und die Web-App übernimmt es beim nächsten Öffnen. Das Widget zeigt eine neue Notiz sofort.
@@ -19,6 +20,8 @@ struct NotizHinzufuegen: AppIntent {
         let sauber = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !sauber.isEmpty else { return .result(dialog: "Die Notiz war leer.") }
         Ablage.notizDazu(sauber)
+        // Die Notiz steht schon im Stand für das Widget: gleich neu zeichnen, auch wenn die App nicht offen ist
+        WidgetCenter.shared.reloadAllTimelines()
         eingangMelden()
         return .result(dialog: "Notiert.")
     }

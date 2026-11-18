@@ -5,6 +5,7 @@ Payload/
 *.log
 simulator.png
 widget.png
+schnell-*.png
 pruefung-*.json
 build/
 *.xcodeproj

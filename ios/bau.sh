@@ -1,6 +1,6 @@
 #!/bin/bash
 # Baut die iPhone-App und prüft sie im Simulator. Läuft auf einem Mac mit Xcode: bei GitHub (.github/workflows/ios.yml) oder bei Codemagic (codemagic.yaml).
-# Ergebnis im Ordner ios/: Track.ipa (unsigniert, zum Installieren mit AltStore), simulator.png, widget.png, pruefung-1…3.json.
+# Ergebnis im Ordner ios/: Track.ipa (unsigniert, zum Installieren mit AltStore), simulator.png, widget.png, schnell-*.png, pruefung-1…3.json.
 # Die IPA entsteht erst, wenn alle Prüfungen bestanden sind.
 set -eo pipefail
 cd "$(dirname "$0")"
@@ -32,7 +32,9 @@ codesign --force --sign - --entitlements Info/Widget.entitlements Payload/Track.
 codesign --force --sign - --entitlements Info/Track.entitlements Payload/Track.app
 codesign -d --entitlements - Payload/Track.app 2>&1 | grep -E "application-groups|healthkit|group\."
 codesign -d --entitlements - Payload/Track.app/PlugIns/TrackWidget.appex 2>&1 | grep -E "application-groups|group\."
-plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|NSHealthShare|CFBundleShortVersionString|CFBundleIdentifier|UILaunchScreen"
+plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|NSHealthShare|CFBundleShortVersionString|CFBundleIdentifier|UILaunchScreen|UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace"
+# Beide Schlüssel müssen da sein, sonst erscheint der Ordner mit den Sicherungen nicht in „Dateien“ (Auf meinem iPhone › Track.)
+test "$(plutil -p Payload/Track.app/Info.plist | grep -c -E "UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace")" = 2
 plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
 # Aktionen für Kurzbefehle (Notiz, Ausgabe, Lauf) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
 ls Payload/Track.app/Metadata.appintents
@@ -69,11 +71,12 @@ xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen; sleep 6
 xcrun simctl io "$GERAET" screenshot simulator.png
 # Schnelleingabe aus dem Widget (Bilder für Notiz und Ausgabe). Gestartet mit „-schnell …“ statt über die Adresse: Im Simulator fragt die Adresse erst „Open in Track.?“.
+# „-schnellkonten“ zeigt bei der Ausgabe drei Beispielkonten (im Simulator gibt es keine eigenen).
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell notiz; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-notiz.png
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
-xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe; sleep 5
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -schnellkonten; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-ausgabe.png
 # Mit „-schnellprobe“ trägt sie von selbst „Schnell notiert“ ein und geht zurück auf den Home-Bildschirm (Bild danach).
 # Die Notiz muss dann im gemeinsamen Ordner für das Widget stehen.
@@ -83,6 +86,14 @@ xcrun simctl io "$GERAET" screenshot schnell-danach.png
 GRUPPE=$(xcrun simctl get_app_container "$GERAET" de.trackapp.track groups | awk '{print $2}' | head -1)
 echo "Gruppe: $GRUPPE"; cat "$GRUPPE/stand.json" | head -c 600; echo
 grep -q "Schnell notiert" "$GRUPPE/stand.json"
+# Dasselbe für die Ausgabe: Die Probe trägt 4,20 ein, stellt auf Einnahme und wählt das zweite Beispielkonto.
+# Den Auftrag legt sie dabei zusätzlich als Datei ab: Er muss k „in“ und acc „b2“ tragen, so erwartet ihn die Web-App.
+xcrun simctl terminate "$GERAET" de.trackapp.track || true; sleep 2
+rm -f "$DATEN/Documents/schnellprobe.json"
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -schnellkonten -schnellprobe; sleep 7
+echo "SCHNELLPROBE: $(cat "$DATEN/Documents/schnellprobe.json" 2>/dev/null || echo 'keine Datei')"
+grep -q '"k":"in"' "$DATEN/Documents/schnellprobe.json"
+grep -q '"acc":"b2"' "$DATEN/Documents/schnellprobe.json"
 # Speicher übersteht Neustarts · Web-App und Hülle sind verbunden · der Stand liegt für das Widget bereit (8 Tage) · Plan der Mitteilungen stimmt
 grep -q '"starts":3' pruefung-3.json
 grep -q '"bruecke":true' pruefung-3.json
@@ -90,6 +101,10 @@ grep -q '"widgetTage":8' pruefung-3.json
 # Eingang (Widget, Kurzbefehle): drei Notizen vorgemerkt, eine abgehakt → 2 Notizen in der Web-App, nichts bleibt vorgemerkt
 grep -q '"notizenZahl":2' pruefung-3.json
 grep -q '"eingangRest":0' pruefung-3.json
+# Sicherung von selbst: Beim Verlassen nach dem ersten und zweiten Start schickt die Web-App ihre Sicherung, je Tag eine Datei.
+# Beim dritten Start liegt genau eine in „Dokumente“, lesbar und mit app „takt“. (Läuft der Bau über Mitternacht, wären es zwei: dann neu starten.)
+grep -q '"sicherungen":1[,}]' pruefung-3.json
+grep -q '"sicherungOk":true' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa
