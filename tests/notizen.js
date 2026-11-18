@@ -218,5 +218,20 @@ lauf(async () => {
   await q.click('#n-list .nrow:has-text("Druckerpapier") .tk'); await warte();
   P.ok('Abhaken in der Liste löscht die Notiz', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 6);
   await b.browser.close();
-  await P.ende(null, fehler.concat(b.fehler));
+
+  // --- Erinnerung an die Sicherung: Ohne Sicherung zählt der älteste Eintrag, auch wenn es nur Notizen oder Aufgaben gibt (Tag des Anlegens) ---
+  const mittag = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getTime(); };
+  const e = await oeffnen(), erinnerung = () => text(e.page, '#v-heute .remind[data-h="export"]');
+  const nur = async N => { await e.page.evaluate(n => localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [], running: null }, LY: {}, N: n })), N); await e.page.reload(); await e.page.waitForTimeout(300); };
+  // eine Notiz von vor 6 Tagen: noch keine 7 Tage alt
+  await nur({ folders: {}, tasks: {}, notes: { a: { x: 'Sechs Tage alt', f: '', c: mittag(6), m: mittag(6) } } });
+  P.ok('nur eine Notiz, 6 Tage alt: noch keine Erinnerung', (await erinnerung()) === '', await erinnerung());
+  // eine Notiz von vor 7 Tagen: fällig
+  await nur({ folders: {}, tasks: {}, notes: { a: { x: 'Sieben Tage alt', f: '', c: mittag(7), m: mittag(1) } } });
+  P.enthaelt('nur eine Notiz, 7 Tage alt: Erinnerung', await erinnerung(), ['Noch keine Sicherung gespeichert', 'Jetzt sichern']);
+  // eine Aufgabe, vor 9 Tagen angelegt und gestern erledigt: Es zählt der Tag des Anlegens
+  await nur({ folders: {}, notes: {}, tasks: { a: { t: 'Neun Tage alt', f: '', d: null, done: mittag(1), c: mittag(9), n: '' } } });
+  P.enthaelt('nur eine Aufgabe, vor 9 Tagen angelegt: Erinnerung', await erinnerung(), ['Noch keine Sicherung gespeichert']);
+  await e.browser.close();
+  await P.ende(null, fehler.concat(b.fehler, e.fehler));
 });

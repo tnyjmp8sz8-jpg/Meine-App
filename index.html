@@ -3219,14 +3219,17 @@ $('#kform').addEventListener('submit', e => {
   const p = { log: {} }; p.log[d] = day;
   if (kS.orig) {
     const old = K.log[kS.orig] || {};
-    if (kS.orig !== d) { p.log[kS.orig] = {}; for (const id in old) p.log[kS.orig][id] = null; }
-    else for (const id in old) if (!(id in day)) p.log[d][id] = null;
+    if (kS.orig !== d) {
+      p.log[kS.orig] = {}; for (const id in old) p.log[kS.orig][id] = null;
+      /* Dauer und Plan (K.meta) ziehen mit um. Steht am neuen Tag schon eine Einheit, behält sie ihre eigenen Angaben. */
+      p.meta = {}; p.meta[kS.orig] = null; if (!kDay(d).length) p.meta[d] = (K.meta || {})[kS.orig] || null;
+    } else for (const id in old) if (!(id in day)) p.log[d][id] = null;
   }
   kdoc.patch(p);
   tSub = 'kraft'; closeK(); renderTraining();
 });
 $('#k-del').addEventListener('click', () => {
-  if (kS && kS.orig) { const old = K.log[kS.orig] || {}, p = { log: {} }; p.log[kS.orig] = {}; for (const id in old) p.log[kS.orig][id] = null; kdoc.patch(p); }
+  if (kS && kS.orig) { const old = K.log[kS.orig] || {}, p = { log: {}, meta: {} }; p.log[kS.orig] = {}; for (const id in old) p.log[kS.orig][id] = null; p.meta[kS.orig] = null; kdoc.patch(p); }
   closeK(); renderTraining();
 });
 
@@ -3842,7 +3845,7 @@ function weekStats(mk, c) {
   for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && t.d >= mk && t.d <= end) { flex += t.a; if (t.c === 'aus') eat += t.a; } }
   const g = tAgg(c.runs.filter(r => r.d >= mk && r.d <= end));
   return { mk, end, plan, done, quote: plan ? done / plan : null, wEnd, wDelta: wEnd != null && wPrev != null ? wEnd - wPrev : null, flex, eat, km: g.m / 1000, runs: g.n,
-    kraft: c.kd.filter(d => d >= mk && d <= end).length, money: !!c.firstTx && c.firstTx <= end, cardio: !!c.firstRun && c.firstRun <= end };
+    kraft: c.kd.filter(d => d >= mk && d <= end).length, money: !!c.firstTx && c.firstTx <= end, cardio: !!c.firstRun && c.firstRun <= end, gym: !!c.kd.length && c.kd[0] <= end };
 }
 /* Zusammenhänge: die letzten 12 abgeschlossenen Wochen am Median einer Größe teilen und die andere Größe vergleichen */
 function insightsHTML(c) {
@@ -3896,9 +3899,9 @@ function weekHTML() {
     const df = w.km - p.km;
     rows += kvRow('Laufen', kg(w.km), 'km · ' + w.runs + (w.runs === 1 ? ' Lauf' : ' Läufe'), p.cardio ? (Math.abs(df) < 0.05 ? 'gleich' : signed(df) + ' km') : '', df >= 0.05 ? 'up' : df <= -0.05 ? 'down' : '');
   }
-  if (c.kd.length) {
+  if (w.gym) {
     const df = w.kraft - p.kraft;
-    rows += kvRow('Gym', String(w.kraft), w.kraft === 1 ? 'Einheit' : 'Einheiten', df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df), df > 0 ? 'up' : df < 0 ? 'down' : '');
+    rows += kvRow('Gym', String(w.kraft), w.kraft === 1 ? 'Einheit' : 'Einheiten', p.gym ? (df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df)) : '', p.gym ? (df > 0 ? 'up' : df < 0 ? 'down' : '') : '');
   }
   h += rows ? '<div class="card last" style="padding-top:2px">' + rows + '</div>' : '<p class="note">Für diese Woche gibt es noch keine Einträge.</p>';
   const ins = insightsHTML(c);
@@ -3989,7 +3992,8 @@ const BK_DAYS = 7;
 /* from: Tag der letzten Sicherung, ohne Sicherung der Tag des ältesten Eintrags (leer, solange nichts eingetragen ist). due: der Tag, an dem die Sicherung fällig wird. */
 function backupDay() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
-  const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : ''].filter(Boolean).sort()[0] || '';
+  const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : '']
+    .concat(taskList().concat(noteList()).map(x => x.c ? keyOf(new Date(x.c)) : '')).filter(Boolean).sort()[0] || '';   // Aufgaben und Notizen zählen ab dem Tag, an dem sie angelegt wurden
   return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
 }
 function backupDue() {

@@ -9,18 +9,21 @@ const post = page => page.evaluate(() => window.__post);
 const letzter = async page => (await post(page)).filter(m => m.art === 'stand').pop();
 const wi = n => { const d = new Date(); d.setDate(d.getDate() + n); return (d.getDay() + 6) % 7; };
 const nur = i => [0, 1, 2, 3, 4, 5, 6].map(x => x === i);
+/* Zeitpunkt: 12 Uhr vor n Tagen */
+const mittag = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getTime(); };
 
-/* Beispieldaten: zwei tägliche Routinen (eine heute erledigt), eine nur am morgigen Wochentag.
-   Aufgaben: eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte. Zwei Notizen. Ein Lauf von Hand vor zwei Tagen (5 km). */
+/* Beispieldaten: zwei tägliche Routinen (eine heute erledigt), eine nur am morgigen Wochentag, alle vor 20 Tagen angelegt.
+   Aufgaben (vor 3 Tagen angelegt): eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte.
+   Zwei Notizen, die ältere vor 25 Tagen angelegt: Sie ist der älteste Eintrag überhaupt. Ein Lauf von Hand vor zwei Tagen (5 km). */
 const jahr = tag(0).slice(0, 4), LY = {}; LY[jahr] = {}; LY[jahr][tag(0)] = { r1: { s: 1800, d: 1 } };
 const daten = {
   S: { routines: [{ id: 'r1', name: 'Lesen', minutes: 30, days: Array(7).fill(true), created: tag(20) }, { id: 'r2', name: 'Dehnen', minutes: 10, days: Array(7).fill(true), created: tag(20) }, { id: 'r3', name: 'Putzen', minutes: 20, days: nur(wi(1)), created: tag(20) }], running: null },
   LY, W: {}, MF: {}, MY: {}, K: {},
   T: { runs: { a1: { d: tag(2), m: 5000, s: 1500, hr: 150, k: 'out' } } },
   N: { folders: {}, tasks: {
-    t1: { t: 'Seminararbeit abgeben', f: '', d: tag(2), done: null, c: 1 }, t2: { t: 'Zahnarzt anrufen', f: '', d: tag(-3), done: null, c: 2 },
-    t3: { t: 'Irgendwann', f: '', d: null, done: null, c: 3 }, t4: { t: 'Schon fertig', f: '', d: tag(0), done: Date.now(), c: 4 } },
-    notes: { n1: { x: 'Milch kaufen\nund Brot', f: '', c: 1, m: 2 }, n2: { x: 'Idee für Kapitel 3', f: '', c: 3, m: 4 } } }
+    t1: { t: 'Seminararbeit abgeben', f: '', d: tag(2), done: null, c: mittag(3) + 1 }, t2: { t: 'Zahnarzt anrufen', f: '', d: tag(-3), done: null, c: mittag(3) + 2 },
+    t3: { t: 'Irgendwann', f: '', d: null, done: null, c: mittag(3) + 3 }, t4: { t: 'Schon fertig', f: '', d: tag(0), done: Date.now(), c: mittag(3) + 4 } },
+    notes: { n1: { x: 'Milch kaufen\nund Brot', f: '', c: mittag(25), m: mittag(2) }, n2: { x: 'Idee für Kapitel 3', f: '', c: mittag(3), m: mittag(1) } } }
 };
 
 lauf(async () => {
@@ -47,8 +50,8 @@ lauf(async () => {
   /* in drei Tagen ist auch „Zahnarzt“ fällig: 2 Aufgaben, die ältere zuerst; ohne Datum und Erledigtes zählen nie */
   p.ok('in drei Tagen: 2 Aufgaben, ältere zuerst', st.tage[2].an === 1 && st.tage[3].an === 2 && st.tage[3].auf.join('|') === 'Seminararbeit abgeben|Zahnarzt anrufen', JSON.stringify(st.tage[3]));
   p.ok('Notizen: neueste zuerst, nur die erste Zeile', st.notizen.join('|') === 'Idee für Kapitel 3|Milch kaufen', st.notizen.join('|'));
-  /* ohne Sicherung zählt der älteste Eintrag: die Routinen von vor 20 Tagen, also fällig seit 13 Tagen */
-  p.ok('Sicherung fällig: ältester Eintrag plus 7 Tage', st.sicherung === tag(13), st.sicherung);
+  /* ohne Sicherung zählt der älteste Eintrag, auch eine Notiz oder Aufgabe: hier die Notiz von vor 25 Tagen (älter als die Routinen), also fällig seit 25 − 7 = 18 Tagen */
+  p.ok('Sicherung fällig: ältester Eintrag (eine Notiz) plus 7 Tage', st.sicherung === tag(18), st.sicherung);
 
   /* Sicherung vor 2 Tagen gespeichert: fällig in 5 Tagen. Der neue Stand geht nach dem nächsten Speichern raus. */
   await page.evaluate(() => { localStorage.setItem('takt.backup', String(Date.now() - 2 * 86400000)); window.TrackHuelle.neu('notiz'); });
@@ -63,7 +66,6 @@ lauf(async () => {
   /* Läufe aus Health:
      A neu (gestern 5,23 km) → wird eingetragen. B am Tag des Laufs von Hand, 5,3 km statt 5,0 (6 % Unterschied) → derselbe Lauf, nicht doppelt.
      C ohne Strecke → ungültig. D in der Zukunft → nein. A noch einmal → nein. E Laufband vor drei Tagen → wird eingetragen. */
-  const mittag = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getTime(); };
   const A = { id: 'AAAA1111-22', t: mittag(1), m: 5230.4, s: 1800.2, hr: 151.6, k: 'out' };
   const liste = [A, { id: 'BBBB', t: mittag(2), m: 5300, s: 1600, hr: 140, k: 'out' }, { id: 'CCCC', t: mittag(1), m: 0, s: 900, k: 'out' },
     { id: 'DDDD', t: mittag(-2), m: 4000, s: 1300, k: 'out' }, A, { id: 'EEEE', t: mittag(3), m: 3000, s: 1200, hr: null, k: 'in' }];
