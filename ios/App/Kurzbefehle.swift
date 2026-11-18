@@ -30,7 +30,7 @@ struct NotizHinzufuegen: AppIntent {
 
 struct AusgabeEintragen: AppIntent {
     static var title: LocalizedStringResource = "Ausgabe eintragen"
-    static var description = IntentDescription("Trägt eine Ausgabe in Track. ein, ohne die App zu öffnen. Ohne Kategorie landet sie unter „Sonstiges“.")
+    static var description = IntentDescription("Trägt eine Ausgabe in Track. ein, ohne die App zu öffnen. Ohne Kategorie landet sie unter „Sonstiges“. Mit dem Namen eines Kontos zählt sie bei diesem Konto.")
     static var openAppWhenRun: Bool = false
 
     @Parameter(title: "Betrag in Euro", requestValueDialog: "Wie viel hast du ausgegeben?")
@@ -42,10 +42,18 @@ struct AusgabeEintragen: AppIntent {
     @Parameter(title: "Kategorie")
     var kategorie: String?
 
+    /// Name eines Kontos, wie er in der App steht. Für die Automation „bei jeder Zahlung mit Apple Pay“: So landet die Ausgabe immer beim selben Konto.
+    @Parameter(title: "Konto")
+    var konto: String?
+
     func perform() async throws -> some IntentResult & ProvidesDialog {
         let cent = (betrag * 100).rounded()
         guard cent.isFinite, cent > 0, cent <= 1e9 else { return .result(dialog: "Der Betrag muss über 0 liegen.") }
-        Ablage.vormerken(["art": "ausgabe", "a": cent, "n": notiz ?? "", "kat": kategorie ?? ""])
+        var auftrag: [String: Any] = ["art": "ausgabe", "a": cent, "n": notiz ?? "", "kat": kategorie ?? ""]
+        // Das Konto wird nach seinem Namen gesucht (Groß und klein egal). Ohne Angabe oder ohne Treffer wählt die Web-App wie im Blatt: das zuletzt benutzte Konto.
+        let name = (konto ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if !name.isEmpty, let treffer = Ablage.lesen()?.konten?.first(where: { $0.n.lowercased() == name }) { auftrag["acc"] = treffer.id }
+        Ablage.vormerken(auftrag)
         eingangMelden()
         return .result(dialog: "\(String(format: "%.2f", cent / 100).replacingOccurrences(of: ".", with: ",")) € eingetragen.")
     }
