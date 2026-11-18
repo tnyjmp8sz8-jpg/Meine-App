@@ -85,17 +85,18 @@ lauf(async () => {
   const start = await page.$$eval('[data-fold]', l => l.map(b => b.dataset.fold + (b.getAttribute('aria-expanded') === 'true' ? ' offen' : '')));
   P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['sicherung', 'eintraege', 'umbuchungen', 'laeufe'].every(k => start.includes(k)) && !start.some(k => k.includes('offen')), start.join(', '));
 
-  /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt ist nur der jüngste Monat offen. */
+  /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind. */
   await bereich(page, 'gewicht');
-  const juengster = '#v-gewicht .mons .entries:first-child .mon';
+  const juengster = '#v-gewicht .mons .entries:first-child .mon', imJuengsten = '#v-gewicht .mons .entries:first-child [data-w="edit"]';
   await klappe('Gewicht „Einträge“', 'eintraege', 56, async () => {
+    /* Im jüngsten Monat liegen die Tage 0 … (Tag im Monat − 1) zurück, ohne die mit i % 5 = 4 (am 18.: 18 − 3 = 15; am 1.: 1; am 2.: 2).
+       Ab drei Einträgen ist nur er offen; am 1. und 2. sind es weniger, dann ist auch der Vormonat offen. */
+    const tage = +tag(0).slice(8), inM = tage - Math.floor(tage / 5), offen = inM >= 3 ? 1 : 2;
     const m = await page.$$eval('#v-gewicht .mon', l => l.map(b => b.getAttribute('aria-expanded')));
-    P.ok('Gewicht: aufgeklappt ist der jüngste Monat offen, die älteren sind zu', m.length >= 2 && m[0] === 'true' && m.slice(1).every(x => x === 'false'), m.join(' '));
-    /* Im jüngsten Monat liegen die Tage 0 … (Tag im Monat − 1) zurück, ohne die mit i % 5 = 4 (am 18.: 18 − 3 = 15) */
-    const tage = +tag(0).slice(8), inM = tage - Math.floor(tage / 5);
-    P.ok('Gewicht: der offene Monat zeigt, was in ihm eingetragen ist (' + inM + ')',(await z('#v-gewicht [data-w="edit"]')) === inM && (await text(page, juengster)).includes('Schnitt aus ' + inM + ' Eintr'), await text(page, juengster));
+    P.ok('Gewicht: aufgeklappt ' + (offen === 1 ? 'ist der jüngste Monat offen' : 'sind die zwei jüngsten Monate offen') + ', die älteren sind zu', m.length > offen && m.slice(0, offen).every(x => x === 'true') && m.slice(offen).every(x => x === 'false'), m.join(' '));
+    P.ok('Gewicht: der jüngste Monat zeigt, was in ihm eingetragen ist (' + inM + ')', (await z(imJuengsten)) === inM && (await text(page, juengster)).includes('Schnitt aus ' + inM + ' Eintr'), await text(page, juengster));
     await page.click(juengster); await page.waitForTimeout(40);
-    P.ok('Gewicht: ein Tipp auf den Monat klappt ihn zu', (await z('#v-gewicht [data-w="edit"]')) === 0 && (await page.getAttribute(juengster, 'aria-expanded')) === 'false');
+    P.ok('Gewicht: ein Tipp auf den Monat klappt ihn zu', (await z(imJuengsten)) === 0 && (await page.getAttribute(juengster, 'aria-expanded')) === 'false');
     for (let i = 0; i < 12 && await z('#v-gewicht .mon[aria-expanded="false"]'); i++) { await page.click('#v-gewicht .mon[aria-expanded="false"]'); await page.waitForTimeout(40); }
   });
 
@@ -177,7 +178,7 @@ lauf(async () => {
 
   /* Gewicht: Der jüngste Monat ist ohne Merker offen. Klappt man ihn zu und wechselt den Bereich, gilt wieder der erste Blick: Einträge zu, darin der jüngste Monat offen. */
   await bereich(page, 'gewicht'); await tipp('eintraege'); await page.click(juengster); await page.waitForTimeout(40);
-  P.ok('Gewicht: jüngster Monat zugeklappt, kein Eintrag zu sehen', (await page.getAttribute(juengster, 'aria-expanded')) === 'false' && (await z('#v-gewicht [data-w="edit"]')) === 0);
+  P.ok('Gewicht: jüngster Monat zugeklappt, keiner seiner Einträge zu sehen', (await page.getAttribute(juengster, 'aria-expanded')) === 'false' && (await z(imJuengsten)) === 0);
   await page.click('#v-gewicht [data-w="add"]'); await kurz(); await page.click('#ws-close'); await kurz();
   P.ok('Gewicht: bleibt nach einem Blatt so', (await stand('eintraege')).auf && (await page.getAttribute(juengster, 'aria-expanded')) === 'false');
   await bereich(page, 'training'); await bereich(page, 'gewicht'); await kurz();
@@ -335,6 +336,44 @@ lauf(async () => {
   const og = await page.evaluate(breiten);
   P.ok('320 px, Vermögen mit „Umbuchungen“ und „Ohne Konto“ offen: nichts ragt seitlich hinaus', og.auf === 2 && passtHinein(og), JSON.stringify(og));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
+
+  /* Gewicht bei wenigen Einträgen im jüngsten Monat (Monatsanfang, oder wer einmal die Woche wiegt): heute einer, im Vormonat am 28., 21. und 14., davor einer.
+     Offen ist ein Monat, solange in den jüngeren weniger als drei Einträge liegen: laufender Monat (davor 0), Vormonat (davor 1), der Monat davor nicht (davor 1 + 3 = 4).
+     Nach einem Tipp auf „Einträge“ stehen also vier Zeilen da, darunter die jüngsten drei (heute, 28., 21.). */
+  const w = leer(), wTage = [tag(0), monat(1) + '-28', monat(1) + '-21', monat(1) + '-14'];
+  wTage.forEach((k, i) => { w.W.entries[k] = 80 + i * 0.3; }); w.W.entries[monat(2) + '-20'] = 82;
+  const gewicht = async dat => {
+    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'gewicht'); await o.page.click('#v-gewicht [data-fold="eintraege"]'); await o.page.waitForTimeout(60);
+    const r = { monate: await o.page.$$eval('#v-gewicht .mon', l => l.map(b => b.getAttribute('aria-expanded') === 'true' ? 'auf' : 'zu').join(' ')), zeilen: await o.page.$$eval('#v-gewicht [data-w="edit"]', l => l.map(b => b.dataset.k).join(' ')) };
+    if (r.zeilen.includes(' ')) { await o.page.click('#v-gewicht [data-w="edit"] >> nth=1'); await o.page.waitForTimeout(150); }
+    r.blatt = await o.page.inputValue('#w-date');
+    await o.browser.close(); o.fehler.forEach(f => P.ok(f, false));
+    return r;
+  };
+  let gw = await gewicht(w);
+  P.ok('Gewicht, heute ein Eintrag und drei im Vormonat: ein Tipp auf „Einträge“ zeigt beide Monate offen, den dritten zu', gw.monate === 'auf auf zu' && gw.zeilen === wTage.join(' '), JSON.stringify(gw));
+  P.ok('… und der zweitjüngste Eintrag (28. des Vormonats) ist mit dem nächsten Tipp im Blatt', gw.blatt === wTage[1], gw.blatt);
+  /* Ein Eintrag je Monat, fünf Monate: offen sind der laufende (davor 0), der Vormonat (davor 1) und der davor (davor 2); zu sind die zwei ältesten (davor 3 und 4). */
+  const w5 = leer(), w5Tage = [tag(0), monat(1) + '-15', monat(2) + '-15', monat(3) + '-15', monat(4) + '-15'];
+  w5Tage.forEach((k, i) => { w5.W.entries[k] = 80 + i * 0.5; });
+  gw = await gewicht(w5);
+  P.ok('Gewicht, ein Eintrag je Monat: die drei jüngsten Monate sind offen, die zwei älteren zu', gw.monate === 'auf auf auf zu zu' && gw.zeilen === w5Tage.slice(0, 3).join(' '), JSON.stringify(gw));
+
+  /* Die Liste der Einträge entsteht nur aufgeklappt, sonst würde jeder Tipp auf eine Klappzeile mit jedem Eintrag langsamer.
+     Gezählt wird, wie oft die Seite bei einem Tipp auf „Sicherung“ (zeichnet alles neu) eine Zahl formatiert (toLocaleString): mit den 56 Einträgen der Beispieldaten
+     und mit 300 älteren dazu. Jede Zeile eines Eintrags formatiert ihr Gewicht zweimal; mit dem Fehler wären es 2 × 300 = 600 Aufrufe mehr. Zugeklappt darf nichts dazukommen. */
+  const viele = daten(); for (let i = 100; i < 400; i++) viele.W.entries[tag(i)] = 81;
+  const formatiert = async dat => {
+    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'heute');
+    const n = await o.page.evaluate(() => { const echt = Number.prototype.toLocaleString; let k = 0; Number.prototype.toLocaleString = function (...a) { k++; return echt.apply(this, a); };
+      document.querySelector('#v-heute [data-fold="sicherung"]').click(); Number.prototype.toLocaleString = echt; return k; });
+    const offen = await o.page.getAttribute('#v-heute [data-fold="sicherung"]', 'aria-expanded'), eintr = await o.page.$eval('#v-gewicht [data-fold="eintraege"] .fold', e => e.textContent.trim());
+    await o.browser.close(); o.fehler.forEach(f => P.ok(f, false));
+    return { n, offen, eintr };
+  };
+  const f56 = await formatiert(d), f356 = await formatiert(viele);
+  P.ok('Gewicht: mit 300 Einträgen mehr formatiert ein Tipp auf eine Klappzeile nicht mehr Zahlen (zugeklappt entsteht die Liste nicht)',
+    f56.offen === 'true' && f356.offen === 'true' && f56.eintr === '56' && f356.eintr === '356' && f56.n > 0 && f356.n - f56.n < 300, JSON.stringify({ f56, f356 }));
 
   /* Leere Stammdaten: nur eine Ausgabe im Vormonat. Im laufenden Monat gibt es dann keine Budgets, keine Einnahmen und keine Fixkosten:
      je eine Zeile mit Plus, die gleich das Blatt zum Anlegen öffnet. Leere Verläufe (Ausgaben) bekommen keine Zeile. */

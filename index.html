@@ -1717,7 +1717,7 @@ const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (te
 const fo = {};
 const foldHTML = (key, title, sub, right, rows, after) => '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + !!fo[key] + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (fo[key] ? rows + '</ul>' + (after || '') : '</ul>');
 /* Der eine Weg für alle Klappzeilen (foldHTML und die Monate aus monthsHTML): Ein Tipp kehrt um, was die Zeile gerade zeigt, dann wird neu gezeichnet.
-   Maßgeblich ist aria-expanded und nicht fo, weil der jüngste Monat einer Liste auch ohne Merker offen ist. */
+   Maßgeblich ist aria-expanded und nicht fo, weil die jüngsten Monate einer Liste auch ohne Merker offen sind. */
 $('#scroll').addEventListener('click', e => {
   const b = e.target.closest('[data-fold]'); if (!b) return;
   fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
@@ -1787,10 +1787,11 @@ function renderWeight() {
     '</div>';
   h += goalHTML;
 
-  /* Einträge: eine eingeklappte Zeile mit Anzahl (der letzte Wert steht schon oben), aufgeklappt nach Monaten (monthsHTML) */
+  /* Einträge: eine eingeklappte Zeile mit Anzahl (der letzte Wert steht schon oben), aufgeklappt nach Monaten (monthsHTML).
+     Die Liste entsteht nur aufgeklappt: Sie wächst mit jedem Eintrag, und gezeichnet wird bei jedem Tipp auf eine Klappzeile. */
   const rev = all.slice().reverse();
   const wRow = e => '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>';
-  h += '<div class="folds">' + foldHTML('eintraege', 'Einträge', '', rev.length, '',
+  h += '<div class="folds">' + foldHTML('eintraege', 'Einträge', '', rev.length, '', !fo.eintraege ? '' :
     monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), 'eintraege', (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; })) + '</div>';
   el.innerHTML = h;
 }
@@ -2897,13 +2898,16 @@ function liveCardHTML() {
     '<div class="side"><span class="streak" style="padding-right:14px"><b class="lv-card-t">' + fmt((Date.now() - L.start) / 1000) + '</b><span>Gesamt</span></span></div></li></ul>';
 }
 const CHEV_D = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
-/* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt. Jeder Monat ist eine Klappzeile mit dem Schlüssel key-YYYY-MM (Weg siehe foldHTML);
-   ohne Merker ist der jüngste offen. info(ym, anzahl) liefert { s: kleine Zeile unter dem Monat, r: Angabe rechts }. */
+/* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt. Jeder Monat ist eine Klappzeile mit dem Schlüssel key-YYYY-MM (Weg siehe foldHTML).
+   Ohne Merker sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind: Am Monatsersten läge der von gestern sonst im zugeklappten Vormonat.
+   info(ym, anzahl) liefert { s: kleine Zeile unter dem Monat, r: Angabe rechts }. */
 function monthsHTML(items, key, info) {
   const groups = [];
   items.forEach(it => { const ym = it.d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.h.push(it.html); else groups.push({ ym, h: [it.html] }); });
-  return '<div class="mons">' + groups.map((g, i) => {
-    const k = key + '-' + g.ym, on = fo[k] != null ? fo[k] : i === 0, x = info(g.ym, g.h.length);
+  let newer = 0;   // Einträge in den jüngeren Monaten
+  return '<div class="mons">' + groups.map(g => {
+    const k = key + '-' + g.ym, on = fo[k] != null ? fo[k] : newer < 3, x = info(g.ym, g.h.length);
+    newer += g.h.length;
     return '<ul class="entries"><li><button type="button" class="two mon" data-fold="' + k + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span><small>' + x.s + '</small></span><b class="dim fold">' + x.r + CHEV_D + '</b></button></li>' + (on ? g.h.join('') : '') + '</ul>';
   }).join('') + '</div>';
 }
@@ -4139,7 +4143,7 @@ document.addEventListener('click', e => {
 
 /* Jeder Besuch eines Bereichs beginnt eingeklappt: Wechselt man über die Leiste unten, klappt alles Aufgeklappte wieder zu.
    Im Bereich selbst bleibt es offen, auch beim Blättern durch Monate und nach einem Blatt. Gespeichert wird davon nichts.
-   Die Merker werden gelöscht, nicht auf false gesetzt: In einer Liste nach Monaten ist dann wieder der jüngste Monat offen. */
+   Die Merker werden gelöscht, nicht auf false gesetzt: In einer Liste nach Monaten sind dann wieder die jüngsten Monate offen (monthsHTML). */
 function foldsShut() { for (const k in fo) delete fo[k]; }
 function show(v, user) {
   const was = view;
