@@ -50,7 +50,7 @@ lauf(async () => {
   P.enthaelt('Aufgabe von gestern steht unter Heute: 2 offen', await text(page, '#n-main .hero'), ['2 offen']);
   P.enthaelt('mit rotem „Gestern“', await text(page, '#n-main .when.late'), ['Gestern']);
   P.ok('Erledigtes ist eingeklappt', (await liste()).includes('Erledigt 1') && !(await liste()).includes('Vorgestern erledigt'));
-  await page.click('#n-main [data-n="donefold"]'); await kurz();
+  await page.click('#n-main [data-fold="erledigt"]'); await kurz();
   P.enthaelt('aufgeklappt zeigt es die Aufgabe', await liste(), ['Vorgestern erledigt']);
 
   // --- Ordner: filtern, eigener Ordner beim Anlegen ---

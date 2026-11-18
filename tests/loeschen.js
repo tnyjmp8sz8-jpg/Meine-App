@@ -10,7 +10,7 @@ lauf(async () => {
   const kurz = () => page.waitForTimeout(200);
 
   // --- Rückgängig: Ausgabe löschen und zurückholen ---
-  await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-m="more"]');   // Ausgaben aufklappen
+  await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-fold="ausgaben"]');   // Ausgaben aufklappen
   const liste = () => text(page, '#v-haushalt [data-m="tx"]');   // die Liste zeigt nur die neuesten Buchungen, deshalb zählt ihr Text, nicht ihre Länge
   const vorher = await roh(), zeilen = await liste();
   await page.click('#v-haushalt [data-m="tx"]'); await page.click('#m-del'); await kurz();
@@ -51,7 +51,7 @@ lauf(async () => {
   await page.fill('#m-catnew', 'Haustier'); await page.click('#m-catnew-add');
   P.ok('neue Kategorie ist angelegt und gewählt', (await text(page, '#m-cat [aria-pressed="true"]')) === 'Haustier');
   await page.fill('#m-amt', '20'); await page.fill('#m-note', 'Futter'); await page.click('#m-acc .chip:has-text("Kein Konto")'); await page.click('#m-save'); await kurz();
-  await page.click('#v-haushalt [data-m="more"]');   // nach dem Wechsel des Bereichs ist die Liste wieder zu
+  await page.click('#v-haushalt [data-fold="ausgaben"]');   // nach dem Wechsel des Bereichs ist die Liste wieder zu
   P.enthaelt('Buchung trägt die Kategorie', await text(page, '#v-haushalt [data-m="tx"]'), ['Haustier · Futter']);
   P.enthaelt('sie steht bei den flexiblen Kosten', await text(page, '#v-haushalt'), ['Haustier 20,00 €']);
   await page.click('#v-haushalt [data-m="add"]'); await page.click('#m-cat [data-c="__more"]'); await page.click('#m-cat [data-c="__new"]');
@@ -63,7 +63,7 @@ lauf(async () => {
   await page.reload(); await page.waitForTimeout(300);
   const cats = async () => Object.values((await gespeichert(page)).MF.cats || {}).filter(Boolean).map(c => c.n).sort().join(',');
   P.ok('nach dem Neuladen: benutzte Kategorie bleibt, unbenutzte ist weg', (await cats()) === 'Haustier', await cats());
-  await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-m="more"]');
+  await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-fold="ausgaben"]');
   await page.click('#v-haushalt [data-m="tx"]:has-text("Futter")'); await page.click('#m-del'); await kurz();
   await page.reload(); await page.waitForTimeout(300);
   P.ok('letzte Buchung gelöscht: Kategorie verschwindet von selbst', (await cats()) === '', await cats());

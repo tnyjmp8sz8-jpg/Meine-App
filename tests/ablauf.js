@@ -55,7 +55,7 @@ lauf(async () => {
   const alt = beispiel(); alt.T = { runs: { a1: { d: tag(1), m: 4800, s: 1800, hr: 150, k: 'in', spd: 10, inc: 1.5 } } };
   const b = await oeffnen({ daten: alt });
   await bereich(b.page, 'training'); await b.page.click('#v-training .subtabs button:nth-child(1)'); await b.page.waitForTimeout(150);
-  await b.page.click('#v-training [data-t="more"]');   // Läufe sind eine eingeklappte Zeile
+  await b.page.click('#v-training [data-fold="laeufe"]');   // Läufe sind eine eingeklappte Zeile
   const seite = await b.page.evaluate(() => document.querySelector('#v-training').innerText.replace(/\s+/g, ' '));
   P.ok('alter Laufband-Lauf: weiter 5,0 km und Pace 6:00, kein km/h mehr', seite.includes('5,0 km in 30:00') && seite.includes('6:00 /km') && !seite.includes('km/h') && seite.includes('1,5 % Steigung'), seite.slice(0, 400));
   await b.page.click('#v-training [data-t="edit"]');

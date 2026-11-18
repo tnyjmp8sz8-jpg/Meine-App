@@ -16,6 +16,13 @@ lauf(async () => {
     const vor = (hell ? 'hell' : 'dunkel') + '-' + breite + '-' + (voll ? 'daten' : 'leer') + '-';
     const bild = async n => { await page.waitForTimeout(300); await page.screenshot({ path: ordner + '/' + vor + n + '.png' }); };
     const versuch = async (n, f) => { try { await blaetterZu(page); await f(); await bild(n); } catch (e) { fehler.push(n + ': ' + String(e.message).split('\n')[0]); } };
+    /* Klappzeile aufklappen und so weit scrollen, dass sie mit etwas Luft oben im Bild steht. Fehlt sie (am Monatsanfang gibt es noch keinen Lauf), zeigt das Bild den Vormonat. */
+    const auf = async key => {
+      const sel = '.view:not([hidden]) [data-fold="' + key + '"]';
+      if (!(await page.$(sel))) await page.click('.view:not([hidden]) .mnav button:first-child');
+      await page.click(sel);
+      await page.evaluate(q => { const s = document.querySelector('#scroll'); s.scrollTop += document.querySelector(q).getBoundingClientRect().top - s.getBoundingClientRect().top - 60; }, sel);
+    };
     for (const v of ['heute', 'routinen', 'gewicht', 'haushalt', 'training']) await versuch(v, async () => { await bereich(page, v); await nachOben(page); });
     if (voll) {
       await versuch('woche', async () => { await bereich(page, 'heute'); await page.click('[data-h="mode"][data-v="week"]'); });
@@ -25,7 +32,7 @@ lauf(async () => {
       await versuch('blatt-stand', async () => { await page.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await page.click('#add'); });
       await versuch('gym', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); });
       await versuch('gym-jahr', async () => { await page.click('#v-training [data-t="mode"][data-v="year"]'); });
-      await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training [data-k="exs"]'); await page.click('#v-training [data-k="ex"]'); });
+      await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training [data-fold="uebungen"]'); await page.click('#v-training [data-k="ex"]'); });
       await versuch('training-laeuft', async () => { await page.click('#v-training .row .go'); });
       await versuch('aufgaben', async () => { await bereich(page, 'routinen'); await page.click('#r-subs [data-v="task"]'); await nachOben(page); });
       await versuch('blatt-aufgabe', async () => { await page.click('#add'); });
@@ -35,6 +42,10 @@ lauf(async () => {
       await versuch('routinen-zurueck', async () => { await page.click('#r-subs [data-v="rout"]'); });
       await versuch('blatt-routine', async () => { await bereich(page, 'routinen'); await page.click('#add'); });
       await versuch('blatt-gewicht', async () => { await bereich(page, 'gewicht'); await page.click('#add'); });
+      // Aufgeklappte Listen: Die Klappzeile steht oben im Bild, darunter ihre Zeilen
+      await versuch('heute-sicherung', async () => { await bereich(page, 'heute'); await auf('sicherung'); });
+      await versuch('budget-ausgaben', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await auf('ausgaben'); });
+      await versuch('cardio-laeufe', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await auf('laeufe'); });
     }
     await browser.close();
     alle.push(...fehler.map(f => vor + f));

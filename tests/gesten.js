@@ -54,7 +54,7 @@ lauf(async () => {
   await page.click('#ms-close');
 
   // Im gescrollten Blatt scrollt der Zug nach unten, er schließt nicht (Blatt der Übung ist lang)
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await page.click('#v-training [data-k="exs"]'); await page.click('#v-training [data-k="ex"]'); await page.waitForTimeout(400);
+  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await page.click('#v-training [data-fold="uebungen"]'); await page.click('#v-training [data-k="ex"]'); await page.waitForTimeout(400);
   await page.evaluate(() => { document.querySelector('#xsheet').scrollTop = 200; });
   await wischen(ctx, page, 195, 300, 197, 640, 200);
   P.ok('gescrolltes Blatt: Zug nach unten schließt nicht', await offen('#xsheet'));

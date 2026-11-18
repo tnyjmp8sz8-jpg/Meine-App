@@ -276,7 +276,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .entries button{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;background:none;border:0;text-align:left;font-size:16px}
 .entries .d{color:var(--muted)}
 .entries b{font-weight:600;font-variant-numeric:tabular-nums}
-.linkbtn{align-self:flex-start;border:0;border-radius:9px;background:none;color:var(--at);font-weight:600;font-size:15px;padding:8px 4px;margin-top:-10px}
+.linkbtn{align-self:flex-start;border:0;border-radius:9px;background:none;color:var(--at);font-weight:600;font-size:15px;padding:8px 4px}
 .ghost.center{text-align:center}
 .goal .streak b{font-size:24px}
 
@@ -340,8 +340,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .duo button{display:inline-flex;align-items:center;justify-content:center;gap:7px}
 .duo svg{width:15px;height:15px;flex:none;opacity:.85}
 .duo .ghost{font-size:15px;font-weight:600}
-.links{display:flex;flex-wrap:wrap;gap:2px 20px;margin-top:-6px}
-.links .linkbtn{margin-top:0}
+.links{display:flex;flex-wrap:wrap;gap:2px 20px}
 .chip.more{width:36px;height:36px;min-height:0;align-self:center;padding:0;display:inline-grid;place-items:center;border-radius:50%}
 .chip.more svg{width:14px;height:14px}
 
@@ -388,7 +387,6 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .kx-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .kx-head b{font-size:15px;overflow-wrap:anywhere}
 .kx .note{margin:0}
-.kx .linkbtn{margin-top:0}
 .kset{display:grid;grid-template-columns:16px minmax(0,1fr) auto minmax(0,1fr) auto 36px;gap:6px;align-items:center}
 .kset span{color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 .kset em{font-style:normal;color:var(--muted);font-size:13px}
@@ -517,8 +515,7 @@ input.n-q{margin-bottom:-8px}
 .tab svg{width:20px;height:20px}
 .foot{font-size:11.5px}
 .ver{display:block;margin-top:2px;font-size:10px;color:var(--mid)}
-.linkbtn{font-size:13px;margin-top:-6px}
-.links .linkbtn{margin-top:0}
+.linkbtn{font-size:13px}
 .legend{font-size:11.5px}
 #form .fig b{font-size:19px}
 #ls-times .fig b{font-size:18px}
@@ -550,8 +547,7 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .cs-leg{display:flex;justify-content:center;gap:16px;margin:0;padding:8px 10px 0;font-size:11.5px;color:var(--muted)}
 .cs-leg[hidden]{display:none}
 .cs-leg span{display:inline-flex;align-items:center;gap:6px}
-.cs-day .linkbtn{margin:0}
-.cs-top .linkbtn{margin:0;font-size:15px;padding:8px 6px}
+.cs-top .linkbtn{font-size:15px;padding:8px 6px}
 .cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:1px solid var(--line)}
 .cs-wd span{text-align:center;font-size:11px;font-weight:600;color:var(--mid)}
 .cs-body{flex:1;min-height:0;overflow-y:auto;padding:0 10px 18px}
@@ -597,7 +593,6 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
 .lt-r .st svg{width:14px;height:14px}
-.lx .links{margin-top:0}
 .linkbtn.danger{color:var(--danger)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
 .lastx{gap:0;padding:10px 12px 8px}
@@ -708,9 +703,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 /* Abschnittstitel mit Aktion rechts: ein kleines Plus (mit Wort, wo das Plus sonst missverständlich wäre) oder „Alle n“. Ersetzt die blauen Link-Zeilen unter den Listen. */
 .sec.has-a{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sec-a{flex:none;position:relative;display:inline-flex;align-items:center;gap:5px;border:0;background:none;padding:0;margin:0 2px 0 0;font-family:var(--body);font-size:12.5px;font-weight:600;letter-spacing:0;color:var(--at)}
-/* Tippfläche mindestens 40 px, nach oben in den freien Raum über dem Titel gelegt, damit sie die erste Zeile der Liste darunter nicht überdeckt */
-.sec-a::after{content:"";position:absolute;inset:-17px -12px -8px}
-.sec-a.solo::after{inset:-19px -15px -9px}
+/* Tippfläche mindestens 40 px, nach oben in den freien Raum über dem Titel gelegt: Bis zur Liste darunter sind es vom Wort 7,75 px und vom einzelnen Plus 10 px, die Fläche endet knapp 2 px davor */
+.sec-a::after{content:"";position:absolute;inset:-18px -12px -6px}
+.sec-a.solo::after{inset:-20px -15px -8px}
 .sec-a svg{width:10px;height:10px}
 .sec-a.go svg{width:9px;height:9px;margin-left:-2px;opacity:.8}
 .sec-a.solo svg{width:13px;height:13px}
@@ -1254,16 +1249,16 @@ let S = { routines: [], running: null };   // Routinen + laufender Timer
 let LY = {};                               // Jahr -> { Datum: { routineId: { s: Sekunden, d: 0|1 } } }
 let lastDay = '', lastClock = '', justDone = null;
 let W = { goal: null, goalFrom: null, entries: {} };   // Gewicht: Ziel + { Datum: kg }
-let view = 'routinen', wRange = '28', wAll = false, wMon = {};
+let view = 'routinen', wRange = '28';
 let MF = { fixed: {} };                    // Haushalt: feste Posten { id: {...} }
 let MY = {};                               // Haushalt: Jahr -> { tx: { id: {...} } }
-let mMode = 'month', mYM = '', mYear = 0, mAll = false;
+let mMode = 'month', mYM = '', mYear = 0;
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
-let tMode = 'month', tYM = '', tYear = 0, tAll = false, tMetric = 'eff';
+let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
 let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', kUnOpen = false, kExOpen = false, hMode = 'day', hWeek = '', hMonth = '';
+let tSub = 'cardio', hMode = 'day', hWeek = '', hMonth = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -1720,24 +1715,31 @@ function chartSVG(pts, t0) {
   return s + '</svg>';
 }
 
-/* Kleines „i“: zeigt auf Tipp den Erklärtext mit der id info-… darunter. Erklärungen stehen nie dauerhaft da. */
 /* Leerer Bereich: Symbol des Bereichs, Titel, ein Satz, darunter die Knöpfe (rest). Mittig und ohne Kasten. */
 const emptyHTML = (area, title, text, rest) => '<div class="empty"><span class="e-ic ' + area + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[area] + '</svg></span><h2>' + title + '</h2><p>' + text + '</p>' + rest + '</div>';
+/* Kleines „i“: zeigt auf Tipp den Erklärtext mit der id info-… darunter. Erklärungen stehen nie dauerhaft da. */
 const INFO = id => '<button type="button" class="info" data-info="' + id + '" aria-expanded="false" aria-label="Erklärung zeigen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="6.4"/><path d="M8 7.5v3.6"/><circle cx="8" cy="4.9" r=".5" fill="currentColor"/></svg></button>';
-/* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
 /* Abschnittstitel; mit act steht rechts eine Aktion (secAct) */
 const secHTML = (title, small, act) => '<h2 class="sec' + (act ? ' has-a' : '') + '">' + (act ? '<span>' : '') + title + (small ? '<small>' + small + '</small>' : '') + (act ? '</span>' + act : '') + '</h2>';
 /* Aktion rechts im Abschnittstitel: Plus mit Wort (text) oder nur das Plus (dann nennt label, was es anlegt) */
 const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (text ? '' : ' solo') + '" ' + attr + (text ? '' : ' aria-label="' + label + '"') + '>' + PLUS + (text || '') + '</button>';
-/* Eingeklappte Liste: eine Zeile mit Name, kleiner Zeile (sub) und Anzahl (right); ein Tipp klappt rows darunter auf.
-   Auf und zu wird nicht gespeichert (fo, Regel siehe foldsShut): Der erste Blick in einen Bereich ist immer derselbe. */
+/* Klappzeile: eine Zeile mit Name, kleiner Zeile (sub) und Anzahl (right). Aufgeklappt folgen rows als Zeilen derselben Liste und after darunter (für Inhalt, der keine Zeile ist).
+   Ob eine Klappzeile offen ist, steht in fo unter ihrem Schlüssel (key) und nur dort. Gespeichert wird es nicht: Der erste Blick in einen Bereich ist immer derselbe (foldsShut). */
 const fo = {};
-const foldHTML = (attr, open, title, sub, right, rows) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-expanded="' + !!open + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (open ? rows : '') + '</ul>';
+const foldHTML = (key, title, sub, right, rows, after) => '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + !!fo[key] + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (fo[key] ? rows + '</ul>' + (after || '') : '</ul>');
+/* Der eine Weg für alle Klappzeilen (foldHTML und die Monate aus monthsHTML): Ein Tipp kehrt um, was die Zeile gerade zeigt, dann wird neu gezeichnet.
+   Maßgeblich ist aria-expanded und nicht fo, weil der jüngste Monat einer Liste auch ohne Merker offen ist. */
+$('#scroll').addEventListener('click', e => {
+  const b = e.target.closest('[data-fold]'); if (!b) return;
+  fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
+  render();
+});
 /* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
 const addFoldHTML = (attr, title) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-label="' + title + ' hinzufügen"><span class="l"><span>' + title + '</span></span><b class="fold plus">' + PLUS + '</b></button></li></ul>';
 /* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile */
 const actRow = (attr, text, plus) => '<li><button type="button" class="two act" ' + attr + '><span class="l">' + (plus ? PLUS : '') + '<span>' + text + '</span></span></button></li>';
+/* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
 const fig = (val, unit, label) => val === '–' ? '' : '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
 function renderWeight() {
@@ -1799,8 +1801,8 @@ function renderWeight() {
   /* Einträge: eine eingeklappte Zeile mit Anzahl (der letzte Wert steht schon oben), aufgeklappt nach Monaten (monthsHTML) */
   const rev = all.slice().reverse();
   const wRow = e => '<li><button type="button" data-w="edit" data-k="' + e.k + '" aria-label="' + dRow(e.k) + ', ' + kg2(e.w) + ' kg, ändern"><span class="d">' + dRow(e.k) + '</span><b>' + kg2(e.w) + ' kg</b></button></li>';
-  h += '<div class="folds">' + foldHTML('data-w="more"', wAll, 'Einträge', '', rev.length, '') +
-    (wAll ? monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), wMon, 'data-w="mon"', false, (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; }) : '') + '</div>';
+  h += '<div class="folds">' + foldHTML('eintraege', 'Einträge', '', rev.length, '',
+    monthsHTML(rev.map(e => ({ d: e.k, html: wRow(e) })), 'eintraege', (ym, n) => { const ws = rev.filter(e => e.k.slice(0, 7) === ym); return { s: 'Schnitt aus ' + n + (n === 1 ? ' Eintrag' : ' Einträgen'), r: '<span class="ink">' + kg(ws.reduce((t, e) => t + e.w, 0) / ws.length) + ' kg</span>' }; })) + '</div>';
   el.innerHTML = h;
 }
 
@@ -1811,8 +1813,6 @@ $('#v-gewicht').addEventListener('click', e => {
   else if (a === 'edit') openW('entry', t.dataset.k);
   else if (a === 'goal') openW('goal');
   else if (a === 'range') { wRange = t.dataset.r; renderWeight(); }
-  else if (a === 'more') { wAll = !wAll; renderWeight(); }
-  else if (a === 'mon') { monToggle(wMon, t); renderWeight(); }
 });
 
 const wdlg = $('#wsheet');
@@ -2056,9 +2056,9 @@ function monthHTML(curYM) {
   const one = txIn(mYM).filter(x => x.t.k === 'in'), fxIn = fixedIn(mYM).filter(x => x.f.kind === 'in').sort((a, b) => b.f.amount - a.f.amount);
   const fx = fixedIn(mYM).filter(x => x.f.kind === 'fix').sort((a, b) => b.f.amount - a.f.amount), fixYear = fx.reduce((t, x) => t + x.f.amount * 12 / x.f.every, 0);
   h += '<div class="folds">' + (hasCats ? '' : addFoldHTML('data-m="budget"', 'Budgets')) +
-    (tx.length ? foldHTML('data-m="more"', mAll, 'Ausgaben', '', tx.length, tx.map(txRow).join('')) : '') +
-    (one.length || fxIn.length ? foldHTML('data-m="fold" data-v="inc"', fo.inc, 'Einnahmen', '', one.length + fxIn.length, one.map(incomeRow).join('') + fxIn.map(fixedRow).join('') + actRow('data-m="newin"', 'Feste Einnahme', true)) : addFoldHTML('data-m="newin"', 'Feste Einnahmen')) +
-    (fx.length ? foldHTML('data-m="fold" data-v="fix"', fo.fix, 'Fixkosten', fo.fix ? eur0(fixYear) + ' € im Jahr' : '', fx.length, fx.map(fixedRow).join('') + actRow('data-m="newfix"', 'Fixkosten', true)) : addFoldHTML('data-m="newfix"', 'Fixkosten')) + '</div>';
+    (tx.length ? foldHTML('ausgaben', 'Ausgaben', '', tx.length, tx.map(txRow).join('')) : '') +
+    (one.length || fxIn.length ? foldHTML('einnahmen', 'Einnahmen', '', one.length + fxIn.length, one.map(incomeRow).join('') + fxIn.map(fixedRow).join('') + actRow('data-m="newin"', 'Feste Einnahme', true)) : addFoldHTML('data-m="newin"', 'Feste Einnahmen')) +
+    (fx.length ? foldHTML('fixkosten', 'Fixkosten', fo.fixkosten ? eur0(fixYear) + ' € im Jahr' : '', fx.length, fx.map(fixedRow).join('') + actRow('data-m="newfix"', 'Fixkosten', true)) : addFoldHTML('data-m="newfix"', 'Fixkosten')) + '</div>';
   return h;
 }
 
@@ -2104,10 +2104,10 @@ function yearHTML(curYM) {
   h += barHTML(tot) + sumTiles(tot) + rateHTML(tot, ySum(y - 1, 12).tot, 'Sparquote');
   h += '<div class="card chart"><p class="note">Bilanz pro Monat in €</p>' + yearSVG(ms) + '</div>';
   /* Der Graph zeigt die Monate schon; die Liste dazu (Sprung in den Monat) und die Kategorien sind je eine eingeklappte Zeile */
-  h += '<div class="folds">' + foldHTML('data-m="fold" data-v="mons"', fo.mons, 'Monate', '', ms.filter(Boolean).length, ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  h += '<div class="folds">' + foldHTML('budgetMonate', 'Monate', '', ms.filter(Boolean).length, ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + eur0(s.inc) + ' € ein · ' + eur0(s.fix + s.flex) + ' € aus</small></span>' +
     '<b' + (minus(s.bal) ? ' class="neg"' : '') + '>' + (minus(s.bal) || '+') + eur0(s.bal) + ' €</b></button></li>' : '').reverse().join('')) +
-    (tot.flex > 0 ? foldHTML('data-m="fold" data-v="cats"', fo.cats, 'Flexible Kosten nach Kategorie', '', Object.keys(tot.cats).length, '') + (fo.cats ? catsHTML(tot.cats) : '') : '') + '</div>';
+    (tot.flex > 0 ? foldHTML('kategorien', 'Flexible Kosten nach Kategorie', '', Object.keys(tot.cats).length, '', catsHTML(tot.cats)) : '') + '</div>';
   return h;
 }
 
@@ -2228,18 +2228,17 @@ function wealthHTML(curYM) {
     /* Ohne Konto gebucht: verändert kein Konto. Eingeklappte Zeile; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen des Kontos. */
     const na = noAcc(mYM), nn = na.tx.length + na.fx.length;
     if (trs.length || nn) h += '<div class="folds">' +
-      (trs.length ? foldHTML('data-m="fold" data-v="tr"', fo.tr, 'Umbuchungen', '', trs.length, trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('')) : '') +
-      (nn ? foldHTML('data-m="noacc"', vNoOpen, 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') + '</div>';
+      (trs.length ? foldHTML('umbuchungen', 'Umbuchungen', '', trs.length, trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('')) : '') +
+      (nn ? foldHTML('ohneKonto', 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') + '</div>';
     return h + goalsHTML(curYM);
   }
   /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
   let rows = '', nm = 0;
   for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue; nm++;
     rows += '<li><button type="button" class="two" data-m="goto" data-ym="' + ym + '" aria-label="' + MONTHS[m - 1] + ' öffnen"><span class="l"><span>' + MONTHS[m - 1] + '</span><small>Stand ' + minus(x.end) + eur0(x.end) + ' €</small></span>' + (x.d != null ? '<b class="' + signCls(x.d) + '">' + eurS(x.d) + '</b>' : '') + '</button></li>'; }
-  return h + foldHTML('data-m="fold" data-v="vmons"', fo.vmons, 'Monate', '', nm, rows);
+  return h + foldHTML('vermMonate', 'Monate', '', nm, rows);
 }
 
-let vNoOpen = false;   // Zeile „Ohne Konto“ im Bereich Vermögen aufgeklappt
 let fSub = '';   // vom Nutzer gewählter Bereich: 'verm' = Vermögen, 'budget' = Einnahmen und Ausgaben
 /* Ohne Wahl: Budget, wenn es nur Budget-Daten gibt, sonst Vermögen */
 const finSub = () => fSub || (hasMoney() && !hasWealth() ? 'budget' : 'verm');
@@ -2277,9 +2276,6 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'newtr') return openM('tx', null, 'tr');
   if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
   else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
-  else if (a === 'more') mAll = !mAll;
-  else if (a === 'fold') fo[t.dataset.v] = !fo[t.dataset.v];
-  else if (a === 'noacc') vNoOpen = !vNoOpen;
   else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
     const d = a === 'prev' ? -1 : 1;
@@ -2696,10 +2692,10 @@ function tMonthHTML(all, list0, kind, curYM) {
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
   /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht oben im Vergleich. */
   const rev = list.slice().reverse();
-  if (rev.length) h += foldHTML('data-t="more"', tAll, 'Läufe', '', rev.length, rev.map(r => {
+  if (rev.length) h += foldHTML('laeufe', 'Läufe', '', rev.length, rev.map(r => {
     const de = dEff(r), dp = dPace(r);
     return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (kind === 'all' ? ' · ' + kindName(r.k) : '') + (r.hr ? ' · Puls ' + r.hr : '') + (r.inc ? ' · ' + n1(r.inc) + ' % Steigung' : '') + '</small></span>' +
-      '<span class="r"><b>' + fmtPace(r.pace) + ' /km</b>' + (r.eff != null ? '<small class="' + (de ? de.c : '') + '">Effizienz ' + kg(r.eff, 2) + (de ? ' · ' + de.t : '') + '</small>' : dp ? '<small class="' + dp.c + '">' + dp.t + '</small>' : '') + '</span></button></li>';
+      '<span class="r"><b>' + fmtPace(r.pace) + ' /km</b>' + (r.eff != null ? '<small>Effizienz ' + kg(r.eff, 2) + (de ? ' · ' + (de.c ? '<span class="' + de.c + '">' + de.t + '</span>' : de.t) : '') + '</small>' : dp ? '<small class="' + dp.c + '">' + dp.t + '</small>' : '') + '</span></button></li>';
   }).join(''));
   return h;
 }
@@ -2709,7 +2705,7 @@ function tYearHTML(list0, curYM) {
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
   h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000)) + '</div>';
-  h += foldHTML('data-t="fold" data-v="tmons"', fo.tmons, 'Monate', '', per.filter(p => p.n).length, per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  h += foldHTML('cardioMonate', 'Monate', '', per.filter(p => p.n).length, per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join(''));
   return h;
 }
@@ -2740,8 +2736,6 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
   else if (a === 'kind') tKind = t.dataset.v;
   else if (a === 'metric') tMetric = t.dataset.v;
-  else if (a === 'more') tAll = !tAll;
-  else if (a === 'fold') fo[t.dataset.v] = !fo[t.dataset.v];
   else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else tYM = ymOfIdx(ymIdx(tYM) + d); }
   renderTraining();
@@ -2909,19 +2903,16 @@ function liveCardHTML() {
     '<div class="side"><span class="streak" style="padding-right:14px"><b class="lv-card-t">' + fmt((Date.now() - L.start) / 1000) + '</b><span>Gesamt</span></span></div></li></ul>';
 }
 const CHEV_D = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
-/* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt, open = Merker { 'YYYY-MM': offen }, attr = data-Attribut des Monatsknopfs.
-   Jeder Monat ist einklappbar, der jüngste ist offen. cards = Einträge sind eigene Karten statt Zeilen einer Liste.
-   info(ym, anzahl) liefert auf Wunsch { s: kleine Zeile unter dem Monat, r: Angabe rechts }; ohne info steht rechts die Anzahl. */
-function monthsHTML(items, open, attr, cards, info) {
+/* Lange Listen nach Monaten: items = [{ d: Datum, html }] von neu nach alt. Jeder Monat ist eine Klappzeile mit dem Schlüssel key-YYYY-MM (Weg siehe foldHTML);
+   ohne Merker ist der jüngste offen. info(ym, anzahl) liefert { s: kleine Zeile unter dem Monat, r: Angabe rechts }. */
+function monthsHTML(items, key, info) {
   const groups = [];
   items.forEach(it => { const ym = it.d.slice(0, 7), g = groups[groups.length - 1]; if (g && g.ym === ym) g.h.push(it.html); else groups.push({ ym, h: [it.html] }); });
   return '<div class="mons">' + groups.map((g, i) => {
-    const on = open[g.ym] != null ? open[g.ym] : i === 0, body = on ? g.h.join('') : '', x = info ? info(g.ym, g.h.length) : { r: g.h.length };
-    const head = '<li><button type="button" class="two mon" ' + attr + ' data-ym="' + g.ym + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span>' + (x.s ? '<small>' + x.s + '</small>' : '') + '</span><b class="dim fold">' + (x.r == null ? '' : x.r) + CHEV_D + '</b></button></li>';
-    return cards ? '<ul class="entries">' + head + '</ul>' + body : '<ul class="entries">' + head + body + '</ul>';
+    const k = key + '-' + g.ym, on = fo[k] != null ? fo[k] : i === 0, x = info(g.ym, g.h.length);
+    return '<ul class="entries"><li><button type="button" class="two mon" data-fold="' + k + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span><small>' + x.s + '</small></span><b class="dim fold">' + x.r + CHEV_D + '</b></button></li>' + (on ? g.h.join('') : '') + '</ul>';
   }).join('') + '</div>';
 }
-const monToggle = (open, t) => { open[t.dataset.ym] = t.getAttribute('aria-expanded') !== 'true'; };
 const kUnitRow = d => {
   const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
   return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
@@ -2933,7 +2924,7 @@ function kExFoldHTML() {
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
   if (!rows.length) return '';
-  return foldHTML('data-k="exs"', kExOpen, 'Übungen', '', rows.length, rows.map(o => {
+  return foldHTML('uebungen', 'Übungen', '', rows.length, rows.map(o => {
       const d = exDelta(o.hist, pre);
       return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
@@ -2946,7 +2937,7 @@ function kYearHTML(curYM) {
   if (!s.n) return h;
   h += kTiles(s) + kNote(s);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
-  return h + '<div class="folds">' + foldHTML('data-t="fold" data-v="kmons"', fo.kmons, 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFoldHTML() + '</div>';
 }
 function kraftHTML(curYM) {
@@ -2967,15 +2958,13 @@ function kraftHTML(curYM) {
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  return h + '<div class="folds">' + kExFoldHTML() + (rev.length ? foldHTML('data-k="units"', kUnOpen, 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
+  return h + '<div class="folds">' + kExFoldHTML() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
   const a = t.dataset.k;
   if (a === 'day') openK(t.dataset.d);
   else if (a === 'ex') openX(t.dataset.id);
-  else if (a === 'units') { kUnOpen = !kUnOpen; renderTraining(); }
-  else if (a === 'exs') { kExOpen = !kExOpen; renderTraining(); }
   else if (a === 'start') startPlan(t.dataset.id);
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
@@ -3603,7 +3592,7 @@ function cleanFolders() {
   for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
   if (n) ndoc.patch(p);
 }
-let rSub = 'rout', nFolder = '', nDoneOpen = false, nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), „Erledigt“ aufgeklappt, Suchtext der Notizen
+let rSub = 'rout', nFolder = '', nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), Suchtext der Notizen
 const inFolder = x => !nFolder || x.f === nFolder;
 const doneKey = t => t.done ? keyOf(new Date(t.done)) : '';
 const dueText = d => d === keyOf(addDays(new Date(), 1)) ? 'Morgen' : dRow(d);
@@ -3631,7 +3620,7 @@ function tasksHTML() {
   if (p.soon.length) h += '<h2 class="sec">Demnächst</h2><ul class="entries">' + p.soon.map(t => taskRow(t, dueText(t.d))).join('') + '</ul>';
   if (p.none.length) h += '<h2 class="sec">Ohne Datum</h2><ul class="entries">' + p.none.map(t => taskRow(t)).join('') + '</ul>';
   /* Erledigtes: eingeklappt, die letzten 50 */
-  if (p.old.length) h += foldHTML('data-n="donefold"', nDoneOpen, 'Erledigt', '', p.old.length, p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join(''));
+  if (p.old.length) h += foldHTML('erledigt', 'Erledigt', '', p.old.length, p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join(''));
   return h;
 }
 /* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
@@ -3689,7 +3678,6 @@ function nAct(e) {
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
   else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderRoutines(); }
   else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
-  else if (a === 'donefold') { nDoneOpen = !nDoneOpen; renderRoutines(); }
   else if (a === 'alltasks') { rSub = 'task'; nFolder = ''; show('routinen', true); renderRoutines(); }
   return true;
 }
@@ -4047,7 +4035,7 @@ function renderHome() {
   h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal. */
-  h += foldHTML('data-h="fold" data-v="bk"', fo.bk, 'Sicherung', '<span id="bk-msg">' + esc(bkMsg || (bkDue ? '' : lastBackupText())) + '</span>', '',
+  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg">' + esc(bkMsg || (bkDue ? '' : lastBackupText())) + '</span>', '',
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen'));
   el.innerHTML = h;
 }
@@ -4061,7 +4049,6 @@ $('#v-heute').addEventListener('click', e => {
   const t = e.target.closest('[data-h]'); if (!t) return;
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
-  else if (a === 'fold') { fo[v] = !fo[v]; renderHome(); }
   else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') show(v, true);
   else if (a === 'q') quickOpen(v);
@@ -4140,8 +4127,9 @@ document.addEventListener('click', e => {
 });
 
 /* Jeder Besuch eines Bereichs beginnt eingeklappt: Wechselt man über die Leiste unten, klappt alles Aufgeklappte wieder zu.
-   Im Bereich selbst bleibt es offen, auch beim Blättern durch Monate und nach einem Blatt. Gespeichert wird davon nichts. */
-function foldsShut() { for (const k in fo) fo[k] = false; mAll = wAll = tAll = vNoOpen = kExOpen = kUnOpen = nDoneOpen = false; }
+   Im Bereich selbst bleibt es offen, auch beim Blättern durch Monate und nach einem Blatt. Gespeichert wird davon nichts.
+   Die Merker werden gelöscht, nicht auf false gesetzt: In einer Liste nach Monaten ist dann wieder der jüngste Monat offen. */
+function foldsShut() { for (const k in fo) delete fo[k]; }
 function show(v, user) {
   const was = view;
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';

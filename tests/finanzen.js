@@ -45,7 +45,7 @@ lauf(async () => {
   P.ok('Umbuchung: kein Umschalter Ausgabe/Einnahme', !(await page.isVisible('#m-kind')));
   await page.fill('#m-amt', '100'); await chip('#m-acc', 'Girokonto'); await chip('#m-to', 'Bargeld'); await speichern('#m-save');
   P.enthaelt('Umbuchung 100 vom Girokonto zum Bargeld', await konten(), ['1.220', '1.070 €', '150 €']);
-  await page.click('#v-haushalt [data-m="fold"][data-v="tr"]');   // Umbuchungen aufklappen
+  await page.click('#v-haushalt [data-fold="umbuchungen"]');   // Umbuchungen aufklappen
   P.enthaelt('Umbuchung steht im Bereich Vermögen', await text(page, '#v-haushalt [data-m="tx"]'), ['Girokonto → Bargeld', '100,00 €']);
 
   await sub('budget'); await page.click('#v-haushalt [data-m="newfix"]'); await page.fill('#m-name', 'Miete'); await page.fill('#m-amt', '400'); await chip('#m-acc', 'Girokonto');
@@ -66,7 +66,7 @@ lauf(async () => {
 
   await sub('budget');
   P.enthaelt('Budget zählt die Umbuchung nicht: 200 ein, 400 fix, 65 flexibel', await text(page, '#v-haushalt .figs .fig'), ['200', '400', '65']);
-  await page.click('#v-haushalt [data-m="more"]');   // Ausgaben aufklappen
+  await page.click('#v-haushalt [data-fold="ausgaben"]');   // Ausgaben aufklappen
   P.enthaelt('Buchungszeile nennt das Konto', await text(page, '#v-haushalt [data-m="tx"]'), ['Heute · Girokonto']);
 
   // --- Teil 2: Konto beim Buchen anlegen, umbenennen ---
@@ -109,11 +109,11 @@ lauf(async () => {
   await page.click('#v-haushalt .mnav button:first-child');
   P.enthaelt('Vormonat: Depot ohne Eintrag behält 5.150, gesamt 8.650, −151', await text(page, '#v-haushalt .hero h1, #v-haushalt .figs .fig, #v-haushalt [data-m="bal"].two'), ['8.650', '−151 €', 'Depot 5.150 € ±0 €']);
   await page.click('#v-haushalt [data-m="mode"][data-v="year"]');
-  await page.click('#v-haushalt [data-m="fold"][data-v="vmons"]');
+  await page.click('#v-haushalt [data-fold="vermMonate"]');
   P.ok('Jahresansicht zeigt Monate zum Antippen', (await page.$$('#v-haushalt [data-m="goto"]')).length >= 1);
 
   /* „+ Fixkosten“: ohne Fixkosten die Zeile selbst, sonst die letzte Zeile der aufgeklappten Liste */
-  const neuFix = async () => { if (!(await page.$('#v-haushalt [data-m="newfix"]'))) await page.click('#v-haushalt [data-m="fold"][data-v="fix"]'); await page.click('#v-haushalt [data-m="newfix"]'); };
+  const neuFix = async () => { if (!(await page.$('#v-haushalt [data-m="newfix"]'))) await page.click('#v-haushalt [data-fold="fixkosten"]'); await page.click('#v-haushalt [data-m="newfix"]'); };
   // --- Teil 5: Sparquote und Fixkosten aufs Jahr ---
   await page.evaluate(([m3, m2, m1]) => {
     const o = JSON.parse(localStorage.getItem('takt.v1'));
@@ -125,7 +125,7 @@ lauf(async () => {
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt');
   P.ok('nur Budget-Daten: startet im Bereich Budget', (await text(page, '#v-haushalt .subtabs [aria-pressed="true"]')) === 'Budget');
   P.enthaelt('laufender Monat heißt „Sparquote bisher“, ohne Vergleich', await text(page, '#v-haushalt .kv'), ['Sparquote bisher']);
-  P.enthaelt('Fixkosten aufs Jahr: Miete 7.200, Versicherung 360, Summe 7.560', await (async () => { await page.click('#v-haushalt [data-m="fold"][data-v="fix"]'); return text(page, '#v-haushalt .fo, #v-haushalt [data-m="fixed"]'); })(), ['7.560 € im Jahr', '7.200 € im Jahr', '360 € im Jahr']);
+  P.enthaelt('Fixkosten aufs Jahr: Miete 7.200, Versicherung 360, Summe 7.560', await (async () => { await page.click('#v-haushalt [data-fold="fixkosten"]'); return text(page, '#v-haushalt .fo, #v-haushalt [data-m="fixed"]'); })(), ['7.560 € im Jahr', '7.200 € im Jahr', '360 € im Jahr']);
   await nachOben(page); await page.click('#v-haushalt .mnav button:first-child');
   P.enthaelt('Vormonat: (2.000 − 600 − 200) / 2.000 = 60 %, davor 50 %', await text(page, '#v-haushalt .kv'), ['Sparquote', '60 %', '+10 Prozentpunkte']);
   /* Der Vergleich steht in einer eigenen Zeile unter dem Wert, nicht daneben */
@@ -147,17 +147,17 @@ lauf(async () => {
   // 1.000 − 30 = 970; die Ausgabe ohne Konto zählt nicht
   P.enthaelt('Ausgabe 30 verändert das Vermögen: 970', await konten(), ['970 €', 'gerechnet seit']);
   // Zeile „Ohne Konto“: die Ausgabe nach dem Stand und die Miete = 2; die Ausgabe vom Vortag steckt schon im Stand und fehlt
-  P.enthaelt('Vermögen nennt, was ohne Konto gebucht ist', await text(page, '#v-haushalt [data-m="noacc"]'), ['Ohne Konto', '2']);
+  P.enthaelt('Vermögen nennt, was ohne Konto gebucht ist', await text(page, '#v-haushalt [data-fold="ohneKonto"]'), ['Ohne Konto', '2']);
   P.ok('Zeile ist eingeklappt', !(await text(page, '#v-haushalt')).includes('Alt'));
-  await page.click('#v-haushalt [data-m="noacc"]');
-  const offen = await text(page, '#v-haushalt .entries:has([data-m="noacc"])');
+  await page.click('#v-haushalt [data-fold="ohneKonto"]');
+  const offen = await text(page, '#v-haushalt .entries:has([data-fold="ohneKonto"])');
   P.ok('aufgeklappt: Ausgabe und Miete, nicht die vom Vortag', offen.includes('Alt') && offen.includes('Miete') && !offen.includes('Davor'), offen);
   await page.click('#v-haushalt [data-m="tx"]:has-text("Alt")'); await chip('#m-acc', 'Girokonto'); await speichern('#m-save');
   // 970 − 12 = 958
   P.enthaelt('Konto bei der alten Ausgabe nachgetragen: 958', await konten(), ['958 €']);
-  P.enthaelt('danach steht nur noch die Miete ohne Konto', await text(page, '#v-haushalt .entries:has([data-m="noacc"])'), ['1', 'Miete']);
+  P.enthaelt('danach steht nur noch die Miete ohne Konto', await text(page, '#v-haushalt .entries:has([data-fold="ohneKonto"])'), ['1', 'Miete']);
   await page.click('#v-haushalt [data-m="fixed"]:has-text("Miete")'); await chip('#m-acc', 'Girokonto'); await page.fill('#m-day', '1'); await speichern('#m-save');
-  P.ok('alles hat ein Konto: Zeile ist weg', !(await page.$('#v-haushalt [data-m="noacc"]')));
+  P.ok('alles hat ein Konto: Zeile ist weg', !(await page.$('#v-haushalt [data-fold="ohneKonto"]')));
   await sub('budget'); await neuFix();
   P.ok('Konto ist auch bei neuen Fixkosten vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
   await page.click('#ms-close');

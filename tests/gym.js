@@ -15,16 +15,16 @@ lauf(async () => {
   await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)');
   P.enthaelt('laufender Monat: 1 Einheit, Verbesserung +10,0 %', await gym(), ['1 Einheit', '+10,0 %']);
   P.enthaelt('bewegtes Gewicht 44 × 27 = 1.188 kg, Zeit 0:40 h', await gym(), ['1,2', '0:40 h']);
-  await page.click('#v-training [data-k="exs"]');
+  await page.click('#v-training [data-fold="uebungen"]');
   P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training [data-k="ex"]'), ['Rudern', '+10,0 %']);
-  await page.click('#v-training [data-k="units"]');
+  await page.click('#v-training [data-fold="einheiten"]');
   P.ok('Einheiten klappen auf: eine in diesem Monat', (await page.$$('#v-training [data-k="day"]')).length === 1);
 
   await nachOben(page); await page.click('#v-training .mnav button:first-child');
   P.enthaelt('Vormonat: 5 Einheiten, +14,3 % (erster Monat: gegenüber der ersten Einheit)', await gym(), ['5 Einheiten', '+14,3 %']);
   P.ok('Einheiten des Vormonats: fünf', (await page.$$('#v-training [data-k="day"]')).length === 5);
   await page.click('#v-training [data-t="mode"][data-v="year"]');
-  await page.click('#v-training [data-t="fold"][data-v="kmons"]');
+  await page.click('#v-training [data-fold="gymMonate"]');
   P.ok('Jahresansicht mit Monaten zum Antippen', (await page.$$('#v-training [data-t="goto"]')).length >= 1);
   await page.click('#v-training [data-t="mode"][data-v="month"]');
 
