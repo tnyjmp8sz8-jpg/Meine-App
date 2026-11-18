@@ -5,6 +5,7 @@ import WidgetKit
 /// Schnelleingabe: Die Knöpfe „Notiz“ und „Ausgabe“ im Widget öffnen die App nur mit einem Eingabefeld (trackpunkt://schnell/notiz).
 /// Nach dem Bestätigen geht die App von selbst zurück auf den Home-Bildschirm. Näher kommt man an ein Popup nicht heran:
 /// Ein Widget darf selbst keine Tastatur zeigen.
+/// Bei „Ausgabe“ lässt sich oben auf Einnahme umstellen und darunter das Konto wählen (seit 0.5), damit die Buchung gleich im Vermögen mitrechnet.
 enum Schnell: String {
     case notiz, ausgabe
 
@@ -27,19 +28,35 @@ struct Schnelleingabe: View {
     @Environment(\.colorScheme) private var schema
     @State private var text = ""
     @State private var wofuer = ""
+    @State private var einnahme = false
+    @State private var konten: [Stand.Konto] = []
+    /// Gewähltes Konto: nil = noch keines · "" = „Kein Konto“ · sonst die Kennung
+    @State private var konto: String? = nil
 
     /// Betrag in Cent (deutsches Komma oder Punkt)
     private var cent: Double { ((Double(text.replacingOccurrences(of: ",", with: ".")) ?? 0) * 100).rounded() }
-    private var gueltig: Bool { art == .notiz ? !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty : cent > 0 && cent <= 1e9 }
+    /// Bei Ausgabe und Einnahme: Betrag über 0 und, wenn es Konten gibt, eine Wahl (auch „Kein Konto“ ist eine)
+    private var gueltig: Bool {
+        if art == .notiz { return !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+        return cent > 0 && cent <= 1e9 && (konten.isEmpty || konto != nil)
+    }
 
     var body: some View {
         let f = Farben(dunkel: schema == .dark)
+        let frage = einnahme ? "Woher? (kann leer bleiben)" : "Wofür? (kann leer bleiben)"
         ZStack(alignment: .top) {
             // Tipp daneben bricht ab, aber nur solange nichts getippt ist: Ein Fehltipp soll keinen Text kosten
             f.seite.ignoresSafeArea().onTapGesture { if text.isEmpty && wofuer.isEmpty { schliessen() } }
             VStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 10) {
-                    Text(art == .notiz ? "Notiz" : "Ausgabe").font(.system(size: 13, weight: .semibold)).foregroundColor(f.blass)
+                    if art == .notiz {
+                        Text("Notiz").font(.system(size: 13, weight: .semibold)).foregroundColor(f.blass)
+                    } else {
+                        HStack(spacing: 8) {
+                            pille("Ausgabe", !einnahme, f) { einnahme = false }
+                            pille("Einnahme", einnahme, f) { einnahme = true }
+                        }
+                    }
                     HStack(spacing: 10) {
                         Eingabefeld(text: $text, platzhalter: art == .notiz ? "Was möchtest du notieren?" : "0,00", zahl: art == .ausgabe, farben: f, fertig: sichern)
                             .frame(height: 34)
@@ -52,8 +69,12 @@ struct Schnelleingabe: View {
                     }
                     if art == .ausgabe {
                         Rectangle().fill(f.spur).frame(height: 1)
-                        TextField("Wofür? (kann leer bleiben)", text: $wofuer).font(.system(size: 15)).foregroundColor(f.schrift).tint(f.blau)
+                        TextField(frage, text: $wofuer).font(.system(size: 15)).foregroundColor(f.schrift).tint(f.blau)
                             .submitLabel(.done).onSubmit(sichern)
+                        if !konten.isEmpty {
+                            Rectangle().fill(f.spur).frame(height: 1)
+                            kontenReihe(f)
+                        }
                     }
                 }
                 .padding(16).background(f.grund).clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
@@ -62,9 +83,75 @@ struct Schnelleingabe: View {
             .padding(.horizontal, 16).padding(.top, 56)
         }
         .onAppear {
-            // Nur für den Selbsttest im Bau: trägt von selbst etwas ein, damit geprüft ist, dass Speichern und Schließen gehen
+            kontenLaden()
+            // Nur für den Selbsttest im Bau: trägt von selbst etwas ein, damit geprüft ist, dass Speichern und Schließen gehen.
+            // Bei „Ausgabe“ stellt die Probe dazu auf Einnahme und wählt das zweite Konto.
             guard CommandLine.arguments.contains("-schnellprobe") else { return }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) { text = art == .notiz ? "Schnell notiert" : "4,20"; sichern() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                if art == .notiz {
+                    text = "Schnell notiert"
+                } else {
+                    text = "4,20"
+                    einnahme = true
+                    if konten.count > 1 { konto = konten[1].id }
+                }
+                sichern()
+            }
+        }
+    }
+
+    /// Pille zum Wählen: gewählt blau mit weißer Schrift, sonst ruhig. Ein Tipp darauf lässt die Tastatur offen.
+    private func pille(_ titel: String, _ an: Bool, _ f: Farben, _ tipp: @escaping () -> Void) -> some View {
+        Button(action: tipp) {
+            Text(titel).font(.system(size: 13, weight: .medium)).foregroundColor(an ? .white : f.blass).lineLimit(1)
+                .padding(.horizontal, 12).frame(height: 32).background(an ? f.blau : f.spur).clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
+    }
+
+    /// Konten als Pillen in einer Reihe, die sich seitlich schieben lässt (so ist auch auf einem schmalen Gerät nichts abgeschnitten); am Ende „Kein Konto“
+    private func kontenReihe(_ f: Farben) -> some View {
+        ScrollViewReader { leser in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(konten, id: \.id) { eins in
+                        pille(Schnelleingabe.kurz(eins.n), konto == eins.id, f) { konto = eins.id }.id(eins.id)
+                    }
+                    pille("Kein Konto", konto == "", f) { konto = "" }
+                }
+            }
+            .scrollDismissesKeyboard(.never)
+            .onAppear {
+                // Das vorbelegte Konto soll zu sehen sein, auch wenn es weiter hinten in der Reihe steht
+                if let wahl = konto, !wahl.isEmpty { DispatchQueue.main.async { leser.scrollTo(wahl, anchor: .center) } }
+            }
+        }
+    }
+
+    /// Lange Kontonamen kürzen, damit eine Pille nicht die ganze Reihe füllt
+    private static func kurz(_ name: String) -> String { name.count > 22 ? String(name.prefix(21)) + "…" : name }
+
+    /// Konten aus dem letzten Stand der App. Vorbelegt ist das zuletzt hier gewählte Konto, sonst das, das die App im Blatt vorbelegen würde
+    /// (zuletzt benutzt oder das einzige) – jeweils nur, wenn es noch in der Liste steht. „Kein Konto“ wird nie von selbst gewählt.
+    private func kontenLaden() {
+        guard art == .ausgabe else { return }
+        let stand = Ablage.lesen()
+        var liste = stand?.konten ?? []
+        var zuletzt = UserDefaults.standard.string(forKey: "schnellKonto") ?? ""
+        var vor = stand?.konto ?? ""
+        // Für das Bild und die Probe im Bau: drei Beispielkonten statt des Stands
+        if CommandLine.arguments.contains("-schnellkonten") {
+            liste = [Stand.Konto(id: "b1", n: "Girokonto"), Stand.Konto(id: "b2", n: "Sparkonto"), Stand.Konto(id: "b3", n: "Depot")]
+            zuletzt = ""
+            vor = "b1"
+        }
+        konten = liste
+        if liste.contains(where: { $0.id == zuletzt }) {
+            konto = zuletzt
+        } else if liste.contains(where: { $0.id == vor }) {
+            konto = vor
+        } else {
+            konto = nil
         }
     }
 
@@ -73,7 +160,17 @@ struct Schnelleingabe: View {
         if art == .notiz {
             Ablage.notizDazu(text.trimmingCharacters(in: .whitespacesAndNewlines))
         } else {
-            Ablage.vormerken(["art": "ausgabe", "a": cent, "n": wofuer.trimmingCharacters(in: .whitespacesAndNewlines), "kat": ""])
+            var auftrag: [String: Any] = ["art": "ausgabe", "a": cent, "n": wofuer.trimmingCharacters(in: .whitespacesAndNewlines), "kat": "", "k": einnahme ? "in" : "out"]
+            // acc nur, wenn es Konten gibt: die Kennung, leer heißt ausdrücklich „Kein Konto“. Ohne das Feld belegt die App wie bisher selbst vor.
+            if !konten.isEmpty, let wahl = konto {
+                auftrag["acc"] = wahl
+                if !wahl.isEmpty { UserDefaults.standard.set(wahl, forKey: "schnellKonto") }
+            }
+            Ablage.vormerken(auftrag)
+            // Nur in der Probe: den Auftrag zusätzlich ablegen, damit der Bau ihn prüfen kann
+            if CommandLine.arguments.contains("-schnellprobe"), let daten = try? JSONSerialization.data(withJSONObject: auftrag) {
+                try? daten.write(to: FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0].appendingPathComponent("schnellprobe.json"))
+            }
         }
         WidgetCenter.shared.reloadAllTimelines()
         NotificationCenter.default.post(name: Halter.eingangDa, object: nil)
