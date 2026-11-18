@@ -14,9 +14,16 @@ struct Stand: Codable {
         var id: String      // Kennung in der Web-App; „neu-…“, solange die Notiz erst vorgemerkt ist
         var x: String       // erste Zeile
     }
+    struct Konto: Codable {
+        var id: String      // Kennung in der Web-App
+        var n: String       // Name
+    }
     var tage: [Tag]
     var notizen: [String]   // nur Text, für die Fassung 0.2
     var nz: [Notiz]?        // die neuesten zehn Notizen mit Kennung
+    // Für die Schnelleingabe (ab v65 der Web-App; fehlt in einer älteren stand.json, deshalb wahlfrei)
+    var konten: [Konto]?    // alle Konten, nach Name sortiert
+    var konto: String?      // Kennung des Kontos, das die Web-App vorbelegen würde; leer = keines
 
     func tag(_ datum: Date) -> Tag? { let k = Ablage.tag(datum); return tage.first { $0.d == k } }
 

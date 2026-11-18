@@ -195,7 +195,13 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             geplant = schluessel
             Mitteilungen.planen(sicherung: sicherung, ablauf: Profil.ablauf)
         }
-        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? []]
+        // Konten und das vorbelegte Konto für die Schnelleingabe. Nur Einträge mit Kennung und Name: Ein unvollständiger machte sonst den ganzen Stand unlesbar.
+        let konten: [[String: String]] = (inhalt["konten"] as? [[String: Any]] ?? []).compactMap { eins in
+            guard let id = eins["id"] as? String, let n = eins["n"] as? String else { return nil }
+            return ["id": id, "n": n]
+        }
+        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? [],
+                                     "konten": konten, "konto": inhalt["konto"] as? String ?? ""]
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
         }
