@@ -1252,7 +1252,7 @@ let W = { goal: null, goalFrom: null, entries: {} };   // Gewicht: Ziel + { Datu
 let view = 'routinen', wRange = '28';
 let MF = { fixed: {} };                    // Haushalt: feste Posten { id: {...} }
 let MY = {};                               // Haushalt: Jahr -> { tx: { id: {...} } }
-let mMode = 'month', mYM = '', mYear = 0;
+let mMode = 'month', mYM = '', mYear = 0, mNow = '';   // mNow: der laufende Monat beim letzten Zeichnen
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
 let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
@@ -2010,7 +2010,7 @@ function catsHTML(cats, budgets, ym) {
     const bud = own + carry, over = bud && r[1] > bud, w = bud ? Math.min(1, r[1] / bud) : r[1] / max;
     const inner = '<span>' + catName(r[0]) + (rollOn ? ROLL : '') + '</span><b>' + eur(r[1]) + (bud ? '<small> von ' + eur0(bud) + ' €</small>' : '') + '</b><div class="track"><i style="width:' + (w * 100).toFixed(1) + '%"></i></div>' +
       (carry > 0 ? '<small class="roll">' + eur0(own) + ' € Budget + ' + eur0(carry) + ' € aus Vormonaten</small>' : '');
-    return budgets ? '<button type="button" class="cat' + (over ? ' over' : '') + '" data-m="budget" data-c="' + r[0] + '" aria-label="Budget für ' + catName(r[0]) + ' ändern">' + inner + '</button>' : '<div class="cat">' + inner + '</div>';
+    return budgets ? '<button type="button" class="cat' + (over ? ' over' : '') + '" data-m="budget" data-c="' + esc(r[0]) + '" aria-label="Budget für ' + catName(r[0]) + ' ändern">' + inner + '</button>' : '<div class="cat">' + inner + '</div>';
   }).join('') + '</div></div>';
 }
 const sumTiles = s => '<div class="figs on-bg">' + fig(eur0(s.inc), '€', '<i class="dot" style="background:var(--good)"></i>Einnahmen') +
@@ -2199,7 +2199,7 @@ function goalsHTML(curYM) {
       '<button type="button" class="go" data-m="goal" data-id="' + esc(x.id) + '" aria-label="Sparziel ' + esc(g.n) + ' ändern">' +
         '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
         '<span class="txt"><span class="name">' + esc(g.n) + ' · ' + eur0(g.amount) + ' €</span><span class="meta">' + meta + (acc ? ' · ' + esc(MF.acc[acc].n) : '') + '</span></span></button>' +
-      '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(p * 100) + '</b><span>%</span></span></div></li>';
+      '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(clamp(have * 100 / g.amount, 0, 100)) + '</b><span>%</span></span></div></li>';
   }).join('') + '</ul>' : '');
 }
 function wealthHTML(curYM) {
@@ -2245,9 +2245,12 @@ let fSub = '';   // vom Nutzer gewählter Bereich: 'verm' = Vermögen, 'budget' 
 /* Ohne Wahl: Budget, wenn es nur Budget-Daten gibt, sonst Vermögen */
 const finSub = () => fSub || (hasMoney() && !hasWealth() ? 'budget' : 'verm');
 function renderMoney() {
-  const el = $('#v-haushalt'), curYM = todayKey().slice(0, 7);
-  if (!isYM(mYM)) mYM = curYM;
-  if (!mYear) mYear = +curYM.slice(0, 4);
+  const el = $('#v-haushalt'), curYM = todayKey().slice(0, 7), moved = !!mNow && mNow !== curYM;
+  /* Monatswechsel, während die App offen ist: Stand die Wahl auf dem bisher laufenden Monat oder Jahr, geht sie mit.
+     Sonst trüge „Stand eintragen“ den Stand in den alten Monat ein, und neue Buchungen bekämen dessen letzten Tag. */
+  if (!isYM(mYM) || (moved && mYM === mNow)) mYM = curYM;
+  if (!mYear || (moved && mYear === +mNow.slice(0, 4))) mYear = +curYM.slice(0, 4);
+  mNow = curYM;
   const sub = finSub();
   const subs = '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
   const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"');
@@ -2423,7 +2426,7 @@ function paintM() {
   if (bg) { const cy = carryIn(mE.cat, todayKey().slice(0, 7)); $('#m-roll-s').textContent = cy > 0 ? 'Aus den Vormonaten angespart: ' + eur0(cy) + ' €.' : 'Was am Monatsende übrig ist, kommt im nächsten Monat dazu.'; }
   const all = allCats(), extraSel = all.findIndex(c => c[0] === mE.cat) >= QUICK, showAll = bg || mE.more || extraSel;
   $('#m-catnew-row').hidden = !(mE.newCat && showAll);
-  $('#m-cat').innerHTML = (showAll ? all : all.slice(0, QUICK)).map(c => '<button type="button" class="chip" data-c="' + c[0] + '" aria-pressed="' + (c[0] === mE.cat) + '">' + c[1] + '</button>').join('') +
+  $('#m-cat').innerHTML = (showAll ? all : all.slice(0, QUICK)).map(c => '<button type="button" class="chip" data-c="' + esc(c[0]) + '" aria-pressed="' + (c[0] === mE.cat) + '">' + c[1] + '</button>').join('') +
     (showAll ? '<button type="button" class="chip" data-c="__new" aria-expanded="' + !!mE.newCat + '">' + (mE.newCat ? 'Abbrechen' : '+ Kategorie') + '</button>' : '') +
     (extraSel || bg ? '' : '<button type="button" class="chip more" data-c="__more" aria-expanded="' + showAll + '" aria-label="' + (showAll ? 'Weniger Kategorien zeigen' : 'Mehr Kategorien zeigen') + '"><svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M2 7h10' + (showAll ? '' : 'M7 2v10') + '"/></svg></button>');
   $('#m-note').placeholder = mE.kind === 'in' ? 'optional, z. B. Gehalt' : 'optional, z. B. Rewe';
@@ -3613,7 +3616,7 @@ function taskRow(t, when, late, slim) {
     (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
 }
 const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['task', 'Aufgaben'], ['note', 'Notizen']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
-const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + f[0] + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
+const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + esc(f[0]) + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
 function tasksHTML() {
   if (!taskList().length) return emptyHTML('aufgaben', 'Noch keine Aufgabe', 'Schreib auf, was ansteht. Was offen bleibt, rutscht auf den nächsten Tag.', '<button type="button" class="primary" data-n="newtask">Aufgabe anlegen</button>');
   const tk = todayKey(), p = taskParts(taskList().filter(inFolder)), n = p.today.length, all = n + p.doneToday.length;
@@ -3688,7 +3691,7 @@ $('#n-main').addEventListener('input', e => { if (e.target.id === 'n-q') { nQuer
 $('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderRoutines(); } });
 
 /* Ordner-Chips in den Blättern: „Kein Ordner“, alle Ordner, „+ Ordner“ legt einen neuen an und wählt ihn */
-const folderPickHTML = st => [['', 'Kein Ordner']].concat(allFolders()).map(f => '<button type="button" class="chip" data-f="' + f[0] + '" aria-pressed="' + (st.f === f[0]) + '">' + f[1] + '</button>').join('') +
+const folderPickHTML = st => [['', 'Kein Ordner']].concat(allFolders()).map(f => '<button type="button" class="chip" data-f="' + esc(f[0]) + '" aria-pressed="' + (st.f === f[0]) + '">' + f[1] + '</button>').join('') +
   '<button type="button" class="chip" data-f="__new" aria-expanded="' + !!st.newF + '">' + (st.newF ? 'Abbrechen' : '+ Ordner') + '</button>';
 function folderClick(e, st, input) {
   const b = e.target.closest('.chip'); if (!b) return false;
@@ -3975,7 +3978,7 @@ const AREA = {
 };
 const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
-const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx'); };
+const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); };
 let bkMsg = '';
 function lastBackupText() {
   try { const t = Number(localStorage.getItem('takt.backup')); return t ? 'Letzte Sicherung: ' + DF_LONG.format(new Date(t)) + '.' : 'Noch keine Sicherung gespeichert.'; } catch (e) { return ''; }

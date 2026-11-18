@@ -12,10 +12,13 @@ const zahl = n => Math.round(n).toLocaleString('de-DE');
 
 /* Öffnet die App. Ohne o.bewegung läuft sie mit „Bewegung reduzieren“: Dann zählen Zahlen nicht hoch, und Prüfungen lesen sofort den Endwert.
     o.daten wird einmal nach dem Laden gespeichert und die Seite neu geladen.
+    o.uhr (ein Date) stellt die Uhr der Seite auf diesen Zeitpunkt; die Zeit läuft von dort normal weiter. Die Uhr von Node bleibt, wie sie ist:
+    tag() und monat() rechnen weiter mit dem echten Datum.
    Nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich und überschreibt dann die Daten der App. */
 async function oeffnen(o = {}) {
   const browser = await chromium.launch(o.start || {});
   const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger, reducedMotion: o.bewegung ? 'no-preference' : 'reduce' });
+  if (o.uhr) await ctx.clock.install({ time: o.uhr });
   if (o.skript) await ctx.addInitScript(o.skript);   // läuft vor jedem Laden der Seite, z. B. um die iPhone-Hülle nachzustellen
   const page = await ctx.newPage(), fehler = [];
   page.on('pageerror', e => fehler.push('Seitenfehler: ' + e.message));

@@ -1,9 +1,30 @@
 // Finanzen: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen über Monate, Sparziele, Sparquote.
 // Jede Zahl ist von Hand nachgerechnet und steht als Erwartung im Test.
-const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, zahl, nachOben } = require('./lib');
+const { oeffnen, text, bereich, gespeichert, pruefer, lauf, monat, zahl, nachOben } = require('./lib');
+
+/* Die Uhr der App steht für die ganze Reihe auf dem 15. des laufenden Monats, 12 Uhr, und läuft von dort weiter. So hängt kein Ergebnis vom Tag ab, an dem die Reihe läuft:
+   Am 1. läge „gestern“ im Vormonat, und ab dem 28. zählen feste Posten vom 28. schon mit. Was am 28. gilt, prüft Teil 7 mit eigener Uhr.
+   Deshalb hier kein tag() aus lib.js (das folgt der Uhr von Node): „heute“ und „gestern“ kommen aus dem Monat. */
+const M = monat(0), heute = M + '-15', gestern = M + '-14', um12 = (ym, t) => new Date(+ym.slice(0, 4), +ym.slice(5) - 1, t, 12);
+const NAMEN = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'], name = ym => NAMEN[+ym.slice(5) - 1] + ' ' + ym.slice(0, 4);
+/* Daten für Teil 3: Stand vor zwei Monaten (gilt zum Monatsende), Miete am 1., Gehalt am 28., eine Ausgabe im Vormonat */
+const daten3 = pg => pg.evaluate(([m5, m2, m1]) => {
+  const MF = { fixed: { r: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: m5, to: null, acc: 'g', day: 1 }, s: { name: 'Gehalt', amount: 100000, kind: 'in', every: 1, from: m5, to: null, acc: 'g', day: 28 } }, acc: { g: { n: 'Girokonto' } }, bal: {}, balT: {}, goals: {} };
+  MF.bal[m2] = { g: 50000 };
+  const MY = {}; MY[m1.slice(0, 4)] = { tx: { a: { d: m1 + '-10', a: 2500, k: 'out', c: 'essen', n: '', acc: 'g', t: 1 } } };
+  localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, MF, MY }));
+}, [monat(5), monat(2), monat(1)]);
+/* Daten für Teil 6, der Fall des Nutzers: Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu ohne Konto: eine Ausgabe von 12 nach dem Stand (am Tag d.tag),
+   eine von 5 am Tag davor (d.vor), Miete als fester Posten. Die Zeitpunkte kommen von der Uhr der Seite. */
+const daten6 = (pg, d) => pg.evaluate(d => {
+  const MY = {}, tx = (id, tag, a, n, alter) => { const y = tag.slice(0, 4); MY[y] = MY[y] || { tx: {} }; MY[y].tx[id] = { d: tag, a, k: 'out', c: 'essen', n, t: Date.now() - alter }; };
+  tx('alt', d.tag, 1200, 'Alt', 1000); tx('vor', d.vor, 500, 'Davor', 2000);
+  localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, W: {}, T: {}, K: {}, MY,
+    MF: { fixed: { m: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: d.ym } }, acc: { g: { n: 'Girokonto' } }, bal: { [d.ym]: { g: 100000 } } } }));
+}, d);
 
 lauf(async () => {
-  const P = pruefer('Finanzen'), { browser, page, fehler } = await oeffnen();
+  const P = pruefer('Finanzen'), { browser, page, fehler } = await oeffnen({ uhr: um12(M, 15) });
   const sub = v => page.click('#v-haushalt [data-m="sub"][data-v="' + v + '"]');
   const konten = async () => { await sub('verm'); return (await text(page, '#v-haushalt .hero h1')) + ' || ' + (await text(page, '#v-haushalt [data-m="bal"].two')); };
   const feld = name => '#vsheet .vrow:has(.vname[value="' + name + '"]) [data-acc]';
@@ -52,7 +73,7 @@ lauf(async () => {
   P.ok('fester Posten mit Konto fragt nach dem Tag im Monat', await page.isVisible('#m-day'));
   await page.fill('#m-day', '1'); await speichern('#m-save');
   P.enthaelt('Miete am 1. steckt schon im eingetragenen Stand', await konten(), ['1.220', '1.070 €']);
-  await buchen('out', '20', 'Girokonto', tag(1));
+  await buchen('out', '20', 'Girokonto', gestern);
   P.enthaelt('rückdatierte Ausgabe (gestern) ändert den Stand nicht', await konten(), ['1.220', '1.070 €']);
 
   await sub('verm'); await page.click('#add');
@@ -80,16 +101,11 @@ lauf(async () => {
   P.enthaelt('nach dem Neuladen unverändert', await konten(), ['1.205', '1.065 €', '140 €', 'PayPal privat']);
 
   // --- Teil 3: vergangene Monate. Stand vor zwei Monaten (gilt zum Monatsende), Miete am 1., Gehalt am 28., eine Ausgabe im Vormonat ---
-  await page.evaluate(([m5, m2, m1]) => {
-    const o = JSON.parse(localStorage.getItem('takt.v1'));
-    const MF = { fixed: { r: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: m5, to: null, acc: 'g', day: 1 }, s: { name: 'Gehalt', amount: 100000, kind: 'in', every: 1, from: m5, to: null, acc: 'g', day: 28 } }, acc: { g: { n: 'Girokonto' } }, bal: {}, balT: {}, goals: {} };
-    MF.bal[m2] = { g: 50000 };
-    const MY = {}; MY[m1.slice(0, 4)] = { tx: { a: { d: m1 + '-10', a: 2500, k: 'out', c: 'essen', n: '', acc: 'g', t: 1 } } };
-    localStorage.setItem('takt.v1', JSON.stringify({ S: o.S, LY: {}, MF, MY }));
-  }, [monat(5), monat(2), monat(1)]);
+  await daten3(page);
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt'); await sub('verm');
-  const vormonat = 500 - 400 + 1000 - 25, jetzt = vormonat - 400 + (new Date().getDate() >= 28 ? 1000 : 0);
-  P.enthaelt('laufender Monat: Miete zählt, Gehalt erst ab dem 28.', await text(page, '#v-haushalt .hero h1'), [zahl(jetzt)]);
+  // Vormonat 500 − 400 + 1.000 − 25 = 1.075; am 15. kommt nur die Miete dazu: 1.075 − 400 = 675
+  const vormonat = 500 - 400 + 1000 - 25, jetzt = vormonat - 400;
+  P.enthaelt('laufender Monat am 15.: Miete zählt, Gehalt vom 28. noch nicht (675)', await text(page, '#v-haushalt .hero h1'), [zahl(jetzt)]);
   await page.click('#v-haushalt .mnav button:first-child');
   P.enthaelt('Vormonat: 500 − 400 + 1.000 − 25', await text(page, '#v-haushalt .hero h1'), [zahl(vormonat)]);
   await page.click('#v-haushalt .mnav button:first-child');
@@ -112,6 +128,18 @@ lauf(async () => {
   await page.click('#v-haushalt [data-fold="vermMonate"]');
   P.ok('Jahresansicht zeigt Monate zum Antippen', (await page.$$('#v-haushalt [data-m="goto"]')).length >= 1);
 
+  // --- Sparziele in ganzen Prozent: abgerundet, aber nie eins zu wenig. 0,29 × 100 ist als Kommazahl 28,999…; mit Cent gerechnet (290.000 × 100 / 1.000.000) genau 29 ---
+  // A: 2.900 von 10.000 € = 29 %. B: 570 von 1.000 € = 57 %. C: 580 von 1.000 € = 58 %. D (gesamtes Vermögen): 2.900 + 570 + 580 = 4.050 von 10.000 € = 40,5 %, abgerundet 40 %.
+  await page.evaluate(m => {
+    const MF = { fixed: {}, acc: { a: { n: 'Eins' }, b: { n: 'Zwei' }, c: { n: 'Drei' } }, bal: {}, balT: {},
+      goals: { g1: { n: 'A', amount: 1000000, acc: 'a' }, g2: { n: 'B', amount: 100000, acc: 'b' }, g3: { n: 'C', amount: 100000, acc: 'c' }, g4: { n: 'D', amount: 1000000, acc: null } } };
+    MF.bal[m] = { a: 290000, b: 57000, c: 58000 };
+    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, MF, MY: {} }));
+  }, M);
+  await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt'); await sub('verm');
+  const prozent = await page.$$eval('#v-haushalt .row.goal .streak b', l => l.map(b => b.textContent).join());
+  P.ok('Sparziele: 29 %, 57 %, 58 % und abgerundet 40 %', prozent === '29,57,58,40', prozent);
+
   /* „+ Fixkosten“: ohne Fixkosten die Zeile selbst, sonst die letzte Zeile der aufgeklappten Liste */
   const neuFix = async () => { if (!(await page.$('#v-haushalt [data-m="newfix"]'))) await page.click('#v-haushalt [data-fold="fixkosten"]'); await page.click('#v-haushalt [data-m="newfix"]'); };
   // --- Teil 5: Sparquote und Fixkosten aufs Jahr ---
@@ -132,15 +160,26 @@ lauf(async () => {
   const lage = await page.evaluate(() => { const k = document.querySelector('#v-haushalt .kv'), w = k.querySelector('b').getBoundingClientRect(), d = k.querySelector('.delta').getBoundingClientRect(); return { darunter: d.top >= w.bottom - 4, rechts: Math.abs(d.right - w.right) < 2 }; });
   P.ok('Vergleich steht unter dem Wert, rechtsbündig', lage.darunter && lage.rechts, JSON.stringify(lage));
 
-  // --- Teil 6: Fall des Nutzers. Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu ohne Konto: eine Ausgabe von 12 nach dem Stand, eine von 5 am Tag davor, Miete als fester Posten ---
+  // --- Kennungen aus einer fremden Datei: Eine Kennung mit Anführungszeichen und HTML darf nichts in die Seite einschleusen ---
+  // Budget-Schlüssel und Kennung einer eigenen Kategorie (11 Zeichen, erlaubt sind 12) tragen ein Element; es darf nirgends entstehen
   await page.evaluate(d => {
-    const MY = {}, tx = (id, tag, a, n, alter) => { const y = tag.slice(0, 4); MY[y] = MY[y] || { tx: {} }; MY[y].tx[id] = { d: tag, a, k: 'out', c: 'essen', n, t: Date.now() - alter }; };
-    tx('alt', d.tag, 1200, 'Alt', 1000); tx('vor', d.vor, 500, 'Davor', 2000);
-    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, W: {}, T: {}, K: {}, MY,
-      MF: { fixed: { m: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: d.ym } }, acc: { g: { n: 'Girokonto' } }, bal: { [d.ym]: { g: 100000 } } } }));
-  }, { ym: monat(0), tag: tag(0), vor: tag(1) });
+    const kat = 'a"><i id=q>', MY = {}; MY[d.slice(0, 4)] = { tx: { a: { d, a: 1000, k: 'out', c: kat, n: '' } } };
+    const MF = { fixed: {}, budgets: { 'x"><b id="inj">E</b><i a="': 5000 }, cats: {} }; MF.cats[kat] = { n: 'Fremd' };
+    localStorage.setItem('takt.v1', JSON.stringify({ S: { routines: [] }, LY: {}, MF, MY }));
+  }, heute);
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt');
-  P.ok('Stand ohne Zeitpunkt bekommt beim Laden einen', (((await gespeichert(page)).MF.balT || {})[monat(0)] || {}).g > 0);
+  const fremd = () => page.evaluate(() => !!document.querySelector('#inj, #q'));
+  P.ok('Budget mit fremden Kennungen: beide Zeilen da, nichts eingeschleust', (await page.$$('#v-haushalt .cat')).length === 2 && !(await fremd()), await text(page, '#v-haushalt .cats'));
+  await page.click('#v-haushalt [data-m="add"]'); await page.click('#m-cat [data-c="__more"]');
+  P.ok('Blatt mit allen Kategorien: nichts eingeschleust', !(await fremd()));
+  await chip('#m-cat', 'Fremd');
+  P.ok('die fremde Kategorie lässt sich weiter wählen', (await text(page, '#m-cat [aria-pressed="true"]')) === 'Fremd');
+  await page.click('#ms-close');
+
+  // --- Teil 6: Fall des Nutzers. Stand aus v38 (ohne Zeitpunkt) im laufenden Monat, ein Konto, dazu ohne Konto: eine Ausgabe von 12 nach dem Stand, eine von 5 am Tag davor, Miete als fester Posten ---
+  await daten6(page, { ym: M, tag: heute, vor: gestern });
+  await page.reload(); await page.waitForTimeout(300); await bereich(page, 'haushalt');
+  P.ok('Stand ohne Zeitpunkt bekommt beim Laden einen', (((await gespeichert(page)).MF.balT || {})[M] || {}).g > 0);
   await sub('budget'); await page.click('#v-haushalt [data-m="add"]');
   P.ok('einziges Konto ist vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
   await page.fill('#m-amt', '30'); await speichern('#m-save');
@@ -162,6 +201,18 @@ lauf(async () => {
   P.ok('Konto ist auch bei neuen Fixkosten vorbelegt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'Girokonto');
   await page.click('#ms-close');
 
+  // --- Schnell-Knopf „Ausgabe“ auf Heute bucht auf heute, auch wenn in den Finanzen gerade ein anderer Monat gewählt ist ---
+  // Im Bereich selbst bleibt es dabei: Wer dort im Vormonat steht und „Ausgabe“ tippt, bekommt dessen letzten Tag vorgeschlagen.
+  const vm = monat(1), vmEnde = vm + '-' + new Date(+vm.slice(0, 4), +vm.slice(5), 0).getDate();
+  await sub('budget'); await nachOben(page); await page.click('#v-haushalt .mnav button:first-child');
+  await page.click('#v-haushalt [data-m="add"]');
+  P.ok('im Vormonat: Datum ist dessen letzter Tag (' + vmEnde + ')', (await page.inputValue('#m-date')) === vmEnde, await page.inputValue('#m-date'));
+  await page.click('#ms-close');
+  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="ausgabe"]');
+  P.ok('Schnell-Knopf auf Heute: Datum ist heute', (await page.inputValue('#m-date')) === heute, await page.inputValue('#m-date'));
+  await page.click('#ms-close');
+  await bereich(page, 'haushalt'); await page.click('#v-haushalt .mnav button:last-child');
+
   // --- Ein Knopf für Ausgabe und Einnahme (v56): Das Blatt öffnet als Ausgabe, oben schaltet man auf Einnahme um ---
   const txAlle = async () => Object.values((await gespeichert(page)).MY).flatMap(y => Object.values(y.tx)).filter(Boolean);
   await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="ausgabe"]');
@@ -177,5 +228,38 @@ lauf(async () => {
   await page.click('#ms-close');
 
   P.ok('gespeicherte Daten sind lesbar', !!(await gespeichert(page)).MF);
-  await P.ende(browser, fehler);
+
+  // --- Monatswechsel, während die App offen ist (die iPhone-App bleibt tagelang im Speicher): Der gewählte Monat geht mit ---
+  // Uhr auf den 1. des nächsten Monats; die App zeichnet neu, wenn sie wieder nach vorn kommt (visibilitychange).
+  const M1 = monat(-1), M2 = monat(-2), wach = () => page.evaluate(() => document.dispatchEvent(new Event('visibilitychange')));
+  const titel = () => text(page, '#v-haushalt .mnav b');
+  await sub('verm');
+  P.ok('vor dem Wechsel: ' + name(M), (await titel()) === name(M), await titel());
+  await page.clock.setFixedTime(um12(M1, 1)); await wach(); await page.waitForTimeout(150);
+  P.ok('am 1. zeigt der Bereich den neuen Monat: ' + name(M1), (await titel()) === name(M1), await titel());
+  await page.click('#add');
+  P.ok('„Stand eintragen“ gilt für den neuen Monat', (await page.inputValue('#v-month')) === M1, await page.inputValue('#v-month'));
+  await page.click('#vs-close');
+  await sub('budget'); await page.click('#v-haushalt [data-m="add"]');
+  P.ok('neue Ausgabe: Datum ist der 1. des neuen Monats', (await page.inputValue('#m-date')) === M1 + '-01', await page.inputValue('#m-date'));
+  await page.click('#ms-close');
+  // Wer bewusst einen früheren Monat gewählt hat, bleibt dort
+  await sub('verm'); await page.click('#v-haushalt .mnav button:first-child');
+  await page.clock.setFixedTime(um12(M2, 1)); await wach(); await page.waitForTimeout(150);
+  P.ok('ein gewählter früherer Monat bleibt beim nächsten Wechsel stehen: ' + name(M), (await titel()) === name(M), await titel());
+  await browser.close();
+
+  // --- Teil 7: der 28. Feste Posten zählen ab ihrem Tag im Monat; ohne Konto haben sie keinen Tag und gelten als am 28. fällig ---
+  const b = await oeffnen({ uhr: um12(M, 28) }), q = b.page;
+  await daten3(q); await q.reload(); await q.waitForTimeout(300); await bereich(q, 'haushalt');
+  // wie Teil 3, aber am 28. ist auch das Gehalt da: 1.075 − 400 + 1.000 = 1.675
+  P.enthaelt('am 28.: Miete und Gehalt zählen (1.675)', await text(q, '#v-haushalt .hero h1'), [zahl(vormonat - 400 + 1000)]);
+  await daten6(q, { ym: M, tag: M + '-28', vor: M + '-27' }); await q.reload(); await q.waitForTimeout(300); await bereich(q, 'haushalt');
+  // wie Teil 6, aber der Stand trägt jetzt das Datum des 28.: Die Miete ohne Konto gilt als schon enthalten, in der Zeile steht nur die Ausgabe von heute
+  P.enthaelt('am 28.: „Ohne Konto“ nennt nur die Ausgabe nach dem Stand', await text(q, '#v-haushalt [data-fold="ohneKonto"]'), ['Ohne Konto', '1']);
+  await q.click('#v-haushalt [data-fold="ohneKonto"]');
+  const am28 = await text(q, '#v-haushalt .entries:has([data-fold="ohneKonto"])');
+  P.ok('am 28. aufgeklappt: die Ausgabe, nicht die Miete, nicht die vom Vortag', am28.includes('Alt') && !am28.includes('Miete') && !am28.includes('Davor'), am28);
+  await b.browser.close();
+  await P.ende(null, fehler.concat(b.fehler));
 });

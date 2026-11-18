@@ -145,6 +145,18 @@ lauf(async () => {
   await page.reload(); await page.waitForTimeout(300);
   P.ok('nach dem Neuladen unverändert', JSON.stringify((await gespeichert(page)).N) === JSON.stringify(stand.N));
   P.ok('benutzter eigener Ordner bleibt', Object.values(stand.N.folders).filter(Boolean).map(f => f.n).join() === 'Haushalt');
+
+  // --- Ordner mit fremder Kennung aus einer veränderten Sicherungsdatei: Anführungszeichen und HTML in der Kennung schleusen nichts ein, der Ordner bleibt benutzbar ---
+  const fid = '"><b id="inj">';
+  await page.setInputFiles('#bk-file', { name: 'fremd.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, N: { folders: { [fid]: { n: 'Fremd' } }, tasks: {}, notes: { fremd: { x: 'Notiz im fremden Ordner', f: fid, c: 7, m: 8 } } } })) });
+  await page.waitForTimeout(400); await bereich(page, 'routinen'); await sub('note');
+  P.ok('Ordner-Leiste: der Ordner ist da, nichts eingeschleust', (await text(page, '#n-main [data-n="folder"]')).includes('Fremd') && !(await page.$('#inj')), await text(page, '#n-main .chips'));
+  await page.click('#n-main [data-n="folder"]:has-text("Fremd")'); await kurz();
+  P.ok('der fremde Ordner filtert wie jeder andere', (await liste()).includes('Notiz im fremden Ordner') && !(await liste()).includes('Besprechung'), await liste());
+  await page.click('#n-main [data-n="note"]:has-text("Notiz im fremden Ordner")');
+  P.ok('Blatt: der Ordner ist gewählt, nichts eingeschleust', (await text(page, '#n-folder [aria-pressed="true"]')) === 'Fremd' && !(await page.$('#inj')));
+  await chip('#n-folder', 'Privat'); await chip('#n-folder', 'Fremd'); await page.click('#n-done'); await kurz();
+  P.ok('umgestellt und zurück: die Notiz liegt wieder im fremden Ordner', (await notizen()).some(n => n.x === 'Notiz im fremden Ordner' && n.f === fid));
   await browser.close();
 
   // Sicherung einlesen bringt Aufgaben und Notizen mit; der Kalender zeigt Erledigtes
