@@ -204,6 +204,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Die farbigen Symbole der Bereiche auf Heute findet er „schön und cool“ (v54) und fragte, wo Farbe noch Sinn ergibt. Farbe darf also etwas mehr vorkommen, solange sie eine Bedeutung trägt (Farbe = Bereich). Meinen Vorschlag dazu hat er nach Bildern genau so übernommen (v55).
 - Vorschaubilder kommen gut an: Für Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen (im Test-Browser per eingefügtem CSS, ohne die App zu ändern), dann bauen. So sind v48 und v55 entstanden.
 - „Cleaner“ (18.11., v64): Ihm war „noch zu viel zu unübersichtlich“, er mag aber alle Funktionen. Lösung siehe Entscheidungen (Klappzeilen). Gebaut ohne Rückfrage, während er schlief; seine Rückmeldung am iPhone steht aus und kann einzelne Zeilen wieder öffnen.
+- Läufe: Er trägt immer die Zahlen der Apple Watch bzw. aus Apple Fitness ein, nie die Anzeige des Laufbands (18.11.). Was von selbst von der Uhr kommt, ist also genau seine Zahl.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
