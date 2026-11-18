@@ -709,6 +709,11 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .entries button.act .l{flex-direction:row;align-items:center;gap:7px}
 .fold.plus{color:var(--at)}
 .fold.plus svg{width:12px;height:12px}
+/* Zeile mit einer Aktion und einem „i“ rechts daneben (actRow mit info): Das „i“ steht unter dem Pfeil der Klappzeile, ein langer Text endet mit drei Punkten */
+.entries .irow{display:flex;align-items:center}
+.entries .irow .two{min-width:0}
+.entries .irow .l>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.entries .irow .info{flex:none;width:auto;display:inline-grid;padding:0;margin:0 13px 0 0}
 /* Heute zeigt die Kurzfassung: eine Zeile je Notiz und Aufgabe (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
@@ -1259,7 +1264,7 @@ function loadLocal() {
   } catch (e) {}
   return false;
 }
-function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); hSoon(); }
+function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); hSoon(); sMerk(); }
 
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
@@ -1731,8 +1736,8 @@ $('#scroll').addEventListener('click', e => {
 /* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
 const addFoldHTML = (attr, title) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-label="' + title + ' hinzufügen"><span class="l"><span>' + title + '</span></span><b class="fold plus">' + PLUS + '</b></button></li></ul>';
-/* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile */
-const actRow = (attr, text, plus) => '<li><button type="button" class="two act" ' + attr + '><span class="l">' + (plus ? PLUS : '') + '<span>' + text + '</span></span></button></li>';
+/* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile. Mit info (ein INFO()) steht rechts neben der Aktion ein „i“. */
+const actRow = (attr, text, plus, info) => '<li' + (info ? ' class="irow"' : '') + '><button type="button" class="two act" ' + attr + '><span class="l">' + (plus ? PLUS : '') + '<span>' + text + '</span></span></button>' + (info || '') + '</li>';
 /* Kennzahl-Kachel. Ohne Wert (Strich) gibt es keine Kachel: Eine Reihe aus Strichen wirkt unfertig. Die übrigen Kacheln der Reihe teilen sich die Breite. */
 const fig = (val, unit, label) => val === '–' ? '' : '<div class="fig"><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b><span>' + label + '</span></div>';
 
@@ -4000,6 +4005,24 @@ function lastBackupText() {
   try { const t = Number(localStorage.getItem('takt.backup')); return t ? 'Letzte Sicherung: ' + DF_LONG.format(new Date(t)) + '.' : 'Noch keine Sicherung gespeichert.'; } catch (e) { return ''; }
 }
 function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
+/* Unterzeile der Klappzeile „Sicherung“. Sichert die iPhone-App von selbst (hInfo.sicherung), steht dort, wann zuletzt; sonst die letzte Sicherung von Hand,
+   und die nur, solange sie nicht fällig ist (due): Dann steht derselbe Satz schon in der Erinnerung oben. */
+function bkSub(due) {
+  const s = hInfo.sicherung;
+  if (bkMsg || !s) return bkMsg || (due ? '' : lastBackupText());
+  const d = new Date(s.t), n = dayNum(todayKey()) - dayNum(keyOf(d)), uhr = ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const wann = !s.t ? '' : n === 0 ? 'heute' + uhr : n === 1 ? 'gestern' + uhr : DF_LONG.format(d);
+  return s.fehler ? 'Von selbst sichern ging nicht' + (wann ? ' · zuletzt ' + wann : '') : wann ? 'Von selbst gesichert · ' + wann : 'Wird von selbst gesichert';
+}
+const bkOrd = () => hInfo.sicherung.ordner ? 'Ordner: ' + hInfo.sicherung.ordner : 'Ordner in iCloud wählen';
+/* Meldet die iPhone-App eine Sicherung, werden nur die Texte der Zeile nachgeführt: Neu zeichnen schlösse eine offene Erklärung und kann einen Tipp verschlucken.
+   Neu gezeichnet wird Heute nur, um die erledigte Erinnerung oben wegzunehmen, und nicht bei offenem Blatt (dessen Schließen zeichnet Heute ohnehin neu). */
+function bkPaint() {
+  const s = hInfo.sicherung, due = backupDue(), er = $('#bk-err'), set = (id, t) => { const el = $(id); if (el) el.textContent = t; };
+  if ($('#v-heute .remind[data-h="export"]') && !due && !document.querySelector('dialog[open]')) return renderHome();
+  set('#bk-msg', bkSub(due)); set('#bk-ord', bkOrd());
+  if (er) { er.textContent = s.fehler; er.hidden = !s.fehler; }
+}
 /* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer */
 const BK_DAYS = 7;
 /* from: Tag der letzten Sicherung, ohne Sicherung der Tag des ältesten Eintrags (leer, solange nichts eingetragen ist). due: der Tag, an dem die Sicherung fällig wird. */
@@ -4056,9 +4079,12 @@ function renderHome() {
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false, true)).join('') + '</ul>';
   h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
-  /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal. */
-  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg">' + esc(bkMsg || (bkDue ? '' : lastBackupText())) + '</span>', '',
-    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen'));
+  /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
+     Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu; was dabei geschieht, steht hinter dem „i“, ein Fehler der iPhone-App im Wortlaut darunter. */
+  const au = hInfo.sicherung;
+  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg">' + esc(bkSub(bkDue)) + '</span>', '',
+    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') + (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) : ''),
+    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die letzten 14 Tage. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
   el.innerHTML = h;
 }
 $('#v-heute').addEventListener('click', e => {
@@ -4076,14 +4102,17 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'q') quickOpen(v);
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
+  else if (a === 'ordner') hPost({ art: 'ordner' });
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
 
 /* ---------- Datensicherung ---------- */
+/* Text und Name der Sicherung: ein Weg für „Sicherung speichern“ und für die Sicherung von selbst in der iPhone-App.
+   app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
+const backupText = () => JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
+const backupName = () => 'track-sicherung-' + todayKey() + '.json';
 async function exportData() {
-  /* app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
-  const text = JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
-  const name = 'track-sicherung-' + todayKey() + '.json';
+  const text = backupText(), name = backupName();
   const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); hSoon(); };
   try {
     const f = new File([text], name, { type: 'application/json' });
@@ -4195,8 +4224,8 @@ toastEl.lastElementChild.addEventListener('click', () => {
   const u = undo; toastOff(); if (!u) return;
   try { if (localStorage.getItem(LS) !== u.after) return; localStorage.setItem(LS, u.before); } catch (x) { return; }
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  /* Der Weg geht an saveLocal() vorbei: Ein zurückgeholter laufender Timer muss wieder ticken, und die iPhone-Hülle braucht den Stand für das Widget */
-  loadLocal(); render(); ensureTicker(); hSoon();
+  /* Der Weg geht an saveLocal() vorbei: Ein zurückgeholter laufender Timer muss wieder ticken, und die iPhone-Hülle braucht den Stand für das Widget und die Sicherung */
+  loadLocal(); render(); ensureTicker(); hSoon(); sMerk();
 });
 
 /* ---------- Graphen ablesen ---------- */
@@ -4310,8 +4339,8 @@ document.addEventListener('click', e => {
 
 /* ---------- iPhone-Hülle ---------- */
 /* Die iPhone-App zeigt diese Seite in einem eigenen Fenster und stellt eine Verbindung bereit (HUELLE). Im Browser gibt es sie nicht: Dann bleibt alles hier ohne Wirkung.
-   Hin: Nach jedem Speichern geht ein kleiner Stand an die Hülle, für das Widget und die Mitteilung zur Sicherung.
-   Zurück: Die Hülle ruft window.TrackHuelle auf (Läufe aus Health, Auskunft über die App, Kurzbefehl). */
+   Hin: Nach jedem Speichern geht ein kleiner Stand an die Hülle, für das Widget und die Mitteilung zur Sicherung; dazu die Sicherung selbst, wenn die Hülle sie ablegt.
+   Zurück: Die Hülle ruft window.TrackHuelle auf (Läufe aus Health, Auskunft über die App, Kurzbefehl, Eingang, Sicherung). */
 const HUELLE = (() => { try { return window.webkit.messageHandlers.track || null; } catch (e) { return null; } })();
 let hInfo = {}, hTimer = 0;
 function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
@@ -4389,6 +4418,33 @@ function hEingang(list) {
   }
   return all.map(c => c.id);
 }
+/* Sicherung von selbst: Meldet die iPhone-App in info() ein sicherung (ab 0.5), legt sie den Text der Sicherung als Datei ab ({ art: 'sicherung', name, text }), je Tag eine.
+   Jede Änderung der Daten merkt „offen“ (sMerk). Die erste startet eine Uhr von 20 Sekunden, weitere starten sie nicht neu: Beim Tippen einer Notiz wird sehr oft gespeichert,
+   und so geht höchstens alle 20 Sekunden eine Sicherung hinaus. Verlässt der Nutzer die App, ruft die Hülle sichern(): Dann geht Offenes sofort.
+   Ohne sicherung in info() (Browser, iPhone-App bis 0.4) geht nie etwas hinaus. */
+let sOffen = false, sTimer = 0, sErst = true;
+/* Ist in irgendeiner Gruppe etwas eingetragen? Eine leere App sichert nie: Nach einem verlorenen Speicher würde sie sonst die gute Datei des Tages mit nichts überschreiben. */
+const hatDaten = () => S.routines.length > 0 || Object.keys(LY).some(y => live(LY[y] || {})) || wList().length > 0 || W.goal != null
+  || ['fixed', 'budgets', 'cats', 'acc', 'goals'].some(k => live(MF[k] || {})) || Object.keys(MY).some(y => live(MY[y].tx)) || live(T.runs)
+  || live(K.ex) || live(K.plans) || live(N.tasks) || live(N.notes);
+function sMerk() { if (!HUELLE) return; sOffen = true; if (hInfo.sicherung && !sTimer) sTimer = setTimeout(sJetzt, 20000); }
+function sJetzt() {
+  clearTimeout(sTimer); sTimer = 0;
+  if (!hInfo.sicherung || !sOffen || !hatDaten()) return;
+  sOffen = false;
+  hPost({ art: 'sicherung', name: backupName(), text: backupText() });
+}
+/* Was die iPhone-App zur Sicherung meldet, in info() und nach jedem Schreibversuch in gesichert(): { t: Zeitpunkt der letzten gelungenen (0 = noch keine), ordner, fehler }. */
+const sNorm = s => s && typeof s === 'object' ? { t: Number(s.t) > 0 ? Number(s.t) : 0, ordner: String(s.ordner || ''), fehler: String(s.fehler || '') } : null;
+/* Eine gelungene Sicherung zählt wie eine von Hand gespeicherte: Die Erinnerung auf Heute entfällt, und die Mitteilung „Sicherung fällig“ rückt nach hinten (dafür geht der Stand neu hinaus).
+   Nach einem Fehler bleibt die Sicherung offen und geht beim nächsten Anlass noch einmal (nächste Änderung, sichern(), nächster Start).
+   Von hier startet nie eine Sicherung und keine Uhr: Sonst liefe es bei einem dauerhaften Fehler endlos zwischen App und Hülle hin und her. */
+function sStand() {
+  const s = hInfo.sicherung; if (!s) return;
+  if (s.fehler) sOffen = true;
+  let alt = 0; try { alt = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
+  if (s.t > alt) { try { localStorage.setItem('takt.backup', String(s.t)); } catch (e) {} hSoon(); }
+}
 const healthBtnHTML = () => hInfo.health === 'kann' ? '<button type="button" class="ghost h-btn" data-t="health">Läufe aus Health übernehmen</button>' : '';
 function hPaint() {
   const el = $('#h-line'), t = [hInfo.app ? 'iPhone-App ' + hInfo.app : '', hInfo.ablauf ? 'gültig bis ' + new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'long' }).format(new Date(hInfo.ablauf)) : '', hInfo.health === 'an' ? 'Health verbunden' : ''].filter(Boolean).join(' · ');
@@ -4420,7 +4476,17 @@ if (HUELLE && window.visualViewport) {
   document.addEventListener('focusout', e => { if (feld(e.target)) setTimeout(() => { if (!feld(document.activeElement)) setze(0); }, 60); });
 }
 if (HUELLE) window.TrackHuelle = {
-  info(o) { hInfo = o && typeof o === 'object' ? o : {}; hPaint(); renderTraining(); },
+  /* info kommt bei jedem Zurückkommen in die App: Heute wird nur neu gezeichnet, wenn sich an der Sicherung etwas geändert hat.
+     Beim ersten Mal nach dem Laden geht eine Sicherung gleich hinaus, wenn etwas offen ist oder die letzte von gestern oder älter ist: So gibt es an jedem Tag, an dem die App läuft, eine Datei. */
+  info(o) {
+    const vor = JSON.stringify(hInfo.sicherung || null);
+    hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung);
+    sStand(); hPaint(); renderTraining();
+    if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
+    if (hInfo.sicherung && sErst) { sErst = false; if (hInfo.sicherung.t < new Date().setHours(0, 0, 0, 0)) sOffen = true; sJetzt(); }
+  },
+  gesichert(o) { const s = sNorm(o); if (s) { hInfo.sicherung = s; sStand(); bkPaint(); } },
+  sichern() { sJetzt(); },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },
   neu(was) { if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
