@@ -1,9 +1,10 @@
 // Alle Tests nacheinander, vor jeder Veröffentlichung: node tests/alle.js
 const { spawnSync } = require('child_process');
 const path = require('path');
+const { REIHEN } = require('./lib');
 
-const tests = ['ablauf', 'aufbau', 'klappen', 'gesten', 'eingabe', 'loeschen', 'notizen', 'finanzen', 'gym', 'monat', 'huelle', 'speicher', 'update'], schlecht = [];
-for (const t of tests) {
+const schlecht = [];
+for (const t of REIHEN) {
   const r = spawnSync(process.execPath, [path.join(__dirname, t + '.js')], { stdio: 'inherit', timeout: 300000 });
   if (r.status !== 0) schlecht.push(t);
 }

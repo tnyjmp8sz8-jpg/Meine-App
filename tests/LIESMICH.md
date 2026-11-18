@@ -10,13 +10,14 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 - `eingabe.js`: Eingaben in den Blättern: Dauer einer Routine mit dem Minus-Knopf, Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
 - `loeschen.js`: „Rückgängig“ nach dem Löschen (Buchung, Konto im offenen Blatt, Training), eigene Kategorien.
 - `notizen.js`: Aufgaben (Abschnitte, abhaken, Ordner, Liegengebliebenes) und Notizen (schnelle Aufnahme, Abhaken löscht, „Als Aufgabe“, Suche, Übernahme alter Notizen), wiederkehrende Aufgaben, Heute, Rückgängig, Sicherung, Kalender.
-- `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote.
+- `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote, Monatswechsel bei offener App. Die Uhr der Seite steht auf dem 15. des Monats (für den 28. gibt es einen eigenen Teil), damit kein Ergebnis vom Tag abhängt.
 - `gym.js`: Recap für Monat und Jahr, Verbesserung, Blatt der Übung, laufendes Training.
 - `speicher.js`: 25-mal Neuladen, Sicherung speichern und einlesen.
 - `update.js`: offline starten, Selbst-Aktualisierung, gleiche Versionsnummer in `sw.js` und Fußzeile.
 - `node tests/bilder.js <ordner> [2]`: Bildschirmfotos aller Bereiche, der wichtigsten Blätter und einiger aufgeklappter Listen (dunkel, hell, 390 und 320 px) zum Ansehen.
 - `node tests/live.js`: prüft die veröffentlichte App nach dem Hochladen.
-- `lib.js`: Helfer. `daten.js`: Beispieldaten relativ zum heutigen Tag.
+- `node tests/am.js JJJJ-MM-TT [reihe …]`: dieselben Reihen mit vorgetäuschtem Datum (Uhr von Node und Uhr der Seite). Zeigt, ob eine Reihe vom Tag abhängt, an dem sie läuft. Nach Änderungen an Tests mit Datum für einen 1., 2., 15., 28. und 31. laufen lassen.
+- `lib.js`: Helfer und die Liste der Reihen; `oeffnen({ uhr })` stellt die Uhr der Seite. `daten.js`: Beispieldaten relativ zum heutigen Tag.
 
 Neue Funktion oder behobener Fehler: eine Prüfung dazuschreiben, mit der Rechnung als Kommentar.
 
