@@ -329,30 +329,20 @@ lauf(async () => {
   P.ok('Gewicht: … auch beim Zuklappen eines Monats; ein Tipp auf das „i“ verbirgt sie dann', nachMonat && !(await page.isVisible('#info-w-leg')) && !(await infoAuf('w-leg')));
   await page.click('#v-gewicht [data-info="w-leg"]');
   await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
-  P.ok('Cardio: der Vergleichssatz in „Letzter Lauf“ ist zuerst verborgen', !(await page.isVisible('#info-t-last')) && (await text(page, '#v-training .last h3')).indexOf('Letzter Lauf') === 0);
-  await page.click('#v-training [data-info="t-last"]');
-  /* Letzter Lauf ist der von heute, der Outdoor-Lauf davor der von gestern */
-  P.ok('Cardio: ein Tipp auf das „i“ zeigt ihn', (await page.isVisible('#info-t-last')) && (await text(page, '#info-t-last')) === 'Vergleich mit dem Outdoor-Lauf davor (Gestern)', await text(page, '#info-t-last'));
-  /* Das „i“ hängt an der Laufzeit: Füllt der Text davor die Zeile genau, darf es nicht allein in die nächste rutschen (bei 390 px z. B. „· Mo., 16. Nov. · Outdoor · 5,0 km in 27:00“).
-     Welche Breite das trifft, hängt von Schrift und Datum ab; deshalb wird die Kopfzeile Pixel für Pixel von 150 auf 340 px verbreitert (191 Breiten)
-     und jedes Mal geprüft, ob das „i“ in der Zeile der letzten Ziffer steht und nicht über den Rand ragt. */
-  const iZeile = await page.evaluate(() => {
-    const h3 = document.querySelector('#v-training .last h3'), i = h3.querySelector('.info'), tw = document.createTreeWalker(h3, NodeFilter.SHOW_TEXT), rg = document.createRange();
-    let ziffer = null; for (let n; (n = tw.nextNode());) if (n.textContent.trim()) ziffer = n;
-    rg.setStart(ziffer, ziffer.length - 1); rg.setEnd(ziffer, ziffer.length);
-    let allein = 0, raus = 0, breiten = 0;
-    for (let w = 150; w <= 340; w++) {
-      h3.style.width = w + 'px'; breiten++;
-      const q = rg.getBoundingClientRect(), r = i.getBoundingClientRect();
-      if (!(q.bottom > r.top + 2 && q.top < r.bottom - 2)) allein++;
-      if (r.right > h3.getBoundingClientRect().right + 0.5) raus++;
-    }
-    h3.style.width = '';
-    return { text: h3.textContent, ziffer: ziffer.textContent, allein, raus, breiten };
-  });
-  /* Lauf von heute: 5000 m in 1500 s → „5,0 km in 25:00“ */
-  P.ok('Cardio „Letzter Lauf“: das „i“ steht bei jeder Breite in der Zeile der Laufzeit und ragt nicht hinaus', iZeile.text === 'Letzter Lauf · Heute · Outdoor · 5,0 km in 25:00' && iZeile.ziffer === '25:00' && iZeile.breiten === 191 && iZeile.allein === 0 && iZeile.raus === 0, JSON.stringify(iZeile));
-  await bleibt('Cardio „Läufe“', 't-last', 'laeufe'); await tipp('laeufe');
+  /* Cardio „Letzter Lauf“ ist seit v66 eine Klappzeile unter dem Graphen. Zu: Tag, Art, Strecke und Zeit, rechts der Vergleich der Pace. Aufgeklappt: Pace, Effizienz, Puls und womit verglichen wird.
+     Lauf von heute: 5000 m in 1500 s → „5,0 km in 25:00“, 5:00 /km. Der Outdoor-Lauf davor ist der von gestern: 5000 m in 1620 s → 5:24 /km. Unterschied 24 s pro km, heute schneller. */
+  const ll = '#v-training [data-fold="letzterLauf"]', llZu = (await text(page, ll)).replace(/\s+/g, ' ');
+  P.ok('Cardio „Letzter Lauf“: zuerst zu, mit Tag, Art, Strecke, Zeit und dem Vergleich der Pace', (await page.getAttribute(ll, 'aria-expanded')) === 'false' && llZu.includes('Letzter Lauf') && llZu.includes('Heute · Outdoor · 5,0 km in 25:00') && llZu.includes('24 s schneller') && (await z('#v-training .kvs')) === 0, llZu);
+  P.ok('Cardio „Letzter Lauf“: der Vergleich ist grün, die Zeile steht unter dem Graphen und über „Läufe“', await page.evaluate(() => {
+    const v = document.querySelector('#v-training'), z = v.querySelector('[data-fold="letzterLauf"]'), probe = document.createElement('i'); document.body.appendChild(probe); probe.style.color = 'var(--good)';
+    const gut = getComputedStyle(probe).color; probe.remove();
+    const y = e => e.getBoundingClientRect().top;
+    return getComputedStyle(z.querySelector('.fold .up')).color === gut && y(v.querySelector('.card.chart')) < y(z) && y(z) < y(v.querySelector('[data-fold="laeufe"]')) && !v.querySelector('.card.last');
+  }));
+  await tipp('letzterLauf');
+  const llAuf = (await text(page, '#v-training .kvs')).replace(/\s+/g, ' ');
+  P.ok('Cardio „Letzter Lauf“: aufgeklappt stehen Pace, Effizienz und Puls mit Vergleich, darunter womit verglichen wird', ['Pace', '5:00', '24 s pro km schneller', 'Effizienz', 'Puls', 'Vergleich mit dem Outdoor-Lauf davor (Gestern).'].every(t => llAuf.includes(t)) && (await stand('letzterLauf')).auf, llAuf);
+  await tipp('letzterLauf');
   await page.click('#v-training .subtabs button:nth-child(2)'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
   await bleibt('Gym „Übungen“', 'k-imp', 'uebungen');
   /* Der Wechsel des Bereichs stellt den ersten Blick her: Klappzeilen zu, Erklärungen verborgen (die im Gewicht stand noch offen) */
@@ -470,5 +460,22 @@ lauf(async () => {
   await blatt('Zeile „Budgets“ öffnet das Blatt „Budget“', '.fo[data-m="budget"]', '#msheet', '#ms-title', 'Budget');
   await blatt('Zeile „Feste Einnahmen“ öffnet das Blatt „Feste Einnahme“', '.fo[data-m="newin"]', '#msheet', '#ms-title', 'Feste Einnahme');
   await blatt('Zeile „Fixkosten“ öffnet das Blatt „Fixkosten“', '.fo[data-m="newfix"]', '#msheet', '#ms-title', 'Fixkosten');
+  await browser.close();
+
+  /* Cardio, Kachel „Effizienz“: Das Plus oder Minus zum Vormonat steht klein neben dem Wert (v66, vorher ein loser Satz unter den Kacheln). Uhr der Seite auf dem 15., je ein Lauf am 10. dieses und des letzten Monats.
+     Dieser Monat: 5000 m in 1500 s mit Puls 150 → 5000 / (25 × 150) = 1,333. Vormonat 5000 m in 1620 s mit Puls 152 → 5000 / (27 × 152) = 1,218. 1,333 / 1,218 = 1,094 → „+9,4 %“, grün.
+     Zweiter Fall, Vormonat 5000 m in 1800 s mit Puls 160 → 5000 / (30 × 160) = 1,042. 1,333 / 1,042 = 1,280 → ab 10 % ohne Nachkommastelle „+28 %“ (sonst wird die Kachel bei 320 px zu eng). */
+  for (const [sek, puls, soll] of [[1620, 152, '+9,4 %'], [1800, 160, '+28 %']]) {
+    const c = leer(), M = monat(0);
+    c.T = { hk: {}, runs: { a: { d: M + '-10', m: 5000, s: 1500, hr: 150, k: 'out' }, b: { d: monat(1) + '-10', m: 5000, s: sek, hr: puls, k: 'out' } } };
+    ({ browser, page, fehler } = await oeffnen({ daten: c, breite: 320, uhr: new Date(+M.slice(0, 4), +M.slice(5) - 1, 15, 12) }));
+    await bereich(page, 'training'); await kurz();
+    const kachel = await page.evaluate(() => {
+      const v = document.querySelector('#v-training'), f = [...v.querySelectorAll('.fig')].find(e => e.textContent.includes('Effizienz')), d = f.querySelector('b .up, b .down');
+      return { text: f.textContent, delta: d ? d.textContent : '', gruen: !!f.querySelector('b .up'), satz: v.textContent.includes('Effizienz im Schnitt'), passt: f.querySelector('b').scrollWidth <= f.clientWidth, seite: document.querySelector('#scroll').scrollWidth <= document.querySelector('#scroll').clientWidth };
+    });
+    P.ok('Cardio, Kachel „Effizienz“: ' + soll + ' zum Vormonat neben dem Wert, grün, kein loser Satz, passt bei 320 px', kachel.delta === soll && kachel.gruen && kachel.text.includes('1,33') && !kachel.satz && kachel.passt && kachel.seite, JSON.stringify(kachel));
+    if (soll !== '+28 %') await browser.close();
+  }
   await P.ende(browser, fehler);
 });

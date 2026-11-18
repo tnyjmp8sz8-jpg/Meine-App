@@ -315,11 +315,10 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 #mform .stepper input,#tform .stepper input,#vform #g-amt{text-align:left;padding-left:16px}
 
 /* Training */
-.last .note{margin:0 0 4px;font-size:13px}
 .last{gap:0;padding:12px 16px 4px}
-.last h3{margin:0 0 2px;font-size:15px;font-weight:600}
-.last h3 small{font-weight:400;color:var(--muted);font-size:14px}
-.last h3 small span{white-space:nowrap}
+/* Aufgeklappte Zeile „Letzter Lauf“: die Werte mit Vergleich, darunter klein, womit verglichen wird */
+.kvs{padding:0 13px 9px}
+.kvs .note{margin:3px 0 0}
 /* Zeile mit Wert: der Vergleich steht in einer eigenen Zeile darunter, rechtsbündig (vom Nutzer so gewünscht, wirkt ruhiger als daneben) */
 .kv{display:grid;grid-template-columns:1fr auto;gap:1px 12px;align-items:baseline;padding:11px 0}
 .kv+.kv{border-top:1px solid var(--line)}
@@ -500,9 +499,6 @@ input.n-q{margin-bottom:-8px}
 .kv span{font-size:13px}
 .kv .delta{font-size:12px}
 .last{padding:10px 14px 2px}
-.last h3{font-size:13.5px}
-.last h3 small{font-size:12.5px}
-.last .note{font-size:12px}
 .note{font-size:12px}
 .ins b{font-size:13.5px}
 .ins span{font-size:12.5px}
@@ -775,7 +771,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v65</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v66</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2632,8 +2628,9 @@ function tAgg(list) {
   o.eff = o.hb ? o.mH / o.hb : null;
   return o;
 }
-const tTiles = g => '<div class="figs on-bg">' + fig(g.pace == null ? '–' : fmtPace(g.pace), g.pace == null ? '' : '/km', 'Ø Pace') +
-  fig(g.hr == null ? '–' : String(Math.round(g.hr)), '', 'Ø Puls') + fig(g.eff == null ? '–' : kg(g.eff, 2), '', 'Effizienz') + '</div>';
+/* eff: Plus oder Minus der Effizienz zum Zeitraum davor als { t, c }, steht klein neben dem Wert der Kachel (v66; vorher ein loser Satz unter den Kacheln) */
+const tTiles = (g, eff) => '<div class="figs on-bg">' + fig(g.pace == null ? '–' : fmtPace(g.pace), g.pace == null ? '' : '/km', 'Ø Pace') +
+  fig(g.hr == null ? '–' : String(Math.round(g.hr)), '', 'Ø Puls') + fig(g.eff == null ? '–' : kg(g.eff, 2), eff ? '<span class="' + eff.c + '">' + eff.t + '</span>' : '', 'Effizienz') + '</div>';
 const tHero = (label, g) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + kg(g.m / 1000) + '</span><span class="unit">km</span></h1>' +
   '<p class="sub">' + (g.n ? g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtHM(g.s) : 'Noch kein Lauf in diesem Zeitraum.') + '</p></section>';
 
@@ -2678,15 +2675,14 @@ function kmBarsSVG(vals, label) {
   return s + '</svg>';
 }
 
-function lastCardHTML(r) {
+/* Letzter Lauf im Vergleich mit dem Lauf derselben Art davor: eine Klappzeile unter dem Graphen (v66; als offene Karte schob er den Graphen aus dem ersten Blick).
+   Zu sehen sind Tag, Art, Strecke und Zeit, rechts der Vergleich der Pace in Grün oder Rot. Aufgeklappt: Pace, Effizienz und Puls je mit Vergleich, darunter, womit verglichen wird. */
+function lastFoldHTML(r) {
   const dp = dPace(r), de = dEff(r), kv = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
-  /* Das „i“ hängt an der Laufzeit (kein Umbruch dazwischen): Sonst rutscht es allein in eine zweite Zeile, sobald der Text die erste genau füllt. */
-  let h = '<div class="card last"><h3>Letzter Lauf <small>· ' + dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in <span>' + fmt(r.s) + INFO('t-last') + '</span></small></h3>';
-  h += '<p class="note" id="info-t-last" hidden>' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ')' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p>';
-  h += kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c);
-  if (r.eff != null) h += kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c);
-  if (r.hr) h += kv('Puls', r.hr, '', r.prev && r.prev.hr ? dHr(r.hr, r.prev.hr) : '', '');
-  return h + '</div>';
+  const rows = '<li class="kvs">' + kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c) + (r.eff != null ? kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c) : '') +
+    (r.hr ? kv('Puls', r.hr, '', r.prev && r.prev.hr ? dHr(r.hr, r.prev.hr) : '', '') : '') +
+    '<p class="note">' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ').' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p></li>';
+  return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
 }
 
 function tMonthHTML(all, list0, kind, curYM) {
@@ -2694,23 +2690,25 @@ function tMonthHTML(all, list0, kind, curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(list0.filter(r => r.d.slice(0, 7) === prevYM));
   let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g);
   h += '<button type="button" class="primary" data-t="add">Lauf eintragen</button>';
-  /* Reihenfolge wie in den anderen Bereichen: Zahl, Knopf, Kennzahlen des Monats, dann der eine Kernblock (letzter Lauf im Vergleich) */
-  h += tTiles(g);
-  if (kind !== 'all' && g.eff != null && gp.eff != null) { const p = (g.eff / gp.eff - 1) * 100; h += '<p class="note">Effizienz im Schnitt ' + (p >= 0 ? '+' : '−') + kg(Math.abs(p)) + ' % gegenüber ' + MONTHS[+prevYM.slice(5) - 1] + '.</p>'; }
+  /* Reihenfolge wie in den anderen Bereichen: Zahl, Knopf, Kennzahlen des Monats, Graph, darunter die Klappzeilen (letzter Lauf im Vergleich, Läufe des Monats).
+     Die Effizienz im Schnitt trägt ihr Plus oder Minus zum Vormonat (nicht bei „Alle“: Outdoor und Laufband lassen sich nicht mitteln). */
+  const p = kind !== 'all' && g.eff != null && gp.eff != null ? (g.eff / gp.eff - 1) * 100 : null;
+  /* Ab 10 % ohne Nachkommastelle: Mit „−12,5 %“ wäre die Kachel bei 320 px zu eng. */
+  h += tTiles(g, p == null || Math.abs(p) < 0.05 ? null : { t: (p > 0 ? '+' : '−') + (Math.abs(p) >= 9.95 ? Math.round(Math.abs(p)) : kg(Math.abs(p))) + ' %', c: p > 0 ? 'up' : 'down' });
   const last = list0[list0.length - 1];
-  if (tYM === curYM && last) h += lastCardHTML(last);
   const ck = kind === 'all' ? (last ? last.k : 'out') : kind, svg = runSVG(all.filter(r => r.k === ck), tMetric);
   h += '<div class="card chart"><div class="card-head"><p class="note">Letzte ' + kindName(ck) + '-Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
     [['eff', 'Effizienz'], ['pace', 'Pace']].map(m => '<button type="button" class="chip" data-t="metric" data-v="' + m[0] + '" aria-pressed="' + (tMetric === m[0]) + '">' + m[1] + '</button>').join('') + '</div></div>' +
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
-  /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht oben im Vergleich. */
+  /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht in der Zeile darüber im Vergleich. */
   const rev = list.slice().reverse();
+  h += '<div class="folds">' + (tYM === curYM && last ? lastFoldHTML(last) : '');
   if (rev.length) h += foldHTML('laeufe', 'Läufe', '', rev.length, rev.map(r => {
     const de = dEff(r), dp = dPace(r);
     return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (kind === 'all' ? ' · ' + kindName(r.k) : '') + (r.hr ? ' · Puls ' + r.hr : '') + (r.inc ? ' · ' + n1(r.inc) + ' % Steigung' : '') + '</small></span>' +
       '<span class="r"><b>' + fmtPace(r.pace) + ' /km</b>' + (r.eff != null ? '<small>Effizienz ' + kg(r.eff, 2) + (de ? ' · ' + (de.c ? '<span class="' + de.c + '">' + de.t + '</span>' : de.t) : '') + '</small>' : dp ? '<small class="' + dp.c + '">' + dp.t + '</small>' : '') + '</span></button></li>';
   }).join(''));
-  return h;
+  return h + '</div>';
 }
 function tYearHTML(list0, curYM) {
   const y = String(tYear), list = list0.filter(r => r.d.slice(0, 4) === y), g = tAgg(list), per = [];
