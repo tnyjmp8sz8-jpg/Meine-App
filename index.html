@@ -3578,13 +3578,21 @@ function normN(o) {
 const ndoc = patchDoc(() => N, v => { N = normN(v); });
 /* Wiederkehrende Aufgaben: Beim Abhaken bleibt die Aufgabe als erledigt stehen, und eine neue mit dem nächsten Datum entsteht (nx merkt sich ihre id).
    Wird der Haken wieder entfernt, verschwindet die neue, solange sie noch offen ist. So bleibt sichtbar, was wann erledigt wurde. */
-function nextDue(d, r) {
+function nextDue(d, r, day) {
   const tk = todayKey(); let k = d;
   do {
-    if (r === 'month') { const y = +k.slice(0, 4), m = +k.slice(5, 7), ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; k = ny + '-' + pad(nm) + '-' + pad(Math.min(+d.slice(8), new Date(ny, nm, 0).getDate())); }
+    if (r === 'month') { const y = +k.slice(0, 4), m = +k.slice(5, 7), ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; k = ny + '-' + pad(nm) + '-' + pad(Math.min(day || +d.slice(8), new Date(ny, nm, 0).getDate())); }
     else k = keyOf(addDays(parseKey(k), r === 'week' ? 7 : 1));
   } while (k <= tk);   // Liegengebliebenes springt nicht in die Vergangenheit, sondern auf den nächsten Termin nach heute
   return k;
+}
+/* Tag im Monat, der bei einer monatlichen Aufgabe gemeint ist. Er steht nirgends eigens, sondern ergibt sich aus der Kette der abgehakten Aufgaben (nx zeigt auf die nächste):
+   Liegt eine Aufgabe nur deshalb früher als ihre Vorgängerin, weil ihr Monat kürzer ist (31. → 30.), gilt deren Tag weiter, und nach dem 30.11. kommt wieder der 31.12.
+   Ein von Hand geändertes Datum passt nicht zu dieser Rechnung und zählt deshalb neu. Ist die Vorgängerin gelöscht, gilt der Tag der Aufgabe selbst. */
+function monthDay(t) {
+  const all = taskList(), chain = [t];
+  for (let p; chain.length < 120 && (p = all.find(x => x.nx === chain[chain.length - 1].id && x.r === 'month' && x.d));) chain.push(p);
+  return chain.reduceRight((want, x) => { const day = +x.d.slice(8); return day === Math.min(want, new Date(+x.d.slice(0, 4), +x.d.slice(5, 7), 0).getDate()) ? want : day; }, 0);
 }
 const FOLDERS = [['uni', 'Uni'], ['prom', 'Promotion'], ['priv', 'Privat']];
 const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['month', 'Monatlich']], RNAME = { day: 'täglich', week: 'wöchentlich', month: 'monatlich' };
@@ -3672,7 +3680,7 @@ function nAct(e) {
     const t = N.tasks[id], p = { tasks: {} }; if (!t) return true;
     if (!t.done) {
       p.tasks[id] = { done: Date.now(), nx: '' };
-      if (t.r && t.d) { const nid = newId(); p.tasks[nid] = { t: t.t, f: t.f, d: nextDue(t.d, t.r), done: null, c: Date.now(), n: t.n, r: t.r, nx: '' }; p.tasks[id].nx = nid; }
+      if (t.r && t.d) { const nid = newId(); p.tasks[nid] = { t: t.t, f: t.f, d: nextDue(t.d, t.r, t.r === 'month' ? monthDay(Object.assign({ id }, t)) : 0), done: null, c: Date.now(), n: t.n, r: t.r, nx: '' }; p.tasks[id].nx = nid; }
     } else {
       p.tasks[id] = { done: null, nx: '' };
       if (t.nx && N.tasks[t.nx] && !N.tasks[t.nx].done) p.tasks[t.nx] = null;
@@ -3803,11 +3811,14 @@ $('#n-text').addEventListener('keydown', e => {
 $('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
 $('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
 $('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });
-/* Aus der Notiz wird eine Aufgabe für heute; die Notiz selbst ist damit erledigt und verschwindet */
+/* Aus der Notiz wird eine Aufgabe für heute: die erste Zeile als Titel, alles Weitere als Notiz der Aufgabe. Die Notiz selbst ist damit erledigt und verschwindet.
+   Passt nicht alles in die Aufgabe (Titel 120, Notiz 200 Zeichen), bleibt die Notiz stehen: So geht kein Text verloren. */
 $('#n-task').addEventListener('click', () => {
   if (!nE) return; noteSave();
-  const id = nE.id, title = firstLine($('#n-text').value); if (!id || !title) return;
-  const p = { tasks: {}, notes: {} }; p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: '', r: '', nx: '' }; p.notes[id] = null;
+  const id = nE.id, lines = $('#n-text').value.split('\n').map(l => l.trim()).filter(Boolean), title = lines[0] || ''; if (!id || !title) return;
+  const rest = (title.slice(120) + ' ' + lines.slice(1).join(' ')).trim(), p = { tasks: {}, notes: {} };
+  p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: rest.slice(0, 200), r: '', nx: '' };
+  if (rest.length <= 200) p.notes[id] = null;
   ndoc.patch(p); nE = null; closeN();
 });
 $('#n-del').addEventListener('click', () => {
@@ -4076,6 +4087,8 @@ async function exportData() {
     const f = new File([text], name, { type: 'application/json' });
     if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Sicherung von Track.' }); return ok(); }
   } catch (e) { if (e && e.name === 'AbortError') return setBk('Sicherung abgebrochen.'); }
+  /* In der iPhone-App gibt es nur das Teilen: Den Sprung zu einer Datei lehnt die Hülle ab, es entstünde keine Datei. Dann auch keine Erfolgsmeldung. */
+  if (HUELLE) return setBk('Die Sicherung konnte nicht gespeichert werden.');
   try {
     const a = document.createElement('a'), url = URL.createObjectURL(new Blob([text], { type: 'application/json' }));
     a.href = url; a.download = name; document.body.appendChild(a); a.click(); a.remove();
@@ -4304,16 +4317,19 @@ function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
 function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeout(() => hPost(hStand()), 300); }
 /* Stand für heute und die nächsten sieben Tage: So stimmt das Widget auch nach Mitternacht, ohne dass die App geöffnet wurde.
    Je Tag: Routinen geplant (rn) und erledigt (rd), offene Aufgaben, die bis dahin fällig sind (an, die ersten vier Titel in auf). */
+/* Text für das Widget auf n Zeichen kürzen, nach ganzen Zeichen: slice() könnte ein Emoji in der Mitte teilen, und mit einem halben Zeichen lässt sich der Stand nicht als Datei schreiben.
+   Halbe Zeichen, die schon im Text stehen, fallen dabei weg. */
+const hCut = (s, n) => Array.from(s).filter(c => c.length > 1 || c < '\uD800' || c > '\uDFFF').slice(0, n).join('');
 function hStand() {
   const tk = todayKey(), open = taskList().filter(t => !t.done && t.d).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), tage = [];
   for (let i = 0; i < 8; i++) {
     const dt = addDays(parseKey(tk), i), k = keyOf(dt), wi = wd(dt);
     const due = S.routines.filter(r => r.days[wi] || doneOn(k, r.id) || (!i && (isRunning(r) || secsOf(k, r.id) > 0)));
     const auf = open.filter(t => t.d <= k);
-    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: auf.length, auf: auf.slice(0, 4).map(t => t.t.slice(0, 80)) });
+    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: auf.length, auf: auf.slice(0, 4).map(t => hCut(t.t, 80)) });
   }
   /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
-  const nz = notesNew().map(x => ({ id: x.id, x: firstLine(x.x).slice(0, 80) })).filter(n => n.x).slice(0, 10);
+  const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
   return { art: 'stand', sicherung: backupDay().due, tage, notizen: nz.slice(0, 4).map(n => n.x), nz };
 }
 /* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
@@ -4346,9 +4362,10 @@ function hEingang(list) {
       const x = String(c.x || '').trim().slice(0, 20000), p = { notes: {} };
       if (x) { p.notes[newId()] = { x, f: '', c: t, m: t }; ndoc.patch(p); }
     } else if (c.art === 'ausgabe') {
-      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Konto: wie im Blatt vorbelegt (zuletzt benutztes oder das einzige), sonst keines. */
+      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Konto: wie im Blatt vorbelegt (zuletzt benutztes oder das einzige), sonst keines.
+         Die Namen aus allCats() sind schon für HTML umgeschrieben (& ist dort &amp;): Das Wort wird deshalb genauso umgeschrieben, bevor verglichen wird. */
       const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
-      const hit = kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(kat));
+      const hit = kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
       if (okCents(a)) { p.tx[newId()] = { d, a, k: 'out', c: hit ? hit[0] : 'sonst', n: String(c.n || '').trim().slice(0, 60), acc: defAcc() || null, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
   });

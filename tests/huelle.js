@@ -14,11 +14,12 @@ const mittag = n => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d
 
 /* Beispieldaten: zwei tägliche Routinen (eine heute erledigt), eine nur am morgigen Wochentag, alle vor 20 Tagen angelegt.
    Aufgaben (vor 3 Tagen angelegt): eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte.
-   Zwei Notizen, die ältere vor 25 Tagen angelegt: Sie ist der älteste Eintrag überhaupt. Ein Lauf von Hand vor zwei Tagen (5 km). */
+   Zwei Notizen, die ältere vor 25 Tagen angelegt: Sie ist der älteste Eintrag überhaupt. Ein Lauf von Hand vor zwei Tagen (5 km).
+   Eine eigene Kategorie „Haus & Garten“ (mit Budget, sonst räumt die App sie beim Start als unbenutzt weg). */
 const jahr = tag(0).slice(0, 4), LY = {}; LY[jahr] = {}; LY[jahr][tag(0)] = { r1: { s: 1800, d: 1 } };
 const daten = {
   S: { routines: [{ id: 'r1', name: 'Lesen', minutes: 30, days: Array(7).fill(true), created: tag(20) }, { id: 'r2', name: 'Dehnen', minutes: 10, days: Array(7).fill(true), created: tag(20) }, { id: 'r3', name: 'Putzen', minutes: 20, days: nur(wi(1)), created: tag(20) }], running: null },
-  LY, W: {}, MF: {}, MY: {}, K: {},
+  LY, W: {}, MF: { cats: { cgarten1: { n: 'Haus & Garten' } }, budgets: { cgarten1: 5000 } }, MY: {}, K: {},
   T: { runs: { a1: { d: tag(2), m: 5000, s: 1500, hr: 150, k: 'out' } } },
   N: { folders: {}, tasks: {
     t1: { t: 'Seminararbeit abgeben', f: '', d: tag(2), done: null, c: mittag(3) + 1 }, t2: { t: 'Zahnarzt anrufen', f: '', d: tag(-3), done: null, c: mittag(3) + 2 },
@@ -137,6 +138,45 @@ lauf(async () => {
   await page.waitForTimeout(1200);
   p.ok('Tastatur kommt nicht: Blatt fällt zurück', (await unten())[0] === 844, String(await unten()));
   await page.keyboard.press('Enter'); await page.waitForTimeout(200);
+
+  /* Kategorie aus dem Kurzbefehl bei einer eigenen Kategorie mit „&“ im Namen: Der volle Name trifft sie, ebenso ein Anfang, der über das Zeichen reicht.
+     „Haus & Hof“ ist kein Anfang von „Haus & Garten“ → Sonstiges. */
+  await page.evaluate(l => window.TrackHuelle.eingang(l), [{ id: 'k1', art: 'ausgabe', a: 990, kat: 'Haus & Garten', t: jetzt }, { id: 'k2', art: 'ausgabe', a: 550, kat: 'haus &', t: jetzt }, { id: 'k3', art: 'ausgabe', a: 440, kat: 'Haus & Hof', t: jetzt }]);
+  const kat = a => (Object.values(g.MY[jahr].tx).find(t => t && t.a === a) || {}).c; g = await gespeichert(page);
+  p.ok('Eingang: Kategorie mit „&“ wird über Namen und Anfang gefunden', kat(990) === 'cgarten1' && kat(550) === 'cgarten1' && kat(440) === 'sonst', [kat(990), kat(550), kat(440)].join());
+
+  /* Texte für das Widget werden nach ganzen Zeichen gekürzt. Notiz und Aufgabe: 79 Buchstaben, ein Emoji, ein Buchstabe. 80 Zeichen sind die 79 Buchstaben und das Emoji
+     (81 Einheiten in UTF-16); nach Einheiten geschnitten bliebe ein halbes Emoji, mit dem sich der Stand nicht als Datei schreiben lässt.
+     Dazu ein Titel, in dem schon ein halbes Zeichen gespeichert ist: Es fällt weg. Fällig vor 9 und vor 8 Tagen, damit beide heute vorn stehen. */
+  await page.evaluate(d => { const o = JSON.parse(localStorage.getItem('takt.v1'));
+    o.N.notes.em = { x: 'a'.repeat(79) + '😀b', f: '', c: d.c, m: Date.now() };
+    o.N.tasks.em = { t: 'b'.repeat(79) + '😀c', f: '', d: d.t9, done: null, c: d.c, n: '' }; o.N.tasks.hb = { t: 'Halb\ud83d', f: '', d: d.t8, done: null, c: d.c, n: '' };
+    localStorage.setItem('takt.v1', JSON.stringify(o)); }, { c: mittag(3), t9: tag(9), t8: tag(8) });
+  await page.reload(); await page.waitForTimeout(700); st = await letzter(page);
+  p.ok('Stand: Notiz endet nach 80 Zeichen mit dem ganzen Emoji', st.nz[0].x === 'a'.repeat(79) + '😀', st.nz[0].x);
+  p.ok('Stand: Titel der Aufgabe ebenso, das halbe Zeichen im anderen Titel ist weg', st.tage[0].auf[0] === 'b'.repeat(79) + '😀' && st.tage[0].auf[1] === 'Halb', JSON.stringify(st.tage[0].auf));
+  p.ok('Stand: kein Text mit halbem Zeichen', await page.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop();
+    return s.nz.map(n => n.x).concat(s.notizen, ...s.tage.map(t => t.auf)).every(x => { try { encodeURIComponent(x); return true; } catch (e) { return false; } }); }));
+
+  /* Sicherung in der iPhone-App: Dort gibt es nur das Teilen, den Sprung zu einer Datei lehnt die Hülle ab. Entsteht keine Datei, meldet die App keinen Erfolg
+     und stellt die Erinnerung nicht zurück (takt.backup bleibt). Ein vom Nutzer abgebrochenes Teilen bleibt eine stille Zeile. */
+  let dateien = 0; page.on('download', () => dateien++);
+  await bereich(page, 'heute');
+  const merker = () => page.evaluate(() => localStorage.getItem('takt.backup')), merker0 = await merker();
+  const sichern = async () => { if (!(await page.$('#v-heute .act[data-h="export"]'))) await page.click('#v-heute [data-fold="sicherung"]'); await page.click('#v-heute .act[data-h="export"]'); await page.waitForTimeout(300); return text(page, '#bk-msg'); };
+  /* Teilen nachstellen: wie = 'ok' (Datei gesichert) oder der Name des Fehlers, mit dem das Teilen endet */
+  const teilen = wie => page.evaluate(w => { if (!window.__mm) { const mm = window.matchMedia.bind(window); window.__mm = 1; window.matchMedia = q => q === '(pointer:coarse)' ? { matches: true } : mm(q); }
+    Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
+    Object.defineProperty(navigator, 'share', { value: () => w === 'ok' ? Promise.resolve() : Promise.reject(Object.assign(new Error(w), { name: w })), configurable: true }); }, wie);
+  let meldung = await sichern();
+  p.ok('Sicherung ohne Teilen: kein Erfolg, Erinnerung bleibt', meldung === 'Die Sicherung konnte nicht gespeichert werden.' && (await merker()) === merker0 && dateien === 0, meldung);
+  await teilen('AbortError'); meldung = await sichern();
+  p.ok('Teilen abgebrochen: nur die stille Zeile, Erinnerung bleibt', meldung === 'Sicherung abgebrochen.' && (await merker()) === merker0, meldung);
+  await teilen('NotAllowedError'); meldung = await sichern();
+  p.ok('Teilen scheitert: kein Erfolg, Erinnerung bleibt', meldung === 'Die Sicherung konnte nicht gespeichert werden.' && (await merker()) === merker0 && dateien === 0, meldung);
+  await teilen('ok'); meldung = await sichern(); await page.waitForTimeout(500); st = await letzter(page);
+  /* geteilt: Erfolg, der Merker ist von jetzt, und die nächste Sicherung ist in 7 Tagen fällig */
+  p.ok('Teilen gelungen: Erfolg, Erinnerung zurückgestellt', meldung === 'Sicherung gespeichert: track-sicherung-' + tag(0) + '.json' && Number(await merker()) > Number(merker0) && st.sicherung === tag(-7), meldung + ' · ' + st.sicherung);
 
   /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();

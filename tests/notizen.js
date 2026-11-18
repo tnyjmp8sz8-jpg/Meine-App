@@ -157,6 +157,20 @@ lauf(async () => {
   P.ok('Blatt: der Ordner ist gewählt, nichts eingeschleust', (await text(page, '#n-folder [aria-pressed="true"]')) === 'Fremd' && !(await page.$('#inj')));
   await chip('#n-folder', 'Privat'); await chip('#n-folder', 'Fremd'); await page.click('#n-done'); await kurz();
   P.ok('umgestellt und zurück: die Notiz liegt wieder im fremden Ordner', (await notizen()).some(n => n.x === 'Notiz im fremden Ordner' && n.f === fid));
+
+  // --- „Als Aufgabe“ bei längeren Notizen: Die erste Zeile wird der Titel, der Rest die Notiz der Aufgabe. Nichts geht verloren. ---
+  await page.click('#n-main [data-n="folder"]:has-text("Alle")'); await kurz();
+  const alsAufgabe = async anfang => { await page.click('#n-main [data-n="note"]:has-text("' + anfang + '")'); await page.click('#n-task'); await kurz(); };
+  // zwei Zeilen (die übernommene alte Notiz): Titel „Besprechung“, Notiz der Aufgabe „Kapitel 2 kürzen.“
+  await alsAufgabe('Besprechung');
+  P.ok('zwei Zeilen: erste wird Titel, zweite die Notiz der Aufgabe; die Notiz ist weg', (await aufgaben()).some(t => t.t === 'Besprechung' && t.n === 'Kapitel 2 kürzen.' && t.d === tag(0) && t.f === 'prom') && !(await notizen()).some(n => n.x.startsWith('Besprechung')), JSON.stringify(await aufgaben()));
+  // eine Zeile mit 150 Zeichen: 120 passen in den Titel, die übrigen 30 stehen in der Notiz der Aufgabe
+  const neuN = async x => { await page.click('#add'); await page.fill('#n-text', x); await page.click('#n-done'); await kurz(); };
+  await neuN('L' + 'a'.repeat(119) + 'b'.repeat(30)); await alsAufgabe('Laaa');
+  P.ok('150 Zeichen in einer Zeile: 120 im Titel, 30 in der Notiz der Aufgabe', (await aufgaben()).some(t => t.t === 'L' + 'a'.repeat(119) && t.n === 'b'.repeat(30)) && !(await notizen()).some(n => n.x.startsWith('Laaa')));
+  // erste Zeile „Einkauf“, danach 250 Zeichen: Die Notiz der Aufgabe fasst nur 200, deshalb bleibt die Notiz selbst stehen
+  await neuN('Einkauf\n' + 'c'.repeat(250)); await alsAufgabe('Einkauf');
+  P.ok('zu lang für die Aufgabe: Aufgabe mit den ersten 200 Zeichen, die Notiz bleibt vollständig', (await aufgaben()).some(t => t.t === 'Einkauf' && t.n === 'c'.repeat(200)) && (await notizen()).some(n => n.x === 'Einkauf\n' + 'c'.repeat(250)));
   await browser.close();
 
   // Sicherung einlesen bringt Aufgaben und Notizen mit; der Kalender zeigt Erledigtes
@@ -205,6 +219,22 @@ lauf(async () => {
   P.ok('ohne Datum gibt es kein „Wiederholen“', !(await q.isVisible('#a-rep-fld')));
   await q.click('#as-close');
 
+  // --- Monatlich über mehrere Monate (Uhr der Seite gestellt): Der Tag im Monat bleibt der gemeinte, auch nach einem kürzeren Monat ---
+  // Fällig am 31.10.2026, jeweils am Tag der Fälligkeit abgehakt: 30.11. (November hat 30 Tage) → 31.12. → 31.01. → 28.02. → 31.03.
+  const am = (j, m, t) => new Date(j, m - 1, t, 12), ms = d => d.getTime();
+  const k = await oeffnen({ uhr: am(2026, 10, 31), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, notes: {}, tasks: { m1: { t: 'Miete überweisen', f: '', d: '2026-10-31', done: null, c: ms(am(2026, 10, 1)), n: '', r: 'month', nx: '' } } } } });
+  const offen = async () => Object.values((await gespeichert(k.page)).N.tasks).filter(t => t && !t.done).map(t => t.d).join();
+  const abhaken = async (j, m, t) => { await k.page.clock.setFixedTime(am(j, m, t)); await k.page.reload(); await k.page.waitForTimeout(300); await bereich(k.page, 'routinen'); await k.page.click('#r-subs [data-v="task"]');
+    await k.page.click('#n-main .trow:not(.done):has-text("Miete überweisen") .tk'); await k.page.waitForTimeout(200); return offen(); };
+  const folge = [await abhaken(2026, 10, 31), await abhaken(2026, 11, 30), await abhaken(2026, 12, 31), await abhaken(2027, 1, 31), await abhaken(2027, 2, 28)];
+  P.ok('monatlich ab dem 31.10.: 30.11., 31.12., 31.01., 28.02., 31.03.', folge.join(' ') === '2026-11-30 2026-12-31 2027-01-31 2027-02-28 2027-03-31', folge.join(' '));
+  // Datum von Hand auf den 15.03. gestellt und an dem Tag abgehakt: Von da an gilt der 15.
+  await k.page.click('#n-main .trow:not(.done) [data-n="task"]:has-text("Miete überweisen")'); await k.page.click('#a-due .chip:has-text("Anderer Tag")'); await k.page.fill('#a-date', '2027-03-15'); await k.page.click('#a-save'); await k.page.waitForTimeout(200);
+  P.ok('Datum von Hand geändert: Der neue Tag gilt weiter (15.04.)', (await abhaken(2027, 3, 15)) === '2027-04-15', await offen());
+  // Liegen geblieben: am 15.04. fällig, erst am 20.06. abgehakt → der nächste 15. nach heute ist der 15.07.
+  P.ok('liegen geblieben bis zum 20.06.: die nächste am 15.07.', (await abhaken(2027, 6, 20)) === '2027-07-15', await offen());
+  await k.browser.close();
+
   // --- Suche in den Notizen (das Feld erscheint ab sechs Notizen) ---
   await q.click('#r-subs [data-v="note"]'); await warte();
   const treffer = () => text(q, '#n-list');
@@ -233,5 +263,5 @@ lauf(async () => {
   await nur({ folders: {}, notes: {}, tasks: { a: { t: 'Neun Tage alt', f: '', d: null, done: mittag(1), c: mittag(9), n: '' } } });
   P.enthaelt('nur eine Aufgabe, vor 9 Tagen angelegt: Erinnerung', await erinnerung(), ['Noch keine Sicherung gespeichert']);
   await e.browser.close();
-  await P.ende(null, fehler.concat(b.fehler, e.fehler));
+  await P.ende(null, fehler.concat(b.fehler, k.fehler, e.fehler));
 });
