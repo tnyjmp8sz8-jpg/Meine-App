@@ -298,10 +298,11 @@ lauf(async () => {
 
   // --- Teil 7: Erklärungen erst nach Tipp auf das „i“; Farbe nur an der Veränderung ---
   /* Eine offene Erklärung bleibt stehen, wenn man die Klappzeile darunter antippt: Vorher verschwand sie beim Zeichnen, und die angetippte Zeile sprang um ihre Höhe nach oben.
-     platz = Lage der Klappzeile auf der Seite (unabhängig davon, wie weit gescrollt ist); sie muss vor und nach dem Tipp dieselbe sein. */
+     platz = Lage der Klappzeile auf dem Bildschirm; sie muss vor und nach dem Tipp dieselbe sein. Zuerst wird die Zeile in die Mitte geholt, damit der Tipp selbst nicht scrollt. */
   const infoAuf = id => page.evaluate(i => !document.getElementById('info-' + i).hidden && document.querySelector('.view:not([hidden]) [data-info="' + i + '"]').getAttribute('aria-expanded') === 'true', id);
-  const platz = key => page.evaluate(k => Math.round((document.querySelector('.view:not([hidden]) [data-fold="' + k + '"]').getBoundingClientRect().top + document.querySelector('#scroll').scrollTop) * 10) / 10, key);
+  const platz = key => page.evaluate(k => Math.round(document.querySelector('.view:not([hidden]) [data-fold="' + k + '"]').getBoundingClientRect().top * 10) / 10, key);
   const bleibt = async (name, id, key) => {
+    await page.evaluate(k => document.querySelector('.view:not([hidden]) [data-fold="' + k + '"]').scrollIntoView({ block: 'center' }), key);
     const vor = { auf: await infoAuf(id), y: await platz(key) }; await tipp(key);
     const nach = { auf: await infoAuf(id), y: await platz(key), zeile: (await stand(key)).auf };
     P.ok(name + ': die offene Erklärung bleibt beim Aufklappen stehen, die angetippte Zeile bleibt an ihrem Platz', vor.auf && nach.auf && nach.zeile && nach.y === vor.y, JSON.stringify({ vor, nach }));
@@ -444,7 +445,7 @@ lauf(async () => {
 
   /* Die Liste der Einträge entsteht nur aufgeklappt, sonst würde jeder Tipp auf eine Klappzeile mit jedem Eintrag langsamer.
      Gezählt wird, wie oft die Seite bei einem Tipp auf „Sicherung“ (zeichnet alles neu) eine Zahl formatiert (toLocaleString): mit den 56 Einträgen der Beispieldaten
-     und mit 300 älteren dazu. Jede Zeile eines Eintrags formatiert ihr Gewicht zweimal; mit dem Fehler wären es 2 × 300 = 600 Aufrufe mehr. Zugeklappt darf nichts dazukommen. */
+     und mit 300 älteren dazu. Jede Zeile eines Eintrags formatiert ihr Gewicht zweimal; mit dem Fehler wären es 2 × 300 = 600 Aufrufe mehr. Zugeklappt kommt nichts dazu; verlangt wird weniger als ein Aufruf je zusätzlichem Eintrag. */
   const viele = daten(); for (let i = 100; i < 400; i++) viele.W.entries[tag(i)] = 81;
   const formatiert = async dat => {
     const o = await oeffnen({ daten: dat }); await bereich(o.page, 'heute');

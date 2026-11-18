@@ -1724,9 +1724,9 @@ const foldHTML = (key, title, sub, right, rows, after) => '<ul class="entries"><
 $('#scroll').addEventListener('click', e => {
   const b = e.target.closest('[data-fold]'); if (!b) return;
   fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
-  const open = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
+  const infos = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
   render();
-  open.forEach(id => { const i = document.querySelector('.info[data-info="' + id + '"]'), p = document.getElementById('info-' + id); if (i && p) { p.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
+  infos.forEach(id => { const i = document.querySelector('.info[data-info="' + id + '"]'), p = document.getElementById('info-' + id); if (i && p) { p.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
 });
 /* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */

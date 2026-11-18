@@ -5,7 +5,7 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 - `node tests/alle.js`: alle Tests nacheinander. Vor jeder Veröffentlichung laufen lassen.
 - `ablauf.js`: Sicherung einlesen, in jedem Bereich etwas eintragen, Neuladen.
 - `aufbau.js`: Wochenleiste in jedem Bereich mit Kalender, Monat/Jahr über den Pfeilen, Erklärungen hinter „i“ (390 und 320 px).
-- `klappen.js`: Klappzeilen (zu, auf, zu; Zahl rechts = Zahl der Zeilen; bleibt im Bereich offen, klappt beim Wechsel des Bereichs zu), verlegte Aktionen (Plus in der Überschrift, letzte Zeile der Liste) mit Tippfläche, Kurzfassung auf Heute, Zeile „Sicherung“, Erklärungen hinter „i“, 320 px mit allem aufgeklappt.
+- `klappen.js`: Klappzeilen (zu, auf, zu; Zahl rechts = Zahl der Zeilen; bleibt im Bereich offen, klappt beim Wechsel des Bereichs zu), verlegte Aktionen (Plus in der Überschrift, letzte Zeile der Liste) mit Tippfläche, Kurzfassung auf Heute, Zeile „Sicherung“, Erklärungen hinter „i“ (bleiben beim Aufklappen stehen, die Zeile springt nicht; das „i“ bei „Letzter Lauf“ rutscht nie allein in eine Zeile), 320 px mit allem aufgeklappt, Gewicht mit wenigen Einträgen im jüngsten Monat (die letzten drei sind nach einem Tipp zu sehen) und die Liste entsteht nur aufgeklappt, Vermögen ohne Sparziel (Zeile mit Plus), Abstand eines Textes unter einer Überschrift.
 - `gesten.js`: Blatt wegziehen, zwischen Monaten wischen, Wert im Graphen ablesen (echte Berührungen).
 - `eingabe.js`: Eingaben in den Blättern: Dauer einer Routine mit dem Minus-Knopf, Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
 - `loeschen.js`: „Rückgängig“ nach dem Löschen (Buchung, Konto im offenen Blatt, Training), eigene Kategorien.
