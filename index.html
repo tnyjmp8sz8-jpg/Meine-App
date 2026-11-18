@@ -714,6 +714,8 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 .entries .irow .two{min-width:0}
 .entries .irow .l>span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .entries .irow .info{flex:none;width:auto;display:inline-grid;padding:0;margin:0 13px 0 0}
+/* Zeile „Sicherung“: Meldet die iPhone-App einen Fehler, steht sein Wortlaut in Rot (die Unterzeile trägt dann .neg). Ein langer Ordnername ohne Leerzeichen bricht darin um, statt Heute breiter zu machen. */
+#bk-err{color:var(--danger);overflow-wrap:anywhere}
 /* Heute zeigt die Kurzfassung: eine Zeile je Notiz und Aufgabe (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
@@ -4000,32 +4002,37 @@ const AREA = {
 const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
 const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); };
-let bkMsg = '';
+/* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
+let bkMsg = '', bkHand = false;
 function lastBackupText() {
   try { const t = Number(localStorage.getItem('takt.backup')); return t ? 'Letzte Sicherung: ' + DF_LONG.format(new Date(t)) + '.' : 'Noch keine Sicherung gespeichert.'; } catch (e) { return ''; }
 }
-function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
+function setBk(m, hand) { bkMsg = m; bkHand = !!hand; const el = $('#bk-msg'); if (el) { el.textContent = m; el.classList.remove('neg'); } }
 /* Unterzeile der Klappzeile „Sicherung“. Sichert die iPhone-App von selbst (hInfo.sicherung), steht dort, wann zuletzt; sonst die letzte Sicherung von Hand,
    und die nur, solange sie nicht fällig ist (due): Dann steht derselbe Satz schon in der Erinnerung oben.
-   Meldet die iPhone-App einen Fehler, heißt es bewusst nur „etwas ging nicht“: Es kann auch allein der zusätzliche Ordner sein, während die Datei auf dem iPhone liegt.
-   Was genau, steht aufgeklappt im Wortlaut der iPhone-App. */
+   Meldet die iPhone-App einen Fehler, heißt es bewusst nur „ging nicht“ (in Rot, siehe bkBad): Es kann auch allein der gewählte Ordner sein, während die Datei auf dem iPhone liegt.
+   Was genau, steht aufgeklappt im Wortlaut der iPhone-App. Im Zeitpunkt stehen geschützte Leerzeichen: Bricht die Zeile um, bleibt „3. November 2026“ beisammen. */
 function bkSub(due) {
   const s = hInfo.sicherung;
   if (bkMsg || !s) return bkMsg || (due ? '' : lastBackupText());
-  const d = new Date(s.t), n = dayNum(todayKey()) - dayNum(keyOf(d)), uhr = ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
-  const wann = !s.t ? '' : n === 0 ? 'heute' + uhr : n === 1 ? 'gestern' + uhr : DF_LONG.format(d);
-  return s.fehler ? 'Beim Sichern ging etwas nicht' + (wann ? ' · letzte Sicherung ' + wann : '') : wann ? 'Von selbst gesichert · ' + wann : 'Wird von selbst gesichert';
+  const d = new Date(s.t), n = dayNum(todayKey()) - dayNum(keyOf(d)), uhr = ',\u00a0' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+  const wann = !s.t ? '' : n === 0 ? 'heute' + uhr : n === 1 ? 'gestern' + uhr : DF_LONG.format(d).replace(/ /g, '\u00a0');
+  return s.fehler ? 'Sichern ging nicht' + (wann ? ' · zuletzt ' + wann : '') : wann ? 'Von selbst gesichert · ' + wann : 'Wird von selbst gesichert';
 }
+const bkBad = () => !bkMsg && !!(hInfo.sicherung && hInfo.sicherung.fehler);
 const bkOrd = () => hInfo.sicherung.ordner ? 'Ordner: ' + hInfo.sicherung.ordner : 'Ordner in iCloud wählen';
 /* Meldet die iPhone-App eine Sicherung, werden nur die Texte der Zeile nachgeführt: Neu zeichnen schlösse eine offene Erklärung und kann einen Tipp verschlucken.
-   Neu gezeichnet wird Heute nur, um die erledigte Erinnerung oben wegzunehmen, und nicht bei offenem Blatt (dessen Schließen zeichnet Heute ohnehin neu). */
+   Neu gezeichnet wird Heute nur, wenn die Erinnerung oben kommt, geht oder ihren Satz wechselt, und nicht bei offenem Blatt (dessen Schließen zeichnet Heute ohnehin neu). */
 function bkPaint() {
-  const s = hInfo.sicherung, due = backupDue(), er = $('#bk-err'), set = (id, t) => { const el = $(id); if (el) el.textContent = t; };
-  if ($('#v-heute .remind[data-h="export"]') && !due && !document.querySelector('dialog[open]')) return renderHome();
-  set('#bk-msg', bkSub(due)); set('#bk-ord', bkOrd());
+  const s = hInfo.sicherung, due = backupDue(), alt = $('#bk-due'), er = $('#bk-err'), ms = $('#bk-msg'), set = (id, t) => { const el = $(id); if (el) el.textContent = t; };
+  if (hMode === 'day' && (alt ? alt.firstElementChild.textContent : '') !== due && !document.querySelector('dialog[open]')) return renderHome();
+  set('#bk-msg', bkSub(due)); if (ms) ms.classList.toggle('neg', bkBad());
+  set('#bk-ord', bkOrd());
   if (er) { er.textContent = s.fehler; er.hidden = !s.fehler; }
 }
-/* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer */
+/* Erinnerung auf Heute: Text, wenn die letzte Sicherung (oder ohne Sicherung der älteste Eintrag) mindestens BK_DAYS Tage alt ist, sonst leer.
+   Gezählt wird nur, was außerhalb der App liegt: eine Sicherung von Hand oder die Kopie, die die iPhone-App von selbst in einen gewählten Ordner legt (takt.backup, siehe sGemeldet).
+   Die Dateien, die die iPhone-App in ihrem eigenen Ordner ablegt, zählen nicht: Wird die App gelöscht, sind sie mit den Daten weg. */
 const BK_DAYS = 7;
 /* from: Tag der letzten Sicherung, ohne Sicherung der Tag des ältesten Eintrags (leer, solange nichts eingetragen ist). due: der Tag, an dem die Sicherung fällig wird. */
 function backupDay() {
@@ -4034,9 +4041,12 @@ function backupDay() {
     .concat(taskList().concat(noteList()).map(x => x.c ? keyOf(new Date(x.c)) : '')).filter(Boolean).sort()[0] || '';   // Aufgaben und Notizen zählen ab dem Tag, an dem sie angelegt wurden
   return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
 }
+/* Legt die iPhone-App von selbst eine Kopie in den gewählten Ordner (sSelbst), gibt es nichts zu erinnern. Sichert sie nur in ihren eigenen Ordner,
+   führt die Erinnerung zur Wahl eines Ordners: einmal wählen, dann kommt sie nicht wieder. */
 function backupDue() {
+  if (sSelbst()) return '';
   const b = backupDay(), n = b.from ? dayNum(todayKey()) - dayNum(b.from) : 0;
-  return n < BK_DAYS ? '' : b.saved ? 'Letzte Sicherung vor ' + n + ' Tagen' : 'Noch keine Sicherung gespeichert';
+  return n < BK_DAYS ? '' : sOhne() ? 'Sicherung liegt nur in der App' : b.saved ? 'Letzte Sicherung vor ' + n + ' Tagen' : 'Noch keine Sicherung gespeichert';
 }
 
 function renderHome() {
@@ -4049,7 +4059,7 @@ function renderHome() {
     .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
-  if (bkDue) h += '<button type="button" class="remind" data-h="export"><span>' + bkDue + '</span><b>Jetzt sichern</b></button>';
+  if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
   const rcYM = recapDue();
   if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
   const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
@@ -4082,11 +4092,13 @@ function renderHome() {
   h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
-     Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu; was dabei geschieht, steht hinter dem „i“, ein Fehler der iPhone-App im Wortlaut darunter. */
+     Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
+     ein Fehler der iPhone-App im Wortlaut darunter. */
   const au = hInfo.sicherung;
-  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg">' + esc(bkSub(bkDue)) + '</span>', '',
-    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') + (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) : ''),
-    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
+  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub(bkDue)) + '</span>', '',
+    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen')
+    + (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : ''),
+    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
   el.innerHTML = h;
 }
 $('#v-heute').addEventListener('click', e => {
@@ -4105,17 +4117,21 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
   else if (a === 'ordner') hPost({ art: 'ordner' });
+  else if (a === 'ordnerweg') hPost({ art: 'ordnerWeg' });
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
 
 /* ---------- Datensicherung ---------- */
 /* Text und Name der Sicherung: ein Weg für „Sicherung speichern“ und für die Sicherung von selbst in der iPhone-App.
-   app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen */
-const backupText = () => JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N });
+   app: 'takt' ist die Kennung der Sicherungsdatei und bleibt trotz des neuen Namens, sonst ließen sich alte Sicherungen nicht mehr einlesen.
+   Halbe Zeichen kommen nicht in die Datei (ganz): Die App kürzt Texte an vielen Stellen nach Einheiten und teilt dabei gelegentlich ein Emoji. Mit einem halben Zeichen
+   ist die Datei für andere Leser kein gültiges JSON mehr; die iPhone-App hat eine solche Sicherung abgelehnt. */
+const ganz = s => s.replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]|[\uD800-\uDFFF]/g, m => m.length > 1 ? m : '');
+const backupText = () => JSON.stringify({ app: 'takt', v: 1, exported: new Date().toISOString(), routines: S.routines, LY, W, MF, MY, T, K, N }, (k, v) => typeof v === 'string' ? ganz(v) : v);
 const backupName = () => 'track-sicherung-' + todayKey() + '.json';
 async function exportData() {
   const text = backupText(), name = backupName();
-  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name); renderHome(); hSoon(); };
+  const ok = () => { try { localStorage.setItem('takt.backup', String(Date.now())); } catch (e) {} setBk('Sicherung gespeichert: ' + name, true); renderHome(); hSoon(); };
   try {
     const f = new File([text], name, { type: 'application/json' });
     if (matchMedia('(pointer:coarse)').matches && navigator.canShare && navigator.canShare({ files: [f] })) { await navigator.share({ files: [f], title: 'Sicherung von Track.' }); return ok(); }
@@ -4344,7 +4360,7 @@ document.addEventListener('click', e => {
    Hin: Nach jedem Speichern geht ein kleiner Stand an die Hülle, für das Widget und die Mitteilung zur Sicherung; dazu die Sicherung selbst, wenn die Hülle sie ablegt.
    Zurück: Die Hülle ruft window.TrackHuelle auf (Läufe aus Health, Auskunft über die App, Kurzbefehl, Eingang, Sicherung). */
 const HUELLE = (() => { try { return window.webkit.messageHandlers.track || null; } catch (e) { return null; } })();
-let hInfo = {}, hTimer = 0;
+let hInfo = {}, hTimer = 0, hFaelligAlt = null;
 function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
 function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeout(() => hPost(hStand()), 300); }
 /* Stand für heute und die nächsten sieben Tage: So stimmt das Widget auch nach Mitternacht, ohne dass die App geöffnet wurde.
@@ -4362,8 +4378,9 @@ function hStand() {
   }
   /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
   const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
-  /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer. */
-  return { art: 'stand', sicherung: backupDay().due, tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
+  /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer.
+     sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
 }
 /* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
    Steht am selben Tag schon ein Lauf mit fast gleicher Strecke (bis 10 % Unterschied), gilt er als derselbe: Er wurde von Hand eingetragen und kommt nicht doppelt. */
@@ -4421,31 +4438,44 @@ function hEingang(list) {
   return all.map(c => c.id);
 }
 /* Sicherung von selbst: Meldet die iPhone-App in info() ein sicherung (ab 0.5), legt sie den Text der Sicherung als Datei ab ({ art: 'sicherung', name, text }), je Tag eine.
-   Jede Änderung der Daten merkt „offen“ (sMerk). Die erste startet eine Uhr von 20 Sekunden, weitere starten sie nicht neu: Beim Tippen einer Notiz wird sehr oft gespeichert,
-   und so geht höchstens alle 20 Sekunden eine Sicherung hinaus. Verlässt der Nutzer die App, ruft die Hülle sichern(): Dann geht Offenes sofort.
+   Jede Änderung der Daten merkt „offen“ (sMerk). Die erste startet eine Uhr von fünf Minuten (S_WARTEN), weitere starten sie nicht neu: So geht bei offener App höchstens
+   alle fünf Minuten eine Sicherung hinaus. Öfter wäre Verschwendung: Jedes Mal wird alles geschrieben und, mit gewähltem Ordner, nach iCloud geladen.
+   Verlässt der Nutzer die App, ruft die Hülle sichern(): Dann geht Offenes sofort; ebenso, bevor die Seite neu geladen wird (pagehide), denn „offen“ ginge dabei verloren.
    Ohne sicherung in info() (Browser, iPhone-App bis 0.4) geht nie etwas hinaus. */
-let sOffen = false, sTimer = 0, sErst = true;
+const S_WARTEN = 300000;
+let sOffen = false, sTimer = 0, sTag = '';
+/* Die iPhone-App legt von selbst eine Kopie in den gewählten Ordner, und zuletzt ging nichts schief: Dann liegt die Sicherung auch außerhalb der App, ohne dass der Nutzer etwas tut.
+   sOhne: Sie sichert von selbst, aber nur in ihren eigenen Ordner (keiner gewählt). */
+const sSelbst = () => { const s = hInfo.sicherung; return !!(s && s.ordner && !s.fehler); };
+const sOhne = () => !!(hInfo.sicherung && !hInfo.sicherung.ordner);
+/* Tag der Mitteilung „Sicherung fällig“ der iPhone-App. Leer, solange die Kopie in den gewählten Ordner von selbst läuft: Dann gibt es nichts zu tun, auch wenn die App lange nicht geöffnet wird. */
+const hFaellig = () => sSelbst() ? '' : backupDay().due;
 /* Ist in irgendeiner Gruppe etwas eingetragen? Eine leere App sichert nie: Nach einem verlorenen Speicher würde sie sonst die gute Datei des Tages mit nichts überschreiben. */
 const hatDaten = () => S.routines.length > 0 || Object.keys(LY).some(y => live(LY[y] || {})) || wList().length > 0 || W.goal != null
   || ['fixed', 'budgets', 'cats', 'acc', 'goals'].some(k => live(MF[k] || {})) || Object.keys(MY).some(y => live(MY[y].tx)) || live(T.runs)
   || live(K.ex) || live(K.plans) || live(N.tasks) || live(N.notes);
-function sMerk() { if (!HUELLE) return; sOffen = true; if (hInfo.sicherung && !sTimer) sTimer = setTimeout(sJetzt, 20000); }
+function sMerk() { if (!HUELLE) return; sOffen = true; if (hInfo.sicherung && !sTimer) sTimer = setTimeout(sJetzt, S_WARTEN); }
 function sJetzt() {
   clearTimeout(sTimer); sTimer = 0;
   if (!hInfo.sicherung || !sOffen || !hatDaten()) return;
   sOffen = false;
   hPost({ art: 'sicherung', name: backupName(), text: backupText() });
 }
-/* Was die iPhone-App zur Sicherung meldet, in info() und nach jedem Schreibversuch in gesichert(): { t: Zeitpunkt der letzten gelungenen (0 = noch keine), ordner, fehler }. */
-const sNorm = s => s && typeof s === 'object' ? { t: Number(s.t) > 0 ? Number(s.t) : 0, ordner: String(s.ordner || ''), fehler: String(s.fehler || '') } : null;
-/* Eine gelungene Sicherung zählt wie eine von Hand gespeicherte: Die Erinnerung auf Heute entfällt, und die Mitteilung „Sicherung fällig“ rückt nach hinten (dafür geht der Stand neu hinaus).
-   Nach einem Fehler bleibt die Sicherung offen und geht beim nächsten Anlass noch einmal (nächste Änderung, sichern(), nächster Start).
+/* Was die iPhone-App zur Sicherung meldet, in info() und nach jedem Schreibversuch in gesichert():
+   t: Zeitpunkt der letzten gelungenen Sicherung in ihrem eigenen Ordner (0 = noch keine) · aussen: Zeitpunkt des Stands, der zuletzt auch im gewählten Ordner ankam (0 = noch keiner) ·
+   ordner: Name des gewählten Ordners (leer = keiner) · fehler: was zuletzt nicht ging (leer = nichts) · nochmal: Die Datei im eigenen Ordner wurde nicht geschrieben. */
+const sNorm = s => { const z = v => Number(v) > 0 ? Number(v) : 0; return s && typeof s === 'object' ? { t: z(s.t), aussen: z(s.aussen), ordner: String(s.ordner || ''), fehler: String(s.fehler || ''), nochmal: s.nochmal === true } : null; };
+/* Nur die Kopie im gewählten Ordner (aussen) zählt wie eine von Hand gespeicherte Sicherung und hebt takt.backup an: Was nur im Ordner der App liegt, ist mit der App weg.
+   Ändert sich dadurch der Tag der Mitteilung „Sicherung fällig“, geht der Stand neu hinaus.
+   Wurde die Datei nicht geschrieben (nochmal), bleibt die Sicherung offen und geht beim nächsten Anlass noch einmal (nächste Änderung, sichern(), nächster Tag).
+   Ging nur der gewählte Ordner nicht, bleibt nichts offen: Die iPhone-App trägt die Kopie selbst nach, sobald der Ordner wieder geht.
    Von hier startet nie eine Sicherung und keine Uhr: Sonst liefe es bei einem dauerhaften Fehler endlos zwischen App und Hülle hin und her. */
 function sGemeldet() {
   const s = hInfo.sicherung; if (!s) return;
-  if (s.fehler) sOffen = true;
+  if (s.nochmal) sOffen = true;
   let alt = 0; try { alt = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
-  if (s.t > alt) { try { localStorage.setItem('takt.backup', String(s.t)); } catch (e) {} hSoon(); }
+  if (s.aussen > alt) { try { localStorage.setItem('takt.backup', String(s.aussen)); } catch (e) {} }
+  if (hFaellig() !== hFaelligAlt) hSoon();
 }
 const healthBtnHTML = () => hInfo.health === 'kann' ? '<button type="button" class="ghost h-btn" data-t="health">Läufe aus Health übernehmen</button>' : '';
 function hPaint() {
@@ -4479,22 +4509,33 @@ if (HUELLE && window.visualViewport) {
 }
 if (HUELLE) window.TrackHuelle = {
   /* info kommt bei jedem Zurückkommen in die App: Heute wird nur neu gezeichnet, wenn sich an der Sicherung etwas geändert hat.
-     Beim ersten Mal nach dem Laden geht eine Sicherung gleich hinaus, wenn etwas offen ist oder die letzte von gestern oder älter ist: So gibt es für jeden Tag, an dem die App startet, eine Datei.
-     Nur beim ersten Mal: Käme info() einmal als Antwort auf eine Sicherung, liefe es sonst bei einem Fehler endlos hin und her. */
+     Bei der ersten Auskunft eines Tages (sTag) geht eine Sicherung gleich hinaus, wenn etwas offen ist oder die letzte von gestern oder älter ist: So gibt es für jeden Tag,
+     an dem die App benutzt wird, eine Datei, auch wenn sie über Mitternacht offen blieb. Nur einmal je Tag: Käme info() einmal als Antwort auf eine Sicherung,
+     liefe es sonst bei einem Fehler endlos hin und her. */
   info(o) {
     const vor = JSON.stringify(hInfo.sicherung || null);
     hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung);
     sGemeldet(); hPaint(); renderTraining();
     if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
-    if (hInfo.sicherung && sErst) { sErst = false; if (hInfo.sicherung.t < new Date().setHours(0, 0, 0, 0)) sOffen = true; sJetzt(); }
+    const s = hInfo.sicherung, tk = todayKey();
+    if (s && sTag !== tk) { sTag = tk; if (s.t < new Date().setHours(0, 0, 0, 0)) sOffen = true; sJetzt(); }
   },
-  /* Ergebnis eines Schreibversuchs. Es ist das Neueste zur Sicherung: Ein Satz von vorhin („Sicherung gespeichert: …“) weicht ihm. */
-  gesichert(o) { const s = sNorm(o); if (s) { hInfo.sicherung = s; sGemeldet(); bkMsg = ''; bkPaint(); } },
+  /* Stand der Sicherung nach einem Schreibversuch und nach der Wahl oder Abwahl eines Ordners. Der Satz „Sicherung gespeichert: …“ von vorhin weicht ihm;
+     andere Sätze (eingelesen, abgebrochen) bleiben stehen, außer die iPhone-App meldet einen Fehler: Der geht vor.
+     Kommt ein Ordner dazu oder fällt er weg, ändert sich die Liste der Zeile: Dann wird Heute neu gezeichnet, sonst nur der Text nachgeführt. */
+  gesichert(o) {
+    const s = sNorm(o), alt = hInfo.sicherung; if (!s) return;
+    hInfo.sicherung = s; sGemeldet();
+    if (bkHand || s.fehler) { bkMsg = ''; bkHand = false; }
+    if ((!alt || !alt.ordner !== !s.ordner) && !document.querySelector('dialog[open]')) renderHome(); else bkPaint();
+  },
   sichern() { sJetzt(); },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },
   neu(was) { if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
 };
+/* Wird die Seite neu geladen (die iPhone-App zeigt so eine neue Fassung), geht Offenes vorher hinaus: Der Merker „offen“ überlebt das Neuladen nicht. */
+if (HUELLE) window.addEventListener('pagehide', sJetzt);
 
 /* ---------- boot ---------- */
 document.addEventListener('visibilitychange', () => { if (!document.hidden) { ensureTicker(); render(); if (ldlg.open) wakeOn(); } });

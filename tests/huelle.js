@@ -6,6 +6,10 @@ const { tag, monat, pad, oeffnen, text, bereich, gespeichert, pruefer, lauf } = 
 /* Dazu ein nachgestelltes visualViewport: So lässt sich die Tastatur vortäuschen (Höhe wird kleiner, dann „resize“). */
 const huelle = () => { window.__vv = new EventTarget(); window.__vv.height = 844; window.__vv.offsetTop = 0; Object.defineProperty(window, 'visualViewport', { value: window.__vv, configurable: true });
   window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
+/* Dieselbe Hülle, die sich jede Nachricht „sicherung“ zusätzlich in sessionStorage merkt: So ist nach einem Neuladen der Seite zu sehen, was davor noch hinausging. */
+const huelleMerkt = () => { window.__vv = new EventTarget(); window.__vv.height = 844; window.__vv.offsetTop = 0; Object.defineProperty(window, 'visualViewport', { value: window.__vv, configurable: true });
+  window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => { o = JSON.parse(JSON.stringify(o)); window.__post.push(o);
+    if (o.art === 'sicherung') sessionStorage.setItem('t.sich', JSON.stringify(JSON.parse(sessionStorage.getItem('t.sich') || '[]').concat(o.text))); } } } }; };
 const post = page => page.evaluate(() => window.__post);
 const letzter = async page => (await post(page)).filter(m => m.art === 'stand').pop();
 const wi = n => { const d = new Date(); d.setDate(d.getDate() + n); return (d.getDay() + 6) % 7; };
@@ -43,9 +47,12 @@ const lade = async (page, d, merker) => {
 };
 const tipp = async (page, sel) => { if (!(await page.$(sel))) return false; await page.click(sel); await page.waitForTimeout(120); return true; };
 const merker = page => page.evaluate(() => localStorage.getItem('takt.backup'));
-/* Zeile „Sicherung“ auf Heute: Erinnerung oben, Unterzeile, Aktionen der aufgeklappten Zeile, Wortlaut des Fehlers und Erklärung (leer, solange verborgen) */
+/* Zeile „Sicherung“ auf Heute: Erinnerung oben (oben; art sagt, wohin ihr Tipp führt: export = von Hand sichern, ordner = Ordner wählen), Unterzeile, Aktionen der aufgeklappten Zeile,
+   Wortlaut des Fehlers und Erklärung (leer, solange verborgen), Zahl der „i“. rot: ob Unterzeile und Wortlaut in der Farbe für Fehler stehen (--danger). */
 const zeile = page => page.evaluate(() => { const t = q => { const e = document.querySelector(q); return e && !e.hidden ? e.innerText.replace(/\s+/g, ' ').trim() : ''; };
-  return { oben: t('#v-heute .remind[data-h="export"]'), sub: t('#bk-msg'), akt: [...document.querySelectorAll('#v-heute [data-fold="sicherung"]')].map(b => [...b.closest('ul').querySelectorAll('.act')].map(a => a.innerText.trim()).join(' | ')).join(), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#v-heute .entries .info').length }; });
+  const mass = document.createElement('i'); mass.style.color = 'var(--danger)'; document.body.appendChild(mass); const gefahr = getComputedStyle(mass).color; mass.remove();
+  const rot = q => { const e = document.querySelector(q); return !!e && !e.hidden && getComputedStyle(e).color === gefahr; };
+  return { oben: t('#bk-due'), art: (document.querySelector('#bk-due') || { dataset: {} }).dataset.h || '', sub: t('#bk-msg'), akt: [...document.querySelectorAll('#v-heute [data-fold="sicherung"]')].map(b => [...b.closest('ul').querySelectorAll('.act')].map(a => a.innerText.trim()).join(' | ')).join(), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#v-heute .entries .info').length, rot: { sub: rot('#bk-msg'), fehler: rot('#bk-err') } }; });
 /* Merkt sich das erste Element von Heute; gleich() sagt später, ob Heute seitdem neu gezeichnet wurde */
 const marke = page => page.evaluate(() => { window.__m = document.querySelector('#v-heute').firstElementChild; });
 const gleich = page => page.evaluate(() => document.querySelector('#v-heute').firstElementChild === window.__m);
@@ -104,30 +111,35 @@ async function schnelleingabe(p) {
   return o.fehler;
 }
 
-/* Sicherung von selbst (v65, iPhone-App ab 0.5): Die iPhone-App meldet sich in info() mit sicherung; dann schickt die App nach Änderungen den Text der Sicherung. */
+/* Sicherung von selbst (v65, iPhone-App ab 0.5): Die iPhone-App meldet sich in info() mit sicherung; dann schickt die App nach Änderungen den Text der Sicherung.
+   Was die iPhone-App meldet (S): t = letzte Datei in ihrem eigenen Ordner, aussen = letzter Stand im gewählten Ordner, ordner, fehler, nochmal (Datei nicht geschrieben).
+   Für die Erinnerung und takt.backup zählt nur aussen: Was nur im Ordner der App liegt, ist mit der App weg. */
 async function vonSelbst(p) {
-  const fehler = [], D = zweiKonten(), S0 = { t: 0, ordner: '', fehler: '' };
+  const fehler = [], D = zweiKonten(), W = 300000;   // W: so lange wartet die App nach der ersten Änderung, bis sie von selbst schickt (fünf Minuten)
+  const S = (t, aussen, ordner, fehler, nochmal) => ({ t, aussen: aussen || 0, ordner: ordner || '', fehler: fehler || '', nochmal: !!nochmal }), S0 = S(0);
   const aendern = (page, id, x) => ruf(page, 'eingang', [{ id, art: 'notiz', x }]);
+  const NUR = 'Sicherung liegt nur in der App Ordner wählen', FOLD = '#v-heute [data-fold="sicherung"]';
 
   /* --- Ohne Hülle (Browser) ist die Zeile wie in v64: zwei Aktionen, kein „i“, keine Zeile zum Ordner. Die Sicherung ist fällig (Routine vom 1., heute der 15.):
          Der Satz steht in der Erinnerung oben und nicht noch einmal in der Zeile. --- */
   let o = await oeffnen({ daten: D, uhr: new Date(um(15, 12)) }), page = o.page;
-  await tipp(page, '#v-heute [data-fold="sicherung"]'); let zl = await zeile(page);
-  p.ok('ohne Hülle: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && await page.evaluate(() => !document.querySelector('#bk-ord, #bk-err, #info-bk, #v-heute .irow')), JSON.stringify(zl));
+  await tipp(page, FOLD); let zl = await zeile(page);
+  p.ok('ohne Hülle: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export' && await page.evaluate(() => !document.querySelector('#bk-ord, #bk-err, #info-bk, #v-heute .irow')), JSON.stringify(zl));
   fehler.push(...o.fehler); await o.browser.close();
 
   o = await oeffnen({ skript: huelle, uhr: new Date(um(15, 12)) }); page = o.page;
-  /* --- iPhone-App bis 0.4: info() ohne sicherung. Dann geht nie eine Sicherung hinaus, auch nicht nach einer Änderung, nach 25 Sekunden oder auf sichern(); die Zeile bleibt wie in v64. --- */
+  const ordner = async art => (await post(page)).filter(m => m.art === (art || 'ordner')).length;
+  /* --- iPhone-App bis 0.4: info() ohne sicherung. Dann geht nie eine Sicherung hinaus, auch nicht nach einer Änderung, nach gut fünf Minuten oder auf sichern(); die Zeile bleibt wie in v64. --- */
   await lade(page, D);
   await ruf(page, 'info', { app: '0.4', ablauf: um(22, 9), health: 'fehlt' });
-  await aendern(page, 'x1', 'Eine Änderung'); await page.clock.runFor(25000); await ruf(page, 'sichern'); await page.clock.runFor(25000);
-  await tipp(page, '#v-heute [data-fold="sicherung"]'); zl = await zeile(page);
+  await aendern(page, 'x1', 'Eine Änderung'); await page.clock.runFor(W + 5000); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
+  await tipp(page, FOLD); zl = await zeile(page);
   p.ok('iPhone-App 0.4 (info ohne sicherung): nie eine Nachricht „sicherung“', (await sich(page)).length === 0, JSON.stringify((await post(page)).map(m => m.art)));
-  p.ok('iPhone-App 0.4: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern', JSON.stringify(zl));
+  p.ok('iPhone-App 0.4: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export', JSON.stringify(zl));
 
   /* --- iPhone-App 0.5, erste Auskunft: Es ist schon etwas offen (eine Änderung vor der Auskunft), also geht die Sicherung sofort hinaus, genau einmal. --- */
   await lade(page, D);
-  await aendern(page, 's1', 'Vor der Auskunft'); await page.clock.runFor(25000);
+  await aendern(page, 's1', 'Vor der Auskunft'); await page.clock.runFor(W + 5000);
   p.ok('vor der Auskunft der iPhone-App geht nichts hinaus', (await sich(page)).length === 0);
   await ruf(page, 'info', { app: '0.5', ablauf: um(22, 9), health: 'fehlt', sicherung: S0 });
   let s = await sich(page), s0 = s[0] || { name: '', text: '{}' }, b = JSON.parse(s0.text), g = await gespeichert(page);
@@ -135,32 +147,43 @@ async function vonSelbst(p) {
   p.ok('Sicherung: der Name passt zum Tag', s0.name === 'track-sicherung-' + am(15) + '.json', s0.name);
   p.ok('Sicherung: der Text ist die Sicherung (Kennung, Routinen, alle Gruppen wie gespeichert)', b.app === 'takt' && b.v === 1 && !!b.exported && JSON.stringify(b.routines) === JSON.stringify(g.S.routines) && ['LY', 'W', 'MF', 'MY', 'T', 'K', 'N'].every(k => JSON.stringify(b[k]) === JSON.stringify(g[k]))
     && Object.values((b.N || {}).notes || {}).some(n => n && n.x === 'Vor der Auskunft'), s0.text.slice(0, 160));
+  /* Die iPhone-App prüft nur den Anfang und das Ende des Textes (und liest ihn nicht ganz): Jede Sicherung beginnt genau so. */
+  p.ok('Sicherung: der Text beginnt mit {"app":"takt", und endet mit }', s0.text.startsWith('{"app":"takt",') && s0.text.endsWith('}'), s0.text.slice(0, 30));
   zl = await zeile(page);
-  p.ok('noch keine Sicherung gemeldet: Erinnerung steht noch, die Zeile sagt „Wird von selbst gesichert“', zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.sub === 'Wird von selbst gesichert', JSON.stringify(zl));
+  p.ok('noch keine Sicherung gemeldet, kein Ordner gewählt: die Erinnerung führt zum Ordner, die Zeile sagt „Wird von selbst gesichert“', zl.oben === NUR && zl.art === 'ordner' && zl.sub === 'Wird von selbst gesichert', JSON.stringify(zl));
 
-  /* --- gesichert(): Die iPhone-App meldet die geschriebene Datei. takt.backup wird der gemeldete Zeitpunkt, die Erinnerung verschwindet, die Zeile nennt Tag und Uhrzeit.
-         Der neue Stand nennt die nächste Fälligkeit: 15. + 7 Tage = der 22. Es geht keine weitere Sicherung hinaus, auch nicht nach einer Minute (kein Hin und Her). --- */
+  /* --- gesichert() ohne gewählten Ordner: Die Datei liegt nur im Ordner der App. Das zählt nicht als Sicherung außerhalb: takt.backup bleibt leer, die Erinnerung bleibt,
+         und die Mitteilung „Sicherung fällig“ bleibt beim alten Tag (ältester Eintrag am 1. + 7 Tage = der 8.). Die Zeile nennt trotzdem, wann zuletzt gesichert wurde.
+         Es geht keine weitere Sicherung hinaus, auch nicht nach sechs Minuten (kein Hin und Her). --- */
   const T1 = await page.evaluate(() => Date.now());
-  await ruf(page, 'gesichert', { t: T1, ordner: '', fehler: '' }); zl = await zeile(page);
-  p.ok('gesichert(): takt.backup ist der gemeldete Zeitpunkt', (await merker(page)) === String(T1), String(await merker(page)));
-  p.ok('gesichert(): die Erinnerung verschwindet, die Zeile nennt den Zeitpunkt', zl.oben === '' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T1), JSON.stringify(zl));
+  await ruf(page, 'gesichert', S(T1)); zl = await zeile(page);
+  p.ok('gesichert() ohne Ordner: takt.backup bleibt leer, die Erinnerung bleibt', (await merker(page)) === null && zl.oben === NUR && zl.art === 'ordner', (await merker(page)) + ' · ' + JSON.stringify(zl));
+  p.ok('gesichert() ohne Ordner: die Zeile nennt den Zeitpunkt', zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T1) && !zl.rot.sub, JSON.stringify(zl));
   await page.waitForTimeout(450); let st = (await letzter(page)) || {};
-  p.ok('gesichert(): neuer Stand, die Mitteilung „Sicherung fällig“ rückt auf den 22.', st.sicherung === am(22), st.sicherung);
-  await page.clock.runFor(60000);
+  p.ok('gesichert() ohne Ordner: die Mitteilung „Sicherung fällig“ bleibt beim 8.', st.sicherung === am(8), st.sicherung);
+  await page.clock.runFor(W + 60000);
   p.ok('gesichert() löst keine weitere Sicherung aus', (await sich(page)).length === 1, String((await sich(page)).length));
+  /* Ein Tipp auf die Erinnerung öffnet die Wahl des Ordners (kein Teilen, keine Datei). Die iPhone-App meldet danach den Ordner und die Kopie dort (aussen):
+     Erst das zählt. takt.backup ist der Zeitpunkt der Kopie, die Erinnerung verschwindet, und für die Mitteilung gibt es keinen Tag mehr (leer). */
+  await tipp(page, '#bk-due');
+  p.ok('Tipp auf die Erinnerung bittet um die Wahl eines Ordners', (await ordner()) === 1 && (await sich(page)).length === 1, (await ordner()) + ' · ' + (await sich(page)).length);
+  await ruf(page, 'gesichert', S(T1, T1, 'Track-Sicherung')); zl = await zeile(page);
+  p.ok('Ordner gewählt, Kopie liegt dort: takt.backup ist ihr Zeitpunkt, die Erinnerung verschwindet', (await merker(page)) === String(T1) && zl.oben === '', (await merker(page)) + ' · ' + JSON.stringify(zl));
+  await page.waitForTimeout(450); st = (await letzter(page)) || {};
+  p.ok('Ordner gewählt: für die Mitteilung „Sicherung fällig“ gibt es keinen Tag mehr', st.sicherung === '', JSON.stringify(st.sicherung));
 
-  /* --- Höchstens eine je 20 Sekunden: drei Änderungen nach 0, 8 und 16 Sekunden. Die Uhr läuft seit der ersten und startet nicht neu:
-         nach 16 Sekunden noch nichts, nach 22 Sekunden genau eine, mit allen drei Änderungen. Eine vierte Änderung gleich danach wartet wieder 20 Sekunden:
-         nach weiteren 15 Sekunden (37) nichts, nach weiteren 6 (43) die nächste. Danach, ohne Änderung, nichts mehr. --- */
-  await aendern(page, 's2', 'Zwei'); await page.clock.runFor(8000); await aendern(page, 's3', 'Drei'); await page.clock.runFor(8000); await aendern(page, 's4', 'Vier');
-  p.ok('drei Änderungen in 16 Sekunden: noch keine Sicherung', (await sich(page)).length === 1, String((await sich(page)).length));
-  await page.clock.runFor(6000); s = await sich(page);
-  p.ok('20 Sekunden nach der ersten Änderung: genau eine Sicherung, mit allen dreien', s.length === 2 && ['Zwei', 'Drei', 'Vier'].every(x => s[1].text.includes('"x":"' + x + '"')), String(s.length));
-  await aendern(page, 's5', 'Fünf'); await page.clock.runFor(15000);
-  p.ok('eine Änderung gleich danach wartet wieder 20 Sekunden', (await sich(page)).length === 2, String((await sich(page)).length));
-  await page.clock.runFor(6000);
+  /* --- Höchstens eine je fünf Minuten: drei Änderungen nach 0, 100 und 200 Sekunden. Die Uhr läuft seit der ersten und startet nicht neu:
+         nach 200 Sekunden noch nichts, nach 305 Sekunden genau eine, mit allen drei Änderungen. Eine vierte Änderung gleich danach wartet wieder fünf Minuten:
+         nach weiteren 290 Sekunden nichts, nach weiteren 15 (305) die nächste. Danach, ohne Änderung, nichts mehr. --- */
+  await aendern(page, 's2', 'Zwei'); await page.clock.runFor(100000); await aendern(page, 's3', 'Drei'); await page.clock.runFor(100000); await aendern(page, 's4', 'Vier');
+  p.ok('drei Änderungen in 200 Sekunden: noch keine Sicherung', (await sich(page)).length === 1, String((await sich(page)).length));
+  await page.clock.runFor(105000); s = await sich(page);
+  p.ok('fünf Minuten nach der ersten Änderung: genau eine Sicherung, mit allen dreien', s.length === 2 && ['Zwei', 'Drei', 'Vier'].every(x => s[1].text.includes('"x":"' + x + '"')), String(s.length));
+  await aendern(page, 's5', 'Fünf'); await page.clock.runFor(290000);
+  p.ok('eine Änderung gleich danach wartet wieder fünf Minuten', (await sich(page)).length === 2, String((await sich(page)).length));
+  await page.clock.runFor(15000);
   p.ok('… und geht dann hinaus', (await sich(page)).length === 3, String((await sich(page)).length));
-  await page.clock.runFor(60000);
+  await page.clock.runFor(2 * W);
   p.ok('ohne weitere Änderung kommt keine Sicherung mehr', (await sich(page)).length === 3, String((await sich(page)).length));
 
   /* --- sichern(): Die iPhone-App ruft das, wenn sie verlassen wird. Es schickt sofort und nur, wenn etwas offen ist; die Uhr schickt danach nicht noch einmal. --- */
@@ -168,7 +191,7 @@ async function vonSelbst(p) {
   p.ok('sichern() ohne Offenes schickt nichts', (await sich(page)).length === 3, String((await sich(page)).length));
   await aendern(page, 's6', 'Sechs'); await ruf(page, 'sichern'); s = await sich(page);
   p.ok('sichern() mit Offenem schickt sofort', s.length === 4 && s[3].text.includes('"x":"Sechs"'), String(s.length));
-  await ruf(page, 'sichern'); await page.clock.runFor(25000);
+  await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
   p.ok('danach ist nichts mehr offen: weder ein zweites sichern() noch die Uhr schicken noch einmal', (await sich(page)).length === 4, String((await sich(page)).length));
 
   /* --- „Rückgängig“ lädt den Stand an saveLocal() vorbei und ist trotzdem eine Änderung. Notiz n1 im Widget abhaken und sichern: Die Sicherung ist ohne sie, nichts ist offen.
@@ -178,27 +201,41 @@ async function vonSelbst(p) {
   await tipp(page, '#toast button'); await ruf(page, 'sichern'); s = await sich(page);
   p.ok('„Rückgängig“ merkt die Änderung: die nächste Sicherung enthält die Notiz wieder', ohne && s.length === 6 && (JSON.parse(s[5].text).N.notes.n1 || {}).x === 'Erste Notiz', ohne + ' · ' + s.length);
 
-  /* --- Fehler beim Schreiben: fehler ist gefüllt, t ist die Zeit der letzten gelungenen Sicherung (T1). takt.backup bleibt T1. Die Zeile sagt, dass etwas nicht ging und von wann die letzte Sicherung ist;
-         aufgeklappt steht darunter der Wortlaut. Von selbst geht nichts noch einmal hinaus (auch nicht nach einer Minute), offen bleibt es aber: Das nächste sichern() versucht es wieder.
-         Heute wird bei alldem nicht neu gezeichnet (keine Erinnerung zu entfernen): Nur die Texte der Zeile ändern sich. --- */
-  await tipp(page, '#v-heute [data-fold="sicherung"]'); await marke(page);
-  await ruf(page, 'gesichert', { t: T1, ordner: '', fehler: 'Auf dem iPhone ist kein Platz mehr.' }); zl = await zeile(page);
-  p.ok('Fehler: takt.backup bleibt, die Zeile sagt, dass etwas nicht ging und von wann die letzte Sicherung ist', (await merker(page)) === String(T1) && zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung heute, ' + hhmm(T1) && zl.oben === '', JSON.stringify(zl));
-  p.ok('Fehler: aufgeklappt steht der Wortlaut darunter', zl.fehler === 'Auf dem iPhone ist kein Platz mehr.', JSON.stringify(zl));
-  await page.clock.runFor(60000);
+  /* --- Die Datei wurde nicht geschrieben: fehler ist gefüllt, nochmal ist wahr, t und aussen bleiben beim letzten Gelungenen (T1). takt.backup bleibt T1.
+         Die Zeile sagt in Rot, dass es nicht ging und von wann die letzte Sicherung ist; aufgeklappt steht darunter der Wortlaut, auch in Rot.
+         Von selbst geht nichts noch einmal hinaus (auch nicht nach sechs Minuten), offen bleibt es aber: Das nächste sichern() versucht es wieder.
+         Heute wird bei alldem nicht neu gezeichnet (die Erinnerung ändert sich nicht): Nur die Texte der Zeile ändern sich. --- */
+  await tipp(page, FOLD); await marke(page);
+  await ruf(page, 'gesichert', S(T1, T1, 'Track-Sicherung', 'Auf dem iPhone ist kein Platz mehr.', true)); zl = await zeile(page);
+  p.ok('Fehler: takt.backup bleibt, die Zeile sagt in Rot, dass es nicht ging und von wann die letzte Sicherung ist', (await merker(page)) === String(T1) && zl.sub === 'Sichern ging nicht · zuletzt heute, ' + hhmm(T1) && zl.rot.sub && zl.oben === '', JSON.stringify(zl));
+  p.ok('Fehler: aufgeklappt steht der Wortlaut darunter, in Rot', zl.fehler === 'Auf dem iPhone ist kein Platz mehr.' && zl.rot.fehler, JSON.stringify(zl));
+  await page.clock.runFor(W + 60000);
   p.ok('Fehler: von selbst geht nichts noch einmal hinaus', (await sich(page)).length === 6, String((await sich(page)).length));
   await ruf(page, 'sichern');
-  p.ok('Fehler: die Sicherung bleibt offen, das nächste sichern() versucht es wieder', (await sich(page)).length === 7, String((await sich(page)).length));
+  p.ok('Datei nicht geschrieben: die Sicherung bleibt offen, das nächste sichern() versucht es wieder', (await sich(page)).length === 7, String((await sich(page)).length));
   const T2 = await page.evaluate(() => Date.now());
-  await ruf(page, 'gesichert', { t: T2, ordner: '', fehler: '' }); zl = await zeile(page);
-  p.ok('danach gelungen: Wortlaut weg, Zeitpunkt und takt.backup neu', zl.fehler === '' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T2) && (await merker(page)) === String(T2), JSON.stringify(zl));
+  await ruf(page, 'gesichert', S(T2, T2, 'Track-Sicherung')); zl = await zeile(page);
+  p.ok('danach gelungen: Wortlaut weg, nicht mehr rot, Zeitpunkt und takt.backup neu', zl.fehler === '' && !zl.rot.sub && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T2) && (await merker(page)) === String(T2), JSON.stringify(zl));
   await ruf(page, 'sichern');
   p.ok('nach der gelungenen Sicherung ist nichts mehr offen', (await sich(page)).length === 7, String((await sich(page)).length));
-  /* Ein älterer Zeitpunkt stellt takt.backup nie zurück: Fehler, zuletzt gelungen gestern um 20:56 Uhr → die Zeile nennt gestern, takt.backup bleibt T2. Ohne jede gelungene (t = 0) fehlt „zuletzt“. */
-  await ruf(page, 'gesichert', { t: um(14, 20, 56), ordner: '', fehler: 'Kein Platz.' }); zl = await zeile(page);
-  p.ok('Fehler mit älterem Zeitpunkt: „letzte Sicherung gestern, 20:56“, takt.backup wird nicht zurückgestellt', zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung gestern, 20:56' && (await merker(page)) === String(T2), JSON.stringify(zl) + ' · ' + (await merker(page)));
-  await ruf(page, 'gesichert', { t: 0, ordner: '', fehler: 'Kein Platz.' }); zl = await zeile(page);
-  p.ok('Fehler ohne jede gelungene Sicherung: nur der Satz', zl.sub === 'Beim Sichern ging etwas nicht', JSON.stringify(zl));
+  /* Nur der gewählte Ordner ging nicht: Die Datei liegt auf dem iPhone (t ist neu), die Kopie fehlt (aussen bleibt T2), nochmal ist falsch.
+     takt.backup bleibt T2. Nichts bleibt offen: Weder sichern() noch die Uhr schicken die Sicherung noch einmal (die iPhone-App trägt die Kopie selbst nach).
+     Weil die Kopie nicht mehr von selbst läuft, gibt es wieder einen Tag für die Mitteilung: T2 liegt am 15., also der 22. */
+  await page.clock.runFor(60000);
+  const T3 = await page.evaluate(() => Date.now()), nurOrdner = 'In „Track-Sicherung“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.';
+  await ruf(page, 'gesichert', S(T3, T2, 'Track-Sicherung', nurOrdner)); zl = await zeile(page);
+  p.ok('nur der Ordner ging nicht: takt.backup bleibt beim Zeitpunkt der letzten Kopie, die Zeile ist rot, der Wortlaut steht da', (await merker(page)) === String(T2) && zl.sub === 'Sichern ging nicht · zuletzt heute, ' + hhmm(T3) && zl.rot.sub && zl.fehler === nurOrdner && zl.oben === '', (await merker(page)) + ' · ' + JSON.stringify(zl));
+  await ruf(page, 'sichern'); await page.clock.runFor(W + 60000);
+  p.ok('nur der Ordner ging nicht: nichts bleibt offen, weder sichern() noch die Uhr schicken noch einmal', (await sich(page)).length === 7, String((await sich(page)).length));
+  await page.waitForTimeout(450); st = (await letzter(page)) || {};
+  p.ok('nur der Ordner ging nicht: die Mitteilung „Sicherung fällig“ ist wieder geplant, für den 22.', st.sicherung === am(22), JSON.stringify(st.sicherung));
+  await ruf(page, 'gesichert', S(T3, T3, 'Track-Sicherung')); zl = await zeile(page); await page.waitForTimeout(450); st = (await letzter(page)) || {};
+  p.ok('der Ordner geht wieder: takt.backup ist neu, nichts mehr rot, kein Tag mehr für die Mitteilung', (await merker(page)) === String(T3) && !zl.rot.sub && zl.fehler === '' && st.sicherung === '', (await merker(page)) + ' · ' + JSON.stringify(zl) + ' · ' + st.sicherung);
+  /* Ein älterer Zeitpunkt stellt takt.backup nie zurück: Fehler, zuletzt gelungen gestern um 20:56 Uhr → die Zeile nennt gestern, takt.backup bleibt T3. Ohne jede gelungene (t = 0) fehlt „zuletzt“. */
+  await ruf(page, 'gesichert', S(um(14, 20, 56), um(14, 20, 56), 'Track-Sicherung', 'Kein Platz.', true)); zl = await zeile(page);
+  p.ok('Fehler mit älterem Zeitpunkt: „zuletzt gestern, 20:56“, takt.backup wird nicht zurückgestellt', zl.sub === 'Sichern ging nicht · zuletzt gestern, 20:56' && (await merker(page)) === String(T3), JSON.stringify(zl) + ' · ' + (await merker(page)));
+  await ruf(page, 'gesichert', S(0, 0, 'Track-Sicherung', 'Kein Platz.', true)); zl = await zeile(page);
+  p.ok('Fehler ohne jede gelungene Sicherung: nur der Satz', zl.sub === 'Sichern ging nicht', JSON.stringify(zl));
   p.ok('Meldungen der iPhone-App zeichnen Heute nicht neu, sie ändern nur die Texte der Zeile', await gleich(page));
 
   /* --- Ein Weg für Hand und von selbst: „Sicherung speichern“ (hier über das Teilen) gibt denselben Text wie die Sicherung von selbst, bis auf den Zeitpunkt des Schreibens. --- */
@@ -212,36 +249,57 @@ async function vonSelbst(p) {
   p.ok('von Hand und von selbst: derselbe Text', s.length === 8 && hand.length > 100 && ohneZeit(hand) === ohneZeit(s[7].text), s.length + ' · ' + hand.slice(0, 80));
   /* Nach dem Speichern von Hand nennt die Zeile die Datei. Die nächste Meldung der iPhone-App ist neuer: Dann steht dort wieder, wann von selbst gesichert wurde. */
   zl = await zeile(page); const vonHand = zl.sub;
-  await ruf(page, 'gesichert', { t: T2, ordner: '', fehler: '' }); zl = await zeile(page);
-  p.ok('nach „Sicherung speichern“ nennt die Zeile die Datei, nach der nächsten Meldung wieder die Sicherung von selbst', vonHand === 'Sicherung gespeichert: track-sicherung-' + am(15) + '.json' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T2), vonHand + ' · ' + zl.sub);
+  await ruf(page, 'gesichert', S(T3, T3, 'Track-Sicherung')); zl = await zeile(page);
+  p.ok('nach „Sicherung speichern“ nennt die Zeile die Datei, nach der nächsten Meldung wieder die Sicherung von selbst', vonHand === 'Sicherung gespeichert: track-sicherung-' + am(15) + '.json' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T3), vonHand + ' · ' + zl.sub);
+  /* Andere Sätze bleiben stehen: Nach „Sicherung einlesen“ steht da, was eingelesen wurde (Stand vom 10.). Das Einlesen ist selbst eine Änderung, kurz darauf meldet die iPhone-App
+     die nächste Sicherung; der Satz bleibt trotzdem. Erst ein Fehler der iPhone-App geht vor. */
+  const datei = JSON.stringify({ app: 'takt', v: 1, exported: new Date(um(10, 8)).toISOString(), routines: [], LY: {}, W: {}, MF: {}, MY: {}, T: {}, K: {}, N: { notes: { z9: { x: 'Aus der Datei', f: '', c: um(2, 9), m: um(2, 9) } } } });
+  await page.setInputFiles('#bk-file', { name: 'track-sicherung.json', mimeType: 'application/json', buffer: Buffer.from(datei) }); await page.waitForTimeout(300);
+  const gelesen = 'Sicherung eingelesen, Stand 10. ' + MONATE[+M.slice(5) - 1] + ' ' + JM + '. Vorhandene Einträge bleiben erhalten.';
+  await ruf(page, 'gesichert', S(T3, T3, 'Track-Sicherung')); zl = await zeile(page);
+  p.ok('der Satz nach „Sicherung einlesen“ bleibt stehen, wenn die iPhone-App danach eine Sicherung meldet', zl.sub === gelesen && Object.values((await gespeichert(page)).N.notes).some(n => n && n.x === 'Aus der Datei'), zl.sub);
+  await ruf(page, 'gesichert', S(T3, T3, 'Track-Sicherung', 'Kein Platz.', true)); zl = await zeile(page);
+  p.ok('… einem Fehler der iPhone-App weicht er', zl.sub === 'Sichern ging nicht · zuletzt heute, ' + hhmm(T3) && zl.rot.sub, JSON.stringify(zl));
 
   /* --- Erste Auskunft, nichts offen: Maßgeblich ist, ob die letzte Sicherung vor heute 0 Uhr liegt. Eine Millisekunde vor Mitternacht → sie geht sofort hinaus (einmal, auch wenn die
-         Auskunft noch einmal kommt). Genau Mitternacht → nichts; erst eine Änderung und 20 Sekunden bringen die nächste. Der gemeldete Zeitpunkt wird takt.backup:
-         Die Erinnerung steht dann nicht mehr da (Sicherung von gestern, fällig erst in 6 Tagen). --- */
+         Auskunft noch einmal kommt). Genau Mitternacht → nichts; erst eine Änderung und fünf Minuten bringen die nächste.
+         Liegt die Kopie im gewählten Ordner (aussen), wird ihr Zeitpunkt takt.backup, und es gibt keine Erinnerung. Ohne Ordner bleibt takt.backup leer, und die Erinnerung führt zum Ordner. --- */
+  const G = um(15, 0) - 1;
   await lade(page, D);
-  await ruf(page, 'info', { app: '0.5', sicherung: { t: um(15, 0) - 1, ordner: '', fehler: '' } }); await ruf(page, 'info', { app: '0.5', sicherung: { t: um(15, 0) - 1, ordner: '', fehler: '' } });
+  await ruf(page, 'info', { app: '0.5', sicherung: S(G, G, 'iCloud') }); await ruf(page, 'info', { app: '0.5', sicherung: S(G, G, 'iCloud') });
   zl = await zeile(page);
   p.ok('erste Auskunft, letzte Sicherung von gestern (23:59 Uhr): eine Sicherung geht sofort hinaus, nur einmal', (await sich(page)).length === 1, String((await sich(page)).length));
-  p.ok('Auskunft: der gemeldete Zeitpunkt wird takt.backup, die Erinnerung entfällt', (await merker(page)) === String(um(15, 0) - 1) && zl.oben === '' && zl.sub === 'Von selbst gesichert · gestern, 23:59', JSON.stringify(zl));
+  p.ok('Auskunft mit Kopie im Ordner: ihr Zeitpunkt wird takt.backup, keine Erinnerung', (await merker(page)) === String(G) && zl.oben === '' && zl.sub === 'Von selbst gesichert · gestern, 23:59', (await merker(page)) + ' · ' + JSON.stringify(zl));
   await lade(page, D);
-  await ruf(page, 'info', { app: '0.5', sicherung: { t: um(15, 0), ordner: '', fehler: '' } }); await ruf(page, 'sichern'); await page.clock.runFor(25000);
+  await ruf(page, 'info', { app: '0.5', sicherung: S(G) }); zl = await zeile(page);
+  p.ok('Auskunft ohne Ordner: takt.backup bleibt leer, die Erinnerung führt zum Ordner', (await merker(page)) === null && zl.oben === NUR && zl.sub === 'Von selbst gesichert · gestern, 23:59', (await merker(page)) + ' · ' + JSON.stringify(zl));
+  await lade(page, D);
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 0)) }); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
   p.ok('erste Auskunft, letzte Sicherung von heute (0:00 Uhr), nichts offen: es geht nichts hinaus', (await sich(page)).length === 0, String((await sich(page)).length));
-  await aendern(page, 'm1', 'Später'); await page.clock.runFor(21000);
-  p.ok('… erst eine Änderung und 20 Sekunden bringen die nächste', (await sich(page)).length === 1, String((await sich(page)).length));
-  /* Älter als gestern steht das Datum da: der 3. des Monats */
-  await ruf(page, 'info', { app: '0.5', sicherung: { t: um(3, 7, 5), ordner: '', fehler: '' } }); zl = await zeile(page);
+  await aendern(page, 'm1', 'Später'); await page.clock.runFor(W + 1000);
+  p.ok('… erst eine Änderung und fünf Minuten bringen die nächste', (await sich(page)).length === 1, String((await sich(page)).length));
+  /* Heute schon gesichert (9 Uhr), aber seit dem Laden gab es eine Änderung: Bei der ersten Auskunft geht genau eine Sicherung sofort hinaus, mit der Änderung.
+     (Hier löst nicht der Tag aus, sondern das Offene: Die App merkt sich Änderungen auch, solange sie von der iPhone-App noch nichts weiß.) */
+  await lade(page, D);
+  await aendern(page, 'm2', 'Vor der Auskunft geändert');
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); s = await sich(page);
+  p.ok('erste Auskunft, heute schon gesichert, aber seit dem Laden geändert: genau eine Sicherung sofort, mit der Änderung', s.length === 1 && s[0].text.includes('"x":"Vor der Auskunft geändert"'), String(s.length));
+  /* Älter als gestern steht das Datum da: der 3. des Monats, mit geschützten Leerzeichen, damit es beim Umbruch nicht zerreißt. Die zweite Auskunft am selben Tag löst nichts mehr aus. */
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(3, 7, 5)) }); zl = await zeile(page);
   p.ok('ältere Sicherung: die Zeile nennt das Datum', zl.sub === 'Von selbst gesichert · 3. ' + MONATE[+M.slice(5) - 1] + ' ' + JM, zl.sub);
+  p.ok('… mit geschützten Leerzeichen im Datum', (await page.evaluate(() => document.querySelector('#bk-msg').textContent)).endsWith('3. ' + MONATE[+M.slice(5) - 1] + ' ' + JM));
+  p.ok('eine weitere Auskunft am selben Tag löst keine Sicherung aus', (await sich(page)).length === 1, String((await sich(page)).length));
 
   /* --- Leere App: Sie sichert nie, sonst überschriebe sie nach einem verlorenen Speicher die gute Datei des Tages. Weder die erste Auskunft noch sichern() noch die Uhr schicken etwas.
-         Mit dem ersten Eintrag ändert sich das: 20 Sekunden später geht die Sicherung hinaus. --- */
+         Mit dem ersten Eintrag ändert sich das: fünf Minuten später geht die Sicherung hinaus. Ohne Einträge gibt es auch keine Erinnerung. --- */
   await lade(page, null);
-  await ruf(page, 'info', { app: '0.5', sicherung: S0 }); await ruf(page, 'sichern'); await page.clock.runFor(25000); zl = await zeile(page);
-  p.ok('leere App: es geht nie eine Sicherung hinaus', (await sich(page)).length === 0 && zl.sub === 'Wird von selbst gesichert', (await sich(page)).length + ' · ' + JSON.stringify(zl));
+  await ruf(page, 'info', { app: '0.5', sicherung: S0 }); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000); zl = await zeile(page);
+  p.ok('leere App: es geht nie eine Sicherung hinaus, keine Erinnerung', (await sich(page)).length === 0 && zl.sub === 'Wird von selbst gesichert' && zl.oben === '', (await sich(page)).length + ' · ' + JSON.stringify(zl));
   await lade(page, { S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, T: {}, K: {}, N: {} });
-  await ruf(page, 'info', { app: '0.5', sicherung: S0 }); await ruf(page, 'sichern'); await page.clock.runFor(25000);
+  await ruf(page, 'info', { app: '0.5', sicherung: S0 }); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
   p.ok('leere App mit leerem Speicher-Eintrag: ebenso', (await sich(page)).length === 0, String((await sich(page)).length));
-  await aendern(page, 'l1', 'Erster Eintrag'); await page.clock.runFor(21000); s = await sich(page);
-  p.ok('nach dem ersten Eintrag: 20 Sekunden später geht die Sicherung hinaus', s.length === 1 && s[0].text.includes('"x":"Erster Eintrag"'), String(s.length));
+  await aendern(page, 'l1', 'Erster Eintrag'); await page.clock.runFor(W + 1000); s = await sich(page);
+  p.ok('nach dem ersten Eintrag: fünf Minuten später geht die Sicherung hinaus', s.length === 1 && s[0].text.includes('"x":"Erster Eintrag"'), String(s.length));
   /* Jede Gruppe für sich zählt als „es gibt Daten“: Mit nur diesem einen Eintrag geht bei der ersten Auskunft (noch keine Sicherung) genau eine hinaus. */
   const leer = () => ({ S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, T: {}, K: {}, N: {} });
   const gruppen = {
@@ -264,76 +322,168 @@ async function vonSelbst(p) {
   for (const name in gruppen) { const d = leer(); gruppen[name](d); await lade(page, d); await ruf(page, 'info', { app: '0.5', sicherung: S0 }); if ((await sich(page)).length !== 1) nicht.push(name); }
   p.ok('jede Gruppe für sich zählt als Daten (' + Object.keys(gruppen).length + ' Fälle)', !nicht.length, 'keine Sicherung bei: ' + nicht.join(', '));
 
-  /* --- Klappzeile mit Sicherung von selbst. Letzte Sicherung heute um 11 Uhr, nichts offen: keine Erinnerung, es geht nichts hinaus. --- */
-  const S11 = { t: um(15, 11), ordner: '', fehler: '' }, ordner = async () => (await post(page)).filter(m => m.art === 'ordner').length;
-  await lade(page, D);
+  /* --- Erinnerung und Mitteilung zählen nur, was außerhalb der App liegt. Die iPhone-App sichert täglich in ihren eigenen Ordner (t von heute), kein Ordner ist gewählt.
+         Letzte Sicherung von Hand am 9. um 12 Uhr: heute, am 15., sind das 6 Tage → noch keine Erinnerung; die Mitteilung ist für den 16. geplant (9. + 7).
+         Letzte Sicherung von Hand am 8.: 7 Tage → die Erinnerung kommt und führt zum Ordner; die Mitteilung ist für den 15. geplant (8. + 7). --- */
+  await lade(page, D, um(9, 12));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); await ruf(page, 'gesichert', S(um(15, 11))); await page.waitForTimeout(450); zl = await zeile(page); st = (await letzter(page)) || {};
+  p.ok('nur im Ordner der App gesichert, von Hand vor 6 Tagen: keine Erinnerung, Mitteilung für den 16.', zl.oben === '' && st.sicherung === am(16) && (await merker(page)) === String(um(9, 12)), JSON.stringify(zl) + ' · ' + st.sicherung);
+  await lade(page, D, um(8, 12));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); await ruf(page, 'gesichert', S(um(15, 11))); await page.waitForTimeout(450); zl = await zeile(page); st = (await letzter(page)) || {};
+  p.ok('nur im Ordner der App gesichert, von Hand vor 7 Tagen: die Erinnerung kommt und führt zum Ordner, Mitteilung für den 15.', zl.oben === NUR && zl.art === 'ordner' && st.sicherung === am(15) && (await merker(page)) === String(um(8, 12)), JSON.stringify(zl) + ' · ' + st.sicherung);
+  /* Ordner gewählt, alles geht, aber die App wurde 14 Tage nicht geöffnet (letzte Kopie am 1.): keine Erinnerung und kein Tag für die Mitteilung, denn seitdem kann sich nichts
+     geändert haben. Die Sicherung des Tages geht sofort hinaus (letzte von vor heute). */
+  await lade(page, D, um(1, 12));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(1, 12), um(1, 12), 'iCloud') }); await page.waitForTimeout(450); zl = await zeile(page); st = (await letzter(page)) || {};
+  p.ok('Ordner gewählt, 14 Tage nicht geöffnet: keine Erinnerung, kein Tag für die Mitteilung, die Sicherung des Tages geht hinaus', zl.oben === '' && st.sicherung === '' && (await sich(page)).length === 1, JSON.stringify(zl) + ' · ' + JSON.stringify(st.sicherung));
+  /* Ordner gewählt, aber er geht seit 14 Tagen nicht (letzte Kopie am 1., Fehler gemeldet): Die Erinnerung kommt wie bisher und bietet die Sicherung von Hand an;
+     die Mitteilung ist seit dem 8. fällig (1. + 7). */
+  await lade(page, D, um(1, 12));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9), um(1, 12), 'iCloud', 'In „iCloud“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.') }); await page.waitForTimeout(450); zl = await zeile(page); st = (await letzter(page)) || {};
+  p.ok('Ordner geht seit 14 Tagen nicht: Erinnerung mit „Jetzt sichern“, Mitteilung seit dem 8. fällig, die Zeile ist rot', zl.oben === 'Letzte Sicherung vor 14 Tagen Jetzt sichern' && zl.art === 'export' && st.sicherung === am(8) && zl.rot.sub, JSON.stringify(zl) + ' · ' + st.sicherung);
+  /* Die iPhone-App meldet die nachgetragene Kopie: Erinnerung weg (Heute wird dafür neu gezeichnet), kein Tag mehr. */
+  await ruf(page, 'gesichert', S(um(15, 9), um(15, 9), 'iCloud')); await page.waitForTimeout(450); zl = await zeile(page); st = (await letzter(page)) || {};
+  p.ok('Kopie nachgetragen: die Erinnerung verschwindet, kein Tag mehr für die Mitteilung', zl.oben === '' && st.sicherung === '' && !zl.rot.sub && (await merker(page)) === String(um(15, 9)), JSON.stringify(zl) + ' · ' + JSON.stringify(st.sicherung));
+
+  /* --- Klappzeile mit Sicherung von selbst. Von Hand gestern gesichert (also keine Erinnerung), letzte Sicherung von selbst heute um 11 Uhr, nichts offen: es geht nichts hinaus. --- */
+  const S11 = S(um(15, 11));
+  await lade(page, D, um(14, 12));
   await ruf(page, 'info', { app: '0.5', sicherung: S11 });
-  p.ok('Zeile zu: „Sicherung“ mit „Von selbst gesichert · heute, 11:00“', (await text(page, '#v-heute [data-fold="sicherung"]')) === 'Sicherung Von selbst gesichert · heute, 11:00' && (await zeile(page)).oben === '', await text(page, '#v-heute [data-fold="sicherung"]'));
-  await tipp(page, '#v-heute [data-fold="sicherung"]'); zl = await zeile(page);
+  p.ok('Zeile zu: „Sicherung“ mit „Von selbst gesichert · heute, 11:00“', (await text(page, FOLD)) === 'Sicherung Von selbst gesichert · heute, 11:00' && (await zeile(page)).oben === '', await text(page, FOLD));
+  await tipp(page, FOLD); zl = await zeile(page);
   p.ok('Zeile auf: speichern, einlesen und „Ordner in iCloud wählen“ mit einem „i“; Erklärung und Fehler verborgen', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner in iCloud wählen' && zl.i === 1 && zl.info === '' && zl.fehler === '', JSON.stringify(zl));
-  await tipp(page, '#v-heute [data-h="ordner"]');
+  await tipp(page, '#v-heute .act[data-h="ordner"]');
   p.ok('Tipp auf die Zeile zum Ordner schickt „ordner“ (einmal, keine Sicherung)', (await ordner()) === 1 && (await sich(page)).length === 0, (await ordner()) + ' · ' + (await sich(page)).length);
   await tipp(page, '#v-heute [data-info="bk"]'); zl = await zeile(page);
-  p.enthaelt('Tipp auf das „i“ zeigt die Erklärung', zl.info, ['bei jeder Änderung von selbst', '„Dateien“ unter „Auf meinem iPhone › Track.“', 'je Tag eine Datei, die neuesten 14 bleiben', 'Wird die App gelöscht', 'Ordner in iCloud Drive', '„Sicherung einlesen“']);
+  p.enthaelt('Tipp auf das „i“ zeigt die Erklärung', zl.info, ['bei jeder Änderung von selbst', '„Dateien“ unter „Auf meinem iPhone › Track.“', 'je Tag eine Datei, die neuesten 14 bleiben', 'Wird die App gelöscht', 'Ordner in iCloud Drive', 'die Erinnerung an die Sicherung entfällt', 'bleibt unberührt', '„Sicherung einlesen“']);
   p.ok('das „i“ wählt keinen Ordner', (await ordner()) === 1, String(await ordner()));
-  /* Der Ordner ist gewählt: Die iPhone-App meldet seinen Namen. Die Zeile nennt ihn an Ort und Stelle, die offene Erklärung bleibt stehen, Heute wird nicht neu gezeichnet. */
-  await marke(page); await ruf(page, 'gesichert', Object.assign({}, S11, { ordner: 'Track-Sicherung' })); zl = await zeile(page);
-  p.ok('Ordner gewählt: die Zeile heißt „Ordner: Track-Sicherung“, die Erklärung bleibt offen, nichts wird neu gezeichnet', zl.akt.endsWith('| Ordner: Track-Sicherung') && zl.info !== '' && await gleich(page), JSON.stringify(zl));
-  await tipp(page, '#v-heute [data-h="ordner"]');
-  p.ok('ein Tipp auf „Ordner: …“ wählt neu', (await ordner()) === 2, String(await ordner()));
+  /* Der Ordner ist gewählt: Die iPhone-App meldet seinen Namen. Die Liste bekommt eine Zeile dazu („Ordner nicht mehr benutzen“), dafür wird Heute neu gezeichnet; die Klappzeile bleibt offen. */
+  await marke(page); await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), 'Track-Sicherung')); zl = await zeile(page);
+  p.ok('Ordner gewählt: die Zeile heißt „Ordner: Track-Sicherung“, darunter „Ordner nicht mehr benutzen“', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: Track-Sicherung | Ordner nicht mehr benutzen' && zl.i === 1 && !(await gleich(page)), JSON.stringify(zl));
+  /* Ein anderer Ordner (nur der Name ändert sich): Der Name wird an Ort und Stelle nachgeführt, die offene Erklärung bleibt stehen, Heute wird nicht neu gezeichnet. */
+  await tipp(page, '#v-heute [data-info="bk"]'); await marke(page);
+  await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), 'Anderer Ordner')); zl = await zeile(page);
+  p.ok('anderer Ordner: nur der Name ändert sich, die Erklärung bleibt offen, nichts wird neu gezeichnet', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: Anderer Ordner | Ordner nicht mehr benutzen' && zl.info !== '' && await gleich(page), JSON.stringify(zl));
+  await tipp(page, '#v-heute .act[data-h="ordner"]');
+  p.ok('ein Tipp auf „Ordner: …“ wählt neu', (await ordner()) === 2 && (await ordner('ordnerWeg')) === 0, (await ordner()) + ' · ' + (await ordner('ordnerWeg')));
   /* info() kommt bei jedem Zurückkommen in die App: Mit unveränderter sicherung wird Heute nicht neu gezeichnet, mit veränderter schon (die Zeile bleibt dabei offen).
-     Ein Ordnername mit Zeichen aus HTML steht als Text da, beim Zeichnen wie beim Nachführen an Ort und Stelle. */
-  await ruf(page, 'info', { app: '0.5', sicherung: Object.assign({}, S11, { ordner: 'Track-Sicherung' }) });
+     Ordnername und Fehler mit Zeichen aus HTML stehen als Text da: beim Zeichnen (info) wie beim Nachführen an Ort und Stelle (gesichert). */
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 11), um(15, 11), 'Anderer Ordner') });
   p.ok('info() mit unveränderter sicherung zeichnet Heute nicht neu', await gleich(page));
-  const frech = '<b>Fett</b> & "Co"';
-  await ruf(page, 'info', { app: '0.5', sicherung: Object.assign({}, S11, { ordner: frech }) }); zl = await zeile(page);
-  p.ok('info() mit veränderter sicherung zeichnet Heute neu, die Zeile bleibt offen', !(await gleich(page)) && zl.akt.endsWith('| Ordner: ' + frech), JSON.stringify(zl));
-  await ruf(page, 'gesichert', Object.assign({}, S11, { ordner: frech + '!', fehler: '<i>Fehler</i>' })); zl = await zeile(page);
-  p.ok('Ordnername und Fehler stehen als Text da, nicht als HTML', zl.akt.endsWith('| Ordner: ' + frech + '!') && zl.fehler === '<i>Fehler</i>' && await page.evaluate(() => !document.querySelector('#bk-ord b, #bk-err i')), JSON.stringify(zl));
+  const frech = '<b>Fett</b> & "Co"', kursiv = '<i>Fehler</i> & <img src=x onerror="window.__xss=1">';
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 11), um(15, 11), frech, kursiv) }); zl = await zeile(page);
+  p.ok('info() mit veränderter sicherung zeichnet Heute neu, die Zeile bleibt offen', !(await gleich(page)) && zl.akt.includes('| Ordner: ' + frech + ' |'), JSON.stringify(zl));
+  p.ok('beim Zeichnen stehen Ordnername und Fehler als Text da, nicht als HTML', zl.fehler === kursiv && await page.evaluate(() => !document.querySelector('#bk-ord b, #bk-err i, #bk-err img') && !window.__xss), JSON.stringify(zl));
+  await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), frech + '!', kursiv + '!')); zl = await zeile(page);
+  p.ok('beim Nachführen ebenso', zl.akt.includes('| Ordner: ' + frech + '! |') && zl.fehler === kursiv + '!' && await page.evaluate(() => !document.querySelector('#bk-ord b, #bk-err i, #bk-err img') && !window.__xss), JSON.stringify(zl));
+  /* „Ordner nicht mehr benutzen“ schickt „ordnerWeg“. Die iPhone-App meldet danach keinen Ordner mehr: Die Zeile dazu verschwindet, „Ordner in iCloud wählen“ steht wieder da. */
+  await tipp(page, '#v-heute .act[data-h="ordnerweg"]');
+  p.ok('„Ordner nicht mehr benutzen“ schickt „ordnerWeg“ (einmal)', (await ordner('ordnerWeg')) === 1 && (await ordner()) === 2, (await ordner('ordnerWeg')) + ' · ' + (await ordner()));
+  await ruf(page, 'gesichert', S(um(15, 11), um(15, 11))); zl = await zeile(page);
+  p.ok('danach: wieder „Ordner in iCloud wählen“, die Zeile zum Abwählen ist weg, nichts mehr rot', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner in iCloud wählen' && zl.fehler === '' && !zl.rot.sub, JSON.stringify(zl));
   p.ok('es ging bei alldem keine Sicherung hinaus', (await sich(page)).length === 0, String((await sich(page)).length));
+  /* In der Ansicht „Woche“ gibt es die Zeile nicht: Eine Meldung der iPhone-App ändert dort nichts und stört nicht; zurück auf „Heute“ steht der neue Stand da. */
+  await tipp(page, '#v-heute [data-h="mode"][data-v="week"]'); await ruf(page, 'gesichert', S(um(15, 11, 30), um(15, 11, 30), 'iCloud')); await ruf(page, 'gesichert', S(um(15, 11, 30), um(15, 11, 30), 'iCloud', 'Kein Platz.', true));
+  await tipp(page, '#v-heute [data-h="mode"][data-v="day"]'); zl = await zeile(page);
+  p.ok('Meldung in der Ansicht „Woche“: kein Fehler, auf „Heute“ steht danach der neue Stand', zl.sub === 'Sichern ging nicht · zuletzt heute, 11:30' && zl.akt.includes('| Ordner: iCloud |'), JSON.stringify(zl));
 
-  /* --- Blatt offen: Die Meldung zeichnet Heute nicht neu (der Nutzer tippt gerade), sie ändert nur den Text der Zeile. Die Erinnerung verschwindet, sobald das Blatt zugeht. --- */
+  /* --- Blatt offen: Die Meldung zeichnet Heute nicht neu (der Nutzer tippt gerade), sie ändert nur den Text der Zeile. Die Erinnerung verschwindet, sobald das Blatt zugeht;
+         dann steht auch die Zeile zum Abwählen des Ordners da. --- */
   await lade(page, D);
   await ruf(page, 'info', { app: '0.5', sicherung: S0 });
   await ruf(page, 'neu', 'notiz'); await page.waitForTimeout(150); await marke(page);
-  const T3 = await page.evaluate(() => Date.now());
-  await ruf(page, 'gesichert', { t: T3, ordner: '', fehler: '' });
-  const offen = await page.evaluate(() => ({ blatt: document.querySelector('#nsheet').open, oben: !!document.querySelector('#v-heute .remind[data-h="export"]'), sub: document.querySelector('#bk-msg').textContent }));
-  p.ok('Blatt offen: Heute wird nicht neu gezeichnet, nur der Text der Zeile ändert sich', offen.blatt && offen.oben && offen.sub === 'Von selbst gesichert · heute, ' + hhmm(T3) && await gleich(page), JSON.stringify(offen));
-  await page.keyboard.press('Enter'); await page.waitForTimeout(200);
-  p.ok('Blatt zu: die Erinnerung ist weg', await page.evaluate(() => !document.querySelector('#nsheet').open && !document.querySelector('#v-heute .remind[data-h="export"]')));
-  /* --- Nur der zusätzliche Ordner ging nicht: Die iPhone-App meldet dann den neuen Zeitpunkt (die Datei liegt auf dem iPhone) und trotzdem einen Fehler.
-         Die Sicherung zählt: takt.backup ist neu, die Erinnerung verschwindet. Die Zeile weist auf den Fehler hin, aufgeklappt steht der Wortlaut. --- */
+  const T4 = await page.evaluate(() => Date.now());
+  await ruf(page, 'gesichert', S(T4, T4, 'iCloud'));
+  const offen = await page.evaluate(() => ({ blatt: document.querySelector('#nsheet').open, oben: !!document.querySelector('#bk-due'), sub: document.querySelector('#bk-msg').textContent.replace(/\s+/g, ' ') }));
+  p.ok('Blatt offen: Heute wird nicht neu gezeichnet, nur der Text der Zeile ändert sich', offen.blatt && offen.oben && offen.sub === 'Von selbst gesichert · heute, ' + hhmm(T4) && await gleich(page), JSON.stringify(offen));
+  await page.keyboard.press('Enter'); await page.waitForTimeout(200); await tipp(page, FOLD); zl = await zeile(page);
+  p.ok('Blatt zu: die Erinnerung ist weg, die Liste nennt den Ordner', await page.evaluate(() => !document.querySelector('#nsheet').open) && zl.oben === '' && zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: iCloud | Ordner nicht mehr benutzen', JSON.stringify(zl));
+
+  /* --- Halbes Zeichen: Die App kürzt Texte nach Einheiten und teilt dabei gelegentlich ein Emoji (hier: Auftrag aus der Schnelleingabe mit 59 Buchstaben und einem Emoji im Feld
+         „Wofür?“, gekürzt auf 60 Einheiten). In der Sicherung steht kein halbes Zeichen: Mit ihm ist die Datei für andere Leser kein gültiges JSON, die iPhone-App lehnte sie ab.
+         Die 59 Buchstaben bleiben, ein ganzes Emoji (in einer Notiz) bleibt auch. --- */
   await lade(page, D);
-  await ruf(page, 'info', { app: '0.5', sicherung: S0 });
-  const T4 = await page.evaluate(() => Date.now()), nurOrdner = 'In „Track-Sicherung“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.';
-  await ruf(page, 'gesichert', { t: T4, ordner: 'Track-Sicherung', fehler: nurOrdner }); await tipp(page, '#v-heute [data-fold="sicherung"]'); zl = await zeile(page);
-  p.ok('nur der Ordner ging nicht: die Sicherung zählt, die Zeile weist auf den Fehler hin', (await merker(page)) === String(T4) && zl.oben === '' && zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung heute, ' + hhmm(T4) && zl.fehler === nurOrdner && zl.akt.endsWith('| Ordner: Track-Sicherung'), JSON.stringify(zl));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) });
+  await ruf(page, 'eingang', [{ id: 'h1', art: 'ausgabe', a: 500, n: 'K'.repeat(59) + '😀' }, { id: 'h2', art: 'notiz', x: 'Ganz 😀 bleibt' }]); await ruf(page, 'sichern');
+  s = await sich(page); const roh = (s[0] || { text: '' }).text, einzeln = (roh.match(/\\ud[89ab][0-9a-f]{2}(?!\\ud[c-f][0-9a-f]{2})/gi) || []).length + (roh.match(/[\uD800-\uDBFF](?![\uDC00-\uDFFF])|(?:^|[^\uD800-\uDBFF])[\uDC00-\uDFFF]/g) || []).length;
+  g = await gespeichert(page);
+  p.ok('Ausgangslage: im Speicher steht die Notiz der Buchung mit halbem Zeichen', Object.values(g.MY[JM].tx).some(t => t && t.n === 'K'.repeat(59) + '\ud83d'));
+  p.ok('Sicherung: kein halbes Zeichen im Text', s.length === 1 && einzeln === 0, s.length + ' · ' + einzeln);
+  let bb = {}; try { bb = JSON.parse(roh); } catch (e) {}
+  p.ok('Sicherung: die 59 Buchstaben bleiben, ein ganzes Emoji bleibt', Object.values(((bb.MY || {})[JM] || {}).tx || {}).some(t => t && t.n === 'K'.repeat(59)) && Object.values((bb.N || {}).notes || {}).some(n => n && n.x === 'Ganz 😀 bleibt'), roh.slice(0, 200));
+  fehler.push(...o.fehler); await o.browser.close();
+
+  /* --- Neuladen: Lädt die iPhone-App die Seite neu (so zeigt sie eine neue Fassung), ginge der Merker „offen“ verloren. Vorher geht deshalb Offenes hinaus.
+         Heute schon gesichert, eine Änderung, 5 Sekunden später Neuladen: Die Sicherung mit der Änderung ist hinausgegangen (die nachgestellte Hülle merkt sie über das Neuladen hinweg).
+         Nach dem Neuladen ist nichts mehr offen: Auskunft, sichern() und gut fünf Minuten bringen keine weitere. --- */
+  o = await oeffnen({ skript: huelleMerkt, uhr: new Date(um(15, 12)) }); page = o.page;
+  const gemerkt = () => page.evaluate(() => JSON.parse(sessionStorage.getItem('t.sich') || '[]'));
+  await lade(page, D); await page.evaluate(() => sessionStorage.removeItem('t.sich'));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) });
+  await aendern(page, 'n1', 'Kurz vor dem Neuladen'); await page.clock.runFor(5000);
+  p.ok('vor dem Neuladen: die Änderung wartet noch (fünf Minuten sind nicht um)', (await gemerkt()).length === 0, String((await gemerkt()).length));
+  await page.reload(); await page.waitForTimeout(450);
+  let gm = await gemerkt();
+  p.ok('Neuladen: die offene Sicherung geht vorher hinaus, mit der Änderung', gm.length === 1 && gm[0].includes('"x":"Kurz vor dem Neuladen"'), String(gm.length));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
+  p.ok('nach dem Neuladen ist nichts mehr offen', (await gemerkt()).length === 1, String((await gemerkt()).length));
+  /* Ohne Offenes schickt das Neuladen nichts. */
+  await page.reload(); await page.waitForTimeout(450);
+  p.ok('Neuladen ohne Offenes schickt nichts', (await gemerkt()).length === 1, String((await gemerkt()).length));
+
+  /* --- Über Mitternacht: Die App bleibt offen (auf dem iPhone oft tagelang). Heute, am 15., ist schon gesichert, nichts ist offen. Am nächsten Morgen um 8 Uhr kommt der Nutzer zurück,
+         die iPhone-App schickt ihre Auskunft: Die letzte Sicherung ist jetzt von gestern, also geht die Sicherung des neuen Tages hinaus, unter dem Namen des 16.
+         Eine weitere Auskunft am selben Tag bringt keine zweite. --- */
+  await lade(page, D); await page.evaluate(() => sessionStorage.removeItem('t.sich'));
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) });
+  p.ok('am 15., heute schon gesichert: es geht nichts hinaus', (await sich(page)).length === 0, String((await sich(page)).length));
+  await page.clock.fastForward(20 * 3600000);   // von 12 Uhr auf 8 Uhr am 16. (seit dem Laden sind einige Sekunden vergangen)
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); s = await sich(page);
+  p.ok('am nächsten Morgen: die erste Auskunft des Tages schickt die Sicherung, unter dem Namen des 16.', s.length === 1 && s[0].name === 'track-sicherung-' + am(16) + '.json', s.length + ' · ' + (s[0] || {}).name);
+  await ruf(page, 'info', { app: '0.5', sicherung: S(um(15, 9)) }); await ruf(page, 'sichern');
+  p.ok('eine weitere Auskunft am selben Tag bringt keine zweite', (await sich(page)).length === 1, String((await sich(page)).length));
+  fehler.push(...o.fehler); await o.browser.close();
+
+  /* --- Der Name der Sicherung folgt dem Tag am Ort des Nutzers, nicht der Weltzeit. In Berlin ist es am 15. kurz nach Mitternacht (14. um 23:30 Uhr Weltzeit,
+         also 0:30 oder 1:30 Uhr in Berlin): Die Datei heißt nach dem 15. Mit der Weltzeit hieße sie nach dem 14. und überschriebe die Datei von gestern. --- */
+  o = await oeffnen({ skript: huelle, uhr: new Date(Date.UTC(+JM, +M.slice(5) - 1, 14, 23, 30)), zone: 'Europe/Berlin' }); page = o.page;
+  await lade(page, D);
+  await ruf(page, 'info', { app: '0.5', sicherung: S0 }); s = await sich(page);
+  p.ok('Berlin, kurz nach Mitternacht am 15.: die Sicherung heißt nach dem 15.', s.length === 1 && s[0].name === 'track-sicherung-' + am(15) + '.json', s.length + ' · ' + (s[0] || {}).name);
   fehler.push(...o.fehler); await o.browser.close();
 
   /* --- 320 px, hell: aufgeklappt mit langem Ordnernamen, Fehler und offener Erklärung. Nichts ist seitlich wischbar, nichts ragt hinaus; der lange Name endet mit drei Punkten
          in einer Zeile (sein eigener Kasten #bk-ord ist breiter, wird aber von der Zeile abgeschnitten und zählt deshalb nicht).
-         Die Tippfläche des „i“ ist 40 px breit und hoch (14 px Symbol, ringsum 13 px) und reicht nicht in die Zeile darüber. Geprüft wird 19 px um die Mitte:
-         in beide Richtungen, dazu drei Ecken; die Ecke unten rechts schneidet die Rundung der Liste ab. --- */
-  o = await oeffnen({ skript: huelle, uhr: new Date(um(15, 12)), breite: 320, hell: true }); page = o.page;
-  await lade(page, D);
-  await ruf(page, 'info', { app: '0.5', sicherung: { t: um(15, 11), ordner: 'Sicherungen von Track auf meinem iCloud Drive für alle Fälle', fehler: 'Der Ordner „Sicherungen von Track“ ist nicht erreichbar.' } });
-  await tipp(page, '#v-heute [data-fold="sicherung"]'); await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await tipp(page, '#v-heute [data-info="bk"]');
-  await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await page.waitForTimeout(150);
-  const eng = await page.evaluate(() => {
-    const sc = document.querySelector('#scroll'), ul = document.querySelector('#v-heute [data-fold="sicherung"]').closest('ul'), i = ul.querySelector('.info'), ord = ul.querySelector('[data-h="ordner"]'), lesen = ul.querySelector('[data-h="import"]');
-    if (!i || !ord) return { fehlt: true };
-    const r = i.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, bei = (x, y) => { const e = document.elementFromPoint(x, y); return e ? e.closest('button') : null; };
-    const raus = [ul, ...ul.querySelectorAll('*'), ...document.querySelectorAll('#bk-err, #info-bk')].filter(e => { const q = e.getBoundingClientRect(); return e.id !== 'bk-ord' && q.width && (q.left < -0.5 || q.right > window.innerWidth + 0.5); }).length;
-    const name = document.querySelector('#bk-ord').parentElement;
-    return { wischbar: sc.scrollWidth > sc.clientWidth || document.documentElement.scrollWidth > window.innerWidth, raus, hoehe: Math.round(ord.getBoundingClientRect().height), punkte: name.scrollWidth > name.clientWidth,
-      ecken: [[0, 0], [-19, 0], [19, 0], [0, -19], [0, 19], [-19, -19], [19, -19], [-19, 19]].every(d => bei(cx + d[0], cy + d[1]) === i), links: bei(cx - 22, cy) === ord, drueber: bei(cx, cy - 22) === lesen,
-      texte: [document.querySelector('#bk-err'), document.querySelector('#info-bk')].every(e => !e.hidden && e.getBoundingClientRect().height > 10) };
-  });
-  p.ok('320 px: nichts seitlich wischbar, nichts ragt hinaus, Fehler und Erklärung sind zu sehen', !eng.fehlt && !eng.wischbar && eng.raus === 0 && eng.texte, JSON.stringify(eng));
-  p.ok('320 px: langer Ordnername in einer Zeile mit drei Punkten (Zeile 40 px hoch)', !eng.fehlt && eng.hoehe === 40 && eng.punkte, JSON.stringify(eng));
-  p.ok('320 px: Tippfläche des „i“ ist 40 px groß, daneben beginnt die Zeile zum Ordner, darüber „Sicherung einlesen“', !eng.fehlt && eng.ecken && eng.links && eng.drueber, JSON.stringify(eng));
-  fehler.push(...o.fehler); await o.browser.close();
+         Der Wortlaut des Fehlers nennt einen Ordner mit 66 Zeichen ohne Leerzeichen und Bindestrich: Er bricht um, statt Heute breiter zu machen.
+         Die Tippfläche des „i“ ist 40 px breit und hoch (14 px Symbol, ringsum 13 px) und reicht nicht in die Zeilen darüber und darunter. Geprüft wird 19 px um die Mitte,
+         in beide Richtungen und in den Ecken. --- */
+  const ohneLuecke = 'Sicherungen_von_Track_auf_meinem_iCloud_Drive_fuer_alle_Faelle_2026';
+  for (const breite of [320, 390]) {
+    o = await oeffnen({ skript: huelle, uhr: new Date(um(15, 12)), breite, hell: breite === 320 }); page = o.page;
+    await lade(page, D);
+    await ruf(page, 'info', { app: '0.5', sicherung: S(um(3, 20, 56), um(3, 20, 56), 'Sicherungen von Track auf meinem iCloud Drive für alle Fälle', 'In „' + ohneLuecke + '“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.') });
+    const zu = await page.evaluate(() => ({ zeilen: document.querySelector('#bk-msg').getClientRects().length, text: document.querySelector('#bk-msg').textContent }));
+    /* Zu, mit Fehler und einem Datum: bei 390 px eine Zeile (bei 320 px zwei, das Datum bleibt beisammen) */
+    if (breite === 390) p.ok('390 px: Unterzeile mit Fehler und Datum steht in einer Zeile', zu.zeilen === 1 && zu.text === 'Sichern ging nicht · zuletzt 3. ' + MONATE[+M.slice(5) - 1] + ' ' + JM, JSON.stringify(zu));
+    await tipp(page, FOLD); await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await tipp(page, '#v-heute [data-info="bk"]');
+    await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await page.waitForTimeout(150);
+    const eng = await page.evaluate(() => {
+      const sc = document.querySelector('#scroll'), ul = document.querySelector('#v-heute [data-fold="sicherung"]').closest('ul'), i = ul.querySelector('.info'), ord = ul.querySelector('[data-h="ordner"]'), lesen = ul.querySelector('[data-h="import"]'), weg = ul.querySelector('[data-h="ordnerweg"]');
+      if (!i || !ord || !weg) return { fehlt: true };
+      const r = i.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, bei = (x, y) => { const e = document.elementFromPoint(x, y); return e ? e.closest('button') : null; };
+      const raus = [ul, ...ul.querySelectorAll('*'), ...document.querySelectorAll('#bk-err, #info-bk')].filter(e => { const q = e.getBoundingClientRect(); return e.id !== 'bk-ord' && q.width && (q.left < -0.5 || q.right > window.innerWidth + 0.5); }).length;
+      const name = document.querySelector('#bk-ord').parentElement;
+      return { wischbar: sc.scrollWidth > sc.clientWidth || document.documentElement.scrollWidth > window.innerWidth, raus, hoehe: Math.round(ord.getBoundingClientRect().height), punkte: name.scrollWidth > name.clientWidth,
+        ecken: [[0, 0], [-19, 0], [19, 0], [0, -19], [0, 19], [-19, -19], [19, -19], [-19, 19], [19, 19]].every(d => bei(cx + d[0], cy + d[1]) === i), links: bei(cx - 22, cy) === ord, drueber: bei(cx, cy - 22) === lesen, drunter: bei(cx, cy + 22) === weg,
+        texte: [document.querySelector('#bk-err'), document.querySelector('#info-bk')].every(e => !e.hidden && e.getBoundingClientRect().height > 10) };
+    });
+    p.ok(breite + ' px: nichts seitlich wischbar, nichts ragt hinaus (auch nicht der Ordnername ohne Leerzeichen im Fehler), Fehler und Erklärung sind zu sehen', !eng.fehlt && !eng.wischbar && eng.raus === 0 && eng.texte, JSON.stringify(eng));
+    if (breite === 320) {
+      p.ok('320 px: langer Ordnername in einer Zeile mit drei Punkten (Zeile 40 px hoch)', !eng.fehlt && eng.hoehe === 40 && eng.punkte, JSON.stringify(eng));
+      p.ok('320 px: Tippfläche des „i“ ist 40 px groß; daneben beginnt die Zeile zum Ordner, darüber „Sicherung einlesen“, darunter „Ordner nicht mehr benutzen“', !eng.fehlt && eng.ecken && eng.links && eng.drueber && eng.drunter, JSON.stringify(eng));
+    }
+    fehler.push(...o.fehler); await o.browser.close();
+  }
   return fehler;
 }
 
