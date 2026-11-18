@@ -215,17 +215,32 @@ lauf(async () => {
   const h = new Date(), ziel = new Date(h.getFullYear(), h.getMonth() + 1, Math.min(h.getDate(), new Date(h.getFullYear(), h.getMonth() + 2, 0).getDate()), 12);
   const zielTag = ziel.getFullYear() + '-' + String(ziel.getMonth() + 1).padStart(2, '0') + '-' + String(ziel.getDate()).padStart(2, '0');
   P.ok('monatlich: die nächste am selben Tag im nächsten Monat (' + zielTag + ')', w.some(t => !t.done && t.d === zielTag), JSON.stringify(w));
-  // Alle 2 Tage ab einem gewählten Starttag (v68): Start vor drei Tagen, heute abgehakt. Takt ab Start: −3, −1, +1 → die nächste ist morgen fällig, nicht übermorgen (heute + 2).
-  await anlegen('Gießen', 'Anderer Tag', 'Alle 2 Tage', tag(3));
+  // Eigener Takt (v69): „Alle …“ zeigt eine Zahl (vorbelegt 2) und die Einheit Tage oder Wochen. Gezählt wird ab dem gewählten Starttag.
+  const takt = async (titel, faellig, n, einheit, datum) => { await q.click('#add'); await q.fill('#a-title', titel); await wahl('#a-due', faellig); if (datum) await q.fill('#a-date', datum);
+    await wahl('#a-rep', 'Alle …'); if (n != null) await q.fill('#a-cn', String(n)); await wahl('#a-cu', einheit); await q.click('#a-save'); await warte(); };
+  await q.click('#add');
+  const zuerst = !(await q.isVisible('#a-cus')); await wahl('#a-rep', 'Alle …');
+  P.ok('Blatt: Zahl und Einheit erscheinen erst bei „Alle …“, vorbelegt ist „2 Tage“', zuerst && (await q.isVisible('#a-cus')) && (await q.inputValue('#a-cn')) === '2' && (await q.getAttribute('#a-cu .chip:has-text("Tage")', 'aria-pressed')) === 'true');
+  await q.click('#as-close');
+  // Start vor drei Tagen, alle 2 Tage, heute abgehakt. Takt ab Start: −3, −1, +1 → die nächste ist morgen fällig, nicht übermorgen (heute + 2).
+  await takt('Gießen', 'Anderer Tag', null, 'Tage', tag(3));
   P.enthaelt('Zeile nennt „alle 2 Tage“', await q.innerText('#n-main .trow:has-text("Gießen")'), ['alle 2 Tage']);
   await haken('Gießen');
-  w = (await alle('Gießen')).filter(t => t.t === 'Gießen');
+  w = await alle('Gießen');
   P.ok('alle 2 Tage, Start vor 3 Tagen: die nächste ist morgen fällig (Takt ab dem Starttag)', w.length === 2 && w.some(t => t.done && t.d === tag(3)) && w.some(t => !t.done && t.d === tag(-1) && t.r === 'day2'), JSON.stringify(w));
-  // Start heute, heute abgehakt: die nächste in 2 Tagen. Alle 2 Wochen ab heute: die nächste in 14 Tagen.
-  await anlegen('Bettwäsche', 'Heute', 'Alle 2 Tage'); await haken('Bettwäsche');
-  await anlegen('Altpapier', 'Heute', 'Alle 2 Wochen'); await haken('Altpapier');
-  const w2 = await alle('Bettwäsche'), w14 = await alle('Altpapier');
-  P.ok('alle 2 Tage ab heute: in 2 Tagen; alle 2 Wochen ab heute: in 14 Tagen', w2.some(t => !t.done && t.d === tag(-2) && t.r === 'day2') && w14.some(t => !t.done && t.d === tag(-14) && t.r === 'week2'), JSON.stringify(w2) + ' · ' + JSON.stringify(w14));
+  // Start heute, heute abgehakt: alle 3 Tage → in 3 Tagen; alle 2 Wochen → in 14 Tagen; „alle 1 Tage“ ist täglich → morgen.
+  await takt('Bettwäsche', 'Heute', 3, 'Tage'); await haken('Bettwäsche');
+  await takt('Altpapier', 'Heute', 2, 'Wochen'); await haken('Altpapier');
+  await takt('Vitamin', 'Heute', 1, 'Tage'); await haken('Vitamin');
+  const w3 = await alle('Bettwäsche'), w14 = await alle('Altpapier'), w1 = await alle('Vitamin');
+  P.ok('alle 3 Tage ab heute: in 3 Tagen; alle 2 Wochen: in 14 Tagen; alle 1 Tage: täglich', w3.some(t => !t.done && t.d === tag(-3) && t.r === 'day3') && w14.some(t => !t.done && t.d === tag(-14) && t.r === 'week2') && w1.some(t => !t.done && t.d === tag(-1) && t.r === 'day'),
+    JSON.stringify(w3) + ' · ' + JSON.stringify(w14) + ' · ' + JSON.stringify(w1));
+  // Wieder geöffnet zeigt das Blatt den eigenen Takt: „Alle …“ gewählt, 3, Tage. Ohne Zahl lässt sich nicht speichern.
+  await q.click('#n-main .trow:not(.done) [data-n="task"]:has-text("Bettwäsche")'); await warte();
+  const wieder = (await q.getAttribute('#a-rep .chip:has-text("Alle …")', 'aria-pressed')) === 'true' && (await q.inputValue('#a-cn')) === '3' && (await q.getAttribute('#a-cu .chip:has-text("Tage")', 'aria-pressed')) === 'true';
+  await q.fill('#a-cn', ''); await q.click('#a-save'); await warte();
+  P.ok('Blatt einer Aufgabe mit eigenem Takt zeigt ihn; ohne Zahl bleibt das Blatt mit Hinweis offen', wieder && (await q.isVisible('#asheet')) && (await q.innerText('#a-err')).includes('alle wie viele Tage'), await q.innerText('#a-err'));
+  await q.click('#as-close');
   await q.click('#add'); await wahl('#a-due', 'Ohne Datum');
   P.ok('ohne Datum gibt es kein „Wiederholen“', !(await q.isVisible('#a-rep-fld')));
   await q.click('#as-close');
@@ -274,5 +289,12 @@ lauf(async () => {
   await nur({ folders: {}, notes: {}, tasks: { a: { t: 'Neun Tage alt', f: '', d: null, done: mittag(1), c: mittag(9), n: '' } } });
   P.enthaelt('nur eine Aufgabe, vor 9 Tagen angelegt: Erinnerung', await erinnerung(), ['Noch keine Sicherung gespeichert']);
   await e.browser.close();
-  await P.ende(null, fehler.concat(b.fehler, k.fehler, e.fehler));
+  // Geladene Daten (ältere Fassung, eingelesene Sicherung): Nur gültige Takte bleiben. day7 → „alle 7 Tage“, week12 → „alle 12 Wochen“; day1, day0, week100 und Unsinn gelten als „nie“.
+  const g = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, notes: {}, tasks: Object.fromEntries(['day7', 'week12', 'day1', 'day0', 'week100', 'quatsch'].map((r, i) => ['t' + i, { t: 'Takt ' + r, f: '', d: tag(-1), done: null, c: 1, n: '', r }])) } } });
+  await bereich(g.page, 'routinen'); await g.page.click('#r-subs button:nth-child(2)'); await g.page.waitForTimeout(200);
+  // Abgelesen wird an den Zeilen: Im Speicher stehen die Daten, wie sie eingespielt wurden, bis zum nächsten Speichern.
+  const geladen = await g.page.$$eval('#n-main .trow', l => Object.fromEntries(l.map(z => { const t = z.innerText.replace(/\s+/g, ' '), m = /Takt (\w+)/.exec(t); return [m ? m[1] : t, /alle \d+ (Tage|Wochen)|täglich|wöchentlich/.exec(t) ? /alle \d+ (Tage|Wochen)|täglich|wöchentlich/.exec(t)[0] : '']; })));
+  P.ok('geladene Takte: day7 und week12 bleiben, alles Ungültige wird „nie“', geladen.day7 === 'alle 7 Tage' && geladen.week12 === 'alle 12 Wochen' && ['day1', 'day0', 'week100', 'quatsch'].every(r => geladen[r] === ''), JSON.stringify(geladen));
+  await g.browser.close();
+  await P.ende(null, fehler.concat(b.fehler, k.fehler, e.fehler, g.fehler));
 });
