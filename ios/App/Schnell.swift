@@ -14,6 +14,14 @@ enum Schnell: String {
         let wahl = NSSelectorFromString("suspend")
         if UIApplication.shared.responds(to: wahl) { UIApplication.shared.perform(wahl) }
     }
+
+    /// Schließt, was gerade über der App gezeigt wird (Auswahl eines Ordners, Teilen-Menü): Die Schnelleingabe läge sonst darunter
+    static func freiraeumen() {
+        for szene in UIApplication.shared.connectedScenes {
+            guard let fenster = szene as? UIWindowScene else { continue }
+            for eins in fenster.windows { eins.rootViewController?.dismiss(animated: false) }
+        }
+    }
 }
 
 /// Ob gerade die Schnelleingabe über der App liegt
@@ -32,6 +40,8 @@ struct Schnelleingabe: View {
     @State private var konten: [Stand.Konto] = []
     /// Gewähltes Konto: nil = noch keines · "" = „Kein Konto“ · sonst die Kennung
     @State private var konto: String? = nil
+    /// Ob der Nutzer selbst ein Konto angetippt hat: Danach ändert ein neuer Stand der App die Wahl nicht mehr
+    @State private var selbst = false
 
     /// Betrag in Cent (deutsches Komma oder Punkt)
     private var cent: Double { ((Double(text.replacingOccurrences(of: ",", with: ".")) ?? 0) * 100).rounded() }
@@ -56,6 +66,7 @@ struct Schnelleingabe: View {
                             pille("Ausgabe", !einnahme, f) { einnahme = false }
                             pille("Einnahme", einnahme, f) { einnahme = true }
                         }
+                        .padding(.vertical, -4)   // die Tippfläche der Pillen reicht je 4 pt über die Reihe hinaus (siehe pille)
                     }
                     HStack(spacing: 10) {
                         Eingabefeld(text: $text, platzhalter: art == .notiz ? "Was möchtest du notieren?" : "0,00", zahl: art == .ausgabe, farben: f, fertig: sichern)
@@ -73,6 +84,11 @@ struct Schnelleingabe: View {
                             .submitLabel(.done).onSubmit(sichern)
                         if !konten.isEmpty {
                             Rectangle().fill(f.spur).frame(height: 1)
+                            // Ohne Vorbelegung (mehrere Konten, noch keines benutzt) bleibt der Haken gesperrt, bis ein Konto oder „Kein Konto“ gewählt ist.
+                            // Das steht dann hier, und sobald ein Betrag da ist, in Blau.
+                            if konto == nil {
+                                Text("Konto wählen").font(.system(size: 12, weight: .medium)).foregroundColor(cent > 0 ? f.blau : f.blass)
+                            }
                             kontenReihe(f)
                         }
                     }
@@ -81,6 +97,11 @@ struct Schnelleingabe: View {
                 Button("Abbrechen", action: schliessen).font(.system(size: 15)).foregroundColor(f.blass)
             }
             .padding(.horizontal, 16).padding(.top, 56)
+        }
+        // Nach einem Kaltstart aus dem Widget kommt der Stand der App erst, wenn die Eingabe schon zu sehen ist (bei der ersten Eingabe nach der
+        // Installation kennt der alte Stand noch gar keine Konten): Dann die Konten neu lesen, solange der Nutzer noch keines angetippt hat.
+        .onReceive(NotificationCenter.default.publisher(for: Halter.standNeu)) { _ in
+            if !selbst { kontenLaden() }
         }
         .onAppear {
             kontenLaden()
@@ -93,34 +114,41 @@ struct Schnelleingabe: View {
                 } else {
                     text = "4,20"
                     einnahme = true
-                    if konten.count > 1 { konto = konten[1].id }
+                    if konten.count > 1 { konto = konten[1].id; selbst = true }
                 }
                 sichern()
             }
         }
     }
 
-    /// Pille zum Wählen: gewählt blau mit weißer Schrift, sonst ruhig. Ein Tipp darauf lässt die Tastatur offen.
+    /// Pille zum Wählen: gewählt blau mit weißer Schrift, sonst ruhig in der Schriftfarbe (wie die Chips im Blatt der App). Ein Tipp darauf lässt die Tastatur offen.
+    /// Zu sehen sind 32 pt Höhe, die Tippfläche ist 40 pt hoch: oben und unten je 4 pt mehr. Die Reihe, in der die Pille steht, nimmt diese 4 pt
+    /// mit einem negativen Rand wieder zurück, damit die Abstände bleiben.
     private func pille(_ titel: String, _ an: Bool, _ f: Farben, _ tipp: @escaping () -> Void) -> some View {
         Button(action: tipp) {
-            Text(titel).font(.system(size: 13, weight: .medium)).foregroundColor(an ? .white : f.blass).lineLimit(1)
+            Text(titel).font(.system(size: 13, weight: .medium)).foregroundColor(an ? .white : f.schrift).lineLimit(1)
                 .padding(.horizontal, 12).frame(height: 32).background(an ? f.blau : f.spur).clipShape(Capsule())
+                .padding(.vertical, 4).contentShape(Rectangle())
         }
         .buttonStyle(.plain)
     }
 
-    /// Konten als Pillen in einer Reihe, die sich seitlich schieben lässt (so ist auch auf einem schmalen Gerät nichts abgeschnitten); am Ende „Kein Konto“
+    /// Konten als Pillen in einer Reihe, die sich seitlich schieben lässt (so ist auch auf einem schmalen Gerät nichts abgeschnitten); am Ende „Kein Konto“.
+    /// Die Reihe läuft links und rechts bis an den Rand der Karte (die Karte hat 16 pt Rand, die Pillen beginnen trotzdem bündig mit dem Rest):
+    /// Geht es rechts weiter, ist so fast immer eine angeschnittene Pille zu sehen.
     private func kontenReihe(_ f: Farben) -> some View {
         ScrollViewReader { leser in
             ScrollView(.horizontal, showsIndicators: false) {
                 HStack(spacing: 8) {
                     ForEach(konten, id: \.id) { eins in
-                        pille(Schnelleingabe.kurz(eins.n), konto == eins.id, f) { konto = eins.id }.id(eins.id)
+                        pille(Schnelleingabe.kurz(eins.n), konto == eins.id, f) { konto = eins.id; selbst = true }.id(eins.id)
                     }
-                    pille("Kein Konto", konto == "", f) { konto = "" }
+                    pille("Kein Konto", konto == "", f) { konto = ""; selbst = true }
                 }
+                .padding(.horizontal, 16)
             }
             .scrollDismissesKeyboard(.never)
+            .padding(.horizontal, -16).padding(.vertical, -4)
             .onAppear {
                 // Das vorbelegte Konto soll zu sehen sein, auch wenn es weiter hinten in der Reihe steht
                 if let wahl = konto, !wahl.isEmpty { DispatchQueue.main.async { leser.scrollTo(wahl, anchor: .center) } }
@@ -131,28 +159,24 @@ struct Schnelleingabe: View {
     /// Lange Kontonamen kürzen, damit eine Pille nicht die ganze Reihe füllt
     private static func kurz(_ name: String) -> String { name.count > 22 ? String(name.prefix(21)) + "…" : name }
 
-    /// Konten aus dem letzten Stand der App. Vorbelegt ist das zuletzt hier gewählte Konto, sonst das, das die App im Blatt vorbelegen würde
-    /// (zuletzt benutzt oder das einzige) – jeweils nur, wenn es noch in der Liste steht. „Kein Konto“ wird nie von selbst gewählt.
+    /// Konten aus dem letzten Stand der App. Vorbelegt ist das Konto, das die App im Blatt vorbelegen würde (zuletzt benutzt oder das einzige),
+    /// wenn es noch in der Liste steht. Was hier schon gebucht, aber von der App noch nicht übernommen wurde, zählt dabei als „zuletzt benutzt“:
+    /// das Konto des jüngsten Auftrags, der noch vorgemerkt ist. „Kein Konto“ wird nie von selbst gewählt.
     private func kontenLaden() {
         guard art == .ausgabe else { return }
         let stand = Ablage.lesen()
         var liste = stand?.konten ?? []
-        var zuletzt = UserDefaults.standard.string(forKey: "schnellKonto") ?? ""
         var vor = stand?.konto ?? ""
-        // Für das Bild und die Probe im Bau: drei Beispielkonten statt des Stands
+        for auftrag in Ablage.eingang() {
+            if auftrag["art"] as? String == "ausgabe", let acc = auftrag["acc"] as? String, !acc.isEmpty { vor = acc }
+        }
+        // Für die Bilder und die Probe im Bau: drei Beispielkonten statt des Stands. Mit „-schnelloffen“ ist keines vorbelegt (mehrere Konten, noch keines benutzt).
         if CommandLine.arguments.contains("-schnellkonten") {
             liste = [Stand.Konto(id: "b1", n: "Girokonto"), Stand.Konto(id: "b2", n: "Sparkonto"), Stand.Konto(id: "b3", n: "Depot")]
-            zuletzt = ""
-            vor = "b1"
+            vor = CommandLine.arguments.contains("-schnelloffen") ? "" : "b1"
         }
         konten = liste
-        if liste.contains(where: { $0.id == zuletzt }) {
-            konto = zuletzt
-        } else if liste.contains(where: { $0.id == vor }) {
-            konto = vor
-        } else {
-            konto = nil
-        }
+        konto = liste.contains(where: { $0.id == vor }) ? vor : nil
     }
 
     private func sichern() {
@@ -162,10 +186,7 @@ struct Schnelleingabe: View {
         } else {
             var auftrag: [String: Any] = ["art": "ausgabe", "a": cent, "n": wofuer.trimmingCharacters(in: .whitespacesAndNewlines), "kat": "", "k": einnahme ? "in" : "out"]
             // acc nur, wenn es Konten gibt: die Kennung, leer heißt ausdrücklich „Kein Konto“. Ohne das Feld belegt die App wie bisher selbst vor.
-            if !konten.isEmpty, let wahl = konto {
-                auftrag["acc"] = wahl
-                if !wahl.isEmpty { UserDefaults.standard.set(wahl, forKey: "schnellKonto") }
-            }
+            if !konten.isEmpty, let wahl = konto { auftrag["acc"] = wahl }
             Ablage.vormerken(auftrag)
             // Nur in der Probe: den Auftrag zusätzlich ablegen, damit der Bau ihn prüfen kann
             if CommandLine.arguments.contains("-schnellprobe"), let daten = try? JSONSerialization.data(withJSONObject: auftrag) {

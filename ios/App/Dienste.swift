@@ -27,6 +27,8 @@ enum Mitteilungen {
 
     /// Reine Rechnung (der Selbsttest prüft sie):
     /// Sicherung: am Tag der Fälligkeit um 18 Uhr, danach alle drei Tage wieder, höchstens fünf im Voraus. Wird gesichert, plant die App neu.
+    /// Fällig heißt: Seit sieben Tagen liegt keine Sicherung außerhalb der App. Legt die App von selbst eine Kopie in einen gewählten Ordner,
+    /// schickt die Web-App keinen Tag (leer), und es gibt keine Mitteilung. Was zu tun ist (Ordner wählen oder von Hand sichern), steht auf Heute.
     /// Ablauf: einen Tag bevor die App abläuft. Erneuert sie sich vorher von selbst, verschiebt sich der Termin beim nächsten Öffnen.
     static func plan(sicherung: String, ablauf: Date?, jetzt: Date = Date()) -> [Termin] {
         var liste: [Termin] = []
@@ -35,7 +37,7 @@ enum Mitteilungen {
             var k = 0
             while liste.count < 5 && k < 400 {
                 if let wann = kalender.date(byAdding: .day, value: 3 * k, to: erste), wann > jetzt {
-                    liste.append(Termin(id: "sicherung-\(liste.count)", wann: wann, titel: "Sicherung fällig", text: "Öffne Track. und tippe auf „Jetzt sichern“. Dann sind deine Daten auch außerhalb der App gespeichert."))
+                    liste.append(Termin(id: "sicherung-\(liste.count)", wann: wann, titel: "Sicherung fällig", text: "Seit einer Woche gibt es keine neue Sicherung außerhalb der App. Öffne Track.: Auf Heute steht, was zu tun ist."))
                 }
                 k += 1
             }

@@ -26,6 +26,7 @@ struct TrackApp: App {
                 // trackpunkt://neu/ausgabe öffnet das Blatt in der App, trackpunkt://lauf?… trägt einen Lauf ein (für Kurzbefehle).
                 .onOpenURL { adresse in
                     if adresse.host == "schnell", let art = Schnell(rawValue: adresse.lastPathComponent) {
+                        Schnell.freiraeumen()
                         lage.schnell = art
                     } else {
                         Halter.wartend = adresse
@@ -124,7 +125,7 @@ struct WebView: UIViewRepresentable {
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.verlassen), name: UIApplication.willResignActiveNotification, object: nil)
         // Sicherung von selbst: Das Ergebnis jedes Schreibversuchs geht an die Web-App zurück
         let halter = context.coordinator
-        Sicherung.shared.melden = { [weak halter] mitAuskunft in halter?.gesichert(mitAuskunft) }
+        Sicherung.shared.melden = { [weak halter] in halter?.gesichert() }
         return view
     }
 
@@ -135,6 +136,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     static let eingang = Notification.Name("track.adresse")
     /// Ein Kurzbefehl hat etwas vorgemerkt, während die App läuft
     static let eingangDa = Notification.Name("track.eingang")
+    /// Die Web-App hat einen neuen Stand geschickt, und er liegt in der App-Gruppe (für die Schnelleingabe, die daraus die Konten liest)
+    static let standNeu = Notification.Name("track.stand")
     /// Adresse, mit der die App geöffnet wurde; wartet, bis die Web-App geladen ist
     static var wartend: URL?
 
@@ -159,6 +162,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         if art == "bereit" {
             bereit = true
             auskunft(); eingangHolen(); laeufeHolen(); adresse()
+            Sicherung.shared.nachholen()
         } else if art == "stand" {
             stand(inhalt)
         } else if art == "health" {
@@ -167,6 +171,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             Sicherung.shared.annehmen(inhalt)
         } else if art == "ordner" {
             ordnerWaehlen()
+        } else if art == "ordnerWeg" {
+            Sicherung.shared.ordnerVergessen()
         }
     }
 
@@ -179,22 +185,30 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         rufe("info", info)
     }
 
-    /// Ergebnis eines Schreibversuchs der Sicherung an die Web-App. Nach der Wahl eines Ordners geht vorher die Auskunft neu hinaus (dort steht sein Name).
-    func gesichert(_ mitAuskunft: Bool) {
+    /// Stand der Sicherung an die Web-App: nach jedem Schreibversuch (erst „Dokumente“, dann getrennt der gewählte Ordner)
+    /// und wenn ein Ordner gewählt oder abgewählt wurde
+    func gesichert() {
         guard bereit else { return }
-        if mitAuskunft { auskunft() }
         rufe("gesichert", Sicherung.shared.auskunft)
     }
 
     /// Die App wird verlassen: Die Web-App schickt jetzt ihre Sicherung, falls seit der letzten etwas geändert wurde.
-    /// Dazu vier Sekunden Aufschub von iOS, damit die Datei noch geschrieben wird, auch wenn die App gleich im Hintergrund ist.
+    /// Dazu ein Aufschub von iOS, damit die Datei noch geschrieben wird, auch wenn die App gleich im Hintergrund ist:
+    /// mindestens vier Sekunden (so lange hat die Web-App Zeit zu schicken) und solange noch geschrieben wird, höchstens rund 24 Sekunden.
     @objc func verlassen() {
         guard bereit else { return }
         if aufschub == .invalid {
-            aufschub = UIApplication.shared.beginBackgroundTask(withName: "sicherung", expirationHandler: nil)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 4) { self.aufschubEnde() }
+            aufschub = UIApplication.shared.beginBackgroundTask(withName: "sicherung") { [weak self] in self?.aufschubEnde() }
+            aufschubWarten(5)
         }
         rufe("sichern")
+    }
+
+    /// Sieht nach vier Sekunden nach, ob noch geschrieben wird (etwa in einen Ordner in iCloud); rest: wie oft danach noch gewartet wird
+    private func aufschubWarten(_ rest: Int) {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 4) {
+            if rest > 0 && Sicherung.shared.schreibt { self.aufschubWarten(rest - 1) } else { self.aufschubEnde() }
+        }
     }
 
     private func aufschubEnde() {
@@ -211,13 +225,15 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         guard bereit else { return }
         zeigen()
         auskunft(); eingangHolen(); laeufeHolen()
+        Sicherung.shared.nachholen()
     }
 
     /// Zeigt eine nachgeladene Web-App, die neuer ist als die gezeigte, aber nie, solange ein Blatt offen ist:
     /// Dann bleibt sie vorgemerkt und kommt beim nächsten Zurückkommen in die App. Je nachgeladener Fassung wird höchstens einmal neu geladen.
+    /// Vor dem Neuladen schickt die Web-App noch ihre Sicherung, falls etwas offen ist: Was sie sich dazu gemerkt hat, ginge mit der Seite verloren.
     private func zeigen() {
         guard wartet > Web.gezeigt else { return }
-        view?.evaluateJavaScript("document.querySelector('dialog[open]') ? 0 : 1") { ergebnis, _ in
+        view?.evaluateJavaScript("document.querySelector('dialog[open]') ? 0 : (window.TrackHuelle && window.TrackHuelle.sichern && window.TrackHuelle.sichern(), 1)") { ergebnis, _ in
             if (ergebnis as? Int) == 1 {
                 self.wartet = 0
                 self.view?.reload()
@@ -256,6 +272,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
                                      "konten": konten, "konto": inhalt["konto"] as? String ?? ""]
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
+            // Ist gerade die Schnelleingabe offen, liest sie die Konten neu: Nach einem Kaltstart aus dem Widget kommt der Stand erst jetzt
+            NotificationCenter.default.post(name: Halter.standNeu, object: nil)
         }
     }
 

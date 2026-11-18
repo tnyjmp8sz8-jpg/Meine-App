@@ -78,6 +78,10 @@ xcrun simctl io "$GERAET" screenshot schnell-notiz.png
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -schnellkonten; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-ausgabe.png
+# Dasselbe ohne vorbelegtes Konto („-schnelloffen“: mehrere Konten, noch keines benutzt): Dann steht „Konto wählen“ über der Reihe, und der Haken ist gesperrt.
+xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -schnellkonten -schnelloffen; sleep 5
+xcrun simctl io "$GERAET" screenshot schnell-ausgabe-offen.png
 # Mit „-schnellprobe“ trägt sie von selbst „Schnell notiert“ ein und geht zurück auf den Home-Bildschirm (Bild danach).
 # Die Notiz muss dann im gemeinsamen Ordner für das Widget stehen.
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
@@ -101,8 +105,9 @@ grep -q '"widgetTage":8' pruefung-3.json
 # Eingang (Widget, Kurzbefehle): drei Notizen vorgemerkt, eine abgehakt → 2 Notizen in der Web-App, nichts bleibt vorgemerkt
 grep -q '"notizenZahl":2' pruefung-3.json
 grep -q '"eingangRest":0' pruefung-3.json
-# Sicherung von selbst: Beim Verlassen nach dem ersten und zweiten Start schickt die Web-App ihre Sicherung, je Tag eine Datei.
-# Beim dritten Start liegt genau eine in „Dokumente“, lesbar und mit app „takt“. (Läuft der Bau über Mitternacht, wären es zwei: dann neu starten.)
+# Sicherung von selbst: Beim Verlassen nach dem ersten und zweiten Start schickt die Web-App ihre Sicherung, je Tag eine Datei
+# (track-automatisch-JJJJ-MM-TT.json). Beim dritten Start liegt genau eine in „Dokumente“, lesbar und mit app „takt“.
+# (Läuft der Bau über Mitternacht, wären es zwei: dann neu starten.)
 grep -q '"sicherungen":1[,}]' pruefung-3.json
 grep -q '"sicherungOk":true' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
