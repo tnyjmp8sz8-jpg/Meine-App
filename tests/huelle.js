@@ -108,8 +108,13 @@ lauf(async () => {
   p.ok('Eingang: Lauf eingetragen', Object.values(g.T.runs).filter(Boolean).some(r => r.d === tag(5) && r.m === 8000) && g.T.hk.k123 === 1);
   p.ok('Eingang: abgehakte Notiz ist weg', !g.N.notes.n2 && Object.keys(vorher.N.notes).includes('n2'));
   p.enthaelt('Eingang: Hinweis mit „Rückgängig“', await text(page, '#toast'), ['Im Widget abgehakt', 'Rückgängig']);
+  await page.waitForTimeout(500); st = await letzter(page);
+  p.ok('Stand nach dem Abhaken: ohne die Notiz', !st.nz.some(n => n.id === 'n2') && st.nz.some(n => n.x === 'Vom Home-Bildschirm'), JSON.stringify(st.nz));
   await page.click('#toast button'); await page.waitForTimeout(200); g = await gespeichert(page);
   p.ok('Rückgängig: Notiz ist wieder da, alles andere bleibt', !!g.N.notes.n2 && Object.values(g.N.notes).some(n => n.x === 'Vom Home-Bildschirm') && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2);
+  /* „Rückgängig“ geht nicht über saveLocal(): Der Stand für das Widget muss trotzdem hinausgehen, sonst fehlt die Notiz dort weiter */
+  await page.waitForTimeout(500); st = await letzter(page);
+  p.ok('Rückgängig: neuer Stand mit der Notiz geht an die Hülle', st.nz.some(n => n.id === 'n2' && n.x === 'Idee für Kapitel 3'), JSON.stringify(st.nz));
   ids = await page.evaluate(l => window.TrackHuelle.eingang(l), befehle); g = await gespeichert(page);
   p.ok('Eingang: zweites Mal wird nichts doppelt angewendet', ids.length === 7 && Object.values(g.MY[jahr].tx).filter(Boolean).length === 2 && !!g.N.notes.n2 && Object.values(g.N.notes).filter(n => n && n.x === 'Vom Home-Bildschirm').length === 1);
 

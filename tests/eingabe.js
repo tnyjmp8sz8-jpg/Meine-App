@@ -1,0 +1,65 @@
+// Eingaben in den Blättern: Dauer einer Routine (Minus-Knopf), Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
+const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag } = require('./lib');
+
+lauf(async () => {
+  const P = pruefer('Eingaben in den Blättern');
+  /* Gewicht: zwei Einträge, 76,0 kg vor fünf Tagen und 79,0 kg vor drei Tagen. 7-Tage-Schnitt am letzten Eintrag = (76 + 79) / 2 = 77,5 kg.
+     Ziel 75 kg, gesetzt bei 80 kg: noch 77,5 − 75 = 2,5 kg, Fortschritt (80 − 77,5) / (80 − 75) = 50 %. */
+  const W = { goal: 75, goalFrom: 80, entries: {} }; W.entries[tag(5)] = 76; W.entries[tag(3)] = 79;
+  const { browser, page, fehler } = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, W } });
+  const kurz = () => page.waitForTimeout(150), wert = sel => page.inputValue(sel);
+  const ziel = () => text(page, '#v-gewicht .row.goal'), gw = async () => (await gespeichert(page)).W;
+
+  // --- Dauer einer Routine: „−“ heißt „5 Minuten weniger“, hört bei 1 auf und macht aus 1 bis 4 nie wieder 5 ---
+  await bereich(page, 'routinen'); await page.click('#add');
+  const schritt = async (start, knopf) => { await page.fill('#f-min', start); await page.click(knopf); return wert('#f-min'); };
+  // nächstkleinere Fünferstufe, mindestens 1: 3 → 1, 4 → 1, 1 bleibt 1, 5 → 1, 7 → 5, 10 → 5
+  const minus = []; for (const s of ['3', '4', '1', '5', '7', '10']) minus.push(await schritt(s, '#min-dec'));
+  P.ok('Minus: 3 → 1, 4 → 1, 1 → 1, 5 → 1, 7 → 5, 10 → 5', minus.join() === '1,1,1,1,5,5', minus.join());
+  // nächstgrößere Fünferstufe, höchstens 600: 1 → 5, 12 → 15, 600 bleibt 600
+  const plus = []; for (const s of ['1', '12', '600']) plus.push(await schritt(s, '#min-inc'));
+  P.ok('Plus: 1 → 5, 12 → 15, 600 → 600', plus.join() === '5,15,600', plus.join());
+  await page.fill('#f-name', 'Kurz dehnen'); await page.fill('#f-min', '3'); await page.click('#min-dec'); await page.click('#f-save'); await kurz();
+  P.ok('Routine mit 1 Minute gespeichert', (await gespeichert(page)).S.routines.some(r => r.name === 'Kurz dehnen' && r.minutes === 1));
+
+  // --- Zielgewicht: unverändert speichern lässt den Startwert stehen ---
+  await bereich(page, 'gewicht');
+  P.enthaelt('Ziel 75 kg: noch 2,5 kg, 50 %', await ziel(), ['Ziel 75,0 kg', 'noch 2,5 kg', '50 %']);
+  await page.click('#v-gewicht [data-w="goal"]');
+  P.ok('Blatt zeigt das Ziel', (await wert('#w-val')) === '75,0');
+  await page.click('#w-save'); await kurz();
+  P.ok('unverändert gespeichert: Startwert bleibt 80, weiter 50 %', (await gw()).goalFrom === 80 && (await ziel()).includes('50 %'), JSON.stringify(await gw()) + ' · ' + await ziel());
+  // Das Feld zeigt eine Nachkommastelle: Ein Ziel von 74,75 steht als „74,8“ da und gilt beim Speichern als gleich
+  await page.evaluate(() => { const o = JSON.parse(localStorage.getItem('takt.v1')); o.W.goal = 74.75; localStorage.setItem('takt.v1', JSON.stringify(o)); });
+  await page.reload(); await page.waitForTimeout(300); await bereich(page, 'gewicht');
+  await page.click('#v-gewicht [data-w="goal"]');
+  P.ok('Ziel 74,75 steht als „74,8“ im Feld', (await wert('#w-val')) === '74,8');
+  await page.click('#w-save'); await kurz();
+  P.ok('unverändert gespeichert: Ziel 74,75 und Startwert 80 bleiben', (await gw()).goal === 74.75 && (await gw()).goalFrom === 80, JSON.stringify(await gw()));
+  // Neues Ziel 74 kg: Der Startwert ist der heutige Schnitt (77,5). Noch 77,5 − 74 = 3,5 kg, Fortschritt 0 %.
+  await page.click('#v-gewicht [data-w="goal"]'); await page.fill('#w-val', '74'); await page.click('#w-save'); await kurz();
+  P.ok('geändertes Ziel: Startwert ist der heutige Schnitt 77,5', (await gw()).goal === 74 && (await gw()).goalFrom === 77.5, JSON.stringify(await gw()));
+  P.enthaelt('Ziel 74 kg: noch 3,5 kg, 0 %', await ziel(), ['Ziel 74,0 kg', 'noch 3,5 kg', '0 %']);
+
+  // --- Gewicht eintragen: Das Datum steht unter dem Gewicht. Wer erst tippt und dann das Datum umstellt, behält seine Zahl. ---
+  await page.click('#v-gewicht [data-w="add"]');
+  P.ok('Blatt schlägt den letzten Eintrag vor: 79,0', (await wert('#w-val')) === '79,0' && (await text(page, '#ws-title')) === 'Gewicht eintragen');
+  await page.fill('#w-val', '78,4'); await page.fill('#w-date', tag(1));
+  P.ok('Datum auf gestern gestellt: 78,4 bleibt stehen', (await wert('#w-val')) === '78,4', await wert('#w-val'));
+  await page.click('#w-save'); await kurz();
+  let e = (await gw()).entries;
+  P.ok('gespeichert: 78,4 kg für gestern, heute nichts', e[tag(1)] === 78.4 && e[tag(0)] == null, JSON.stringify(e));
+  // Nichts getippt: Das Blatt zeigt wie bisher den Eintrag des gewählten Tages, ohne Eintrag den letzten (jetzt 78,4 von gestern)
+  await page.click('#v-gewicht [data-w="add"]'); await page.fill('#w-date', tag(3));
+  P.ok('ohne Tippen: Tag mit Eintrag zeigt dessen Wert und „Eintrag ändern“', (await wert('#w-val')) === '79,0' && (await text(page, '#ws-title')) === 'Eintrag ändern' && await page.isVisible('#w-del'));
+  await page.fill('#w-date', tag(2));
+  P.ok('ohne Tippen: Tag ohne Eintrag zeigt den letzten Eintrag', (await wert('#w-val')) === '78,4' && (await text(page, '#ws-title')) === 'Gewicht eintragen' && !(await page.isVisible('#w-del')));
+  // Getippt und dann auf einen Tag mit Eintrag gestellt: Die getippte Zahl bleibt und ersetzt beim Speichern den alten Eintrag (76,0 vor fünf Tagen)
+  await page.fill('#w-val', '77,7'); await page.fill('#w-date', tag(5));
+  P.ok('getippt, Tag mit Eintrag: 77,7 bleibt, Titel „Eintrag ändern“', (await wert('#w-val')) === '77,7' && (await text(page, '#ws-title')) === 'Eintrag ändern');
+  await page.click('#w-save'); await kurz();
+  e = (await gw()).entries;
+  P.ok('gespeichert: 77,7 kg vor fünf Tagen, der Tag dazwischen bleibt leer', e[tag(5)] === 77.7 && e[tag(2)] == null && e[tag(3)] === 79, JSON.stringify(e));
+
+  await P.ende(browser, fehler);
+});

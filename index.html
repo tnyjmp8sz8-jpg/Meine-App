@@ -1582,7 +1582,7 @@ $('#day-chips').addEventListener('click', e => {
   paintDays();
 });
 $('#min-chips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('#f-min').value = b.dataset.m; paintChips(); });
-const stepMin = d => { const v = Math.round(Number($('#f-min').value)) || 0; $('#f-min').value = clamp(d > 0 ? Math.floor(v / 5) * 5 + 5 : Math.ceil(v / 5) * 5 - 5, 5, 600); paintChips(); };
+const stepMin = d => { const v = Math.round(Number($('#f-min').value)) || 0; $('#f-min').value = clamp(d > 0 ? Math.floor(v / 5) * 5 + 5 : Math.ceil(v / 5) * 5 - 5, 1, 600); paintChips(); };
 $('#min-dec').addEventListener('click', () => stepMin(-1));
 $('#min-inc').addEventListener('click', () => stepMin(1));
 $('#f-min').addEventListener('input', paintChips);
@@ -1816,12 +1816,13 @@ $('#v-gewicht').addEventListener('click', e => {
 });
 
 const wdlg = $('#wsheet');
-let wMode = 'entry';
+let wMode = 'entry', wAuto = '';   // wAuto: der Wert, den das Blatt selbst ins Feld geschrieben hat
 const parseKg = v => { const n = parseFloat(String(v).replace(',', '.').replace(/[^0-9.]/g, '')); return isFinite(n) ? Math.round(n * 100) / 100 : NaN; };
-function fillEntry(k) {
+/* Blatt für den Tag k füllen. keep: Das Feld behält seinen Wert, weil dort schon etwas getippt wurde und nur noch das Datum umgestellt wird. */
+function fillEntry(k, keep) {
   const has = typeof W.entries[k] === 'number', list = wList();
   $('#ws-title').textContent = has ? 'Eintrag ändern' : 'Gewicht eintragen';
-  $('#w-val').value = has ? kg2(W.entries[k]) : list.length ? kg2(list[list.length - 1].w) : '';
+  if (!keep) $('#w-val').value = wAuto = has ? kg2(W.entries[k]) : list.length ? kg2(list[list.length - 1].w) : '';
   $('#w-del').hidden = !has;
 }
 function openW(mode, date) {
@@ -1846,7 +1847,7 @@ function openW(mode, date) {
 function closeW() { if (wdlg.open) wdlg.close(); }
 $('#ws-close').addEventListener('click', closeW);
 wdlg.addEventListener('click', e => { if (e.target === wdlg) closeW(); });
-$('#w-date').addEventListener('change', () => { const k = $('#w-date').value; if (isKey(k)) fillEntry(k); });
+$('#w-date').addEventListener('change', () => { const k = $('#w-date').value; if (isKey(k)) fillEntry(k, $('#w-val').value !== wAuto); });
 const stepKg = d => { const n = parseKg($('#w-val').value); if (isFinite(n)) $('#w-val').value = kg(Math.round((n + d) * 10) / 10); };
 $('#w-dec').addEventListener('click', () => stepKg(-0.1));
 $('#w-inc').addEventListener('click', () => stepKg(0.1));
@@ -1856,8 +1857,9 @@ $('#wform').addEventListener('submit', e => {
   const n = parseKg($('#w-val').value);
   if (!(n >= 20 && n <= 400)) return err('Gib ein Gewicht zwischen 20 und 400 kg ein, zum Beispiel 78,4.');
   if (wMode === 'goal') {
+    /* Der Startwert zählt ab dem Tag, an dem das Ziel gesetzt wurde: Bleibt das Ziel gleich (so wie es im Feld steht, mit einer Nachkommastelle), bleibt auch er */
     const t = withTrend(wList());
-    patchW({ goal: n, goalFrom: t.length ? Math.round(t[t.length - 1].m * 100) / 100 : n });
+    if (W.goal == null || kg(n) !== kg(W.goal)) patchW({ goal: n, goalFrom: t.length ? Math.round(t[t.length - 1].m * 100) / 100 : n });
   } else {
     const k = $('#w-date').value;
     if (!isKey(k) || k > todayKey()) return err('Wähle heute oder einen früheren Tag.');
@@ -4172,7 +4174,8 @@ toastEl.lastElementChild.addEventListener('click', () => {
   const u = undo; toastOff(); if (!u) return;
   try { if (localStorage.getItem(LS) !== u.after) return; localStorage.setItem(LS, u.before); } catch (x) { return; }
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
-  loadLocal(); render();
+  /* Der Weg geht an saveLocal() vorbei: Ein zurückgeholter laufender Timer muss wieder ticken, und die iPhone-Hülle braucht den Stand für das Widget */
+  loadLocal(); render(); ensureTicker(); hSoon();
 });
 
 /* ---------- Graphen ablesen ---------- */
