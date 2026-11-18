@@ -12,6 +12,8 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 - `notizen.js`: Aufgaben (Abschnitte, abhaken, Ordner, Liegengebliebenes) und Notizen (schnelle Aufnahme, Abhaken löscht, „Als Aufgabe“, Suche, Übernahme alter Notizen), wiederkehrende Aufgaben, Heute, Rückgängig, Sicherung, Kalender.
 - `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote, Monatswechsel bei offener App. Die Uhr der Seite steht auf dem 15. des Monats (für den 28. gibt es einen eigenen Teil), damit kein Ergebnis vom Tag abhängt.
 - `gym.js`: Recap für Monat und Jahr, Verbesserung, Blatt der Übung, laufendes Training.
+- `monat.js`: Monatsabschluss auf Heute (Vergleich mit dem Vormonat, Hinweis am Monatsanfang) und der Kurzbefehl `?neu=…`, mit gestellter Uhr.
+- `huelle.js`: Verbindung zur iPhone-App, die dafür nachgestellt wird: Stand für Widget und Mitteilung, Läufe aus Health, Eingang aus Widget und Kurzbefehlen, Tastatur, Auskunft. Seit v65: Konten für die Schnelleingabe (Stand in vier Fällen; Auftrag als Ausgabe oder Einnahme mit Konto, Kontostand und Vermögen nachgerechnet) und die Sicherung von selbst (wann sie hinausgeht und wann nie, höchstens eine je 20 Sekunden, `gesichert()`, Fehler, Klappzeile mit Ordner und Erklärung, 320 px). Diese Teile laufen mit gestellter Uhr (der 15. des Monats); 20 Sekunden vergehen dort über `page.clock.runFor()`.
 - `speicher.js`: 25-mal Neuladen, Sicherung speichern und einlesen.
 - `update.js`: offline starten, Selbst-Aktualisierung, gleiche Versionsnummer in `sw.js` und Fußzeile.
 - `node tests/bilder.js <ordner> [2]`: Bildschirmfotos aller Bereiche, der wichtigsten Blätter und einiger aufgeklappter Listen (dunkel, hell, 390 und 320 px) zum Ansehen.

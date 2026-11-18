@@ -178,12 +178,12 @@ async function vonSelbst(p) {
   await tipp(page, '#toast button'); await ruf(page, 'sichern'); s = await sich(page);
   p.ok('„Rückgängig“ merkt die Änderung: die nächste Sicherung enthält die Notiz wieder', ohne && s.length === 6 && (JSON.parse(s[5].text).N.notes.n1 || {}).x === 'Erste Notiz', ohne + ' · ' + s.length);
 
-  /* --- Fehler beim Schreiben: fehler ist gefüllt, t ist die Zeit der letzten gelungenen Sicherung (T1). takt.backup bleibt T1. Die Zeile sagt, dass es nicht ging und wann zuletzt;
+  /* --- Fehler beim Schreiben: fehler ist gefüllt, t ist die Zeit der letzten gelungenen Sicherung (T1). takt.backup bleibt T1. Die Zeile sagt, dass etwas nicht ging und von wann die letzte Sicherung ist;
          aufgeklappt steht darunter der Wortlaut. Von selbst geht nichts noch einmal hinaus (auch nicht nach einer Minute), offen bleibt es aber: Das nächste sichern() versucht es wieder.
          Heute wird bei alldem nicht neu gezeichnet (keine Erinnerung zu entfernen): Nur die Texte der Zeile ändern sich. --- */
   await tipp(page, '#v-heute [data-fold="sicherung"]'); await marke(page);
   await ruf(page, 'gesichert', { t: T1, ordner: '', fehler: 'Auf dem iPhone ist kein Platz mehr.' }); zl = await zeile(page);
-  p.ok('Fehler: takt.backup bleibt, die Zeile sagt, dass es nicht ging und wann zuletzt', (await merker(page)) === String(T1) && zl.sub === 'Von selbst sichern ging nicht · zuletzt heute, ' + hhmm(T1) && zl.oben === '', JSON.stringify(zl));
+  p.ok('Fehler: takt.backup bleibt, die Zeile sagt, dass etwas nicht ging und von wann die letzte Sicherung ist', (await merker(page)) === String(T1) && zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung heute, ' + hhmm(T1) && zl.oben === '', JSON.stringify(zl));
   p.ok('Fehler: aufgeklappt steht der Wortlaut darunter', zl.fehler === 'Auf dem iPhone ist kein Platz mehr.', JSON.stringify(zl));
   await page.clock.runFor(60000);
   p.ok('Fehler: von selbst geht nichts noch einmal hinaus', (await sich(page)).length === 6, String((await sich(page)).length));
@@ -196,9 +196,9 @@ async function vonSelbst(p) {
   p.ok('nach der gelungenen Sicherung ist nichts mehr offen', (await sich(page)).length === 7, String((await sich(page)).length));
   /* Ein älterer Zeitpunkt stellt takt.backup nie zurück: Fehler, zuletzt gelungen gestern um 20:56 Uhr → die Zeile nennt gestern, takt.backup bleibt T2. Ohne jede gelungene (t = 0) fehlt „zuletzt“. */
   await ruf(page, 'gesichert', { t: um(14, 20, 56), ordner: '', fehler: 'Kein Platz.' }); zl = await zeile(page);
-  p.ok('Fehler mit älterem Zeitpunkt: „zuletzt gestern, 20:56“, takt.backup wird nicht zurückgestellt', zl.sub === 'Von selbst sichern ging nicht · zuletzt gestern, 20:56' && (await merker(page)) === String(T2), JSON.stringify(zl) + ' · ' + (await merker(page)));
+  p.ok('Fehler mit älterem Zeitpunkt: „letzte Sicherung gestern, 20:56“, takt.backup wird nicht zurückgestellt', zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung gestern, 20:56' && (await merker(page)) === String(T2), JSON.stringify(zl) + ' · ' + (await merker(page)));
   await ruf(page, 'gesichert', { t: 0, ordner: '', fehler: 'Kein Platz.' }); zl = await zeile(page);
-  p.ok('Fehler ohne jede gelungene Sicherung: nur der Satz', zl.sub === 'Von selbst sichern ging nicht', JSON.stringify(zl));
+  p.ok('Fehler ohne jede gelungene Sicherung: nur der Satz', zl.sub === 'Beim Sichern ging etwas nicht', JSON.stringify(zl));
   p.ok('Meldungen der iPhone-App zeichnen Heute nicht neu, sie ändern nur die Texte der Zeile', await gleich(page));
 
   /* --- Ein Weg für Hand und von selbst: „Sicherung speichern“ (hier über das Teilen) gibt denselben Text wie die Sicherung von selbst, bis auf den Zeitpunkt des Schreibens. --- */
@@ -298,6 +298,13 @@ async function vonSelbst(p) {
   p.ok('Blatt offen: Heute wird nicht neu gezeichnet, nur der Text der Zeile ändert sich', offen.blatt && offen.oben && offen.sub === 'Von selbst gesichert · heute, ' + hhmm(T3) && await gleich(page), JSON.stringify(offen));
   await page.keyboard.press('Enter'); await page.waitForTimeout(200);
   p.ok('Blatt zu: die Erinnerung ist weg', await page.evaluate(() => !document.querySelector('#nsheet').open && !document.querySelector('#v-heute .remind[data-h="export"]')));
+  /* --- Nur der zusätzliche Ordner ging nicht: Die iPhone-App meldet dann den neuen Zeitpunkt (die Datei liegt auf dem iPhone) und trotzdem einen Fehler.
+         Die Sicherung zählt: takt.backup ist neu, die Erinnerung verschwindet. Die Zeile weist auf den Fehler hin, aufgeklappt steht der Wortlaut. --- */
+  await lade(page, D);
+  await ruf(page, 'info', { app: '0.5', sicherung: S0 });
+  const T4 = await page.evaluate(() => Date.now()), nurOrdner = 'In „Track-Sicherung“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.';
+  await ruf(page, 'gesichert', { t: T4, ordner: 'Track-Sicherung', fehler: nurOrdner }); await tipp(page, '#v-heute [data-fold="sicherung"]'); zl = await zeile(page);
+  p.ok('nur der Ordner ging nicht: die Sicherung zählt, die Zeile weist auf den Fehler hin', (await merker(page)) === String(T4) && zl.oben === '' && zl.sub === 'Beim Sichern ging etwas nicht · letzte Sicherung heute, ' + hhmm(T4) && zl.fehler === nurOrdner && zl.akt.endsWith('| Ordner: Track-Sicherung'), JSON.stringify(zl));
   fehler.push(...o.fehler); await o.browser.close();
 
   /* --- 320 px, hell: aufgeklappt mit langem Ordnernamen, Fehler und offener Erklärung. Nichts ist seitlich wischbar, nichts ragt hinaus; der lange Name endet mit drei Punkten

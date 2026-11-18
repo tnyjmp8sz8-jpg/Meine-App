@@ -4006,13 +4006,15 @@ function lastBackupText() {
 }
 function setBk(m) { bkMsg = m; const el = $('#bk-msg'); if (el) el.textContent = m; }
 /* Unterzeile der Klappzeile „Sicherung“. Sichert die iPhone-App von selbst (hInfo.sicherung), steht dort, wann zuletzt; sonst die letzte Sicherung von Hand,
-   und die nur, solange sie nicht fällig ist (due): Dann steht derselbe Satz schon in der Erinnerung oben. */
+   und die nur, solange sie nicht fällig ist (due): Dann steht derselbe Satz schon in der Erinnerung oben.
+   Meldet die iPhone-App einen Fehler, heißt es bewusst nur „etwas ging nicht“: Es kann auch allein der zusätzliche Ordner sein, während die Datei auf dem iPhone liegt.
+   Was genau, steht aufgeklappt im Wortlaut der iPhone-App. */
 function bkSub(due) {
   const s = hInfo.sicherung;
   if (bkMsg || !s) return bkMsg || (due ? '' : lastBackupText());
   const d = new Date(s.t), n = dayNum(todayKey()) - dayNum(keyOf(d)), uhr = ', ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
   const wann = !s.t ? '' : n === 0 ? 'heute' + uhr : n === 1 ? 'gestern' + uhr : DF_LONG.format(d);
-  return s.fehler ? 'Von selbst sichern ging nicht' + (wann ? ' · zuletzt ' + wann : '') : wann ? 'Von selbst gesichert · ' + wann : 'Wird von selbst gesichert';
+  return s.fehler ? 'Beim Sichern ging etwas nicht' + (wann ? ' · letzte Sicherung ' + wann : '') : wann ? 'Von selbst gesichert · ' + wann : 'Wird von selbst gesichert';
 }
 const bkOrd = () => hInfo.sicherung.ordner ? 'Ordner: ' + hInfo.sicherung.ordner : 'Ordner in iCloud wählen';
 /* Meldet die iPhone-App eine Sicherung, werden nur die Texte der Zeile nachgeführt: Neu zeichnen schlösse eine offene Erklärung und kann einen Tipp verschlucken.
