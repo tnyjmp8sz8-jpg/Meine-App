@@ -49,7 +49,9 @@ lauf(async () => {
     P.ok('drei Schnell-Knöpfe: Notiz, Gewicht, Ausgabe' + b, (await text(page, '.quick .chip')) === 'Notiz | Gewicht | Ausgabe', await text(page, '.quick .chip'));
     await bereich(page, 'training');
 
-    // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar
+    // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar. Sie gehört zur Kachel „Verbesserung“, die es nur in einem Monat mit Einheiten gibt:
+    // Am 1. und 2. des Monats liegt die jüngste Einheit der Beispieldaten (vor zwei Tagen) im Vormonat.
+    if (!(await page.$('#v-training [data-info="k-imp"]'))) await page.click('#v-training .mnav button:first-child');
     P.ok('Erklärung ist zuerst verborgen' + b, !(await page.isVisible('#info-k-imp')));
     await page.click('#v-training [data-info="k-imp"]');
     P.ok('Tipp auf „i“ zeigt sie' + b, await page.isVisible('#info-k-imp'));

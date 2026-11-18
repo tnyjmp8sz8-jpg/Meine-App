@@ -52,7 +52,8 @@ lauf(async () => {
 
   // --- Laufband ohne Tempo (v56): Das Feld für km/h ist weg. Läufe aus älteren Versionen, bei denen mit dem Tempo gerechnet wurde, behalten ihre Zahlen. ---
   // Alter Lauf: 30 min bei 10 km/h, laut Uhr 4,8 km. Gerechnet wurde mit 10 / 3,6 × 1800 s = 5000 m, also 5,0 km und Pace 1800 / 5 = 360 s = 6:00.
-  const alt = beispiel(); alt.T = { runs: { a1: { d: tag(1), m: 4800, s: 1800, hr: 150, k: 'in', spd: 10, inc: 1.5 } } };
+  // Der Lauf ist von heute: Die Ansicht zeigt nur den laufenden Monat, und „gestern“ läge am Monatsersten im Vormonat.
+  const alt = beispiel(); alt.T = { runs: { a1: { d: tag(0), m: 4800, s: 1800, hr: 150, k: 'in', spd: 10, inc: 1.5 } } };
   const b = await oeffnen({ daten: alt });
   await bereich(b.page, 'training'); await b.page.click('#v-training .subtabs button:nth-child(1)'); await b.page.waitForTimeout(150);
   await b.page.click('#v-training [data-fold="laeufe"]');   // Läufe sind eine eingeklappte Zeile

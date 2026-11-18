@@ -314,9 +314,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 #mform .stepper input,#tform .stepper input,#vform #g-amt{text-align:left;padding-left:16px}
 
 /* Training */
-.card-head .eyebrow{margin:0}
 .last .note{margin:0 0 4px;font-size:13px}
-.eyebrow{margin:0 0 -10px;font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 .last{gap:0;padding:12px 16px 4px}
 .last h3{margin:0 0 2px;font-size:15px;font-weight:600}
 .last h3 small{font-weight:400;color:var(--muted);font-size:14px}
@@ -403,9 +401,6 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #ls-times{grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0;margin:-8px 0}
 #l-items,#p-items{display:flex;flex-direction:column;gap:10px}
 #l-items:empty,#p-items:empty{display:none}
-.kset .chk svg{width:14px;height:14px}
-.kset.done .chk{background:var(--good);border-color:var(--good);color:var(--bg)}
-.kset.done input[type="text"]{opacity:.55}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
 .prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
 .pst{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -413,7 +408,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #x-stats,#x-recap{display:flex;flex-direction:column;gap:10px}
 #x-stats:empty,#x-recap:empty{display:none}
 .primary[hidden]{display:none}
-.xh,.xh .mons{display:flex;flex-direction:column;gap:8px}
+.xh{display:flex;flex-direction:column;gap:8px}
 
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:14px}
@@ -475,7 +470,7 @@ body{font-size:14px}
 /* Aufgaben und Notizen */
 #main[hidden],#n-main[hidden]{display:none}
 #n-main,#n-list{display:flex;flex-direction:column;gap:12px}
-#n-main>.sec,#n-list>.sec{margin:8px 2px -6px}
+#n-main>.sec{margin:8px 2px -6px}
 input.n-q{margin-bottom:-8px}
 .entries .trow{display:flex;align-items:stretch}
 .tk{flex:none;width:44px;min-height:40px;border:0;background:none;display:grid;place-items:center;padding:0}
@@ -494,7 +489,6 @@ input.n-q{margin-bottom:-8px}
 .n-text{font:inherit;font-size:16px;line-height:1.45;color:var(--ink);background:var(--surface);border:0;border-radius:16px;padding:12px 14px;width:100%;min-height:72px;resize:none;overflow:hidden}
 .n-text:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 .n-text::placeholder{color:var(--muted)}
-.eyebrow{font-size:12px}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
 .cat .roll{font-size:11.5px}
@@ -521,12 +515,8 @@ input.n-q{margin-bottom:-8px}
 #ls-times .fig b{font-size:18px}
 #ls-times .fig{padding:6px 10px 5px}
 
-/* Heute: Routinen direkt startbar */
-.view>.date{margin:0 2px -6px}
-
 /* Wochenleiste und Kalender, in jedem Bereich. Punkte: g = Training, b = erledigt/eingetragen, p = teilweise */
 .wk{display:grid;grid-template-columns:repeat(7,1fr);padding:2px 0}
-.wk[hidden]{display:none}
 .wd{border:0;background:none;padding:4px 0 3px;border-radius:14px;display:flex;flex-direction:column;align-items:center;color:var(--mid)}
 .wd small{font-size:11px;font-weight:600}
 .wd b{font-size:15px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
@@ -570,7 +560,6 @@ u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 #lsheet .sh-head h2{font-size:18px}
 #lsheet .primary{min-height:42px;font-size:14.5px}
 .lx .linkbtn{font-size:13px}
-.lx>.linkbtn{margin-top:-4px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
 .lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:32px}
@@ -721,7 +710,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 /* Heute zeigt die Kurzfassung: eine Zeile je Notiz und Aufgabe (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
-.fld>span,.streak span,.eyebrow{text-transform:none;letter-spacing:0}
+.fld>span,.streak span{text-transform:none;letter-spacing:0}
 .fld>span{font-size:13px;font-weight:500}
 .streak span{font-size:10.5px;font-weight:500}
 .subtabs{gap:16px}
@@ -3730,12 +3719,12 @@ function paintA() {
   $('#a-rep-fld').hidden = aE.due === 'none';
   $('#a-rep').innerHTML = REPEAT.map(q => '<button type="button" class="chip" data-r="' + q[0] + '" aria-pressed="' + (aE.r === q[0]) + '">' + q[1] + '</button>').join('');
 }
-function openA(id, date) {
+function openA(id) {
   const t = id ? N.tasks[id] : null, tk = todayKey(), tm = keyOf(addDays(new Date(), 1));
-  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : isKey(date) && date !== tk ? 'date' : 'today', r: t ? t.r : '', newF: false };
+  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : 'today', r: t ? t.r : '', newF: false };
   $('#as-title').textContent = t ? 'Aufgabe ändern' : 'Neue Aufgabe';
   $('#a-title').value = t ? t.t : ''; $('#a-note').value = t ? t.n : ''; $('#a-fnew').value = '';
-  $('#a-date').value = t && t.d ? t.d : isKey(date) ? date : tm;
+  $('#a-date').value = t && t.d ? t.d : tm;
   $('#a-err').hidden = true; $('#a-del').hidden = !t;
   paintA();
   openDlg(adlg); adlg.scrollTop = 0;
@@ -4013,7 +4002,7 @@ function backupDue() {
 }
 
 function renderHome() {
-  const el = $('#v-heute'), today = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date());
+  const el = $('#v-heute');
   const seg = '<div class="seg2 three" role="group" aria-label="Zeitraum">' + [['day', 'Heute'], ['week', 'Woche'], ['month', 'Monat']].map(m => '<button type="button" data-h="mode" data-v="' + m[0] + '" aria-pressed="' + (hMode === m[0]) + '">' + m[1] + '</button>').join('') + '</div>';
   if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
@@ -4161,7 +4150,6 @@ function show(v, user) {
   if (user && view !== was) { foldsShut(); render(); }
   if (user) {
     $('#scroll').scrollTop = 0;
-    try { localStorage.setItem('takt.view', view); } catch (e) {}
     try { if (location.hash.slice(1) !== view) location.hash = view; } catch (e) {}
   }
 }

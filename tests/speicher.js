@@ -20,8 +20,9 @@ lauf(async () => {
   P.enthaelt('Anzeige nach dem Neuladen: Vermögen 5.500 €', await text(page, '#v-haushalt .subtabs [aria-pressed="true"], #v-haushalt .hero h1'), ['Vermögen', '5.500']);
 
   // Sicherung speichern und in eine leere App einlesen
-  await bereich(page, 'heute');
-  const laden = page.waitForEvent('download'); await page.click('[data-h="export"]');
+  // über die Zeile „Sicherung“ am Ende von Heute: Die Erinnerung oben mit demselben Knopf gibt es nicht an jedem Tag (hier erst ab dem 8. des Monats)
+  await bereich(page, 'heute'); await page.click('#v-heute [data-fold="sicherung"]');
+  const laden = page.waitForEvent('download'); await page.click('#v-heute .act[data-h="export"]');
   const datei = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'track-')), 'sicherung.json'); const dl = await laden; await dl.saveAs(datei);
   P.ok('Sicherungsdatei heißt track-sicherung-….json', /^track-sicherung-\d{4}-\d\d-\d\d\.json$/.test(dl.suggestedFilename()), dl.suggestedFilename());
   P.ok('Datei trägt die alte Kennung, damit alte Sicherungen lesbar bleiben', JSON.parse(fs.readFileSync(datei, 'utf8')).app === 'takt');

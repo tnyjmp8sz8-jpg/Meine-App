@@ -82,6 +82,7 @@ lauf(async () => {
 
   /* Löschen: Der Lauf aus Health kommt nicht wieder */
   await bereich(page, 'training'); await page.click('[data-t="kind"][data-v="all"]');
+  if (!(await page.$('#v-training [data-fold="laeufe"]'))) await page.click('#v-training .mnav button:first-child');   // am Monatsersten liegen alle Läufe im Vormonat
   await page.click('#v-training [data-fold="laeufe"]');   // Läufe aufklappen
   const zeile = page.locator('[data-t="edit"]').first(); await zeile.click(); await page.waitForTimeout(150);
   const geloescht = await page.evaluate(() => document.querySelector('#t-date').value);
