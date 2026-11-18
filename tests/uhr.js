@@ -102,6 +102,10 @@ lauf(async () => {
   /* Beginn am 14. um 20:00 gemeldet, seitdem nichts (16 Stunden): Das Ende fehlt */
   await ruf(page, 'info', { app: '0.5', health: 'fehlt', uhr: { n: 2, offen: um(14, 20, 0), letzte: [{ von, bis, lesungen: 3, km: 5.75, puls: 152 }] } });
   p.enthaelt('Beginn ohne Ende: Zeile sagt es', await text(page, '#v-training [data-fold="uhr"]'), ['20:00 Uhr', 'Ende fehlt']);
+  /* Am 11. von 5:00 bis 5:07 kam eine Strecke an (0,03 km), aber die App hat keinen Lauf daraus gemacht (unter 50 m): Dann fehlt nicht die Strecke, der Lauf ist nicht eingetragen */
+  await ruf(page, 'info', { app: '0.5', health: 'fehlt', uhr: { n: 1, offen: 0, letzte: [{ von: um(11, 5, 0), bis: um(11, 5, 7), lesungen: 1, km: 0.03, puls: 0 }] } });
+  const nicht = await text(page, '#v-training [data-fold="uhr"]');
+  p.ok('Strecke kam, aber kein Lauf: „nicht eingetragen“ statt „Strecke fehlt“', nicht.includes('nicht eingetragen') && !nicht.includes('Strecke fehlt'), nicht);
   await ruf(page, 'info', { app: '0.5', health: 'fehlt', uhr: { n: 0, offen: 0, letzte: [] } });
   p.enthaelt('noch nichts erkannt: Zeile sagt es, darunter der Hinweis auf die zwei Kurzbefehle', await text(page, '#v-training'), ['noch kein Lauf erkannt', 'Lauf merken']);
 
@@ -110,9 +114,5 @@ lauf(async () => {
   await ruf(page, 'info', { app: '0.5', health: 'fehlt', uhr: { n: 2, offen: 0, letzte: [{ von, bis, lesungen: 3, km: 5.75, puls: 152 }, { von: v6, bis: b6, lesungen: 2, km: 0, puls: 0 }] } });
   const breit = await page.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth <= s.clientWidth && [...document.querySelectorAll('#v-training [data-fold="uhr"], #v-training [data-t="uhr"], #v-training .two')].every(e => e.getBoundingClientRect().right <= innerWidth + 0.5); });
   p.ok('320 px: nichts seitlich wischbar, nichts ragt hinaus', breit);
-  await page.screenshot({ path: __dirname + '/../uhr-320.png' });
-  await page.setViewportSize({ width: 390, height: 844 }); await page.waitForTimeout(150);
-  await page.evaluate(() => { const s = document.querySelector('#scroll'); s.scrollTop = s.scrollHeight; });
-  await page.screenshot({ path: __dirname + '/../uhr-390.png' });
   await p.ende(o.browser, o.fehler);
 });

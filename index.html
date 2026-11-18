@@ -4431,7 +4431,8 @@ function uhrFoldHTML() {
   /* Der Lauf in der App zu einem erkannten Lauf: der mit seiner Kennung, sonst einer am selben Tag mit fast gleicher Dauer (von Hand nachgetragen).
      Ist die Kennung übernommen, aber kein Lauf mehr da, wurde er gelöscht: Auch das zählt als erledigt. */
   const zu = f => { const s = (f.bis - f.von) / 1000, d = keyOf(new Date(f.von)), k = 'k' + Math.floor(f.von / 60000); return runs.find(r => r.h === k) || runs.find(r => r.d === d && Math.abs(r.s - s) <= s * 0.1) || (T.hk[k] ? {} : null); };
-  const was = f => zu(f) ? 'eingetragen' : f.lesungen ? 'Strecke fehlt' : 'wartet auf die Strecke';
+  /* Kam eine Strecke an und es steht trotzdem kein Lauf da, hat die App ihn nicht angenommen (z. B. unter 50 m): Dann fehlt nicht die Strecke. */
+  const was = f => zu(f) ? 'eingetragen' : f.km ? 'nicht eingetragen' : f.lesungen ? 'Strecke fehlt' : 'wartet auf die Strecke';
   const l = u.letzte[u.letzte.length - 1];
   /* offen: Die Uhr hat einen Beginn gemeldet, das Ende steht aus. Nach vier Stunden kommt es nicht mehr: Dann fehlt es (so sieht man, wenn die Automation das Ende nicht meldet). */
   const haengt = u.offen && Date.now() - u.offen > 4 * 3600000;
