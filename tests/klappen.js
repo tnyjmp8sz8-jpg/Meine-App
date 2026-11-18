@@ -297,12 +297,36 @@ lauf(async () => {
   P.ok('Sicherung 8 Tage alt: Erinnerung oben, die Zeile ohne Satz', s.oben === 'Letzte Sicherung vor 8 Tagen Jetzt sichern' && s.zeile === 'Sicherung' && s.msg === '', JSON.stringify(s));
 
   // --- Teil 7: Erklärungen erst nach Tipp auf das „i“; Farbe nur an der Veränderung ---
+  /* Eine offene Erklärung bleibt stehen, wenn man die Klappzeile darunter antippt: Vorher verschwand sie beim Zeichnen, und die angetippte Zeile sprang um ihre Höhe nach oben.
+     platz = Lage der Klappzeile auf der Seite (unabhängig davon, wie weit gescrollt ist); sie muss vor und nach dem Tipp dieselbe sein. */
+  const infoAuf = id => page.evaluate(i => !document.getElementById('info-' + i).hidden && document.querySelector('.view:not([hidden]) [data-info="' + i + '"]').getAttribute('aria-expanded') === 'true', id);
+  const platz = key => page.evaluate(k => Math.round((document.querySelector('.view:not([hidden]) [data-fold="' + k + '"]').getBoundingClientRect().top + document.querySelector('#scroll').scrollTop) * 10) / 10, key);
+  const bleibt = async (name, id, key) => {
+    const vor = { auf: await infoAuf(id), y: await platz(key) }; await tipp(key);
+    const nach = { auf: await infoAuf(id), y: await platz(key), zeile: (await stand(key)).auf };
+    P.ok(name + ': die offene Erklärung bleibt beim Aufklappen stehen, die angetippte Zeile bleibt an ihrem Platz', vor.auf && nach.auf && nach.zeile && nach.y === vor.y, JSON.stringify({ vor, nach }));
+  };
+  /* Abstand eines Textes unter einer Überschrift: wie bei einer Liste 6 px (Abstand der Spalte 12 px, die Überschrift zieht das Folgende um 6 px heran), darunter die 12 px der Spalte.
+     Vorher zog der Text selbst noch einmal 8 px hoch und saß 2 px in der Überschrift. */
+  const unterKopf = kopf => page.evaluate(t => { const h = [...document.querySelectorAll('.view:not([hidden]) > h2.sec')].find(x => x.textContent.indexOf(t) === 0), a = h.nextElementSibling, n = a.nextElementSibling, r = e => e.getBoundingClientRect();
+    return { was: a.tagName + '.' + a.className, oben: Math.round((r(a).top - r(h).bottom) * 10) / 10, unten: Math.round((r(n).top - r(a).bottom) * 10) / 10 }; }, kopf);
+  await bereich(page, 'heute'); await page.click('#v-heute [data-h="mode"][data-v="week"]'); await kurz(); await page.click('#v-heute [data-info="ins"]');
+  let uk = await unterKopf('Zusammenhänge');
+  P.ok('Heute, Woche: die Erklärung unter „Zusammenhänge“ hat 6 px Abstand zur Überschrift und 12 px zur Karte darunter', (await infoAuf('ins')) && uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12, JSON.stringify(uk));
+  await page.click('#v-heute [data-h="mode"][data-v="day"]'); await kurz();
   await bereich(page, 'gewicht');
   P.ok('Gewicht: die Legende ist zuerst verborgen', !(await page.isVisible('#info-w-leg')) && (await z('#v-gewicht [data-info="w-leg"]')) === 1);
   await page.click('#v-gewicht [data-info="w-leg"]');
   P.ok('Gewicht: ein Tipp auf das „i“ zeigt sie', (await page.isVisible('#info-w-leg')) && (await text(page, '#info-w-leg span')) === '7-Tage-Schnitt | einzelne Messung', await text(page, '#info-w-leg span'));
   await page.click('#v-gewicht [data-info="w-leg"]');
   P.ok('Gewicht: ein zweiter Tipp verbirgt sie wieder', !(await page.isVisible('#info-w-leg')));
+  await page.click('#v-gewicht [data-info="w-leg"]');
+  await bleibt('Gewicht „Einträge“', 'w-leg', 'eintraege');
+  await page.click(juengster); await page.waitForTimeout(40);
+  const nachMonat = (await infoAuf('w-leg')) && (await page.getAttribute(juengster, 'aria-expanded')) === 'false';
+  await page.click('#v-gewicht [data-info="w-leg"]');
+  P.ok('Gewicht: … auch beim Zuklappen eines Monats; ein Tipp auf das „i“ verbirgt sie dann', nachMonat && !(await page.isVisible('#info-w-leg')) && !(await infoAuf('w-leg')));
+  await page.click('#v-gewicht [data-info="w-leg"]');
   await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
   P.ok('Cardio: der Vergleichssatz in „Letzter Lauf“ ist zuerst verborgen', !(await page.isVisible('#info-t-last')) && (await text(page, '#v-training .last h3')).indexOf('Letzter Lauf') === 0);
   await page.click('#v-training [data-info="t-last"]');
@@ -327,6 +351,13 @@ lauf(async () => {
   });
   /* Lauf von heute: 5000 m in 1500 s → „5,0 km in 25:00“ */
   P.ok('Cardio „Letzter Lauf“: das „i“ steht bei jeder Breite in der Zeile der Laufzeit und ragt nicht hinaus', iZeile.text === 'Letzter Lauf · Heute · Outdoor · 5,0 km in 25:00' && iZeile.ziffer === '25:00' && iZeile.breiten === 191 && iZeile.allein === 0 && iZeile.raus === 0, JSON.stringify(iZeile));
+  await bleibt('Cardio „Läufe“', 't-last', 'laeufe'); await tipp('laeufe');
+  await page.click('#v-training .subtabs button:nth-child(2)'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
+  await bleibt('Gym „Übungen“', 'k-imp', 'uebungen');
+  /* Der Wechsel des Bereichs stellt den ersten Blick her: Klappzeilen zu, Erklärungen verborgen (die im Gewicht stand noch offen) */
+  await bereich(page, 'gewicht'); await kurz();
+  P.ok('Gewicht: nach dem Wechsel des Bereichs ist die Erklärung wieder verborgen und „Einträge“ zu', !(await page.isVisible('#info-w-leg')) && (await page.getAttribute('#v-gewicht [data-info="w-leg"]', 'aria-expanded')) === 'false' && !(await stand('eintraege')).auf);
+  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
   /* Läufe: Nur die Veränderung trägt Farbe, „Effizienz 1,33“ davor bleibt in der Farbe der Nebentexte.
      Lauf von heute: 5000 m in 1500 s mit Puls 150 → 5000 / (25 × 150) = 1,333 m pro Herzschlag; gestern 5000 m in 1620 s mit Puls 152 → 5000 / (27 × 152) = 1,218.
      1,333 / 1,218 = 1,094 → +9,4 %, besser, also grün. */
@@ -379,6 +410,14 @@ lauf(async () => {
   await page.click('#v-haushalt .fo[data-m="newgoal"]'); await page.fill('#g-name', 'Urlaub'); await page.fill('#g-amt', '1000'); await page.click('#v-save'); await kurz();
   zl = await ziele();
   P.ok('… mit Sparziel: Abschnitt „Sparziele“, kein leerer Kasten für Klappzeilen', zl.kopf === 'Konten | Sparziele' && zl.ziel === 'Urlaub · 1.000 € noch 500 € 50 %' && (await z('#v-haushalt .folds')) === 0, JSON.stringify(zl));
+  await browser.close(); fehler.forEach(f => P.ok(f, false));
+
+  /* Gym ohne Plan: Der Satz unter „Pläne“ sitzt wie eine Liste 6 px unter der Überschrift, die Klappzeilen folgen mit 12 px. */
+  const ohnePlan = daten(); ohnePlan.K.plans = {};
+  ({ browser, page, fehler } = await oeffnen({ daten: ohnePlan }));
+  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await kurz();
+  uk = await unterKopf('Pläne');
+  P.ok('Gym ohne Plan: der Satz unter „Pläne“ hat 6 px Abstand zur Überschrift und 12 px zu den Klappzeilen', uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12 && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   /* Gewicht bei wenigen Einträgen im jüngsten Monat (Monatsanfang, oder wer einmal die Woche wiegt): heute einer, im Vormonat am 28., 21. und 14., davor einer.

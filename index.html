@@ -308,6 +308,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .entries .dim{color:var(--muted);font-weight:500}
 .entries .neg{color:var(--danger)}
 .view>.note{margin-top:-8px}
+.view>.sec+.note{margin-top:0}
 .g-pos{fill:var(--at)}
 .g-neg{fill:var(--danger)}
 .g-zero{stroke:var(--muted);stroke-width:1}
@@ -1718,11 +1719,14 @@ const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (te
 const fo = {};
 const foldHTML = (key, title, sub, right, rows, after) => '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + !!fo[key] + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (fo[key] ? rows + '</ul>' + (after || '') : '</ul>');
 /* Der eine Weg für alle Klappzeilen (foldHTML und die Monate aus monthsHTML): Ein Tipp kehrt um, was die Zeile gerade zeigt, dann wird neu gezeichnet.
-   Maßgeblich ist aria-expanded und nicht fo, weil die jüngsten Monate einer Liste auch ohne Merker offen sind. */
+   Maßgeblich ist aria-expanded und nicht fo, weil die jüngsten Monate einer Liste auch ohne Merker offen sind.
+   Eine offene Erklärung („i“) bleibt dabei stehen: Sonst verschwände sie beim Zeichnen, und die angetippte Zeile darunter spränge nach oben. */
 $('#scroll').addEventListener('click', e => {
   const b = e.target.closest('[data-fold]'); if (!b) return;
   fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
+  const open = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
   render();
+  open.forEach(id => { const i = document.querySelector('.info[data-info="' + id + '"]'), p = document.getElementById('info-' + id); if (i && p) { p.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
 });
 /* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
