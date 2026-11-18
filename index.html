@@ -771,7 +771,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v67</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v68</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -3594,8 +3594,8 @@ function nextDue(d, r, day) {
   const tk = todayKey(); let k = d;
   do {
     if (r === 'month') { const y = +k.slice(0, 4), m = +k.slice(5, 7), ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; k = ny + '-' + pad(nm) + '-' + pad(Math.min(day || +d.slice(8), new Date(ny, nm, 0).getDate())); }
-    else k = keyOf(addDays(parseKey(k), r === 'week' ? 7 : 1));
-  } while (k <= tk);   // Liegengebliebenes springt nicht in die Vergangenheit, sondern auf den nächsten Termin nach heute
+    else k = keyOf(addDays(parseKey(k), r === 'week' ? 7 : r === 'week2' ? 14 : r === 'day2' ? 2 : 1));
+  } while (k <= tk);   // Liegengebliebenes springt nicht in die Vergangenheit, sondern auf den nächsten Termin nach heute. Gezählt wird vom Datum der Aufgabe aus: Bei „alle 2 Tage“ und „alle 2 Wochen“ bleibt so der Takt ab dem gewählten Starttag.
   return k;
 }
 /* Tag im Monat, der bei einer monatlichen Aufgabe gemeint ist. Er steht nirgends eigens, sondern ergibt sich aus der Kette der abgehakten Aufgaben (nx zeigt auf die nächste):
@@ -3607,7 +3607,7 @@ function monthDay(t) {
   return chain.reduceRight((want, x) => { const day = +x.d.slice(8); return day === Math.min(want, new Date(+x.d.slice(0, 4), +x.d.slice(5, 7), 0).getDate()) ? want : day; }, 0);
 }
 const FOLDERS = [['uni', 'Uni'], ['prom', 'Promotion'], ['priv', 'Privat']];
-const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['month', 'Monatlich']], RNAME = { day: 'täglich', week: 'wöchentlich', month: 'monatlich' };
+const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['day2', 'Alle 2 Tage'], ['week', 'Wöchentlich'], ['week2', 'Alle 2 Wochen'], ['month', 'Monatlich']], RNAME = { day: 'täglich', day2: 'alle 2 Tage', week: 'wöchentlich', week2: 'alle 2 Wochen', month: 'monatlich' };
 /* Feste Ordner plus eigene. Eigene Namen sind Nutzertext: allFolders() liefert sie schon sicher für HTML. */
 const allFolders = () => FOLDERS.concat(Object.keys(N.folders).filter(id => N.folders[id]).map(id => [id, esc(N.folders[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
 const folderName = id => { const f = id && allFolders().find(x => x[0] === id); return f ? f[1] : ''; };

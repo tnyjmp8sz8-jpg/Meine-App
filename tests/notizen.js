@@ -215,6 +215,17 @@ lauf(async () => {
   const h = new Date(), ziel = new Date(h.getFullYear(), h.getMonth() + 1, Math.min(h.getDate(), new Date(h.getFullYear(), h.getMonth() + 2, 0).getDate()), 12);
   const zielTag = ziel.getFullYear() + '-' + String(ziel.getMonth() + 1).padStart(2, '0') + '-' + String(ziel.getDate()).padStart(2, '0');
   P.ok('monatlich: die nächste am selben Tag im nächsten Monat (' + zielTag + ')', w.some(t => !t.done && t.d === zielTag), JSON.stringify(w));
+  // Alle 2 Tage ab einem gewählten Starttag (v68): Start vor drei Tagen, heute abgehakt. Takt ab Start: −3, −1, +1 → die nächste ist morgen fällig, nicht übermorgen (heute + 2).
+  await anlegen('Gießen', 'Anderer Tag', 'Alle 2 Tage', tag(3));
+  P.enthaelt('Zeile nennt „alle 2 Tage“', await q.innerText('#n-main .trow:has-text("Gießen")'), ['alle 2 Tage']);
+  await haken('Gießen');
+  w = (await alle('Gießen')).filter(t => t.t === 'Gießen');
+  P.ok('alle 2 Tage, Start vor 3 Tagen: die nächste ist morgen fällig (Takt ab dem Starttag)', w.length === 2 && w.some(t => t.done && t.d === tag(3)) && w.some(t => !t.done && t.d === tag(-1) && t.r === 'day2'), JSON.stringify(w));
+  // Start heute, heute abgehakt: die nächste in 2 Tagen. Alle 2 Wochen ab heute: die nächste in 14 Tagen.
+  await anlegen('Bettwäsche', 'Heute', 'Alle 2 Tage'); await haken('Bettwäsche');
+  await anlegen('Altpapier', 'Heute', 'Alle 2 Wochen'); await haken('Altpapier');
+  const w2 = await alle('Bettwäsche'), w14 = await alle('Altpapier');
+  P.ok('alle 2 Tage ab heute: in 2 Tagen; alle 2 Wochen ab heute: in 14 Tagen', w2.some(t => !t.done && t.d === tag(-2) && t.r === 'day2') && w14.some(t => !t.done && t.d === tag(-14) && t.r === 'week2'), JSON.stringify(w2) + ' · ' + JSON.stringify(w14));
   await q.click('#add'); await wahl('#a-due', 'Ohne Datum');
   P.ok('ohne Datum gibt es kein „Wiederholen“', !(await q.isVisible('#a-rep-fld')));
   await q.click('#as-close');
