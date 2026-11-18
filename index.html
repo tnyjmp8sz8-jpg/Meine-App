@@ -4086,7 +4086,7 @@ function renderHome() {
   const au = hInfo.sicherung;
   h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg">' + esc(bkSub(bkDue)) + '</span>', '',
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') + (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) : ''),
-    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die letzten 14 Tage. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
+    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
   el.innerHTML = h;
 }
 $('#v-heute').addEventListener('click', e => {
@@ -4441,7 +4441,7 @@ const sNorm = s => s && typeof s === 'object' ? { t: Number(s.t) > 0 ? Number(s.
 /* Eine gelungene Sicherung zählt wie eine von Hand gespeicherte: Die Erinnerung auf Heute entfällt, und die Mitteilung „Sicherung fällig“ rückt nach hinten (dafür geht der Stand neu hinaus).
    Nach einem Fehler bleibt die Sicherung offen und geht beim nächsten Anlass noch einmal (nächste Änderung, sichern(), nächster Start).
    Von hier startet nie eine Sicherung und keine Uhr: Sonst liefe es bei einem dauerhaften Fehler endlos zwischen App und Hülle hin und her. */
-function sStand() {
+function sGemeldet() {
   const s = hInfo.sicherung; if (!s) return;
   if (s.fehler) sOffen = true;
   let alt = 0; try { alt = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
@@ -4479,15 +4479,17 @@ if (HUELLE && window.visualViewport) {
 }
 if (HUELLE) window.TrackHuelle = {
   /* info kommt bei jedem Zurückkommen in die App: Heute wird nur neu gezeichnet, wenn sich an der Sicherung etwas geändert hat.
-     Beim ersten Mal nach dem Laden geht eine Sicherung gleich hinaus, wenn etwas offen ist oder die letzte von gestern oder älter ist: So gibt es an jedem Tag, an dem die App läuft, eine Datei. */
+     Beim ersten Mal nach dem Laden geht eine Sicherung gleich hinaus, wenn etwas offen ist oder die letzte von gestern oder älter ist: So gibt es für jeden Tag, an dem die App startet, eine Datei.
+     Nur beim ersten Mal: Käme info() einmal als Antwort auf eine Sicherung, liefe es sonst bei einem Fehler endlos hin und her. */
   info(o) {
     const vor = JSON.stringify(hInfo.sicherung || null);
     hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung);
-    sStand(); hPaint(); renderTraining();
+    sGemeldet(); hPaint(); renderTraining();
     if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
     if (hInfo.sicherung && sErst) { sErst = false; if (hInfo.sicherung.t < new Date().setHours(0, 0, 0, 0)) sOffen = true; sJetzt(); }
   },
-  gesichert(o) { const s = sNorm(o); if (s) { hInfo.sicherung = s; sStand(); bkPaint(); } },
+  /* Ergebnis eines Schreibversuchs. Es ist das Neueste zur Sicherung: Ein Satz von vorhin („Sicherung gespeichert: …“) weicht ihm. */
+  gesichert(o) { const s = sNorm(o); if (s) { hInfo.sicherung = s; sGemeldet(); bkMsg = ''; bkPaint(); } },
   sichern() { sJetzt(); },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },

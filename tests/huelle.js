@@ -210,6 +210,10 @@ async function vonSelbst(p) {
   const ohneZeit = t => { let x = {}; try { x = JSON.parse(t); } catch (e) {} delete x.exported; return JSON.stringify(x); };
   const hand = await page.evaluate(() => window.__geteilt || '');
   p.ok('von Hand und von selbst: derselbe Text', s.length === 8 && hand.length > 100 && ohneZeit(hand) === ohneZeit(s[7].text), s.length + ' · ' + hand.slice(0, 80));
+  /* Nach dem Speichern von Hand nennt die Zeile die Datei. Die nächste Meldung der iPhone-App ist neuer: Dann steht dort wieder, wann von selbst gesichert wurde. */
+  zl = await zeile(page); const vonHand = zl.sub;
+  await ruf(page, 'gesichert', { t: T2, ordner: '', fehler: '' }); zl = await zeile(page);
+  p.ok('nach „Sicherung speichern“ nennt die Zeile die Datei, nach der nächsten Meldung wieder die Sicherung von selbst', vonHand === 'Sicherung gespeichert: track-sicherung-' + am(15) + '.json' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T2), vonHand + ' · ' + zl.sub);
 
   /* --- Erste Auskunft, nichts offen: Maßgeblich ist, ob die letzte Sicherung vor heute 0 Uhr liegt. Eine Millisekunde vor Mitternacht → sie geht sofort hinaus (einmal, auch wenn die
          Auskunft noch einmal kommt). Genau Mitternacht → nichts; erst eine Änderung und 20 Sekunden bringen die nächste. Der gemeldete Zeitpunkt wird takt.backup:
@@ -270,7 +274,7 @@ async function vonSelbst(p) {
   await tipp(page, '#v-heute [data-h="ordner"]');
   p.ok('Tipp auf die Zeile zum Ordner schickt „ordner“ (einmal, keine Sicherung)', (await ordner()) === 1 && (await sich(page)).length === 0, (await ordner()) + ' · ' + (await sich(page)).length);
   await tipp(page, '#v-heute [data-info="bk"]'); zl = await zeile(page);
-  p.enthaelt('Tipp auf das „i“ zeigt die Erklärung', zl.info, ['bei jeder Änderung von selbst', '„Dateien“ unter „Auf meinem iPhone › Track.“', 'je Tag eine Datei, die letzten 14 Tage', 'Wird die App gelöscht', 'Ordner in iCloud Drive', '„Sicherung einlesen“']);
+  p.enthaelt('Tipp auf das „i“ zeigt die Erklärung', zl.info, ['bei jeder Änderung von selbst', '„Dateien“ unter „Auf meinem iPhone › Track.“', 'je Tag eine Datei, die neuesten 14 bleiben', 'Wird die App gelöscht', 'Ordner in iCloud Drive', '„Sicherung einlesen“']);
   p.ok('das „i“ wählt keinen Ordner', (await ordner()) === 1, String(await ordner()));
   /* Der Ordner ist gewählt: Die iPhone-App meldet seinen Namen. Die Zeile nennt ihn an Ort und Stelle, die offene Erklärung bleibt stehen, Heute wird nicht neu gezeichnet. */
   await marke(page); await ruf(page, 'gesichert', Object.assign({}, S11, { ordner: 'Track-Sicherung' })); zl = await zeile(page);
