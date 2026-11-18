@@ -4,6 +4,7 @@ import WidgetKit
 
 // Aktionen für die App „Kurzbefehle“, Siri und ein Symbol auf dem Home-Bildschirm. Sie laufen, ohne dass Track. aufgeht:
 // Was eingetragen wird, merkt die Ablage vor, und die Web-App übernimmt es beim nächsten Öffnen. Das Widget zeigt eine neue Notiz sofort.
+// Die Aktionen für Läufe von der Apple Watch stehen in Uhr.swift.
 
 /// Sagt der offenen App Bescheid, damit sie Vorgemerktes gleich übernimmt
 private func eingangMelden() { NotificationCenter.default.post(name: Halter.eingangDa, object: nil) }
@@ -47,43 +48,6 @@ struct AusgabeEintragen: AppIntent {
         Ablage.vormerken(["art": "ausgabe", "a": cent, "n": notiz ?? "", "kat": kategorie ?? ""])
         eingangMelden()
         return .result(dialog: "\(String(format: "%.2f", cent / 100).replacingOccurrences(of: ".", with: ",")) € eingetragen.")
-    }
-}
-
-/// Für eine Automation in Kurzbefehle: Lauf-Trainings aus Health an Track. übergeben. Derselbe Lauf (gleicher Beginn) wird nur einmal eingetragen.
-struct LaufEintragen: AppIntent {
-    static var title: LocalizedStringResource = "Lauf eintragen"
-    static var description = IntentDescription("Trägt einen Lauf in Track. ein, ohne die App zu öffnen. Gedacht für Trainings aus Health.")
-    static var openAppWhenRun: Bool = false
-
-    @Parameter(title: "Beginn")
-    var beginn: Date
-
-    @Parameter(title: "Strecke", defaultUnit: .kilometers)
-    var strecke: Measurement<UnitLength>
-
-    @Parameter(title: "Dauer", defaultUnit: .minutes)
-    var dauer: Measurement<UnitDuration>
-
-    @Parameter(title: "Puls")
-    var puls: Double?
-
-    @Parameter(title: "Laufband", default: false)
-    var laufband: Bool
-
-    func perform() async throws -> some IntentResult {
-        let meter = strecke.converted(to: .meters).value, sekunden = dauer.converted(to: .seconds).value
-        let start = beginn.timeIntervalSince1970 * 1000, kennung = "k\(Int(start / 60000))"
-        guard meter.isFinite, sekunden.isFinite, meter >= 50, sekunden >= 10 else { return .result() }
-        // Schon vorgemerkt (die Automation läuft öfter über dieselben Trainings): nicht noch einmal
-        let schonDa = Ablage.eingang().contains { ($0["lauf"] as? [String: Any])?["id"] as? String == kennung }
-        if !schonDa {
-            var lauf: [String: Any] = ["id": kennung, "t": start, "m": meter, "s": sekunden, "k": laufband ? "in" : "out"]
-            if let puls = puls, puls.isFinite, puls > 0 { lauf["hr"] = puls }
-            Ablage.vormerken(["art": "lauf", "lauf": lauf])
-            eingangMelden()
-        }
-        return .result()
     }
 }
 

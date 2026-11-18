@@ -36,9 +36,11 @@ plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|
 # Beide Schlüssel müssen da sein, sonst erscheint der Ordner mit den Sicherungen nicht in „Dateien“ (Auf meinem iPhone › Track.)
 test "$(plutil -p Payload/Track.app/Info.plist | grep -c -E "UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace")" = 2
 plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
-# Aktionen für Kurzbefehle (Notiz, Ausgabe, Lauf) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
+# Aktionen für Kurzbefehle (Notiz, Ausgabe, drei für Läufe von der Uhr) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
 ls Payload/Track.app/Metadata.appintents
-grep -c -E "NotizHinzufuegen|AusgabeEintragen|LaufEintragen" Payload/Track.app/Metadata.appintents/extract.actionsdata
+for AKTION in NotizHinzufuegen AusgabeEintragen LaufMerken LaufZeitraum LaufEintragen; do
+  grep -q "$AKTION" Payload/Track.app/Metadata.appintents/extract.actionsdata || { echo "Aktion fehlt: $AKTION"; exit 1; }
+done
 zip -qr Track.ipa.neu Payload
 ls -la Track.ipa.neu
 
@@ -110,6 +112,10 @@ grep -q '"eingangRest":0' pruefung-3.json
 # (Läuft der Bau über Mitternacht, wären es zwei: dann neu starten.)
 grep -q '"sicherungen":1[,}]' pruefung-3.json
 grep -q '"sicherungOk":true' pruefung-3.json
+# Läufe von der Apple Watch über Kurzbefehle (Uhr.swift). Rechnung: zwei Läufe erkannt, der erste dauert 2713 s, Kennung k + 1 800 000 000 000 / 60 000.
+# Ganzer Weg: Start 1 liefert 0,80 km, Start 2 dieselbe Lesung mit 0,85 km, Start 3 nichts Neues → ein Lauf mit 850 m, 300 s, Puls (140 + 150) / 2 = 145
+grep -q '"uhrRechnung":"2|2713|k30000000|true|true"' pruefung-3.json
+grep -q '"lauf":"1|850|300|145"' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa

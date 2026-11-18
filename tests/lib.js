@@ -4,7 +4,7 @@ const path = require('path');
 
 const APP = 'file://' + path.resolve(__dirname, '..', 'index.html');
 /* Alle Testreihen in der Reihenfolge, in der alle.js (und am.js mit vorgetäuschtem Datum) sie laufen lässt */
-const REIHEN = ['ablauf', 'aufbau', 'klappen', 'gesten', 'eingabe', 'loeschen', 'notizen', 'finanzen', 'gym', 'monat', 'huelle', 'speicher', 'update'];
+const REIHEN = ['ablauf', 'aufbau', 'klappen', 'gesten', 'eingabe', 'loeschen', 'notizen', 'finanzen', 'gym', 'monat', 'huelle', 'uhr', 'speicher', 'update'];
 const pad = n => String(n).padStart(2, '0');
 /* Datum als YYYY-MM-DD, n Tage zurück */
 const tag = (n = 0) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };

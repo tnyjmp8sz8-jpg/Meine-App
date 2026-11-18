@@ -775,7 +775,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v64</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v65</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2584,6 +2584,8 @@ function normT(o) {
     /* Bis v55 gab es ein Laufband-Tempo (spd), mit dem statt der Strecke gerechnet wurde. Solche Läufe behalten ihre Zahlen: Ihre Strecke wird Tempo x Dauer. */
     const m = k === 'in' && num(x.spd, 1, 30) ? clamp(Math.round(x.spd / 3.6 * x.s), 50, 1000000) : Math.round(x.m);
     out.runs[id] = { d: x.d, m, s: Math.round(x.s), hr: num(x.hr, 30, 250) ? Math.round(x.hr) : null, k, inc: k === 'in' && num(x.inc, 0, 30) ? Math.round(x.inc * 10) / 10 : null };
+    /* h: Kennung eines Laufs aus Health oder aus dem Kurzbefehl, solange ihn niemand von Hand geändert hat. Nur ein solcher Lauf wird nachgebessert, wenn die Uhr Werte nachliefert. */
+    if (typeof x.h === 'string' && /^[A-Za-z0-9-]{1,40}$/.test(x.h)) out.runs[id].h = x.h;
   }
   return out;
 }
@@ -2600,7 +2602,7 @@ const effOf = (m, s, hr) => hr ? m / (s / 60 * hr) : null;
 function tRuns() {
   const a = Object.keys(T.runs).filter(id => T.runs[id]).map(id => {
     const r = T.runs[id];
-    return { id, d: r.d, m: r.m, s: r.s, hr: r.hr, k: r.k, inc: r.inc, pace: r.s / r.m * 1000, eff: effOf(r.m, r.s, r.hr) };
+    return { id, d: r.d, m: r.m, s: r.s, hr: r.hr, k: r.k, inc: r.inc, h: r.h || '', pace: r.s / r.m * 1000, eff: effOf(r.m, r.s, r.hr) };
   }).sort((x, y) => x.d < y.d ? -1 : x.d > y.d ? 1 : x.id < y.id ? -1 : 1);
   const last = {}, lastEff = {};
   a.forEach(r => {
@@ -2730,12 +2732,12 @@ function renderTraining() {
   const all = tRuns();
   if (!all.length) {
     el.innerHTML = '<div class="card-head">' + subs + '</div>' + emptyHTML('training', 'Noch kein Lauf', 'Trag Strecke, Dauer und Puls ein. Du siehst Pace und Effizienz im Vergleich zum Lauf davor.',
-      '<button type="button" class="primary" data-t="add">Lauf eintragen</button>') + healthBtnHTML();
+      '<button type="button" class="primary" data-t="add">Lauf eintragen</button>') + uhrFoldHTML() + healthBtnHTML();
     return;
   }
   const kind = tKind || all[all.length - 1].k, list0 = kind === 'all' ? all : all.filter(r => r.k === kind);
   el.innerHTML = '<div class="card-head">' + subs + '<div class="seg" role="group" aria-label="Art">' +
-    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM)) + healthBtnHTML();
+    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM)) + uhrFoldHTML() + healthBtnHTML();
 }
 $('#v-training').addEventListener('click', e => {
   const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
@@ -2743,6 +2745,7 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'add') return openT();
   if (a === 'edit') return openT(t.dataset.id);
   if (a === 'health') return hPost({ art: 'health' });
+  if (a === 'uhr') return t.dataset.id ? openT(t.dataset.id) : openT(null, keyOf(new Date(+t.dataset.von)), Math.round((t.dataset.bis - t.dataset.von) / 1000));
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
   else if (a === 'kind') tKind = t.dataset.v;
@@ -2773,14 +2776,14 @@ function paintTK() {
   if (tK === 'in' && !tEdit && !$('#t-inc').value) { const li = tRuns().filter(r => r.k === 'in').pop(); if (li && li.inc) $('#t-inc').value = n1(li.inc); }
   paintCalc();
 }
-function openT(id, date) {
+function openT(id, date, sek) {
   const r = id ? T.runs[id] : null, tk = todayKey(), all = tRuns();
   tEdit = r ? id : null;
   tK = r ? r.k : tKind === 'in' || tKind === 'out' ? tKind : all.length ? all[all.length - 1].k : 'out';
   $('#ts-title').textContent = r ? 'Lauf ändern' : 'Lauf eintragen';
   $('#t-km').value = r ? kmf(r.m) : '';
-  $('#t-min').value = r ? Math.floor(r.s / 60) : '';
-  $('#t-sec').value = r ? r.s % 60 : '';
+  $('#t-min').value = r ? Math.floor(r.s / 60) : sek ? Math.floor(sek / 60) : '';
+  $('#t-sec').value = r ? r.s % 60 : sek ? sek % 60 : '';
   $('#t-hr').value = r && r.hr ? r.hr : '';
   $('#t-inc').value = r && r.inc ? n1(r.inc) : '';
   $('#t-date').max = tk; $('#t-date').value = r ? r.d : isKey(date) ? date : tk;
@@ -2807,7 +2810,7 @@ $('#tform').addEventListener('submit', e => {
   if (hrRaw && !(v.hr >= 30 && v.hr <= 250)) return err('Der Puls muss zwischen 30 und 250 liegen. Ohne Puls bleibt das Feld leer.');
   if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
   const p = { runs: {} };
-  p.runs[tEdit || newId()] = { d, m: v.m, s: v.s, hr: hrRaw ? v.hr : null, k: tK, inc: incRaw ? v.inc : null };
+  p.runs[tEdit || newId()] = { d, m: v.m, s: v.s, hr: hrRaw ? v.hr : null, k: tK, inc: incRaw ? v.inc : null, h: null };
   tdoc.patch(p);
   tYM = d.slice(0, 7); tMode = 'month';
   if (tKind !== 'all') tKind = tK;
@@ -4382,21 +4385,63 @@ function hStand() {
      sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
   return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
 }
-/* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
-   Steht am selben Tag schon ein Lauf mit fast gleicher Strecke (bis 10 % Unterschied), gilt er als derselbe: Er wurde von Hand eingetragen und kommt nicht doppelt. */
+/* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, k, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
+   km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
+   Wäre das Tempo damit über 30 km/h, waren es Meter. Puls: ein Durchschnitt oder viele Einzelwerte, dann ihr Mittel; was nicht zwischen 30 und 250 liegt (eine Summe), zählt nicht.
+   Rechnung: 5,62 km in 2713 s sind 7,5 km/h, also km → 5620 m. 5620 in 2713 s wären 7457 km/h, also Meter → 5620 m. */
+const uhrMeter = (list, s) => { const sum = list.reduce((a, v) => a + (typeof v === 'number' && isFinite(v) && v > 0 ? v : 0), 0); return !(sum > 0) || !(s > 0) ? 0 : Math.round(sum / (s / 3600) > 30 ? sum : sum * 1000); };
+const uhrPuls = list => { const v = list.filter(x => typeof x === 'number' && x >= 30 && x <= 250); return v.length ? v.reduce((a, b) => a + b, 0) / v.length : null; };
+/* Woher ein Lauf stammt: '' von Hand, 'k' Kurzbefehl (Kennung k + Minute des Beginns), 'h' Health (Kennung von Apple) */
+const laufQuelle = h => !h ? '' : h.charAt(0) === 'k' ? 'k' : 'h';
 function healthRuns(list) {
-  const p = { runs: {}, hk: {} }, have = tRuns(), tk = todayKey(); let n = 0;
+  const p = { runs: {}, hk: {} }, have = tRuns(), tk = todayKey(); let n = 0, besser = false;
   (Array.isArray(list) ? list : []).forEach(x => {
     const id = String((x && x.id) || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
-    if (!id || T.hk[id] || p.hk[id] || !isFinite(x.t)) return;
-    const r = normT({ runs: { a: { d: keyOf(new Date(x.t)), m: Math.round(x.m), s: Math.round(x.s), hr: x.hr, k: x.k } } }).runs.a;
+    if (!id || p.hk[id] || !isFinite(x.t)) return;
+    /* Art: wie gemeldet. Der Kurzbefehl kennt sie nicht (die Uhr meldet nur „Laufen“): dann wie der letzte Lauf, auf dem Laufband mit dessen Steigung. So belegt es auch das Blatt vor. */
+    const zuletzt = have[have.length - 1], k = x.k === 'in' || x.k === 'out' ? x.k : zuletzt ? zuletzt.k : 'out', band = k === 'in' ? have.filter(o => o.k === 'in').pop() : null;
+    const r = normT({ runs: { a: { d: keyOf(new Date(x.t)), m: Array.isArray(x.km) ? uhrMeter(x.km, x.s) : Math.round(x.m), s: Math.round(x.s), hr: Array.isArray(x.pu) ? uhrPuls(x.pu) : x.hr, k, inc: band ? band.inc : null, h: id } } }).runs.a;
     if (!r || r.d > tk) return;
+    if (T.hk[id]) {
+      /* Derselbe Lauf noch einmal: Die Uhr hat nachgeliefert. Nachgebessert wird nur ein Lauf, der die Kennung noch trägt (nicht von Hand geändert, nicht gelöscht). Ein Puls geht dabei nie verloren. */
+      const alt = have.find(o => o.h === id), hr = r.hr != null ? r.hr : alt ? alt.hr : null;
+      if (alt && (alt.m !== r.m || alt.s !== r.s || alt.hr !== hr)) { p.runs[alt.id] = { m: r.m, s: r.s, hr }; alt.m = r.m; alt.s = r.s; alt.hr = hr; besser = true; }
+      return;
+    }
     p.hk[id] = 1;
-    if (have.some(o => o.d === r.d && Math.abs(o.m - r.m) <= r.m * 0.1)) return;
+    /* Steht am selben Tag schon ein Lauf aus einer anderen Quelle (von Hand, oder Health gegen Kurzbefehl) mit fast gleicher Strecke oder fast gleicher Dauer (bis 10 %), ist es derselbe:
+       Er kommt nicht doppelt. Auf dem Laufband weicht die Strecke der Uhr leicht mehr als 10 % von der Anzeige ab, die Dauer nicht. Zwei Läufe aus derselben Quelle sind zwei Läufe. */
+    if (have.some(o => o.d === r.d && laufQuelle(o.h) !== laufQuelle(id) && (Math.abs(o.m - r.m) <= r.m * 0.1 || Math.abs(o.s - r.s) <= r.s * 0.1))) return;
     p.runs[newId()] = r; have.push(r); n++;
   });
-  if (Object.keys(p.hk).length) { tdoc.patch(p); renderTraining(); renderHome(); }
+  if (besser || Object.keys(p.hk).length) { tdoc.patch(p); renderTraining(); renderHome(); }
   return n;
+}
+/* Läufe von der Apple Watch über zwei Kurzbefehle (die iPhone-App meldet dazu uhr in info(), ab 0.5): Klappzeile am Ende von Cardio.
+   Sie zeigt, was zuletzt erkannt wurde und ob Strecke ankam: Am Bildschirmfoto lässt sich ablesen, welcher Schritt fehlt. Fehlt die Strecke, öffnet ein Tipp das Blatt mit Tag und Dauer.
+   uhr: { n Läufe erkannt, offen (Beginn eines laufenden Laufs in ms oder 0), letzte: [{ von, bis, lesungen, km (wie gekommen, 0 = keine), puls }] höchstens drei, ältester zuerst }. */
+function uhrNorm(u) {
+  if (!u || typeof u !== 'object') return null;
+  const z = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+  return { n: z(u.n), offen: z(u.offen), letzte: (Array.isArray(u.letzte) ? u.letzte : []).filter(f => f && z(f.von) && z(f.bis) > f.von).slice(-3).map(f => ({ von: f.von, bis: f.bis, lesungen: z(f.lesungen), km: z(f.km), puls: z(f.puls) })) };
+}
+function uhrFoldHTML() {
+  const u = hInfo.uhr; if (!u) return '';
+  const runs = tRuns(), uhrzeit = t => new Intl.DateTimeFormat('de-DE', { hour: '2-digit', minute: '2-digit' }).format(new Date(t));
+  /* Der Lauf in der App zu einem erkannten Lauf: der mit seiner Kennung, sonst einer am selben Tag mit fast gleicher Dauer (von Hand nachgetragen).
+     Ist die Kennung übernommen, aber kein Lauf mehr da, wurde er gelöscht: Auch das zählt als erledigt. */
+  const zu = f => { const s = (f.bis - f.von) / 1000, d = keyOf(new Date(f.von)), k = 'k' + Math.floor(f.von / 60000); return runs.find(r => r.h === k) || runs.find(r => r.d === d && Math.abs(r.s - s) <= s * 0.1) || (T.hk[k] ? {} : null); };
+  const was = f => zu(f) ? 'eingetragen' : f.lesungen ? 'Strecke fehlt' : 'wartet auf die Strecke';
+  const l = u.letzte[u.letzte.length - 1];
+  /* offen: Die Uhr hat einen Beginn gemeldet, das Ende steht aus. Nach vier Stunden kommt es nicht mehr: Dann fehlt es (so sieht man, wenn die Automation das Ende nicht meldet). */
+  const haengt = u.offen && Date.now() - u.offen > 4 * 3600000;
+  const sub = u.offen && !haengt ? 'Lauf läuft seit ' + uhrzeit(u.offen) + ' Uhr' : haengt && (!l || u.offen > l.bis) ? dRow(keyOf(new Date(u.offen))) + ' · ' + uhrzeit(u.offen) + ' Uhr · Ende fehlt' : l ? dRow(keyOf(new Date(l.von))) + ' · ' + was(l) : 'noch kein Lauf erkannt';
+  /* Ein Tipp öffnet den Lauf; fehlt die Strecke, das Blatt für einen neuen mit Tag und Dauer */
+  const rows = u.letzte.slice().reverse().map(f => {
+    const r = zu(f), ziel = r ? (r.id ? 'data-t="uhr" data-id="' + esc(r.id) + '"' : 'disabled') : 'data-t="uhr" data-von="' + f.von + '" data-bis="' + f.bis + '"';
+    return '<li><button type="button" class="two" ' + ziel + '><span class="l"><span>' + dRow(keyOf(new Date(f.von))) + ' · ' + uhrzeit(f.von) + ' bis ' + uhrzeit(f.bis) + '</span><small>' + was(f) + (f.km ? ' · Strecke ' + kg(f.km, 2) : '') + (f.puls ? ' · Puls ' + Math.round(f.puls) : '') + '</small></span>' + (r ? '' : '<b class="dim">Eintragen</b>') + '</button></li>';
+  }).join('');
+  return foldHTML('uhr', 'Apple Watch', esc(sub), '', rows, u.n ? '' : '<p class="note">Zwei Kurzbefehle tragen deine Läufe von selbst ein: „Lauf merken“ beim Training auf der Uhr, „Läufe übernehmen“ beim Öffnen der App.</p>');
 }
 /* Was außerhalb der App eingetragen wurde (Widget, Kurzbefehle), sammelt die Hülle und übergibt es beim Öffnen: [{ id, art, t (Zeitpunkt in ms), … }].
    art: 'notiz' (x Text), 'notizWeg' (nid Kennung der Notiz), 'ausgabe' (a Cent, n Notiz, kat Kategorie als Wort; aus der Schnelleingabe dazu k 'in' für eine Einnahme
@@ -4514,7 +4559,7 @@ if (HUELLE) window.TrackHuelle = {
      liefe es sonst bei einem Fehler endlos hin und her. */
   info(o) {
     const vor = JSON.stringify(hInfo.sicherung || null);
-    hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung);
+    hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung); hInfo.uhr = uhrNorm(hInfo.uhr);
     sGemeldet(); hPaint(); renderTraining();
     if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
     const s = hInfo.sicherung, tk = todayKey();

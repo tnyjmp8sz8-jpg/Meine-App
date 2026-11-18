@@ -114,7 +114,7 @@ struct WebView: UIViewRepresentable {
         view.scrollView.bounces = false
         view.allowsBackForwardNavigationGestures = false
         view.navigationDelegate = context.coordinator
-        if CommandLine.arguments.contains("-pruefen") { Halter.probeEingang() }
+        if CommandLine.arguments.contains("-pruefen") { Halter.probeEingang(); Laufbuch.probe() }
         view.load(URLRequest(url: Web.start))
         context.coordinator.view = view
         context.coordinator.aktualisieren()
@@ -122,6 +122,7 @@ struct WebView: UIViewRepresentable {
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.zurueck), name: UIApplication.willEnterForegroundNotification, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.adresse), name: Halter.eingang, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.eingangHolen), name: Halter.eingangDa, object: nil)
+        NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.uhrMelden), name: Halter.eingangDa, object: nil)
         NotificationCenter.default.addObserver(context.coordinator, selector: #selector(Halter.verlassen), name: UIApplication.willResignActiveNotification, object: nil)
         // Sicherung von selbst: Das Ergebnis jedes Schreibversuchs geht an die Web-App zurück
         let halter = context.coordinator
@@ -180,9 +181,14 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     /// An „sicherung“ erkennt die Web-App, dass sie ihre Sicherung schicken darf (ab 0.5).
     private func auskunft() {
         var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand,
-                                   "sicherung": Sicherung.shared.auskunft]
+                                   "sicherung": Sicherung.shared.auskunft, "uhr": Laufbuch.auskunft]
         if let ablauf = Profil.ablauf { info["ablauf"] = ablauf.timeIntervalSince1970 * 1000 }
         rufe("info", info)
+    }
+
+    /// Nach „Lauf merken“ oder „Lauf eintragen“ (Kurzbefehle, siehe Uhr.swift) bei offener App: der Web-App sagen, welche Läufe die Uhr gemeldet hat
+    @objc func uhrMelden() {
+        DispatchQueue.main.async { if self.bereit { self.auskunft() } }
     }
 
     /// Stand der Sicherung an die Web-App: nach jedem Schreibversuch (erst „Dokumente“, dann getrennt der gewählte Ordner)
@@ -323,7 +329,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     }
 
     /// Ergänzt das Ergebnis aus der Web-App um das, was die Hülle selbst weiß: Verbindung, Ablage für das Widget, Plan der Mitteilungen
-    private func pruefungSchreiben(_ ausWeb: String) {
+    private func pruefungSchreiben(_ ausWeb: String, lauf: String) {
         var text = ausWeb
         if var alles = (try? JSONSerialization.jsonObject(with: Data(ausWeb.utf8))) as? [String: Any] {
             alles["bruecke"] = standDa
@@ -337,6 +343,10 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             alles["sicherungen"] = Sicherung.dateien(in: Sicherung.ordner).count
             alles["sicherungOk"] = Sicherung.neuesteLesbar()
             alles["health"] = Gesundheit.shared.zustand
+            // Läufe von der Uhr (Uhr.swift): erst die reine Rechnung, dann der ganze Weg bis in den Speicher der Web-App (siehe Laufbuch.probe):
+            // nach dem dritten Start genau ein Lauf mit 850 m, 300 s und Puls 145
+            alles["uhrRechnung"] = Laufbuch.pruefung()
+            alles["lauf"] = lauf
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()
             let plan = Mitteilungen.plan(sicherung: "2026-11-20", ablauf: jetzt.addingTimeInterval(4 * 86400), jetzt: jetzt)
@@ -381,8 +391,14 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         })()
         """
         webView.evaluateJavaScript(js) { ergebnis, fehler in
-            // Kurz warten: Die Web-App schickt ihren Stand 0,3 Sekunden nach dem Laden
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2) { self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))") }
+            // Kurz warten: Die Web-App schickt ihren Stand 0,3 Sekunden nach dem Laden. Die Läufe werden erst danach gezählt (Vorgemerktes kommt nach „bereit“ an):
+            // Anzahl, dazu vom ersten Meter, Sekunden und Puls
+            let laeufe = "(function () { try { var r = (JSON.parse(localStorage.getItem('takt.v1') || '{}').T || {}).runs || {}, k = Object.keys(r).filter(function (i) { return r[i]; }); return k.length + '|' + (k.length ? r[k[0]].m + '|' + r[k[0]].s + '|' + r[k[0]].hr : ''); } catch (e) { return 'Fehler: ' + e; } })()"
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                webView.evaluateJavaScript(laeufe) { lauf, _ in
+                    self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))", lauf: (lauf as? String) ?? "")
+                }
+            }
         }
     }
 }
