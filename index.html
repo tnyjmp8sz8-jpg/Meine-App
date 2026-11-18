@@ -4331,7 +4331,8 @@ function hStand() {
   }
   /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
   const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
-  return { art: 'stand', sicherung: backupDay().due, tage, notizen: nz.slice(0, 4).map(n => n.x), nz };
+  /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer. */
+  return { art: 'stand', sicherung: backupDay().due, tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
 }
 /* Läufe aus Health: [{ id, t (Beginn in ms), m, s, hr, k }]. Jede Kennung wird nur einmal übernommen.
    Steht am selben Tag schon ein Lauf mit fast gleicher Strecke (bis 10 % Unterschied), gilt er als derselbe: Er wurde von Hand eingetragen und kommt nicht doppelt. */
@@ -4350,7 +4351,8 @@ function healthRuns(list) {
   return n;
 }
 /* Was außerhalb der App eingetragen wurde (Widget, Kurzbefehle), sammelt die Hülle und übergibt es beim Öffnen: [{ id, art, t (Zeitpunkt in ms), … }].
-   art: 'notiz' (x Text), 'notizWeg' (nid Kennung der Notiz), 'ausgabe' (a Cent, n Notiz, kat Kategorie als Wort), 'lauf' (lauf wie in healthRuns).
+   art: 'notiz' (x Text), 'notizWeg' (nid Kennung der Notiz), 'ausgabe' (a Cent, n Notiz, kat Kategorie als Wort; aus der Schnelleingabe dazu k 'in' für eine Einnahme
+   und acc für das Konto), 'lauf' (lauf wie in healthRuns).
    Jede Kennung wird nur einmal angewendet (takt.eingang merkt die letzten 100), falls die Hülle etwas doppelt übergibt.
    Zurück gehen alle Kennungen: Die Hülle streicht sie dann aus ihrer Liste. */
 function hEingang(list) {
@@ -4363,11 +4365,14 @@ function hEingang(list) {
       const x = String(c.x || '').trim().slice(0, 20000), p = { notes: {} };
       if (x) { p.notes[newId()] = { x, f: '', c: t, m: t }; ndoc.patch(p); }
     } else if (c.art === 'ausgabe') {
-      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Konto: wie im Blatt vorbelegt (zuletzt benutztes oder das einzige), sonst keines.
-         Die Namen aus allCats() sind schon für HTML umgeschrieben (& ist dort &amp;): Das Wort wird deshalb genauso umgeschrieben, bevor verglichen wird. */
-      const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
-      const hit = kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
-      if (okCents(a)) { p.tx[newId()] = { d, a, k: 'out', c: hit ? hit[0] : 'sonst', n: String(c.n || '').trim().slice(0, 60), acc: defAcc() || null, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+      /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens, sonst „Sonstiges“. Eine Einnahme (k 'in') hat keine Kategorie.
+         Die Namen aus allCats() sind schon für HTML umgeschrieben (& ist dort &amp;): Das Wort wird deshalb genauso umgeschrieben, bevor verglichen wird.
+         Konto: das gewählte (acc), wenn es das Konto gibt; ein leeres acc heißt ausdrücklich „Kein Konto“. Fehlt acc (Kurzbefehl, iPhone-App bis 0.4) oder ist das Konto
+         inzwischen gelöscht, gilt die Vorbelegung des Blatts (zuletzt benutztes oder das einzige), sonst keines. */
+      const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), ein = c.k === 'in', kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
+      const hit = !ein && kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
+      const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null;
+      if (okCents(a)) { p.tx[newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : 'sonst', n: String(c.n || '').trim().slice(0, 60), acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
   });
   /* Abgehaktes zuletzt und mit „Rückgängig“: Ein Fehltipp im Widget soll nichts kosten */
