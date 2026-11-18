@@ -91,7 +91,10 @@ lauf(async () => {
   P.enthaelt('Buchungszeile nennt das Konto', await text(page, '#v-haushalt [data-m="tx"]'), ['Heute · Girokonto']);
 
   // --- Teil 2: Konto beim Buchen anlegen, umbenennen ---
-  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '7'); await page.click('#m-acc [data-a="__new"]'); await page.fill('#m-accnew', 'PayPal'); await page.click('#m-accnew-add');
+  /* Das Blatt setzt 60 ms nach dem Öffnen den Fokus ins Betragsfeld. Erst danach geht es weiter: Der Test ist sonst gelegentlich schneller, und der Kontoname
+     landet im Betragsfeld (fill() setzt den Fokus und tippt dann; dazwischen darf der Fokus nicht springen). Ein Mensch ist nie so schnell. */
+  await page.click('#v-haushalt [data-m="add"]'); await page.waitForFunction(() => document.activeElement && document.activeElement.id === 'm-amt');
+  await page.fill('#m-amt', '7'); await page.click('#m-acc [data-a="__new"]'); await page.fill('#m-accnew', 'PayPal'); await page.click('#m-accnew-add');
   P.ok('neues Konto ist angelegt und ausgewählt', (await text(page, '#m-acc [aria-pressed="true"]')) === 'PayPal');
   await speichern('#m-save');
   P.enthaelt('Konto ohne Stand erscheint mit Hinweis', await konten(), ['PayPal noch kein Stand eingetragen', '1.205']);

@@ -16,8 +16,11 @@ if (require.main === module) {
   process.exit(schlecht.length ? 1 : 0);
 } else if (process.env.TRACK_DATUM) {
   const Echt = Date, versatz = new Echt(process.env.TRACK_DATUM + 'T10:00:00').getTime() - Echt.now();
-  /* new Date() und Date.now() liefern die verschobene Zeit; mit Angaben (new Date(2026, 11, 1)) bleibt alles, wie es ist */
-  class Vorgetaeuscht extends Echt { constructor(...a) { if (a.length) super(...a); else super(Echt.now() + versatz); } static now() { return Echt.now() + versatz; } }
+  /* new Date() und Date.now() liefern die verschobene Zeit; mit Angaben (new Date(2026, 11, 1)) bleibt alles, wie es ist.
+     Playwright selbst bekommt weiter die echte Zeit (fremd: der Aufruf kommt aus playwright-core). Es merkt sich mit Date.now(), wann die Uhr der Seite gestellt wurde, und rechnet
+     beim Laden der Seite die seitdem vergangene echte Zeit dazu: Mit einem vorgetäuschten Datum vor heute stand die Seite deshalb wieder auf dem echten Tag. */
+  const fremd = () => (new Error().stack || '').includes('playwright-core');
+  class Vorgetaeuscht extends Echt { constructor(...a) { if (a.length) super(...a); else super(Echt.now() + (fremd() ? 0 : versatz)); } static now() { return Echt.now() + (fremd() ? 0 : versatz); } }
   global.Date = Vorgetaeuscht;
   /* Die Seite bekommt dieselbe Zeit, außer die Reihe stellt ihre Uhr selbst (dann leitet sie sie aus dem vorgetäuschten Datum von Node ab) */
   const lib = require('./lib'), oeffnen = lib.oeffnen;
