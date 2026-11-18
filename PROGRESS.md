@@ -36,6 +36,14 @@ Wortlaut: „zahle immer mit apple pay das wäre dann über Trade Republic / nen
 - Mit ihm nach der Installation anlegen (ungeprüft am Gerät, Bildschirmfotos erbitten): Automation „Transaktion/Wallet“ → „Ausgabe eintragen“ (Betrag = Betrag der Zahlung, Notiz = Händler, Konto „Trade Republic“). Kommt der Betrag als Text mit „€“, davor „Zahlen aus Eingabe abrufen“.
 - Ehrliche Grenze: Zinsen von Trade Republic, Überweisungen, Erstattungen, Sparpläne und der Wert des Depots kommen nicht von selbst.
 
+## Offene Vorschläge (18.11., auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“; nichts davon gebaut)
+1. Zuerst das Gebaute am iPhone zum Laufen bringen (0.5, Kurzbefehle für Apple Pay und Läufe, Ordner für die Sicherung): größter Nutzen, nichts Neues nötig.
+2. Händler merkt sich die Kategorie: Eine von selbst gebuchte Ausgabe bekommt die Kategorie der letzten Buchung mit derselben Notiz (Händler), sonst landet alles aus Apple Pay unter „Sonstiges“ und die Budgets je Kategorie stimmen nicht. Nur App-Inhalt, ohne neue Installation.
+3. Routine von selbst abhaken, wenn ein Lauf ankommt oder eine Gym-Einheit beendet wird (Routine mit passendem Namen).
+4. Zwei Rechenkanten beheben (stehen unter „Offene Probleme“): Ein neues Konto zählt mit seinem ersten Stand als Plus des Monats; geänderte Tage einer Routine brechen die Serie rückwirkend.
+5. Seine Entscheidung, kein Bau: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
+Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
+
 ## Letzter Auftrag (17./18.11.2026): Oberfläche aufräumen, erledigt in v64
 Wortlaut: „meine app muss cleaner aussehen; da ist noch zu viel zu unübersichtlich aber ich mag alle funktionen überleg dir was wie alles enthalten bleibt aber auf den ersten blick übersichtlich bleibt und baue es bis es fertig ist. überprüfe dich selbst ob es passt und passe gegebenenfalls an“.
 - Weg: Bilder aller Ansichten; drei gebaute Entwürfe; gewählt „Erst das Wichtigste, der Rest eingeklappt“ (Regeln in `CLAUDE.md` unter Entscheidungen, Klappzeilen, Design-Regeln); danach Klappzeilen vereinheitlicht, Fehler behoben, drei unabhängige Prüfungen (Code, „nichts verloren“, Bilder) und Nachbessern.
