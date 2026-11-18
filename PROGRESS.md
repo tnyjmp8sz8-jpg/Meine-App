@@ -44,6 +44,9 @@ Wortlaut: „zahle immer mit apple pay das wäre dann über Trade Republic / nen
 5. Seine Entscheidung, kein Bau: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
+## Offen (18.11.): neues App-Symbol
+Seine Frage: „geht noch geilers logo vll? dunklerer hintergrund?“ Er hat ein Vorschaubild mit dem jetzigen Symbol und drei Vorschlägen bekommen: A Schwarz mit blauem Schein (Linie wie jetzt), B weißes „T“ mit blauem Punkt (wie der Schriftzug „Track.“), C weiße Linie mit blauem Punkt. Meine Empfehlung: B. Nichts gebaut, wartet auf seine Wahl. Umsetzen: SVG in `tests/symbol.js` ersetzen, `icon-180/192/512.png` neu erzeugen, dazu `ios/App/Assets.xcassets/AppIcon.appiconset/icon-1024.png`; auf dem Home-Bildschirm ändert sich das Symbol erst mit einer neuen Installation.
+
 ## Letzter Auftrag (17./18.11.2026): Oberfläche aufräumen, erledigt in v64
 Wortlaut: „meine app muss cleaner aussehen; da ist noch zu viel zu unübersichtlich aber ich mag alle funktionen überleg dir was wie alles enthalten bleibt aber auf den ersten blick übersichtlich bleibt und baue es bis es fertig ist. überprüfe dich selbst ob es passt und passe gegebenenfalls an“.
 - Weg: Bilder aller Ansichten; drei gebaute Entwürfe; gewählt „Erst das Wichtigste, der Rest eingeklappt“ (Regeln in `CLAUDE.md` unter Entscheidungen, Klappzeilen, Design-Regeln); danach Klappzeilen vereinheitlicht, Fehler behoben, drei unabhängige Prüfungen (Code, „nichts verloren“, Bilder) und Nachbessern.
