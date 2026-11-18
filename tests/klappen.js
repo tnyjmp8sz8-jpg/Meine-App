@@ -308,6 +308,25 @@ lauf(async () => {
   await page.click('#v-training [data-info="t-last"]');
   /* Letzter Lauf ist der von heute, der Outdoor-Lauf davor der von gestern */
   P.ok('Cardio: ein Tipp auf das „i“ zeigt ihn', (await page.isVisible('#info-t-last')) && (await text(page, '#info-t-last')) === 'Vergleich mit dem Outdoor-Lauf davor (Gestern)', await text(page, '#info-t-last'));
+  /* Das „i“ hängt an der Laufzeit: Füllt der Text davor die Zeile genau, darf es nicht allein in die nächste rutschen (bei 390 px z. B. „· Mo., 16. Nov. · Outdoor · 5,0 km in 27:00“).
+     Welche Breite das trifft, hängt von Schrift und Datum ab; deshalb wird die Kopfzeile Pixel für Pixel von 150 auf 340 px verbreitert (191 Breiten)
+     und jedes Mal geprüft, ob das „i“ in der Zeile der letzten Ziffer steht und nicht über den Rand ragt. */
+  const iZeile = await page.evaluate(() => {
+    const h3 = document.querySelector('#v-training .last h3'), i = h3.querySelector('.info'), tw = document.createTreeWalker(h3, NodeFilter.SHOW_TEXT), rg = document.createRange();
+    let ziffer = null; for (let n; (n = tw.nextNode());) if (n.textContent.trim()) ziffer = n;
+    rg.setStart(ziffer, ziffer.length - 1); rg.setEnd(ziffer, ziffer.length);
+    let allein = 0, raus = 0, breiten = 0;
+    for (let w = 150; w <= 340; w++) {
+      h3.style.width = w + 'px'; breiten++;
+      const q = rg.getBoundingClientRect(), r = i.getBoundingClientRect();
+      if (!(q.bottom > r.top + 2 && q.top < r.bottom - 2)) allein++;
+      if (r.right > h3.getBoundingClientRect().right + 0.5) raus++;
+    }
+    h3.style.width = '';
+    return { text: h3.textContent, ziffer: ziffer.textContent, allein, raus, breiten };
+  });
+  /* Lauf von heute: 5000 m in 1500 s → „5,0 km in 25:00“ */
+  P.ok('Cardio „Letzter Lauf“: das „i“ steht bei jeder Breite in der Zeile der Laufzeit und ragt nicht hinaus', iZeile.text === 'Letzter Lauf · Heute · Outdoor · 5,0 km in 25:00' && iZeile.ziffer === '25:00' && iZeile.breiten === 191 && iZeile.allein === 0 && iZeile.raus === 0, JSON.stringify(iZeile));
   /* Läufe: Nur die Veränderung trägt Farbe, „Effizienz 1,33“ davor bleibt in der Farbe der Nebentexte.
      Lauf von heute: 5000 m in 1500 s mit Puls 150 → 5000 / (25 × 150) = 1,333 m pro Herzschlag; gestern 5000 m in 1620 s mit Puls 152 → 5000 / (27 × 152) = 1,218.
      1,333 / 1,218 = 1,094 → +9,4 %, besser, also grün. */
@@ -335,6 +354,31 @@ lauf(async () => {
   await tipp('ohneKonto'); await tipp('umbuchungen');
   const og = await page.evaluate(breiten);
   P.ok('320 px, Vermögen mit „Umbuchungen“ und „Ohne Konto“ offen: nichts ragt seitlich hinaus', og.auf === 2 && passtHinein(og), JSON.stringify(og));
+  /* Ohne Sparziel steht keine Überschrift „Sparziele“ ohne Inhalt da, sondern bei den Klappzeilen als letzte eine Zeile mit Plus (wie „Fixkosten“ im Budget). */
+  const ziele = () => page.evaluate(() => { const v = document.querySelector('#v-haushalt'), f = v.querySelector('.folds');
+    return { kopf: [...v.querySelectorAll('h2.sec')].map(h => (h.classList.contains('has-a') ? h.firstElementChild : h).textContent).join(' | '), reihen: f ? [...f.children].map(u => u.querySelector('.l > span').textContent + (u.querySelector('.fo[data-m="newgoal"] .fold.plus svg') ? ' +' : '')).join(' | ') : '',
+      ziel: [...v.querySelectorAll('.row.goal')].map(r => r.innerText.replace(/\s+/g, ' ').trim()).join(' | '), plusOben: v.querySelectorAll('h2.sec .sec-a[data-m="newgoal"]').length }; });
+  let zl = await ziele();
+  P.ok('Vermögen ohne Sparziel: keine Überschrift „Sparziele“, dafür die letzte Zeile bei den Klappzeilen mit Plus', zl.kopf === 'Konten' && zl.reihen === 'Umbuchungen | Ohne Konto | Sparziele +' && zl.ziel === '' && zl.plusOben === 0, JSON.stringify(zl));
+  const zm = await page.evaluate(breiten);
+  P.ok('320 px, Vermögen ohne Sparziel: nichts ragt seitlich hinaus', passtHinein(zm), JSON.stringify(zm));
+  await blatt('Zeile „Sparziele“ öffnet das Blatt „Sparziel“', '.fo[data-m="newgoal"]', '#vsheet', '#vs-title', 'Sparziel');
+  /* Mit dem ersten Sparziel wird daraus der Abschnitt mit Plus in der Überschrift. Stand im Vormonat: Girokonto 1.000 € + Bargeld 50 € = 1.050 €; die Umbuchung ändert die Summe nicht,
+     die Ausgaben und die Miete haben kein Konto. Ziel 2.000 €: 1.050 / 2.000 = 52,5 % → abgerundet 52 %, noch 950 €. */
+  await page.click('#v-haushalt .fo[data-m="newgoal"]'); await page.fill('#g-name', 'Notgroschen'); await page.fill('#g-amt', '2000'); await page.click('#v-save'); await kurz();
+  zl = await ziele();
+  P.ok('… mit dem ersten Sparziel: Überschrift „Sparziele“ mit Plus, das Ziel darunter, die Zeile ist weg', zl.kopf === 'Konten | Sparziele' && zl.reihen === 'Umbuchungen | Ohne Konto' && zl.plusOben === 1 && zl.ziel === 'Notgroschen · 2.000 € noch 950 € 52 %', JSON.stringify(zl));
+  await browser.close(); fehler.forEach(f => P.ok(f, false));
+  /* Nur ein Konto mit Stand, sonst nichts: Die Zeile „Sparziele“ steht allein bei den Klappzeilen. Mit einem Sparziel gibt es dort nichts mehr, auch keinen leeren Kasten
+     (er bekäme sonst den Abstand einer Karte). Stand 500 €, Ziel 1.000 € → 50 %. */
+  const k1 = leer(); k1.MF = { fixed: {}, acc: { giro: { n: 'Girokonto' } }, bal: {}, balT: {}, goals: {} }; k1.MF.bal[monat(0)] = { giro: 50000 };
+  ({ browser, page, fehler } = await oeffnen({ daten: k1 }));
+  await bereich(page, 'haushalt'); await kurz();
+  zl = await ziele();
+  P.ok('Vermögen mit einem Konto, ohne Sparziel: „Sparziele“ mit Plus ist die einzige Zeile unter den Konten', zl.kopf === 'Konten' && zl.reihen === 'Sparziele +' && (await z('#v-haushalt .folds')) === 1, JSON.stringify(zl));
+  await page.click('#v-haushalt .fo[data-m="newgoal"]'); await page.fill('#g-name', 'Urlaub'); await page.fill('#g-amt', '1000'); await page.click('#v-save'); await kurz();
+  zl = await ziele();
+  P.ok('… mit Sparziel: Abschnitt „Sparziele“, kein leerer Kasten für Klappzeilen', zl.kopf === 'Konten | Sparziele' && zl.ziel === 'Urlaub · 1.000 € noch 500 € 50 %' && (await z('#v-haushalt .folds')) === 0, JSON.stringify(zl));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   /* Gewicht bei wenigen Einträgen im jüngsten Monat (Monatsanfang, oder wer einmal die Woche wiegt): heute einer, im Vormonat am 28., 21. und 14., davor einer.

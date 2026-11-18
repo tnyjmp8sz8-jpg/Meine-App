@@ -318,6 +318,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .last{gap:0;padding:12px 16px 4px}
 .last h3{margin:0 0 2px;font-size:15px;font-weight:600}
 .last h3 small{font-weight:400;color:var(--muted);font-size:14px}
+.last h3 small span{white-space:nowrap}
 /* Zeile mit Wert: der Vergleich steht in einer eigenen Zeile darunter, rechtsbündig (vom Nutzer so gewünscht, wirkt ruhiger als daneben) */
 .kv{display:grid;grid-template-columns:1fr auto;gap:1px 12px;align-items:baseline;padding:11px 0}
 .kv+.kv{border-top:1px solid var(--line)}
@@ -1723,7 +1724,7 @@ $('#scroll').addEventListener('click', e => {
   fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
   render();
 });
-/* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
+/* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
 const addFoldHTML = (attr, title) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-label="' + title + ' hinzufügen"><span class="l"><span>' + title + '</span></span><b class="fold plus">' + PLUS + '</b></button></li></ul>';
 /* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile */
@@ -2176,9 +2177,11 @@ function wealthDelta(pre, acc, endYM) {
   return sv == null ? { end: ev, d: null, p: null, n: 0 } : { end: ev, d: ev - sv, p: sv > 0 ? (ev - sv) / sv : null, n: ymIdx(end) - ymIdx(from) };
 }
 const dTile = (w, label) => fig(w && w.d != null ? '<span class="' + signCls(w.d) + '">' + eurS(w.d) + '</span>' : '–', '', label);
+/* Abschnitt „Sparziele“. Ohne Sparziel leer: Dann steht im Vermögen bei den Klappzeilen eine Zeile mit Plus, keine Überschrift ohne Inhalt. */
 function goalsHTML(curYM) {
   const gs = Object.keys(MF.goals || {}).filter(id => MF.goals[id]).map(id => ({ id, g: MF.goals[id] })).sort((a, b) => a.g.n.localeCompare(b.g.n, 'de'));
-  return secHTML('Sparziele', '', secAct('data-m="newgoal"', '', 'Sparziel anlegen')) + (gs.length ? '<ul class="rows">' + gs.map(x => {
+  if (!gs.length) return '';
+  return secHTML('Sparziele', '', secAct('data-m="newgoal"', '', 'Sparziel anlegen')) + '<ul class="rows">' + gs.map(x => {
     const g = x.g, acc = g.acc && (MF.acc || {})[g.acc] ? g.acc : null, have = wealthAt(curYM, acc) || 0, p = clamp(have / g.amount, 0, 1), reached = have >= g.amount;
     /* Tempo: Schnitt der letzten drei Monate */
     const back = wealthAt(ymOfIdx(ymIdx(curYM) - 3), acc), rate = back != null ? (have - back) / 3 : null;
@@ -2190,7 +2193,7 @@ function goalsHTML(curYM) {
         '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
         '<span class="txt"><span class="name">' + esc(g.n) + ' · ' + eur0(g.amount) + ' €</span><span class="meta">' + meta + (acc ? ' · ' + esc(MF.acc[acc].n) : '') + '</span></span></button>' +
       '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(clamp(have * 100 / g.amount, 0, 100)) + '</b><span>%</span></span></div></li>';
-  }).join('') + '</ul>' : '');
+  }).join('') + '</ul>';
 }
 function wealthHTML(curYM) {
   if (!hasWealth()) return emptyHTML('haushalt', 'Noch kein Stand', 'Trag einmal ein, wie viel auf deinen Konten liegt. Danach siehst du, wie dein Vermögen wächst.',
@@ -2218,11 +2221,12 @@ function wealthHTML(curYM) {
     /* Umbuchungen des Monats, z. B. Geld abheben: vom Girokonto zum Bargeld */
     const trs = txIn(mYM, true);
     /* Ohne Konto gebucht: verändert kein Konto. Eingeklappte Zeile; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen des Kontos. */
-    const na = noAcc(mYM), nn = na.tx.length + na.fx.length;
-    if (trs.length || nn) h += '<div class="folds">' +
+    const na = noAcc(mYM), nn = na.tx.length + na.fx.length, goals = goalsHTML(curYM);
+    const folds =
       (trs.length ? foldHTML('umbuchungen', 'Umbuchungen', '', trs.length, trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('')) : '') +
-      (nn ? foldHTML('ohneKonto', 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') + '</div>';
-    return h + goalsHTML(curYM);
+      (nn ? foldHTML('ohneKonto', 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') +
+      (goals ? '' : addFoldHTML('data-m="newgoal"', 'Sparziele'));
+    return h + (folds ? '<div class="folds">' + folds + '</div>' : '') + goals;
   }
   /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
   let rows = '', nm = 0;
@@ -2663,7 +2667,8 @@ function kmBarsSVG(vals, label) {
 
 function lastCardHTML(r) {
   const dp = dPace(r), de = dEff(r), kv = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
-  let h = '<div class="card last"><h3>Letzter Lauf <small>· ' + dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s) + '</small>' + INFO('t-last') + '</h3>';
+  /* Das „i“ hängt an der Laufzeit (kein Umbruch dazwischen): Sonst rutscht es allein in eine zweite Zeile, sobald der Text die erste genau füllt. */
+  let h = '<div class="card last"><h3>Letzter Lauf <small>· ' + dRow(r.d) + ' · ' + kindName(r.k) + ' · ' + kmf(r.m) + ' km in <span>' + fmt(r.s) + INFO('t-last') + '</span></small></h3>';
   h += '<p class="note" id="info-t-last" hidden>' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ')' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p>';
   h += kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c);
   if (r.eff != null) h += kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c);
