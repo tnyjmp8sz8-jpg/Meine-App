@@ -36,6 +36,9 @@ Wortlaut: „zahle immer mit apple pay das wäre dann über Trade Republic / nen
 - Mit ihm nach der Installation anlegen (ungeprüft am Gerät, Bildschirmfotos erbitten): Automation „Transaktion/Wallet“ → „Ausgabe eintragen“ (Betrag = Betrag der Zahlung, Notiz = Händler, Konto „Trade Republic“). Kommt der Betrag als Text mit „€“, davor „Zahlen aus Eingabe abrufen“.
 - Ehrliche Grenze: Zinsen von Trade Republic, Überweisungen, Erstattungen, Sparpläne und der Wert des Depots kommen nicht von selbst.
 
+## Offener Vorschlag (18.11.): Cardio ruhiger
+Seine Frage: „finde nur vll laufen sektion etwas unübersichtlich, vll die tabellen und details der statistiken auf extra button oder ansicht legen?“ Meine Antwort mit Vorschaubild „jetzt / Vorschlag“: keine eigene Ansicht (neues Muster, Vergleich läge zwei Tipps weit weg), sondern dasselbe Prinzip wie v64. „Letzter Lauf“ wird eine Klappzeile unter dem Graphen (Unterzeile Tag, Art, Strecke und Zeit; rechts der Vergleich der Pace in Grün oder Rot; aufgeklappt die drei Zeilen wie bisher), der lose Satz „Effizienz im Schnitt …“ wandert als Plus/Minus in die Kachel „Effizienz“. Noch nicht gebaut: wartet auf sein Ja.
+
 ## Letzter Auftrag (17./18.11.2026): Oberfläche aufräumen, erledigt in v64
 Wortlaut: „meine app muss cleaner aussehen; da ist noch zu viel zu unübersichtlich aber ich mag alle funktionen überleg dir was wie alles enthalten bleibt aber auf den ersten blick übersichtlich bleibt und baue es bis es fertig ist. überprüfe dich selbst ob es passt und passe gegebenenfalls an“.
 - Weg: Bilder aller Ansichten; drei gebaute Entwürfe; gewählt „Erst das Wichtigste, der Rest eingeklappt“ (Regeln in `CLAUDE.md` unter Entscheidungen, Klappzeilen, Design-Regeln); danach Klappzeilen vereinheitlicht, Fehler behoben, drei unabhängige Prüfungen (Code, „nichts verloren“, Bilder) und Nachbessern.
