@@ -726,6 +726,8 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .subtabs{gap:16px}
 .subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
+/* Planer hat fünf Teile: etwas enger, damit sie bei 375 und 390 px in einer Reihe stehen; auf schmaleren Geräten rutschen die letzten in eine zweite Reihe */
+#r-subs .subtabs{flex-wrap:wrap;gap:2px 13px}
 .mark{font-size:17px;font-weight:700}
 .hero h1 .num,.clock,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
@@ -776,7 +778,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v72</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v73</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1554,7 +1556,7 @@ function renderRoutines() {
   $('#r-subs').innerHTML = subsRHTML();
   const nm = $('#n-main'), other = rSub !== 'rout';
   nm.hidden = !other; main.hidden = other;
-  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'task' ? tasksHTML() : notesHTML(); return; }
+  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'task' ? tasksHTML() : rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML(); return; }
   nm.innerHTML = '';
 
   if (!S.routines.length) {
@@ -1589,7 +1591,7 @@ $('#main').addEventListener('click', e => {
     saveLocal(); render();
   }
 });
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'task') openA(null); else if (rSub === 'note') openN(null); else openSheet(null); });
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'task') openA(null); else if (rSub === 'note') openN(null); else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openSheet(null); });
 
 /* ---------- sheet ---------- */
 const dlg = $('#sheet');
@@ -3749,7 +3751,7 @@ function taskRow(t, when, late, slim) {
     '<button type="button" class="two" data-n="task" data-id="' + esc(t.id) + '" aria-label="' + esc(t.t) + ' ändern"><span class="l"><span>' + esc(t.t) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
     (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
 }
-const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['task', 'Aufgaben'], ['note', 'Notizen']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
+const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['task', 'Aufgaben'], ['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
 const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + esc(f[0]) + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
 function tasksHTML() {
   if (!taskList().length) return emptyHTML('aufgaben', 'Noch keine Aufgabe', 'Schreib auf, was ansteht. Was offen bleibt, rutscht auf den nächsten Tag.', '<button type="button" class="primary" data-n="newtask">Aufgabe anlegen</button>');
@@ -3782,8 +3784,9 @@ function noteListHTML() {
   const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
   return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
 }
-/* Arbeit und Uni (v72, Wunsch des Nutzers): Die Ordner „Arbeit“ und „Uni“ der Notizen zeigen über ihren Notizen einen eigenen Teil.
-   Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile. */
+/* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben Routinen, Aufgaben und Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
+   Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile.
+   Darunter stehen jeweils die Notizen des gleichnamigen Ordners; eine dort angelegte Notiz bekommt ihn von selbst (siehe openN). */
 const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
 const uniList = () => Object.keys(N.uni.e).filter(id => N.uni.e[id]).map(id => Object.assign({ id }, N.uni.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : x.id < y.id ? 1 : -1);
 /* Bezahlte Minuten: Ende minus Beginn (über Mitternacht plus ein Tag) minus Pause. Verdienst in Cent, je Eintrag gerundet. */
@@ -3815,14 +3818,13 @@ function uniHTML() {
   if (fs.length) h += '<div class="folds">' + fs.map(q => foldHTML('uni-' + q[0][0], q[0][1], nT(q[1].length), pktT(sum(q[1])) + ' Punkte', q[1].map(row).join(''))).join('') + '</div>';
   return h;
 }
+function teilHTML(f) {
+  const list = notesNew().filter(x => x.f === f);
+  return (f === 'arb' ? workHTML() : uniHTML()) + (list.length ? secHTML('Notizen', String(list.length), secAct('data-n="newnote"', '', 'Notiz schreiben')) + '<ul class="entries">' + list.map(x => noteRow(x)).join('') + '</ul>' : addFoldHTML('data-n="newnote"', 'Notizen'));
+}
 function notesHTML() {
-  const n = noteList().length, teil = nFolder === 'arb' ? workHTML() : nFolder === 'uni' ? uniHTML() : '';
-  if (teil) {
-    /* Im Ordner mit eigenem Teil gibt es kein Suchfeld: Ein alter Suchtext darf die Liste darunter nicht still filtern */
-    nQuery = ''; const inF = noteList().filter(inFolder).length;
-    return folderBarHTML() + teil + (inF ? secHTML('Notizen', String(inF), secAct('data-n="newnote"', '', 'Notiz schreiben')) + '<div id="n-list">' + noteListHTML() + '</div>' : addFoldHTML('data-n="newnote"', 'Notizen'));
-  }
-  if (!n) { nQuery = ''; return folderBarHTML() + emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
+  const n = noteList().length;
+  if (!n) { nQuery = ''; return emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
   /* Das Suchfeld erscheint erst, wenn die Liste länger wird */
   if (n <= 5) nQuery = '';
   return (n > 5 ? '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' : '') +
@@ -4012,7 +4014,7 @@ const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.h
 function paintN() { $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF; }
 function openN(id) {
   const x = id ? N.notes[id] : null;
-  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? nFolder : '', newF: false, fresh: !x };
+  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? (rSub === 'work' ? 'arb' : rSub === 'uni' ? 'uni' : nFolder) : '', newF: false, fresh: !x };
   $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz'; $('#n-text').placeholder = 'Was willst du festhalten?';
   $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = ''; $('#n-err').hidden = true;
   /* Neu: nur das Textfeld. Was hier verborgen ist, bleibt es, solange das Blatt offen ist: So verschiebt sich beim Speichern nichts unter dem Finger. */
@@ -4421,7 +4423,7 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'task' ? 'Aufgabe anlegen' : rSub === 'note' ? 'Notiz schreiben' : 'Neue Routine anlegen');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'task' ? 'Aufgabe anlegen' : rSub === 'note' ? 'Notiz schreiben' : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
 document.addEventListener('click', e => {

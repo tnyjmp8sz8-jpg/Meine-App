@@ -1,4 +1,4 @@
-// Arbeit und Uni: die Ordner „Arbeit“ und „Uni“ der Notizen mit Arbeitszeiten (Verdienst je Monat) und Terminen der Uni (Punkte je Fach).
+// Arbeit und Uni: zwei eigene Teile des Planers neben Routinen, Aufgaben und Notizen, mit Arbeitszeiten (Verdienst je Monat) und Terminen der Uni (Punkte je Fach).
 const { oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
 
 lauf(async () => {
@@ -16,19 +16,24 @@ lauf(async () => {
   const { browser, page, fehler } = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N } });
   /* Gelöschtes und Verworfenes bleibt im Speicher als Schlüssel mit null stehen: gezählt wird, was einen Wert hat */
   const zahl = o => Object.values(o).filter(Boolean).length;
-  const kurz = () => page.waitForTimeout(150), nm = () => text(page, '#n-main'), ordner = async v => { await page.click('#n-main [data-n="folder"][data-v="' + v + '"]'); await kurz(); };
-  await bereich(page, 'routinen'); await page.click('[data-r="sub"][data-v="note"]'); await kurz();
+  const kurz = () => page.waitForTimeout(150), nm = () => text(page, '#n-main'), teil = async v => { await page.click('#r-subs [data-r="sub"][data-v="' + v + '"]'); await kurz(); };
+  await bereich(page, 'routinen'); await kurz();
 
-  // --- Ordner ---
+  // --- Umschalter und Ordner ---
+  const subs = await page.evaluate(() => { const b = [...document.querySelectorAll('#r-subs [data-r="sub"]')]; return b.map(x => x.textContent).join(' | ') + ' · Reihen: ' + new Set(b.map(x => Math.round(x.getBoundingClientRect().top))).size + ' · rechts: ' + (b[b.length - 1].getBoundingClientRect().right <= innerWidth - 16); });
+  P.ok('Umschalter: Routinen, Aufgaben, Notizen, Arbeit, Uni in einer Reihe (390 px)', subs === 'Routinen | Aufgaben | Notizen | Arbeit | Uni · Reihen: 1 · rechts: true', subs);
+  await teil('note');
   const leiste = await text(page, '#n-main .chips .chip');
   P.ok('Ordner in der Reihe: Alle, Uni, Arbeit, Promotion, Privat', leiste === 'Alle | Uni | Arbeit | Promotion | Privat', leiste);
   const g0 = (await gespeichert(page)).N;
   P.ok('eigener Ordner „arbeit“ geht im festen auf, seine Notiz zieht um', !g0.folders.fx && g0.notes.n1.f === 'arb', JSON.stringify([g0.folders, g0.notes.n1]));
   P.ok('unbrauchbare Einträge werden beim Laden verworfen', !g0.work.e.kaputt && !g0.uni.e.falsch);
-  P.ok('ohne gewählten Ordner steht kein Verdienst und keine Punktzahl da', !(await nm()).includes('Verdienst') && !(await nm()).includes('Punkte gesamt'));
+  await page.click('#n-main [data-n="folder"][data-v="arb"]'); await kurz();
+  P.ok('Notizen, Ordner „Arbeit“: nur die Notiz, kein Verdienst', (await nm()).includes('Dienstplan anfragen') && !(await nm()).includes('Verdienst'));
 
   // --- Arbeit ---
-  await ordner('arb');
+  await teil('work');
+  P.ok('Arbeit: keine Ordner-Reihe, kein Suchfeld', !(await page.$('#n-main [data-n="folder"]')) && !(await page.$('#n-q')));
   P.enthaelt('Arbeit: Verdienst im November 148,63 €, 10,25 Std an 2 Tagen', await text(page, '#n-main .hero'), ['Verdienst im November', '148,63', '10,25 Std an 2 Tagen']);
   const falten = await text(page, '#n-main .folds [data-fold]');
   P.enthaelt('je Monat eine Klappzeile mit Tagen, Stunden und Summe', falten, ['November 2026 2 Tage · 10,25 Std 148,63 €', 'Oktober 2026 1 Tag · 6 Std 78,00 €']);
@@ -39,6 +44,10 @@ lauf(async () => {
   P.ok('zu- und aufklappen: November zu, Oktober offen', (await offen()) === 'arbeit-2026-11=false,arbeit-2026-10=true', await offen());
   P.enthaelt('Oktober rechnet mit dem Lohn von damals (13,00 €)', await nm(), ['10:00–16:00 · 6 Std 78,00 €']);
   P.enthaelt('Notiz des Ordners steht darunter', await nm(), ['Notizen1', 'Dienstplan anfragen']);
+  // Das Plus oben rechts öffnet dasselbe Blatt
+  await page.click('#add'); await kurz();
+  P.ok('Plus oben: Blatt „Arbeitszeit eintragen“', await page.evaluate(() => document.querySelector('#bsheet').open && document.querySelector('#add').getAttribute('aria-label') === 'Arbeitszeit eintragen'));
+  await page.keyboard.press('Escape'); await kurz();
   // Neuer Eintrag: Zeiten, Pause und Lohn stehen wie beim jüngsten Eintrag da (14.11.). 12.11. 09:00–13:00 ohne Pause mit 15,00 € = 4 Std → 60,00 €
   await page.click('#n-main [data-n="newwork"]'); await kurz();
   const vor = await page.evaluate(() => ['b-date', 'b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|'));
@@ -62,7 +71,7 @@ lauf(async () => {
   P.enthaelt('Rückgängig: wieder 208,63 €', await text(page, '#n-main .hero'), ['208,63']);
 
   // --- Uni ---
-  await ordner('uni');
+  await teil('uni');
   P.enthaelt('Uni: 9,5 Punkte bei 3 Terminen', await text(page, '#n-main .hero'), ['Punkte gesamt', '9,5', '3 Termine']);
   const kacheln = await text(page, '#n-main .figs .fig');
   P.ok('Kacheln: Kons 6,5 · Paro 3 · Prothetik 0', kacheln === '6,5 Kons | 3 Paro | 0 Prothetik', kacheln);
@@ -95,18 +104,24 @@ lauf(async () => {
   // --- Ordner ohne Notiz, schmale Breite, Sicherung ---
   await page.click('#n-main [data-n="notedone"]'); await kurz();
   P.ok('Uni ohne Notiz: Zeile „Notizen“ mit Plus statt leerer Überschrift', !!(await page.$('#n-main [data-n="newnote"].fo')) && !(await nm()).includes('Keine Notiz'));
+  // Eine Notiz, die hier angelegt wird, gehört von selbst in den Ordner „Uni“ und steht gleich darunter
+  await page.click('#n-main [data-n="newnote"]'); await kurz(); await page.fill('#n-text', 'Skript Paro lesen'); await page.keyboard.press('Escape'); await kurz();
+  const nn = Object.values((await gespeichert(page)).N.notes).find(x => x && x.x === 'Skript Paro lesen');
+  P.ok('Notiz aus dem Teil „Uni“ trägt den Ordner „Uni“ und steht dort', !!nn && nn.f === 'uni' && (await nm()).includes('Skript Paro lesen'), JSON.stringify(nn));
   await page.setViewportSize({ width: 320, height: 700 }); await kurz();
   const quer = await page.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth > s.clientWidth || document.documentElement.scrollWidth > innerWidth || [...document.querySelectorAll('#n-main *')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 0.5); });
   P.ok('320 px: nichts steht seitlich hinaus (Uni)', !quer);
-  await ordner('arb');
+  const sub320 = await page.evaluate(() => { const b = [...document.querySelectorAll('#r-subs [data-r="sub"]')]; return b.every(x => x.getBoundingClientRect().right <= innerWidth - 16) && new Set(b.map(x => Math.round(x.getBoundingClientRect().top))).size === 2; });
+  P.ok('320 px: der Umschalter bricht in zwei Reihen um, nichts ragt hinaus', sub320);
+  await teil('work');
   const quer2 = await page.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth > s.clientWidth || [...document.querySelectorAll('#n-main *')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 0.5); });
   P.ok('320 px: nichts steht seitlich hinaus (Arbeit)', !quer2);
 
-  /* Leere App: Die Ordner sind auch ohne eine einzige Notiz erreichbar, und ein erster Eintrag ohne gemerkten Lohn verlangt ihn */
+  /* Leere App: Notizen zeigen wie bisher nur „Noch keine Notiz“; ein erster Eintrag ohne gemerkten Lohn verlangt ihn */
   const l = await oeffnen({ uhr: new Date(2026, 10, 15, 12) });
   await bereich(l.page, 'routinen'); await l.page.click('[data-r="sub"][data-v="note"]'); await l.page.waitForTimeout(150);
-  P.ok('leere App: Ordner-Reihe steht über „Noch keine Notiz“', (await text(l.page, '#n-main')).includes('Noch keine Notiz') && !!(await l.page.$('#n-main [data-n="folder"][data-v="arb"]')));
-  await l.page.click('#n-main [data-n="folder"][data-v="arb"]'); await l.page.waitForTimeout(150);
+  P.ok('leere App, Notizen: „Noch keine Notiz“ ohne Ordner-Reihe', (await text(l.page, '#n-main')).includes('Noch keine Notiz') && !(await l.page.$('#n-main [data-n="folder"]')));
+  await l.page.click('#r-subs [data-r="sub"][data-v="work"]'); await l.page.waitForTimeout(150);
   P.enthaelt('leere App, Arbeit: 0,00 € und Hinweis', await text(l.page, '#n-main .hero'), ['0,00', 'Noch keine Arbeitszeit eingetragen']);
   await l.page.click('#n-main [data-n="newwork"]'); await l.page.waitForTimeout(150);
   P.ok('erster Eintrag: Lohn hat sofort den Fokus', (await l.page.evaluate(() => document.activeElement.id)) === 'b-rate');
