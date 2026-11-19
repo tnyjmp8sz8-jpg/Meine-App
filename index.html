@@ -183,17 +183,17 @@ dialog:focus,dialog:focus-visible{outline:none}
 dialog{border:0;padding:0;margin:auto auto var(--kb,0px);width:100%;max-width:480px;max-height:calc(92% - var(--kb,0px));transition:margin-bottom .2s ease;border-radius:24px 24px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(4,6,10,.6)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh-head h2{margin:0;font-family:var(--display);font-size:18px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
 .x svg{width:16px;height:16px}
 .fld{display:flex;flex-direction:column;gap:6px}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
 input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
 /* iPhone: Datumsfelder sind sonst breiter als ihr Platz, dann ragt das Feld rechts hinaus und das Blatt lässt sich seitlich wischen */
-input[type="date"],input[type="month"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-height:46px}
+input[type="date"],input[type="month"],input[type="time"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-height:46px}
 input::-webkit-date-and-time-value{text-align:left;margin:0;min-width:0}
 dialog,.scroll{overflow-x:hidden}
 dialog{overscroll-behavior:contain}
@@ -640,7 +640,7 @@ button.lastx:active{background:var(--fill)}
 .primary,.ghost,.fig,.stepper button{border-radius:14px}
 .seg2{border-radius:14px;padding:3px}
 .seg2 button{border-radius:11px}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-radius:16px}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:16px}
 .days button{border-radius:14px}
 .kx,.prow,.tog{border-radius:16px}
 .lx-tab{border-radius:999px;padding:6px 12px}
@@ -665,7 +665,7 @@ dialog[open]::backdrop{animation:dim .2s ease}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"]{border-color:transparent}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
 .is-off{box-shadow:inset 0 0 0 1px var(--line)}
 .chip,.lx-tab{background:var(--surface)}
 .card .chip{background:var(--fill)}
@@ -733,9 +733,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"]{b
 
 /* Blätter mit Griff wie in iOS */
 dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-radius:3px;background:var(--fill);margin:8px auto 0}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{padding-top:10px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:10px}
 .cs-top{padding-top:6px}
-@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform{padding-top:20px}}
+@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
@@ -776,7 +776,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v71</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v72</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -933,6 +933,75 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <p class="err" id="a-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="a-save">Speichern</button>
     <button type="button" class="ghost danger" id="a-del" hidden>Aufgabe löschen</button>
+  </form>
+</dialog>
+
+<dialog tabindex="-1" id="bsheet" aria-labelledby="bs-title">
+  <form id="bform" novalidate>
+    <div class="sh-head">
+      <h2 id="bs-title">Arbeitszeit eintragen</h2>
+      <button type="button" class="x" id="bs-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <label class="fld" for="b-date">
+      <span>Tag</span>
+      <input id="b-date" type="date">
+    </label>
+    <div class="duo">
+      <label class="fld" for="b-von">
+        <span>Von</span>
+        <input id="b-von" type="time">
+      </label>
+      <label class="fld" for="b-bis">
+        <span>Bis</span>
+        <input id="b-bis" type="time">
+      </label>
+    </div>
+    <div class="duo">
+      <label class="fld" for="b-pause">
+        <span>Pause in Minuten</span>
+        <input id="b-pause" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="0">
+      </label>
+      <label class="fld" for="b-rate">
+        <span>Stundenlohn in €</span>
+        <input id="b-rate" type="text" inputmode="decimal" maxlength="8" autocomplete="off" placeholder="0,00">
+      </label>
+    </div>
+    <p class="note" id="b-calc" hidden></p>
+    <p class="err" id="b-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="b-save">Speichern</button>
+    <button type="button" class="ghost danger" id="b-del" hidden>Eintrag löschen</button>
+  </form>
+</dialog>
+
+<dialog tabindex="-1" id="usheet" aria-labelledby="us-title">
+  <form id="uform" novalidate>
+    <div class="sh-head">
+      <h2 id="us-title">Termin eintragen</h2>
+      <button type="button" class="x" id="us-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="fld">
+      <span id="lbl-u-fach">Fach</span>
+      <div class="chips" id="u-fach" role="group" aria-labelledby="lbl-u-fach"></div>
+    </div>
+    <label class="fld" for="u-pts">
+      <span>Punkte</span>
+      <input id="u-pts" type="text" inputmode="decimal" maxlength="7" autocomplete="off" placeholder="0">
+    </label>
+    <label class="fld" for="u-note">
+      <span>Was</span>
+      <input id="u-note" type="text" maxlength="80" autocomplete="off" placeholder="z. B. Füllung 36, optional">
+    </label>
+    <label class="fld" for="u-date">
+      <span>Tag</span>
+      <input id="u-date" type="date">
+    </label>
+    <p class="err" id="u-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="u-save">Speichern</button>
+    <button type="button" class="ghost danger" id="u-del" hidden>Termin löschen</button>
   </form>
 </dialog>
 
@@ -1260,7 +1329,7 @@ let mMode = 'month', mYM = '', mYear = 0, mNow = '';   // mNow: der laufende Mon
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
 let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
-let N = { folders: {}, tasks: {}, notes: {} };   // Aufgaben und Notizen, Aufbau siehe normN()
+let N = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } };   // Aufgaben und Notizen, Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'cardio', hMode = 'day', hWeek = '', hMonth = '';
 
@@ -1733,7 +1802,7 @@ const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (te
 /* Klappzeile: eine Zeile mit Name, kleiner Zeile (sub) und Anzahl (right). Aufgeklappt folgen rows als Zeilen derselben Liste und after darunter (für Inhalt, der keine Zeile ist).
    Ob eine Klappzeile offen ist, steht in fo unter ihrem Schlüssel (key) und nur dort. Gespeichert wird es nicht: Der erste Blick in einen Bereich ist immer derselbe (foldsShut). */
 const fo = {};
-const foldHTML = (key, title, sub, right, rows, after) => '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + !!fo[key] + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (fo[key] ? rows + '</ul>' + (after || '') : '</ul>');
+const foldHTML = (key, title, sub, right, rows, after, auf) => { const o = fo[key] === undefined ? !!auf : !!fo[key]; return '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + o + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (o ? rows + '</ul>' + (after || '') : '</ul>'); };
 /* Der eine Weg für alle Klappzeilen (foldHTML und die Monate aus monthsHTML): Ein Tipp kehrt um, was die Zeile gerade zeigt, dann wird neu gezeichnet.
    Maßgeblich ist aria-expanded und nicht fo, weil die jüngsten Monate einer Liste auch ohne Merker offen sind.
    Eine offene Erklärung („i“) bleibt dabei stehen: Sonst verschwände sie beim Zeichnen, und die angetippte Zeile darunter spränge nach oben. */
@@ -3582,7 +3651,7 @@ $('#p-del').addEventListener('click', () => {
          notes: { id: { x Text, f Ordner, c angelegt, m geändert } } }
    Notizen sind für die schnelle Aufnahme: nur Text, jede mit einem Kreis davor, Abhaken löscht sie. */
 function normN(o) {
-  const out = { folders: {}, tasks: {}, notes: {} }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+  const out = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
   const fo = o && o.folders, ta = o && o.tasks, no = o && o.notes;
   if (fo && typeof fo === 'object') for (const id in fo) out.folders[id] = fo[id] && typeof fo[id] === 'object' && fo[id].n ? { n: str(fo[id].n, 24) } : null;
   if (ta && typeof ta === 'object') for (const id in ta) {
@@ -3597,6 +3666,21 @@ function normN(o) {
     const tx = [str(x.t, 120).trim(), str(x.x, 20000).replace(/\s+$/, '')].filter(Boolean).join('\n').slice(0, 20000), f = str(x.f, 24), c = num(x.c), m = num(x.m) || c;
     out.notes[id] = tx.trim() ? { x: tx, f, c, m } : null;
     if (Array.isArray(x.items)) x.items.forEach((it, i) => { if (it && typeof it === 'object' && !it.d && str(it.t, 200).trim()) out.notes[id + 'i' + i] = { x: str(it.t, 200).trim(), f, c, m }; });
+  }
+  /* Arbeitszeiten (v72): d Tag, a und b Beginn und Ende in Minuten seit Mitternacht, p Pause in Minuten, r Stundenlohn in Cent (je Eintrag, damit ein neuer Lohn Altes nicht ändert).
+     work.rate ist der zuletzt benutzte Lohn; er fehlt, solange keiner eingetragen ist (eine eingelesene alte Sicherung überschreibt ihn so nicht mit 0). */
+  const wo = o && o.work, un = o && o.uni, min = v => typeof v === 'number' && isFinite(v) && v >= 0 && v < 1440 ? Math.round(v) : -1;
+  if (wo && typeof wo === 'object') {
+    if (okCents(wo.rate)) out.work.rate = Math.round(wo.rate);
+    if (wo.e && typeof wo.e === 'object') for (const id in wo.e) {
+      const x = wo.e[id];
+      out.work.e[id] = x && typeof x === 'object' && isKey(x.d) && min(x.a) >= 0 && min(x.b) >= 0 && okCents(x.r) ? { d: x.d, a: min(x.a), b: min(x.b), p: Math.min(1439, Math.round(num(x.p))), r: Math.round(x.r) } : null;
+    }
+  }
+  /* Termine der Uni (v72): d Tag, f Fach (siehe FACH), p Punkte in Hundertsteln (ganze Zahl, damit Summen nicht krumm werden), n was gemacht wurde */
+  if (un && typeof un === 'object' && un.e && typeof un.e === 'object') for (const id in un.e) {
+    const x = un.e[id];
+    out.uni.e[id] = x && typeof x === 'object' && isKey(x.d) && FACH.some(f => f[0] === x.f) && typeof x.p === 'number' && isFinite(x.p) && x.p >= 0 && x.p <= 1e6 ? { d: x.d, f: x.f, p: Math.round(x.p), n: str(x.n, 80) } : null;
   }
   return out;
 }
@@ -3619,7 +3703,9 @@ function monthDay(t) {
   for (let p; chain.length < 120 && (p = all.find(x => x.nx === chain[chain.length - 1].id && x.r === 'month' && x.d));) chain.push(p);
   return chain.reduceRight((want, x) => { const day = +x.d.slice(8); return day === Math.min(want, new Date(+x.d.slice(0, 4), +x.d.slice(5, 7), 0).getDate()) ? want : day; }, 0);
 }
-const FOLDERS = [['uni', 'Uni'], ['prom', 'Promotion'], ['priv', 'Privat']];
+const FOLDERS = [['uni', 'Uni'], ['arb', 'Arbeit'], ['prom', 'Promotion'], ['priv', 'Privat']];
+/* Fächer der Zahnmedizin, in denen der Nutzer Punkte sammelt */
+const FACH = [['kons', 'Kons'], ['paro', 'Paro'], ['proth', 'Prothetik']];
 /* Wiederholung einer Aufgabe: '' nie, 'day', 'week', 'month', dazu ein eigener Takt als 'day' oder 'week' mit angehängter Zahl von 2 bis 99 ('day3' = alle 3 Tage; v69).
    repOf() zerlegt das in Einheit und Zahl, repOk() prüft es (auch für eingelesene Sicherungen), repName() ist der Text in der Zeile, 'x' ist der Knopf „Alle …“ im Blatt. */
 const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['month', 'Monatlich'], ['x', 'Alle …']];
@@ -3633,7 +3719,14 @@ const taskList = () => Object.keys(N.tasks).filter(id => N.tasks[id]).map(id => 
 const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
 /* Eigene Ordner ohne Aufgabe und ohne Notiz verschwinden beim Start von selbst (wie eigene Kategorien) */
 function cleanFolders() {
-  const used = {}, p = { folders: {} }; let n = 0;
+  const used = {}, p = { folders: {}, tasks: {}, notes: {} }; let n = 0;
+  /* Ein eigener Ordner, der wie ein fester heißt (z. B. „Arbeit“, fest seit v72), geht in diesem auf: Sonst stünde der Name zweimal in der Reihe */
+  for (const id in N.folders) {
+    const f = N.folders[id], fix = f && FOLDERS.find(x => x[1].toLowerCase() === f.n.trim().toLowerCase()); if (!fix) continue;
+    taskList().forEach(t => { if (t.f === id) p.tasks[t.id] = { f: fix[0] }; }); noteList().forEach(x => { if (x.f === id) p.notes[x.id] = { f: fix[0] }; });
+    p.folders[id] = null; n++;
+  }
+  if (n) { ndoc.patch(p); p.tasks = {}; p.notes = {}; p.folders = {}; n = 0; }
   taskList().concat(noteList()).forEach(x => { used[x.f] = 1; });
   for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
   if (n) ndoc.patch(p);
@@ -3689,9 +3782,47 @@ function noteListHTML() {
   const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
   return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
 }
+/* Arbeit und Uni (v72, Wunsch des Nutzers): Die Ordner „Arbeit“ und „Uni“ der Notizen zeigen über ihren Notizen einen eigenen Teil.
+   Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile. */
+const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
+const uniList = () => Object.keys(N.uni.e).filter(id => N.uni.e[id]).map(id => Object.assign({ id }, N.uni.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : x.id < y.id ? 1 : -1);
+/* Bezahlte Minuten: Ende minus Beginn (über Mitternacht plus ein Tag) minus Pause. Verdienst in Cent, je Eintrag gerundet. */
+const workMin = x => Math.max(0, (x.b - x.a + 1440) % 1440 - x.p);
+const workPay = x => Math.round(workMin(x) * x.r / 60);
+const stdT = m => (m / 60).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' Std';
+const uhrT = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
+const pktT = p => (p / 100).toLocaleString('de-DE', { maximumFractionDigits: 2 });
+function workHTML() {
+  const list = workList(), cur = todayKey().slice(0, 7), by = {};
+  list.forEach(x => { const m = x.d.slice(0, 7); (by[m] = by[m] || []).push(x); });
+  const pay = l => l.reduce((s, x) => s + workPay(x), 0), mins = l => l.reduce((s, x) => s + workMin(x), 0), c = by[cur] || [];
+  const tage = l => { const n = new Set(l.map(x => x.d)).size; return n + (n === 1 ? ' Tag' : ' Tage'); };
+  let h = '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
+    (c.length ? stdT(mins(c)) + ' an ' + tage(c).replace('Tage', 'Tagen') : list.length ? 'In diesem Monat noch nichts eingetragen' : 'Noch keine Arbeitszeit eingetragen') + '</p></section>' +
+    '<button type="button" class="primary" data-n="newwork">Arbeitszeit eintragen</button>';
+  const row = x => '<li><button type="button" class="two" data-n="work" data-id="' + esc(x.id) + '" aria-label="Arbeitszeit ändern"><span class="l"><span>' + dRow(x.d) + '</span><small>' + uhrT(x.a) + '–' + uhrT(x.b) + (x.p ? ' · ' + x.p + ' min Pause' : '') + ' · ' + stdT(workMin(x)) + '</small></span><b>' + eur(workPay(x)) + '</b></button></li>';
+  const ms = Object.keys(by).sort().reverse();
+  if (ms.length) h += '<div class="folds">' + ms.map(m => foldHTML('arbeit-' + m, MONTHS[+m.slice(5) - 1] + ' ' + m.slice(0, 4), tage(by[m]) + ' · ' + stdT(mins(by[m])), eur(pay(by[m])), by[m].map(row).join(''), '', m === cur)).join('') + '</div>';
+  return h;
+}
+function uniHTML() {
+  const list = uniList(), sum = l => l.reduce((s, x) => s + x.p, 0), nT = n => n + (n === 1 ? ' Termin' : ' Termine');
+  let h = '<section class="hero w-hero"><p class="date">Punkte gesamt</p><h1><span class="num">' + pktT(sum(list)) + '</span></h1><p class="sub">' + (list.length ? nT(list.length) : 'Noch kein Termin eingetragen') + '</p></section>' +
+    '<div class="figs on-bg">' + FACH.map(f => fig(pktT(sum(list.filter(x => x.f === f[0]))), '', f[1])).join('') + '</div>' +
+    '<button type="button" class="primary" data-n="newuni">Termin eintragen</button>';
+  const row = x => '<li><button type="button" class="two" data-n="uni" data-id="' + esc(x.id) + '" aria-label="Termin ändern"><span class="l"><span>' + (x.n ? esc(x.n) : 'Termin') + '</span><small>' + dRow(x.d) + '</small></span><b>' + pktT(x.p) + ' Pkt.</b></button></li>';
+  const fs = FACH.map(f => [f, list.filter(x => x.f === f[0])]).filter(q => q[1].length);
+  if (fs.length) h += '<div class="folds">' + fs.map(q => foldHTML('uni-' + q[0][0], q[0][1], nT(q[1].length), pktT(sum(q[1])) + ' Punkte', q[1].map(row).join(''))).join('') + '</div>';
+  return h;
+}
 function notesHTML() {
-  const n = noteList().length;
-  if (!n) { nQuery = ''; return emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
+  const n = noteList().length, teil = nFolder === 'arb' ? workHTML() : nFolder === 'uni' ? uniHTML() : '';
+  if (teil) {
+    /* Im Ordner mit eigenem Teil gibt es kein Suchfeld: Ein alter Suchtext darf die Liste darunter nicht still filtern */
+    nQuery = ''; const inF = noteList().filter(inFolder).length;
+    return folderBarHTML() + teil + (inF ? secHTML('Notizen', String(inF), secAct('data-n="newnote"', '', 'Notiz schreiben')) + '<div id="n-list">' + noteListHTML() + '</div>' : addFoldHTML('data-n="newnote"', 'Notizen'));
+  }
+  if (!n) { nQuery = ''; return folderBarHTML() + emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
   /* Das Suchfeld erscheint erst, wenn die Liste länger wird */
   if (n <= 5) nQuery = '';
   return (n > 5 ? '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' : '') +
@@ -3721,6 +3852,10 @@ function nAct(e) {
   else if (a === 'newtask') openA(null);
   else if (a === 'note') openN(id);
   else if (a === 'newnote') openN(null);
+  else if (a === 'newwork') openB(null);
+  else if (a === 'work') openB(id);
+  else if (a === 'newuni') openU(null);
+  else if (a === 'uni') openU(id);
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
   else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderRoutines(); }
   else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
@@ -3799,6 +3934,74 @@ $('#aform').addEventListener('submit', e => {
   ndoc.patch(p); closeA(); render();
 });
 $('#a-del').addEventListener('click', () => { if (aE.id) { const p = { tasks: {} }; p.tasks[aE.id] = null; ndoc.patch(p); } closeA(); render(); });
+
+/* Blatt „Arbeitszeit“ (v72). Neu: Beginn, Ende, Pause und Lohn stehen wie beim letzten Eintrag da, eine gleiche Schicht ist so ein Tipp auf „Speichern“.
+   Unter den Feldern steht schon vor dem Speichern, was herauskommt (Stunden und Verdienst). */
+const bdlg = $('#bsheet'); let bE = null;
+const minOf = v => { const m = /^(\d\d):(\d\d)/.exec(v || ''); return m && +m[1] < 24 && +m[2] < 60 ? +m[1] * 60 + +m[2] : -1; };
+/* Liest das Blatt: der Eintrag oder, wenn etwas fehlt, der Text der Meldung */
+function bRead() {
+  const d = $('#b-date').value, a = minOf($('#b-von').value), b = minOf($('#b-bis').value), ps = $('#b-pause').value.trim(), p = ps ? Math.round(dec(ps)) : 0, r = parseEur($('#b-rate').value);
+  if (!isKey(d)) return 'Wähle einen Tag.';
+  if (a < 0 || b < 0) return 'Trag Beginn und Ende ein.';
+  if (a === b) return 'Beginn und Ende sind gleich.';
+  if (!(p >= 0)) return 'Die Pause in Minuten, z. B. 30.';
+  if (p >= (b - a + 1440) % 1440) return 'Die Pause ist so lang wie die Arbeitszeit.';
+  if (!okCents(r)) return 'Trag deinen Stundenlohn ein.';
+  return { d, a, b, p, r };
+}
+function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 'string'; if (!c.hidden) c.textContent = stdT(workMin(x)) + ' · ' + eur(workPay(x)); }
+function openB(id) {
+  const x = id ? N.work.e[id] : null, last = workList()[0], v = x || last, r = x ? x.r : N.work.rate || (last ? last.r : 0);
+  bE = { id: x ? id : null };
+  $('#bs-title').textContent = x ? 'Arbeitszeit ändern' : 'Arbeitszeit eintragen';
+  $('#b-date').value = x ? x.d : todayKey();
+  $('#b-von').value = v ? uhrT(v.a) : ''; $('#b-bis').value = v ? uhrT(v.b) : ''; $('#b-pause').value = v && v.p ? v.p : '';
+  $('#b-rate').value = r ? eur(r).replace(' €', '') : '';
+  $('#b-err').hidden = true; $('#b-del').hidden = !x;
+  bCalc(); openDlg(bdlg); bdlg.scrollTop = 0;
+  if (!x && !r) fokus($('#b-rate'));
+}
+function closeB() { if (bdlg.open) bdlg.close(); }
+$('#bs-close').addEventListener('click', closeB);
+bdlg.addEventListener('click', e => { if (e.target === bdlg) closeB(); });
+$('#bform').addEventListener('input', bCalc);
+$('#bform').addEventListener('submit', e => {
+  e.preventDefault();
+  const x = bRead(); if (typeof x === 'string') { const m = $('#b-err'); m.textContent = x; m.hidden = false; return; }
+  const p = { work: { rate: x.r, e: {} } }; p.work.e[bE.id || newId()] = x;
+  ndoc.patch(p); closeB(); render();
+});
+$('#b-del').addEventListener('click', () => { if (bE.id) { const p = { work: { e: {} } }; p.work.e[bE.id] = null; ndoc.patch(p); } closeB(); render(); });
+
+/* Blatt „Termin“ der Uni (v72): Fach, Punkte, was gemacht wurde, Tag. Das Fach steht wie beim letzten Termin da. Ohne Punkte zählt der Termin mit 0. */
+const udlg = $('#usheet'); let uE = null;
+function paintU() { $('#u-fach').innerHTML = FACH.map(f => '<button type="button" class="chip" data-f="' + f[0] + '" aria-pressed="' + (uE.f === f[0]) + '">' + f[1] + '</button>').join(''); }
+function openU(id) {
+  const x = id ? N.uni.e[id] : null, last = uniList()[0];
+  uE = { id: x ? id : null, f: x ? x.f : last ? last.f : '' };
+  $('#us-title').textContent = x ? 'Termin ändern' : 'Termin eintragen';
+  $('#u-date').value = x ? x.d : todayKey(); $('#u-date').max = todayKey();
+  $('#u-pts').value = x ? pktT(x.p) : ''; $('#u-note').value = x ? x.n : '';
+  $('#u-err').hidden = true; $('#u-del').hidden = !x;
+  paintU(); openDlg(udlg); udlg.scrollTop = 0;
+  if (!x) fokus($('#u-pts'));
+}
+function closeU() { if (udlg.open) udlg.close(); }
+$('#us-close').addEventListener('click', closeU);
+udlg.addEventListener('click', e => { if (e.target === udlg) closeU(); });
+$('#u-fach').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { uE.f = b.dataset.f; paintU(); } });
+$('#uform').addEventListener('submit', e => {
+  e.preventDefault();
+  const err = m => { const x = $('#u-err'); x.textContent = m; x.hidden = false; };
+  const d = $('#u-date').value, ps = $('#u-pts').value.trim(), v = ps ? dec(ps) : 0;
+  if (!uE.f) return err('Wähle das Fach.');
+  if (!(v >= 0 && v <= 10000)) return err('Die Punkte als Zahl, z. B. 4 oder 2,5.');
+  if (!isKey(d)) return err('Wähle einen Tag.');
+  const p = { uni: { e: {} } }; p.uni.e[uE.id || newId()] = { d, f: uE.f, p: Math.round(v * 100), n: $('#u-note').value.trim().slice(0, 80) };
+  ndoc.patch(p); closeU(); render();
+});
+$('#u-del').addEventListener('click', () => { if (uE.id) { const p = { uni: { e: {} } }; p.uni.e[uE.id] = null; ndoc.patch(p); } closeU(); render(); });
 
 /* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Ordner, „Als Aufgabe“, Löschen.
    Gespeichert wird von selbst (kurz nach jeder Eingabe, beim Verlassen des Feldes, beim Schließen), damit nichts verloren geht, auch wenn das Blatt weggezogen wird.
@@ -4067,7 +4270,7 @@ const BK_DAYS = 7;
 function backupDay() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
   const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : '']
-    .concat(taskList().concat(noteList()).map(x => x.c ? keyOf(new Date(x.c)) : '')).filter(Boolean).sort()[0] || '';   // Aufgaben und Notizen zählen ab dem Tag, an dem sie angelegt wurden
+    .concat(taskList().concat(noteList()).map(x => x.c ? keyOf(new Date(x.c)) : ''), workList().concat(uniList()).map(x => x.d)).filter(Boolean).sort()[0] || '';   // Aufgaben und Notizen zählen ab dem Tag, an dem sie angelegt wurden
   return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
 }
 /* Legt die iPhone-App von selbst eine Kopie in den gewählten Ordner (sSelbst), gibt es nichts zu erinnern. Sichert sie nur in ihren eigenen Ordner,
@@ -4533,7 +4736,7 @@ const hFaellig = () => sSelbst() ? '' : backupDay().due;
 /* Ist in irgendeiner Gruppe etwas eingetragen? Eine leere App sichert nie: Nach einem verlorenen Speicher würde sie sonst die gute Datei des Tages mit nichts überschreiben. */
 const hatDaten = () => S.routines.length > 0 || Object.keys(LY).some(y => live(LY[y] || {})) || wList().length > 0 || W.goal != null
   || ['fixed', 'budgets', 'cats', 'acc', 'goals'].some(k => live(MF[k] || {})) || Object.keys(MY).some(y => live(MY[y].tx)) || live(T.runs)
-  || live(K.ex) || live(K.plans) || live(N.tasks) || live(N.notes);
+  || live(K.ex) || live(K.plans) || live(N.tasks) || live(N.notes) || live(N.work.e) || live(N.uni.e);
 function sMerk() { if (!HUELLE) return; sOffen = true; if (hInfo.sicherung && !sTimer) sTimer = setTimeout(sJetzt, S_WARTEN); }
 function sJetzt() {
   clearTimeout(sTimer); sTimer = 0;

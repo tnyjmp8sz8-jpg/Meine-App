@@ -1,8 +1,9 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v71 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 18.11.2026 spätabends). `node tests/alle.js` (v71): alle 723 Prüfungen in 14 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 154, Gesten 21, Eingaben 24, Löschen 22, Aufgaben und Notizen 80, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10).
-- v71 behebt seinen Fund (Bildschirmfoto 18.11., 23:47: Blatt „Ausgabe eintragen“ im Budget, Betrag mit blauem Rand, keine Tastatur): Der Fokus kam 60 ms nach dem Tipp. Jetzt sofort, in allen Blättern (Buchung, Gewicht, Lauf, neue Routine, neuer Plan). Am iPhone noch nicht bestätigt: Bildschirmfoto erbitten. Auf seinem Foto standen die Konten „Girokonto“ und „PayPal“ (noch nicht in „Trade Republic“ umbenannt).
+- App-Inhalt (`index.html`): live ist v72 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 19.11.2026). `node tests/alle.js` (v72): alle 764 Prüfungen in 15 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 154, Gesten 21, Eingaben 24, Löschen 22, Aufgaben und Notizen 80, Arbeit und Uni 41, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10).
+- v72 (sein Auftrag vom 19.11.: „notizen bereich für Uni, Arbeit“ mit Arbeitszeiten und Verdienst je Monat zum Ein- und Ausklappen, und Terminen der Zahnmedizin mit Punkten je Fach Kons, Paro, Prothetik): gebaut als eigener Teil in den Ordnern „Arbeit“ und „Uni“ der Notizen (Planer → Notizen → Ordner antippen). Meine Annahmen, ihm genannt: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Summen über alle Zeit. Offen an ihn: Punkte je Semester getrennt? Soll je Fach? Mehrere Jobs? Am iPhone noch nicht gesehen (Zeitfelder „Von/Bis“ zeigen dort das Rad).
+- v71 behebt seinen Fund (Bildschirmfoto 18.11., 23:47: Betrag im Budget mit blauem Rand, keine Tastatur): Der Fokus kam 60 ms nach dem Tipp, jetzt sofort in allen Blättern. Am iPhone noch nicht bestätigt. Auf seinem Foto standen die Konten „Girokonto“ und „PayPal“ (noch nicht in „Trade Republic“ umbenannt).
 - iPhone-App: Bei ihm läuft 0.4 („gültig bis 24. November“), soweit bekannt. Im Release „iphone-test“ liegt seit 18.11. abends Fassung 0.6 (Schnelleingabe mit Ausgabe/Einnahme und Konto, Sicherung von selbst, Läufe von der Apple Watch über Kurzbefehle, „Ausgabe eintragen“ mit Konto, neues Symbol). Gebaut bei Codemagic (Bau `6afdebc71ae4e76cb30891f0`, Selbsttest bestanden, `Track.ipa` 1.907.012 Bytes, Prüfsumme im Release geprüft). Die Bilder auf dem Zweig `ios-bild` stammen noch vom GitHub-Bau von 0.5. Ihm gemeldet; ob er installiert hat, ist offen. Am iPhone ist von 0.5/0.6 noch nichts geprüft.
 - Kurzbefehle: Er hat bisher nur den zum Erneuern („habe nur befehl für auto refresh“, 18.11. abends). Die Anleitung für die drei Automationen (Apple Pay, „Lauf merken“, „Läufe übernehmen“ mit Strecke und Puls) und die drei Einstellungen in der App (Konto in „Trade Republic“ umbenennen, feste Posten mit Konto und Tag, Ordner für die Sicherung in iCloud) hat er in einem Stück bekommen. Rat an ihn: mit Apple Pay anfangen. Hakt etwas: Bildschirmfoto der Automation bzw. der aufgeklappten Zeile „Apple Watch“ erbitten.
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
@@ -44,6 +45,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v68–v69: Aufgaben mit eigenem Takt „Alle … Tage/Wochen“, gezählt ab dem Starttag.
 - v70 mit iPhone-App 0.6: neues App-Symbol (schwarz mit blauem Schein).
 - v71: Die Tastatur geht in allen Blättern sofort auf (Fokus ohne Wartezeit).
+- v72: Ordner „Arbeit“ (Arbeitszeiten, Verdienst je Monat als Klappzeile) und „Uni“ (Termine mit Fach und Punkten, Summe je Fach) bei den Notizen.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.
@@ -67,6 +69,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Kurzbefehle: feuert „Apple Watch-Training“ bei gesperrtem iPhone; nimmt der Datumsfilter Beginn und Ende; kommen Betrag und Händler aus „Transaktion“ an?
 - Erneuern: Steht der Zähler in AltStore nach einigen Tagen von selbst wieder bei 7?
 - Oberfläche (v64, v66): übersichtlich genug, oder fehlt eine eingeklappte Liste? Trifft man das kleine Plus und „Alle n“, ohne die erste Zeile zu erwischen? Reicht eine Zeile je Notiz auf Heute?
+- Arbeit und Uni (v72): Findet er die Ordner bei den Notizen? Lassen sich „Von“ und „Bis“ gut einstellen (Rad von iOS), ragen die Zeitfelder nicht hinaus? Stimmen seine Zahlen?
 - Monatsabschluss (v59): dritter Umschalter „Monat“; Hinweis am Monatsanfang.
 - Eingaben: Umschalter Ausgabe/Einnahme im Blatt gut zu sehen (v56)? Geht seit v71 beim Betrag (Budget, Schnell-Knopf), beim Gewicht und beim Lauf die Tastatur sofort auf? Geht sie bei „+ Notiz“ sofort auf, legt Enter die Notiz an und bleibt das Feld offen (v51, v54)?
 - Größen und Farben (v52, v55): etwas zu klein zum Lesen oder Treffen? Kreis zum Abhaken? Farbiges Plus in den Schnell-Knöpfen?
