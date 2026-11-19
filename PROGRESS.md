@@ -8,10 +8,11 @@
 - Kurzbefehle: Er hat bisher nur den zum Erneuern („habe nur befehl für auto refresh“, 18.11. abends). Die Anleitung für die drei Automationen (Apple Pay, „Lauf merken“, „Läufe übernehmen“ mit Strecke und Puls) und die drei Einstellungen in der App (Konto in „Trade Republic“ umbenennen, feste Posten mit Konto und Tag, Ordner für die Sicherung in iCloud) hat er in einem Stück bekommen. Rat an ihn: mit Apple Pay anfangen. Hakt etwas: Bildschirmfoto der Automation bzw. der aufgeklappten Zeile „Apple Watch“ erbitten.
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
 - Projektdateien gestrafft (18.11. abends, sein „mach das“): Alles zur iPhone-App steht in `IPHONE.md` und wird nur bei Bedarf gelesen; `CLAUDE.md` trägt davon nur den Kern. Erledigte Aufträge sind hier gestrichen (ihr Wissen steht in den beiden anderen Dateien).
-- Sparsam arbeiten: kein Ultracode. Der Nutzer will sein Claude-Abo widerrufen („das Limit reicht nicht“, 17.11.).
-- Zweige: `main` und der Arbeitszweig der Sitzung; der alte `claude/app-entwicklung-verschieben-af0kew` steht noch auf v63. Keine offenen Pull Requests oder Issues.
-- Freigabe in der Sitzung vom 17./18.11.: „du hast alle berechtigungen“ und „arbeite solange bis fertig“. Gilt nur für diese Sitzung; in einer neuen Sitzung neu erfragen.
-- Umgebung der Sitzung: seit 18.11. abends „Meine-App“ (erlaubt `api.codemagic.io`, Schlüssel hinterlegt). `node tests/live.js` geht weiter nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
+- Sparsam arbeiten (Regeln in `CLAUDE.md` unter „Zusammenarbeit“): Er fragte am 19.11., wie er weniger Limit verbraucht. Geraten: neue Sitzung je Thema, Wünsche sammeln, für Kleines ein kleineres Modell, kurze Antworten. Ein Mac senkt den Verbrauch nicht; er brächte nur der iPhone-App etwas (Health mit kostenloser Apple-ID über Xcode und signierte Kurzbefehle: nachgelesen, nie ausprobiert). Der Nutzer wollte sein Claude-Abo widerrufen („das Limit reicht nicht“, 17.11.).
+- Übergabe (19.11.): Auf seinen Wunsch ist alles für eine neue Sitzung vorbereitet. `main` und der Arbeitszweig `claude/nifty-hamilton-gyakdi` stehen gleich; eine neue Sitzung bekommt einen eigenen Zweig und baut auf `main` auf. Ihm gegeben: Anleitung für den Start und ein Satz für die erste Nachricht (lesen, Freigabe für `main`, kurz antworten).
+- Zweige: `main`, `claude/nifty-hamilton-gyakdi` (Sitzung vom 17. bis 19.11., kann bleiben), der alte `claude/app-entwicklung-verschieben-af0kew` (v63). Keine offenen Pull Requests oder Issues.
+- Freigaben gelten nur je Sitzung. In der Sitzung vom 17. bis 19.11. hieß es „du hast alle berechtigungen“; in einer neuen Sitzung neu erfragen, außer er schreibt es gleich dazu.
+- Umgebung: „Meine-App“ (persönlich; erlaubt `api.codemagic.io`, Schlüssel für Codemagic hinterlegt). Nur dort lässt sich die iPhone-App über Codemagic bauen; in „Default“ geht alles andere. `node tests/live.js` geht in beiden nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
 Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“ (18.11.):
@@ -79,5 +80,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Ältere Punkte: Datumsfeld bei „Einheit ändern“, Monatsfeld im Blatt „Stand eintragen“, Konto-Chips bei mehreren Konten, Kontoname ändern.
 
 ## Nächste Schritte
-- Der Nutzer entscheidet. Erwartet wird als Nächstes seine Rückmeldung zu 0.6 und zu den Automationen (je mit Bildschirmfoto); vorher `IPHONE.md` lesen.
+- Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` nur, wenn es um die iPhone-App geht.
+- Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: v73 (fünf Umschalter im Planer, „Arbeit“, „Uni“), v71 (Tastatur beim Betrag), Fassung 0.6 und die drei Automationen (je mit Bildschirmfoto).
+- Offene Fragen an ihn: Punkte je Semester getrennt? Soll je Fach als Ziel? Sollen die Antworten künftig noch kürzer sein?
 - Bei Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen.

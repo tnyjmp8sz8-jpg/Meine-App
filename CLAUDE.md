@@ -195,16 +195,23 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 
 ## Zusammenarbeit
 - Sprache: Deutsch, einfache Worte, kurz. Der Nutzer ist kein Entwickler, arbeitet am iPhone und schickt Screenshots.
-- Sparsam arbeiten: Sein Limit ist knapp. Keine Arbeitsabläufe mit vielen Helfern (Ultracode), außer er verlangt es in der Sitzung selbst („bitte kein ultra code mehr nutzen“, 18.11.).
+- Sparsam arbeiten: Sein Limit ist knapp (er fragte am 19.11. ausdrücklich nach weniger Verbrauch bei gleicher Qualität). Deshalb:
+  - Keine Arbeitsabläufe mit vielen Helfern (Ultracode), außer er verlangt es in der Sitzung selbst („bitte kein ultra code mehr nutzen“, 18.11.).
+  - Eine Sitzung je Thema: Ist ein Thema fertig und veröffentlicht, ihm in einem Satz raten, für das nächste eine neue Sitzung zu beginnen (der Verlauf zählt bei jeder Nachricht mit). Alles Wissen steht in diesen Dateien.
+  - Erst fragen, dann bauen, wenn bei einem neuen Teil unklar ist, wo er liegen oder wie er aufgebaut sein soll: eine kurze Frage kostet weniger als ein Umbau (v72 → v73).
+  - Dateien nicht ganz lesen: `index.html` hat rund 4800 Zeilen, also suchen und Ausschnitte lesen. `IPHONE.md` nur bei Bedarf.
+  - Tests: während der Arbeit nur die betroffene Reihe, alle Reihen einmal vor dem Veröffentlichen; die Ausgabe auf Fehler und Summen kürzen.
+  - Nach dem Hochladen einmal rund 45 Sekunden warten (im Hintergrund), dann den Pages-Lauf einmal prüfen, nicht mehrfach abfragen.
+  - Bilder nur, wenn etwas neu aussieht.
 - Zu jeder Änderung einen eigenen, konkreten Verbesserungsvorschlag mitbringen: nur vorschlagen, nicht ungefragt umsetzen. Offene Vorschläge stehen in `PROGRESS.md`.
 - Mitdenken ist ausdrücklich erwünscht („immer weiter so“): Was eine Idee des Nutzers braucht, damit sie im Alltag wirklich stimmt, gleich mitbauen und erklären (Beispiel: Zu Konten an Buchungen gehörten Umbuchungen und der Tag bei festen Posten).
 - Nichts umsetzen, wovon man selbst nicht überzeugt ist. Ist ein Wunsch keine gute Idee, das offen sagen und eine bessere Lösung nennen. Eigene Fehler und falsche Vorschläge benennen.
-- Antwort nach einer Änderung: was neu ist, was bewusst anders gelöst wurde, wie getestet wurde, was nicht getestet werden konnte, welche Version live ist, ein Vorschlag.
+- Antwort nach einer Änderung, kurz gehalten (je Punkt höchstens ein bis zwei Zeilen, was nicht zutrifft, entfällt): was neu ist, was bewusst anders gelöst wurde, wie getestet wurde, was nicht getestet werden konnte, welche Version live ist, ein Vorschlag in einem Satz. Keine Zwischenmeldungen, die nichts Neues sagen.
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
 - Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v73` → `takt-v74`), `<span class="ver">v73</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
-- Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen.
+- Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Ob direkt nach `main` veröffentlicht werden darf, in jeder neuen Sitzung einmal beim Nutzer erfragen (steht es schon in seiner ersten Nachricht, gilt das). Auch reine Änderungen an den Projektdateien nach `main` bringen, wenn veröffentlicht werden darf: Eine neue Sitzung beginnt dort.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.
 
 ## Testen (vor jeder Veröffentlichung)
