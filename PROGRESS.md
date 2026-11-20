@@ -16,6 +16,7 @@
 
 ## Gesammelte Wünsche (nur gemerkt, nichts gebaut; auf sein Zeichen alles in einem Zug)
 - Aufgaben raus (20.11.: „merke ich mir so und ist zu viel“). Betrifft: Umschalter „Aufgaben“ im Planer, Aufgaben auf Heute samt „Alle n“, Kalender-Modus `task`, Zeile „Aufgaben“ in Woche und Monat, „Als Aufgabe“ im Blatt der Notiz, Blatt `asheet`, Tests, Wochenleiste der Aufgaben. Vor dem Bau klären oder so lösen: vorhandene Aufgaben bleiben gespeichert und in der Sicherung, werden nur nicht mehr gezeigt (nichts geht verloren); prüfen, ob Widget „Heute“ und `hStand()` Aufgaben mitschicken (`IPHONE.md`), das ginge ohne neue Installation nur auf der Seite des Inhalts.
+- Gewicht aus Health übernehmen (20.11.). Weg wie bei den Läufen, weil Health direkt mit seiner Installation nicht geht: neue Aktion für Kurzbefehle („Gewicht eintragen“ mit Wert und Tag, über `eingang.json`), er baut eine Automation „Health-Messungen suchen (Gewicht)“ → Aktion. Braucht eine neue Installation (Änderung unter `ios/`, bisher gibt es dort nur `trackpunkt://neu/gewicht`, das das Blatt öffnet) und im Inhalt die Übernahme in `hEingang()`. Zu klären beim Bau: vorhandene Einträge von Hand nie überschreiben; ältere Messungen einmalig nachholen; womit er wiegt (Waage mit App, die in Health schreibt, oder von Hand in Health). Vorher `IPHONE.md` lesen.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
 Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“ (18.11.):
