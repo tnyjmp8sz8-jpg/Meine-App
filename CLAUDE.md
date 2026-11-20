@@ -189,6 +189,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Beim Laufen zählt für ihn die Effizienz mehr als das Tempo (18.11.): Wo nur Platz für einen Vergleich ist, steht die Effizienz.
 - Läufe: Er trägt immer die Zahlen der Apple Watch bzw. aus Apple Fitness ein, nie die Anzeige des Laufbands (18.11.). Was von selbst von der Uhr kommt, ist also genau seine Zahl.
 - Arbeit und Uni (19.11.): Was für ihn ein eigenes Thema ist, will er als eigenen Teil oben im Umschalter sehen, nicht als Unterpunkt in einem Ordner. Ich hatte es zuerst in die Ordner der Notizen gelegt (seine Worte „Notizen-Bereich für Uni, Arbeit“); bei einem neuen Teil vorher mit Bild fragen, wo er liegen soll.
+- Aufgaben will er nicht mehr (20.11.: „merke ich mir so und ist zu viel“); der Ausbau steht in `PROGRESS.md` unter „Gesammelte Wünsche“. Keine Vorschläge mehr zu Aufgaben.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
@@ -198,6 +199,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Sparsam arbeiten: Sein Limit ist knapp (er fragte am 19.11. ausdrücklich nach weniger Verbrauch bei gleicher Qualität). Deshalb:
   - Keine Arbeitsabläufe mit vielen Helfern (Ultracode), außer er verlangt es in der Sitzung selbst („bitte kein ultra code mehr nutzen“, 18.11.).
   - Eine Sitzung je Thema: Ist ein Thema fertig und veröffentlicht, ihm in einem Satz raten, für das nächste eine neue Sitzung zu beginnen (der Verlauf zählt bei jeder Nachricht mit). Alles Wissen steht in diesen Dateien.
+  - Wünsche sammeln (sein Wunsch, 20.11.): Sagt er „erstmal nur merken“, den Wunsch nur in `PROGRESS.md` unter „Gesammelte Wünsche“ eintragen und hochladen, nichts bauen. Gebaut wird alles zusammen in einem Zug, sobald er es sagt.
   - Erst fragen, dann bauen, wenn bei einem neuen Teil unklar ist, wo er liegen oder wie er aufgebaut sein soll: eine kurze Frage kostet weniger als ein Umbau (v72 → v73).
   - Dateien nicht ganz lesen: `index.html` hat rund 4800 Zeilen, also suchen und Ausschnitte lesen. `IPHONE.md` nur bei Bedarf.
   - Tests: während der Arbeit nur die betroffene Reihe, alle Reihen einmal vor dem Veröffentlichen; die Ausgabe auf Fehler und Summen kürzen.

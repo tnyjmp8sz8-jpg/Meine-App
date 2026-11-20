@@ -14,6 +14,9 @@
 - Freigaben gelten nur je Sitzung. In der Sitzung vom 17. bis 19.11. hieß es „du hast alle berechtigungen“; in einer neuen Sitzung neu erfragen, außer er schreibt es gleich dazu.
 - Umgebung: „Meine-App“ (persönlich; erlaubt `api.codemagic.io`, Schlüssel für Codemagic hinterlegt). Nur dort lässt sich die iPhone-App über Codemagic bauen; in „Default“ geht alles andere. `node tests/live.js` geht in beiden nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
 
+## Gesammelte Wünsche (nur gemerkt, nichts gebaut; auf sein Zeichen alles in einem Zug)
+- Aufgaben raus (20.11.: „merke ich mir so und ist zu viel“). Betrifft: Umschalter „Aufgaben“ im Planer, Aufgaben auf Heute samt „Alle n“, Kalender-Modus `task`, Zeile „Aufgaben“ in Woche und Monat, „Als Aufgabe“ im Blatt der Notiz, Blatt `asheet`, Tests, Wochenleiste der Aufgaben. Vor dem Bau klären oder so lösen: vorhandene Aufgaben bleiben gespeichert und in der Sicherung, werden nur nicht mehr gezeigt (nichts geht verloren); prüfen, ob Widget „Heute“ und `hStand()` Aufgaben mitschicken (`IPHONE.md`), das ginge ohne neue Installation nur auf der Seite des Inhalts.
+
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
 Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“ (18.11.):
 1. Zuerst das Gebaute am iPhone zum Laufen bringen (0.6, Kurzbefehle, Ordner für die Sicherung).
