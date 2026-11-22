@@ -45,10 +45,9 @@ lauf(async () => {
   P.ok('kein „bis zum“ beim abgeschlossenen Monat', !(await seite()).includes('bis zum'));
 
   // --- Zahlen des abgeschlossenen Monats B, verglichen mit A ---
-  // Routinen: 21 von allen Tagen in B gegen 14 von allen Tagen in A. Beispiel November/Oktober: 21 / 30 = 70 %, 14 / 31 = 45 %, also +25 Prozentpunkte.
-  const qB = Math.round(21 / letzter(B) * 100), qA = Math.round(14 / letzter(A) * 100), dq = qB - qA;
   let z = await zeilen();
-  P.ok('Routinen: ' + qB + ' %, ' + (dq >= 0 ? '+' : '−') + Math.abs(dq) + ' Prozentpunkte', z.includes('Routinen ' + qB + ' %21 von ' + letzter(B) + ' ' + (dq === 0 ? 'gleich' : (dq > 0 ? '+' : '−') + Math.abs(dq) + ' Prozentpunkte')), z);
+  // Routinen gibt es seit v75 nicht mehr: Auch mit einer Routine und ihrem Protokoll im Speicher (21 Tage in B, 14 in A) steht keine Zeile da
+  P.ok('keine Zeile „Routinen“, obwohl welche gespeichert sind', !z.includes('Routinen'), z);
   // Aufgaben gibt es seit v74 nicht mehr: Auch mit erledigten Aufgaben im Speicher (3 in diesem Monat, 1 im Vormonat) steht keine Zeile da
   P.ok('keine Zeile „Aufgaben“, obwohl welche gespeichert sind', !z.includes('Aufgaben'), z);
   // Gewicht: Schnitt am Monatsende 79,0 kg, im Vormonat 80,0 → −1,0 kg; Ziel 75, also in die richtige Richtung (grün)
@@ -69,8 +68,7 @@ lauf(async () => {
   await page.click('#v-heute .mnav [data-m="next"]'); await kurz();
   z = await zeilen();
   P.enthaelt('laufender Monat: Vergleich bis zum selben Tag', await seite(), [name(C) + ' ' + C.slice(0, 4), 'Vergleich mit ' + name(B) + ' bis zum 3.']);
-  // Routinen: 1 von 3 Tagen = 33 %, in B bis zum 3. waren es 3 von 3 = 100 % → −67 Prozentpunkte
-  P.ok('Routinen: 33 %, −67 Prozentpunkte', z.includes('Routinen 33 %1 von 3 −67 Prozentpunkte'), z);
+  P.ok('laufender Monat: keine Zeile „Routinen“', !z.includes('Routinen'), z);
   // Flexible Ausgaben: 40 €, in B bis zum 3. 100 € → 60 € weniger. Laufen: 6 km, in B bis zum 3. 5 km → +1,0 km. Gym: 0, in B bis zum 3. eine → −1
   P.ok('Flexible Ausgaben: 40 €, 60 € weniger', z.includes('Flexible Ausgaben 40€ 60 € weniger'), z);
   P.ok('Laufen: 6,0 km, +1,0 km', z.includes('Laufen 6,0km · 1 Lauf +1,0 km'), z);

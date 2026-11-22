@@ -1,4 +1,4 @@
-// Eingaben in den Blättern: Dauer einer Routine (Minus-Knopf), Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
+// Eingaben in den Blättern: Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
 const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag } = require('./lib');
 
 lauf(async () => {
@@ -9,18 +9,6 @@ lauf(async () => {
   const { browser, page, fehler } = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, W } });
   const kurz = () => page.waitForTimeout(150), wert = sel => page.inputValue(sel);
   const ziel = () => text(page, '#v-gewicht .row.goal'), gw = async () => (await gespeichert(page)).W;
-
-  // --- Dauer einer Routine: „−“ heißt „5 Minuten weniger“, hört bei 1 auf und macht aus 1 bis 4 nie wieder 5 ---
-  await bereich(page, 'routinen'); await page.click('#add');
-  const schritt = async (start, knopf) => { await page.fill('#f-min', start); await page.click(knopf); return wert('#f-min'); };
-  // nächstkleinere Fünferstufe, mindestens 1: 3 → 1, 4 → 1, 1 bleibt 1, 5 → 1, 7 → 5, 10 → 5
-  const minus = []; for (const s of ['3', '4', '1', '5', '7', '10']) minus.push(await schritt(s, '#min-dec'));
-  P.ok('Minus: 3 → 1, 4 → 1, 1 → 1, 5 → 1, 7 → 5, 10 → 5', minus.join() === '1,1,1,1,5,5', minus.join());
-  // nächstgrößere Fünferstufe, höchstens 600: 1 → 5, 12 → 15, 600 bleibt 600
-  const plus = []; for (const s of ['1', '12', '600']) plus.push(await schritt(s, '#min-inc'));
-  P.ok('Plus: 1 → 5, 12 → 15, 600 → 600', plus.join() === '5,15,600', plus.join());
-  await page.fill('#f-name', 'Kurz dehnen'); await page.fill('#f-min', '3'); await page.click('#min-dec'); await page.click('#f-save'); await kurz();
-  P.ok('Routine mit 1 Minute gespeichert', (await gespeichert(page)).S.routines.some(r => r.name === 'Kurz dehnen' && r.minutes === 1));
 
   // --- Zielgewicht: unverändert speichern lässt den Startwert stehen ---
   await bereich(page, 'gewicht');
@@ -84,7 +72,7 @@ lauf(async () => {
   P.ok('Budget, Knopf „Ausgabe“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="add"]')) === 'm-amt');
   P.ok('Budget, Knopf „Einnahme“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="income"]')) === 'm-amt');
   P.ok('Lauf eintragen: Strecke hat sofort den Fokus', (await sofort('#v-training [data-t="add"]', 'training')) === 't-km');
-  P.ok('Neue Routine: Name hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'f-name');
+  P.ok('Planer, Plus oben: Der Text der neuen Notiz hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'n-text');
   await page.keyboard.press('Escape'); await kurz();
 
   await P.ende(browser, fehler);

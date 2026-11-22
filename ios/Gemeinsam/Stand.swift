@@ -1,14 +1,11 @@
 import SwiftUI
 
-/// Was die Web-App der Hülle nach jedem Speichern schickt und das Widget zeigt:
-/// für heute und die nächsten sieben Tage je ein Eintrag, damit das Widget auch nach Mitternacht stimmt, ohne dass die App geöffnet wurde.
+/// Was die Web-App der Hülle nach jedem Speichern schickt und das Widget zeigt.
 struct Stand: Codable {
+    /// Die Web-App schickt weiter acht Tage (heute und sieben weitere). Gelesen wird nur noch das Datum:
+    /// Routinen und Aufgaben, die hier standen (rn, rd, an, auf), gibt es in der App nicht mehr.
     struct Tag: Codable {
         var d: String       // Datum YYYY-MM-DD
-        var rn: Int         // Routinen geplant
-        var rd: Int         // Routinen erledigt
-        var an: Int         // offene Aufgaben, die bis zu diesem Tag fällig sind
-        var auf: [String]   // ihre ersten Titel
     }
     struct Notiz: Codable {
         var id: String      // Kennung in der Web-App; „neu-…“, solange die Notiz erst vorgemerkt ist
@@ -25,11 +22,9 @@ struct Stand: Codable {
     var konten: [Konto]?    // alle Konten, nach Name sortiert
     var konto: String?      // Kennung des Kontos, das die Web-App vorbelegen würde; leer = keines
 
-    func tag(_ datum: Date) -> Tag? { let k = Ablage.tag(datum); return tage.first { $0.d == k } }
-
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]
-        return Stand(tage: [Tag(d: Ablage.tag(Date()), rn: 4, rd: 2, an: 3, auf: ["Seminararbeit abgeben", "Zahnarzt anrufen", "Paket abholen"])], notizen: Array(texte.prefix(4)),
+        return Stand(tage: [Tag(d: Ablage.tag(Date()))], notizen: Array(texte.prefix(4)),
                      nz: texte.enumerated().map { Notiz(id: "b\($0.offset)", x: $0.element) })
     }
 }

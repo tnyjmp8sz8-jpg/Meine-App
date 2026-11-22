@@ -531,11 +531,9 @@ lauf(async () => {
   let m = await post(page), st = await letzter(page);
   p.ok('beim Start: „bereit“ und ein Stand', m[0] && m[0].art === 'bereit' && !!st, JSON.stringify(m).slice(0, 200));
   p.ok('Stand für heute und sieben weitere Tage', st.tage.length === 8 && st.tage[0].d === tag(0) && st.tage[7].d === tag(-7), JSON.stringify(st.tage.map(t => t.d)));
-  /* heute: 2 Routinen geplant (r3 nur morgen), 1 erledigt. Aufgaben gibt es seit v74 nicht mehr: Die Felder an und auf bleiben für das Widget der iPhone-App stehen, sind aber leer */
-  p.ok('heute: 2 Routinen, 1 erledigt, keine Aufgabe', st.tage[0].rn === 2 && st.tage[0].rd === 1 && st.tage[0].an === 0 && Array.isArray(st.tage[0].auf) && st.tage[0].auf.length === 0, JSON.stringify(st.tage[0]));
-  /* morgen: 3 Routinen (r3 kommt dazu), nichts erledigt */
-  p.ok('morgen: 3 Routinen, 0 erledigt', st.tage[1].rn === 3 && st.tage[1].rd === 0, JSON.stringify(st.tage[1]));
-  p.ok('an keinem der acht Tage steht eine Aufgabe im Stand', st.tage.every(t => t.an === 0 && t.auf.length === 0), JSON.stringify(st.tage[3]));
+  /* Routinen (seit v75) und Aufgaben (seit v74) gibt es nicht mehr. Die Felder rn, rd, an und auf bleiben stehen, weil die iPhone-App bis 0.6 sie beim Lesen erwartet, sind aber leer:
+     auch mit drei gespeicherten Routinen, von denen heute eine erledigt ist */
+  p.ok('Stand: an allen acht Tagen keine Routine und keine Aufgabe, die Felder sind da', st.tage.every(t => t.rn === 0 && t.rd === 0 && t.an === 0 && Array.isArray(t.auf) && t.auf.length === 0), JSON.stringify(st.tage[0]));
   p.ok('Notizen: neueste zuerst, nur die erste Zeile', st.notizen.join('|') === 'Idee für Kapitel 3|Milch kaufen', st.notizen.join('|'));
   /* ohne Sicherung zählt der älteste Eintrag, auch eine Notiz: hier die Notiz von vor 25 Tagen (älter als die Routinen), also fällig seit 25 − 7 = 18 Tagen */
   p.ok('Sicherung fällig: ältester Eintrag (eine Notiz) plus 7 Tage', st.sicherung === tag(18), st.sicherung);

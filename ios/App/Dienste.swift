@@ -110,13 +110,12 @@ final class Gesundheit {
 /// Nur für das Bild aus dem Simulator (Start mit „-widgetbild“): zeigt den Inhalt des Widgets in den Größen des iPhones, dunkel und hell
 struct WidgetVorschau: View {
     var body: some View {
-        let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel, tag = stand.tage[0]
+        let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel
         ZStack {
             LinearGradient(colors: [Color(0x27324A), Color(0x0B0D14)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
             VStack(spacing: 16) {
                 kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: dunkel), dunkel, 338)
-                HStack(spacing: 22) { kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: dunkel), dunkel, 158); kachel(Klein(tag: tag, f: dunkel), dunkel, 158) }
-                kachel(Mittel(tag: tag, notizen: stand.notizen, f: dunkel), dunkel, 338)
+                HStack(spacing: 22) { kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: dunkel), dunkel, 158); kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: hell), hell, 158) }
                 kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: hell), hell, 338)
             }
         }

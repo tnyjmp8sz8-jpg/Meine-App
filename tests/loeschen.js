@@ -45,16 +45,6 @@ lauf(async () => {
   await page.click('#v-training [data-k="live"]'); await kurz(); await page.click('#l-del'); await page.click('#l-del'); await page.waitForTimeout(7600);
   P.ok('ohne Tipp verschwindet der Hinweis nach einigen Sekunden', (await hinweis()) === '');
 
-  // --- Laufende Routine löschen und zurückholen: Die Uhr läuft danach weiter (der Takt war mit dem Löschen angehalten) ---
-  const uhr = () => text(page, '#main .row[data-id="r1"] .clock');   // r1 ist „Lesen“ in den Beispieldaten
-  await bereich(page, 'routinen'); await page.click('#main .row:has-text("Lesen") .go'); await kurz();
-  await page.click('#main .row:has-text("Lesen") .more'); await page.click('#act-del'); await page.click('#act-del'); await page.waitForTimeout(600);
-  P.ok('laufende Routine gelöscht', !(await gespeichert(page)).S.running && !(await page.$('#main .row:has-text("Lesen")')));
-  await page.click('#toast button'); await kurz();
-  const u1 = await uhr(); await page.waitForTimeout(1600); const u2 = await uhr();
-  P.ok('Rückgängig: Die Routine läuft wieder, und die Uhr zählt weiter', !!(await gespeichert(page)).S.running && !!u1 && u1 !== u2, u1 + ' → ' + u2);
-  await page.click('#main .row:has-text("Lesen") .go'); await kurz();
-
   // --- Eigene Kategorie ---
   await bereich(page, 'haushalt'); await sub('budget'); await page.click('#v-haushalt [data-m="add"]');
   await page.click('#m-cat [data-c="__more"]'); await page.click('#m-cat [data-c="__new"]');

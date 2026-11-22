@@ -119,13 +119,6 @@ dialog:focus,dialog:focus-visible{outline:none}
 .txt{min-width:0;display:flex;flex-direction:column;gap:2px}
 .name{font-weight:600;font-size:17px;line-height:1.25;overflow-wrap:anywhere}
 .meta{color:var(--r-muted);font-size:14px;font-variant-numeric:tabular-nums}
-.week{display:flex;gap:6px;margin-top:7px;align-items:center}
-.week i{width:8px;height:8px;border-radius:50%}
-.week .off{background:var(--r-line);transform:scale(.45)}
-.week .open{border:1.5px solid var(--r-muted)}
-.week .miss{border:1.5px solid var(--r-line)}
-.week .done{background:var(--r-accent)}
-.week .now{outline:1.5px solid var(--r-ink);outline-offset:2px}
 
 .side{position:relative;display:flex;align-items:center;padding-right:4px}
 .streak{display:flex;flex-direction:column;align-items:flex-end;line-height:1;gap:3px;padding:0 2px 0 8px}
@@ -135,8 +128,6 @@ dialog:focus,dialog:focus-visible{outline:none}
 .more svg{width:20px;height:20px}
 
 .is-done .glyph{background:var(--good);color:var(--bg)}
-.is-off{background:transparent}
-.is-off .glyph{background:transparent;color:var(--r-ink);box-shadow:inset 0 0 0 1.5px var(--r-line)}
 
 .is-run{
   background:var(--accent);border-color:var(--accent);
@@ -147,16 +138,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .is-run .fill{background:var(--accent-deep);transition:width .3s linear}
 .is-run .glyph{background:var(--on-accent);color:var(--accent)}
 .is-run :focus-visible{outline-color:var(--on-accent)}
-.live{grid-column:1/-1;position:relative;display:flex;align-items:flex-end;justify-content:space-between;gap:12px;padding:2px 16px 18px;cursor:pointer}
-.clock{font-family:var(--display);font-weight:700;font-size:clamp(60px,20vw,88px);line-height:.86;letter-spacing:-.02em;white-space:nowrap}
-.clock .d{display:inline-block;width:.6em;text-align:center}
-.clock .c{display:inline-block;width:.26em;text-align:center}
-.pill{flex:none;font-size:14px;font-weight:600;padding:8px 14px;border-radius:999px;background:var(--on-accent);color:var(--accent)}
 
-@keyframes pop{0%{transform:scale(1)}40%{transform:scale(1.4)}100%{transform:scale(1)}}
-@keyframes sweep{from{width:0}to{width:100%}}
-.just-done .fill{animation:sweep .7s ease}
-.just-done .streak b{animation:pop .7s ease .2s;display:inline-block}
 
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
 /* Symbol der leeren Seite in der Kennfarbe des Bereichs, wie die Symbole in der Übersicht auf Heute */
@@ -203,9 +185,6 @@ dialog{overscroll-behavior:contain}
 .stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
 .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .stepper .unit{flex:none;color:var(--muted);font-weight:500}
-.days{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.days button{height:42px;border-radius:12px;border:1px solid var(--line);background:transparent;font-size:13px;font-weight:600;padding:0}
-.days button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent)}
 .err{margin:0;color:var(--danger);font-size:14px;font-weight:500}
 #sh-extra{display:flex;flex-direction:column;gap:8px}
 #sh-extra[hidden],#sh-stats[hidden],.err[hidden],.ghost[hidden]{display:none}
@@ -216,16 +195,6 @@ dialog{overscroll-behavior:contain}
 .fig{background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:2px;min-width:0}
 .fig b{font-family:var(--display);font-weight:700;font-size:24px;letter-spacing:-.02em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
 .fig span{font-size:12px;color:var(--muted);font-weight:500}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
-.cal .h{font-size:11px;font-weight:600;color:var(--muted);text-align:center;letter-spacing:.04em}
-.cal i{height:22px;border-radius:7px}
-.cal .off{background:transparent;box-shadow:inset 0 0 0 1px var(--line);opacity:.5}
-.cal .open{box-shadow:inset 0 0 0 1.5px var(--muted)}
-.cal .miss{background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
-.cal .part{background:var(--accent-soft)}
-.cal .done{background:var(--accent)}
-.cal .none{background:transparent;box-shadow:inset 0 0 0 1px var(--line);opacity:.35}
-.cal .now{outline:1.5px solid var(--ink);outline-offset:2px}
 .legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:12px;color:var(--muted);margin:0}
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:12px;height:12px;border-radius:4px;display:inline-block}
@@ -350,7 +319,6 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ov:active{background:var(--fill)}
 .ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent)}
 .ov .ic svg{width:17px;height:17px}
-.ov .ic.routinen{--c:var(--accent)}
 .ov .ic.gewicht{--c:var(--c-weight)}
 .ov .ic.haushalt{--c:var(--c-money)}
 .ov .ic.training{--c:var(--good)}
@@ -430,14 +398,9 @@ body{font-size:14px}
 .glyph svg{width:12px;height:12px}
 .name{font-size:14px}
 .meta{font-size:12px}
-.week{margin-top:4px;gap:5px}
-.week i{width:6px;height:6px}
 .streak b{font-size:16px}
 .more{width:32px;height:40px}
 .more svg{width:18px;height:18px}
-.live{padding:0 10px 12px}
-.clock{font-size:clamp(40px,12vw,50px)}
-.pill{font-size:12.5px;padding:6px 12px}
 .primary{padding:8px 16px}
 .ghost{min-height:40px;padding:8px 14px;font-size:13.5px}
 .chip{min-height:32px;padding:5px 12px;font-size:12.5px}
@@ -469,7 +432,6 @@ body{font-size:14px}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
 /* Notizen, Arbeit und Uni im Planer */
-#main[hidden],#n-main[hidden]{display:none}
 #n-main,#n-list{display:flex;flex-direction:column;gap:12px}
 #n-main>.sec{margin:8px 2px -6px}
 input.n-q{margin-bottom:-8px}
@@ -516,19 +478,15 @@ input.n-q{margin-bottom:-8px}
 .wd:active{background:var(--surface)}
 .wk i,.cd i{display:flex;justify-content:center;gap:3px;height:6px}
 .wk i{margin-top:4px}
-.wk u,.cd u,.cs-leg u{display:block;width:6px;height:6px;border-radius:50%;text-decoration:none}
+.wk u,.cd u{display:block;width:6px;height:6px;border-radius:50%;text-decoration:none}
 u.g{background:var(--good)}
 u.b{background:var(--accent)}
-u.p{box-shadow:inset 0 0 0 1.5px var(--mid)}
 #csheet{height:92%;overflow:hidden}
 #csheet[open]{display:flex;flex-direction:column}
 .cs-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 14px 2px}
 .cs-top b{font-size:15px;font-weight:700}
 .cs-top .linkbtn{justify-self:start}
 .cs-top .linkbtn:last-child{justify-self:end}
-.cs-leg{display:flex;justify-content:center;gap:16px;margin:0;padding:8px 10px 0;font-size:11.5px;color:var(--muted)}
-.cs-leg[hidden]{display:none}
-.cs-leg span{display:inline-flex;align-items:center;gap:6px}
 .cs-top .linkbtn{font-size:15px;padding:8px 6px}
 .cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:1px solid var(--line)}
 .cs-wd span{text-align:center;font-size:11px;font-weight:600;color:var(--mid)}
@@ -630,7 +588,6 @@ button.lastx:active{background:var(--fill)}
 .seg2{border-radius:14px;padding:3px}
 .seg2 button{border-radius:11px}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:16px}
-.days button{border-radius:14px}
 .kx,.prow,.tog{border-radius:16px}
 .lx-tab{border-radius:999px;padding:6px 12px}
 .lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:12px}
@@ -655,11 +612,10 @@ dialog[open]::backdrop{animation:dim .2s ease}
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
-.is-off{box-shadow:inset 0 0 0 1px var(--line)}
 .chip,.lx-tab{background:var(--surface)}
 .card .chip{background:var(--fill)}
 .chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:var(--on-accent)}
-.stepper button,.mnav button,.days button{border-color:transparent;background:var(--surface)}
+.stepper button,.mnav button{border-color:transparent;background:var(--surface)}
 .mnav button{background:none;color:var(--accent)}
 .mnav button:disabled{color:var(--muted)}
 .mnav svg{width:17px;height:17px}
@@ -706,7 +662,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .entries .irow .info{flex:none;width:auto;display:inline-grid;padding:0;margin:0 13px 0 0}
 /* Zeile „Sicherung“: Meldet die iPhone-App einen Fehler, steht sein Wortlaut in Rot (die Unterzeile trägt dann .neg). Ein langer Ordnername ohne Leerzeichen bricht darin um, statt Heute breiter zu machen. */
 #bk-err{color:var(--danger);overflow-wrap:anywhere}
-/* Heute zeigt die Kurzfassung: eine Zeile je Notiz (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
+/* Heute zeigt die Kurzfassung: eine Zeile je Notiz (Ordner und Datum stehen im Planer) */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
 .fld>span,.streak span{text-transform:none;letter-spacing:0}
@@ -716,7 +672,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
 .mark{font-size:17px;font-weight:700}
-.hero h1 .num,.clock,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
+.hero h1 .num,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
 
@@ -730,7 +686,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg{transition:none}
   .fill,.glyph{transition:none}
-  .just-done .fill,.just-done .streak b{animation:none}
 }
 </style>
 </head>
@@ -739,7 +694,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="app">
   <header class="top">
     <span class="mark">Track<span class="dot">.</span></span>
-    <button class="add" id="add" type="button" aria-label="Neue Routine anlegen">
+    <button class="add" id="add" type="button" aria-label="Notiz schreiben">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
   </header>
@@ -748,15 +703,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-routinen" class="view" hidden>
   <div id="r-subs"></div>
-  <div id="r-strip" hidden></div>
-  <section class="hero">
-    <p class="date" id="date"></p>
-    <h1 id="hero"></h1>
-    <p class="sub" id="sub"></p>
-  </section>
-
-  <main id="main"></main>
-  <div id="n-main" hidden></div>
+  <div id="n-main"></div>
   </div>
 
   <div id="v-gewicht" class="view" hidden></div>
@@ -765,7 +712,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v74</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v75</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -778,7 +725,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </button>
     <button type="button" class="tab" data-view="routinen">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle class="f" cx="12" cy="12" r="8.5"/><path class="k" d="M8.3 12.3l2.5 2.5 4.9-5.2"/></svg>
-      <span id="tab-r">Planer</span>
+      <span>Planer</span>
     </button>
     <button type="button" class="tab" data-view="gewicht">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path class="b" d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path class="b" d="M15 7h5v5"/></svg>
@@ -794,62 +741,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </button>
   </div>
 </nav>
-
-<dialog tabindex="-1" id="sheet" aria-labelledby="sh-title">
-  <form id="form" novalidate>
-    <div class="sh-head">
-      <h2 id="sh-title">Neue Routine</h2>
-      <button type="button" class="x" id="sh-close" aria-label="Schließen">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
-      </button>
-    </div>
-
-    <div id="sh-stats" hidden>
-      <div class="figs" id="figs"></div>
-      <div class="cal" id="cal" aria-hidden="true"></div>
-      <p class="legend" aria-hidden="true">
-        <span><i style="background:var(--accent)"></i>erledigt</span>
-        <span><i style="background:var(--accent-soft)"></i>angefangen</span>
-        <span><i style="box-shadow:inset 0 0 0 1px var(--line);background:var(--surface)"></i>verpasst</span>
-      </p>
-    </div>
-
-    <label class="fld" for="f-name">
-      <span>Name</span>
-      <input id="f-name" name="name" type="text" maxlength="40" autocomplete="off" placeholder="z. B. Lesen">
-    </label>
-
-    <div class="fld">
-      <span id="lbl-min">Dauer pro Tag</span>
-      <div class="stepper">
-        <button type="button" id="min-dec" aria-label="5 Minuten weniger">−</button>
-        <input id="f-min" name="minutes" type="number" inputmode="numeric" min="1" max="600" aria-labelledby="lbl-min">
-        <span class="unit">min</span>
-        <button type="button" id="min-inc" aria-label="5 Minuten mehr">+</button>
-      </div>
-      <div class="chips" id="min-chips"></div>
-    </div>
-
-    <div class="fld">
-      <span id="lbl-days">Tage</span>
-      <div class="days" id="f-days" role="group" aria-labelledby="lbl-days"></div>
-      <div class="chips" id="day-chips">
-        <button type="button" class="chip" data-set="all">Täglich</button>
-        <button type="button" class="chip" data-set="work">Mo–Fr</button>
-        <button type="button" class="chip" data-set="we">Wochenende</button>
-      </div>
-    </div>
-
-    <p class="err" id="f-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="f-save">Anlegen</button>
-
-    <div id="sh-extra" hidden>
-      <button type="button" class="ghost" id="act-done">Heute als erledigt markieren</button>
-      <button type="button" class="ghost" id="act-reset">Heute zurücksetzen</button>
-      <button type="button" class="ghost danger" id="act-del">Routine löschen</button>
-    </div>
-  </form>
-</dialog>
 
 <dialog tabindex="-1" id="wsheet" aria-labelledby="ws-title">
   <form id="wform" novalidate>
@@ -1216,7 +1107,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 <dialog tabindex="-1" id="csheet" aria-labelledby="cs-title">
   <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button></div>
-  <p class="cs-leg" id="cs-leg" hidden></p>
   <div class="cs-wd" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
   <div class="cs-body" id="cs-body"></div>
   <div class="cs-day" id="cs-day"></div>
@@ -1230,7 +1120,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 /* ---------- helpers ---------- */
 const $ = (s, el = document) => el.querySelector(s);
-const TITLE = 'Track.';
 const DAYS = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
 const DAYS_LONG = ['Montag', 'Dienstag', 'Mittwoch', 'Donnerstag', 'Freitag', 'Samstag', 'Sonntag'];
 const pad = n => String(n).padStart(2, '0');
@@ -1249,19 +1138,17 @@ const fmt = sec => {
   const h = Math.floor(sec / 3600), m = Math.floor(sec % 3600 / 60), s = sec % 60;
   return h ? h + ':' + pad(m) + ':' + pad(s) : pad(m) + ':' + pad(s);
 };
-const clockHTML = t => t.split('').map(c => c === ':' ? '<span class="c">:</span>' : '<span class="d">' + c + '</span>').join('');
 
 const ICON = {
   play: '<svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><path d="M5 2.6v12.8a.8.8 0 0 0 1.2.7l10.3-6.4a.8.8 0 0 0 0-1.4L6.2 1.9A.8.8 0 0 0 5 2.6z"/></svg>',
-  pause: '<svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><rect x="3.5" y="2.5" width="4" height="13" rx="1.2"/><rect x="10.5" y="2.5" width="4" height="13" rx="1.2"/></svg>',
   check: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>',
   more: '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg>'
 };
 
 /* ---------- state ---------- */
-let S = { routines: [], running: null };   // Routinen + laufender Timer
-let LY = {};                               // Jahr -> { Datum: { routineId: { s: Sekunden, d: 0|1 } } }
-let lastDay = '', lastClock = '', justDone = null;
+let S = { routines: [], running: null };   // Routinen aus der Zeit bis v74: nicht mehr gezeigt, nur noch gespeichert (siehe normApp)
+let LY = {};                               // ihr Tagesprotokoll: Jahr -> { Datum: { routineId: { s: Sekunden, d: 0|1 } } }
+let lastDay = '';
 let W = { goal: null, goalFrom: null, entries: {} };   // Gewicht: Ziel + { Datum: kg }
 let view = 'routinen', wRange = '28';
 let MF = { fixed: {} };                    // Haushalt: feste Posten { id: {...} }
@@ -1284,6 +1171,8 @@ function loadLocal() {
 }
 function saveLocal() { try { localStorage.setItem(LS, JSON.stringify({ S, LY, W, MF, MY, T, K, N })); } catch (e) {} toastOff(); hSoon(); sMerk(); }
 
+/* Routinen (v1 bis v74) zeigt die App seit v75 nicht mehr (Wunsch des Nutzers). S und LY werden nur noch geladen, gespeichert und gesichert,
+   damit nichts verloren geht; ein Timer, der beim Umstieg lief, endet dabei. */
 function normRoutine(r) {
   if (!r || typeof r !== 'object') return null;
   const days = (Array.isArray(r.days) && r.days.length === 7) ? r.days.map(Boolean) : Array(7).fill(true);
@@ -1295,345 +1184,28 @@ function normRoutine(r) {
     created: isKey(r.created) ? r.created : todayKey()
   };
 }
-function normApp(d) {
-  const routines = (Array.isArray(d && d.routines) ? d.routines : []).map(normRoutine).filter(Boolean);
-  const ru = d && d.running;
-  let running = null;
-  if (ru && typeof ru === 'object' && Number.isFinite(ru.startedAt) && isKey(ru.date) && routines.some(r => r.id === String(ru.id)))
-    running = { id: String(ru.id), startedAt: ru.startedAt, date: ru.date };
-  return { routines, running };
-}
+const normApp = d => ({ routines: (Array.isArray(d && d.routines) ? d.routines : []).map(normRoutine).filter(Boolean), running: null });
 
-const byId = id => S.routines.find(r => r.id === id) || null;
 /* Blatt öffnen. Der Browser setzt den Fokus sonst auf den ersten Knopf und zeichnet auf dem iPhone einen Rahmen darum; der Fokus gehört dann aufs Blatt selbst. */
 function openDlg(d) { if (!d.open) d.showModal(); const a = document.activeElement; if (a && a !== d && a.tagName === 'BUTTON') d.focus(); }
 /* Ins erste Feld eines Blatts, sofort und ohne Verzögerung: Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp heraus gesetzt wird.
    Mit einer kurzen Wartezeit davor bekam das Feld in der iPhone-App zwar den blauen Rand, die Tastatur blieb aber aus (Bildschirmfoto des Nutzers, 18.11.). */
 function fokus(i) { i.focus(); try { i.select(); } catch (e) {} }
-const entry = (date, rid) => { const y = LY[date.slice(0, 4)]; const d = y && y[date]; return (d && d[rid]) || null; };
-const secsOf = (date, rid) => { const e = entry(date, rid); return Math.max(0, Number(e && e.s) || 0); };
-const doneOn = (date, rid) => { const e = entry(date, rid); return !!(e && e.d); };
-const goal = r => r.minutes * 60;
-const isRunning = r => !!S.running && S.running.id === r.id;
-function liveSecs(r, now) {
-  const run = isRunning(r);
-  let s = secsOf(run ? S.running.date : todayKey(), r.id);
-  if (run) s += Math.max(0, ((now || Date.now()) - S.running.startedAt) / 1000);
-  return Math.min(goal(r), s);
-}
-
-function stats(r) {
-  const tk = todayKey();
-  let start = parseKey(r.created);
-  const floor = new Date(new Date().getFullYear() - 1, 0, 1, 12);
-  if (start < floor) start = floor;
-  let run = 0, best = 0, total = 0;
-  for (let d = start, i = 0; i < 800; d = addDays(d, 1), i++) {
-    const k = keyOf(d);
-    if (k > tk) break;
-    const e = entry(k, r.id);
-    total += Math.max(0, Number(e && e.s) || 0);
-    if (e && e.d) { run++; if (run > best) best = run; }
-    else if (k !== tk && r.days[wd(d)]) run = 0;
-  }
-  return { cur: run, best, total };
-}
-
-function schedText(r) {
-  const d = r.days, n = d.filter(Boolean).length;
-  if (n === 7) return 'täglich';
-  if (n === 5 && !d[5] && !d[6]) return 'Mo–Fr';
-  if (n === 6) return 'täglich außer ' + DAYS[d.indexOf(false)];
-  return DAYS.filter((_, i) => d[i]).join(', ');
-}
-
 /* ---------- persistence (alles liegt in localStorage, siehe loadLocal und saveLocal) ---------- */
 function mergeInto(base, over) {
   if (!over) return base;
   for (const date in over) { base[date] = base[date] || {}; for (const rid in over[date]) base[date][rid] = over[date][rid]; }
   return base;
 }
-function setEntry(date, rid, e) {
-  const y = date.slice(0, 4);
-  LY[y] = LY[y] || {}; LY[y][date] = LY[y][date] || {}; LY[y][date][rid] = e;
-  saveLocal();
-}
-
-/* ---------- actions ---------- */
-function start(r) {
-  if (S.running) pause(true);
-  const tk = todayKey();
-  if (doneOn(tk, r.id)) return;
-  if (secsOf(tk, r.id) >= goal(r)) return finish(r, tk);
-  S.running = { id: r.id, startedAt: Date.now(), date: tk };
-  saveLocal();
-  ensureTicker(); render();
-}
-function pause(silent) {
-  const ru = S.running; if (!ru) return;
-  const r = byId(ru.id);
-  S.running = null; saveLocal();
-  if (r) {
-    const s = Math.min(goal(r), secsOf(ru.date, r.id) + Math.max(0, (Date.now() - ru.startedAt) / 1000));
-    setEntry(ru.date, r.id, { s: Math.round(s), d: (s >= goal(r) || doneOn(ru.date, r.id)) ? 1 : 0 });
-  }
-  if (!silent) render();
-}
-function finish(r, date) {
-  if (isRunning(r)) { S.running = null; saveLocal(); }
-  setEntry(date, r.id, { s: Math.max(goal(r), secsOf(date, r.id)), d: 1 });
-  justDone = r.id;
-  try { if (navigator.vibrate) navigator.vibrate([60, 60, 120]); } catch (e) {}
-  render();
-  setTimeout(() => { justDone = null; const el = document.querySelector('.just-done'); if (el) el.classList.remove('just-done'); }, 1600);
-}
-function toggle(r) {
-  if (isRunning(r)) pause();
-  else if (doneOn(todayKey(), r.id)) openSheet(r.id);
-  else start(r);
-}
-
-let tickId = null;
-function ensureTicker() { if (!tickId && S.running) tickId = setInterval(tick, 250); }
-function tick() {
-  if (!S.running) { clearInterval(tickId); tickId = null; document.title = TITLE; return; }
-  const r = byId(S.running.id);
-  if (!r) return;
-  if (liveSecs(r) >= goal(r)) return finish(r, S.running.date);
-  paintLive(r);
-}
-
 /* ---------- render ---------- */
-function weekDots(r, tk) {
-  const now = new Date(), mon = addDays(now, -wd(now));
-  let h = '';
-  for (let i = 0; i < 7; i++) {
-    const k = keyOf(addDays(mon, i));
-    let c = doneOn(k, r.id) ? 'done' : (!r.days[i] || k < r.created) ? 'off' : k < tk ? 'miss' : 'open';
-    if (k === tk) c += ' now';
-    h += '<i class="' + c + '"></i>';
-  }
-  return '<span class="week" aria-hidden="true">' + h + '</span>';
-}
-
-function rowHTML(r, tk, now, off, slim) {
-  const run = isRunning(r), done = !run && doneOn(tk, r.id);
-  const g = goal(r), s = liveSecs(r, now), p = done ? 1 : s / g;
-  const st = stats(r);
-  const cls = (run ? 'is-run' : done ? 'is-done' : off ? 'is-off' : 'is-idle') + (justDone === r.id ? ' just-done' : '');
-  const meta = done ? 'Erledigt · ' + r.minutes + ' min'
-    : run ? 'läuft · Ziel ' + r.minutes + ' min'
-    : s > 0 ? fmt(g - s) + ' übrig von ' + r.minutes + ' min'
-    : r.minutes + ' min · ' + schedText(r);
-  const label = run ? esc(r.name) + ' pausieren' : done ? esc(r.name) + ', heute erledigt. Details öffnen' : esc(r.name) + ' starten';
-  const icon = run ? ICON.pause : done ? ICON.check : ICON.play;
-  return '<li class="row ' + cls + '" data-id="' + esc(r.id) + '">' +
-    '<div class="fill" style="width:' + (p * 100).toFixed(2) + '%"></div>' +
-    '<button type="button" class="go" data-act="toggle" aria-label="' + label + '">' +
-      '<span class="glyph">' + icon + '</span>' +
-      '<span class="txt"><span class="name">' + esc(r.name) + '</span><span class="meta">' + meta + '</span>' + (slim ? '' : weekDots(r, tk)) + '</span>' +
-    '</button>' +
-    '<div class="side">' +
-      '<span class="streak" title="Tage in Folge"><b>' + st.cur + '</b><span>' + (st.cur === 1 ? 'Tag' : 'Tage') + '</span></span>' +
-      '<button type="button" class="more" data-act="edit" aria-label="' + esc(r.name) + ' bearbeiten">' + ICON.more + '</button>' +
-    '</div>' +
-    (run ? '<div class="live" data-act="toggle"><span class="clock">' + clockHTML(fmt(Math.ceil(g - s))) + '</span><span class="pill">Pause</span></div>' : '') +
-  '</li>';
-}
-
-function paintHero() {
-  const hero = $('#hero'), sub = $('#sub');
-  if (!S.routines.length) { hero.textContent = 'Dein Tag in festen Blöcken'; sub.textContent = ''; return; }
-  const tk = todayKey(), wi = wd(new Date()), now = Date.now();
-  const due = S.routines.filter(r => r.days[wi]);
-  if (!due.length) {
-    let next = 8;
-    S.routines.forEach(r => { for (let i = 1; i <= 7; i++) if (r.days[(wi + i) % 7]) { next = Math.min(next, i); break; } });
-    hero.textContent = 'Heute frei';
-    sub.textContent = next <= 7 ? 'Weiter geht es am ' + DAYS_LONG[(wi + next) % 7] + '.' : '';
-    return;
-  }
-  let open = 0, done = 0, mins = 0;
-  due.forEach(r => { mins += r.minutes; if (doneOn(tk, r.id) && !isRunning(r)) done++; else open += goal(r) - liveSecs(r, now); });
-  if (done === due.length) {
-    hero.textContent = 'Alles erledigt';
-    sub.textContent = due.length + (due.length === 1 ? ' Routine' : ' Routinen') + ' · ' + mins + ' min';
-  } else {
-    hero.innerHTML = '<span class="num">' + Math.ceil(open / 60) + '</span><span class="unit">min offen</span>';
-    sub.textContent = done + ' von ' + due.length + (due.length === 1 ? ' Routine' : ' Routinen') + ' erledigt';
-  }
-}
-
-function paintLive(r) {
-  const rows = document.querySelectorAll('.row[data-id="' + CSS.escape(r.id) + '"]');
-  if (!rows.length) return;
-  const g = goal(r), s = liveSecs(r), t = fmt(Math.ceil(g - s));
-  if (t !== lastClock) {
-    lastClock = t;
-    rows.forEach(row => { const c = row.querySelector('.clock'); if (c) c.innerHTML = clockHTML(t); });
-    document.title = t + ' · ' + r.name;
-    $('#tab-r').textContent = t;
-    if (view === 'heute' && hMode === 'day') { const o = homeRoutine(), a = $('#ov-r-v'), b = $('#ov-r-s'); if (a) a.textContent = o.v; if (b) b.textContent = o.s; }
-    paintHero();
-  }
-  rows.forEach(row => { const f = row.querySelector('.fill'); if (f) f.style.width = (s / g * 100).toFixed(2) + '%'; });
-}
-
-function renderRoutines() {
-  const tk = todayKey(), now = Date.now();
-  lastDay = tk; lastClock = '';
-  const main = $('#main');
-  const ae = document.activeElement, keepId = ae && ae.closest && ae.closest('.row') ? ae.closest('.row').dataset.id : null, keepAct = ae && ae.dataset ? ae.dataset.act : null;
-  $('#date').textContent = 'Heute';
+/* Planer: Notizen, Arbeit und Uni teilen sich einen Bereich. Im Code heißt er weiter 'routinen' (bis v74 begann er mit den Routinen): An der Kennung hängen die Adresse (#routinen) und die Tests. */
+function renderPlaner() {
+  lastDay = todayKey();
   paintTop();
-  paintHero();
-  if (!S.running) { document.title = TITLE; $('#tab-r').textContent = 'Planer'; }
-  const strip = $('#r-strip'), showStrip = S.routines.length > 0;
-  strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
-  document.querySelector('#v-routinen .hero').hidden = !showStrip;   // leer: nur der leere Zustand, wie in den anderen Bereichen
-  /* Notizen, Arbeit und Uni teilen sich den Bereich mit den Routinen */
   $('#r-subs').innerHTML = subsRHTML();
-  const nm = $('#n-main'), other = rSub !== 'rout';
-  nm.hidden = !other; main.hidden = other;
-  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML(); return; }
-  nm.innerHTML = '';
-
-  if (!S.routines.length) {
-    main.innerHTML = emptyHTML('routinen', 'Noch keine Routine', 'Lege fest, was du regelmäßig machst. Ein Tipp startet den Timer.',
-      '<button type="button" class="primary" data-act="new">Routine anlegen</button>' +
-      '<div class="chips"><button type="button" class="chip" data-act="suggest" data-name="Doktorarbeit" data-min="30">Doktorarbeit · 30 min</button>' +
-      '<button type="button" class="chip" data-act="suggest" data-name="Lesen" data-min="30">Lesen · 30 min</button></div>');
-    return;
-  }
-  const wi = wd(new Date());
-  const due = S.routines.filter(r => r.days[wi] || isRunning(r) || secsOf(tk, r.id) > 0 || doneOn(tk, r.id));
-  const off = S.routines.filter(r => due.indexOf(r) < 0);
-  let h = '';
-  if (due.length) h += '<ul class="rows" aria-label="Heute">' + due.map(r => rowHTML(r, tk, now, false)).join('') + '</ul>';
-  if (off.length) h += '<h2 class="sec">Nicht heute</h2><ul class="rows" aria-label="Nicht heute">' + off.map(r => rowHTML(r, tk, now, true)).join('') + '</ul>';
-  main.innerHTML = h;
-  if (keepId && keepAct) {
-    const el = main.querySelector('.row[data-id="' + CSS.escape(keepId) + '"] button[data-act="' + keepAct + '"]');
-    if (el) el.focus({ preventScroll: true });
-  }
-  if (S.running) { const r = byId(S.running.id); if (r) paintLive(r); }
+  $('#n-main').innerHTML = rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML();
 }
-
-$('#main').addEventListener('click', e => {
-  const t = e.target.closest('[data-act]'); if (!t) return;
-  const act = t.dataset.act, row = t.closest('.row'), r = row ? byId(row.dataset.id) : null;
-  if (act === 'toggle' && r) toggle(r);
-  else if (act === 'edit' && r) openSheet(r.id);
-  else if (act === 'new') openSheet(null);
-  else if (act === 'suggest') {
-    S.routines.push({ id: newId(), name: t.dataset.name, minutes: Number(t.dataset.min) || 30, days: Array(7).fill(true), created: todayKey() });
-    saveLocal(); render();
-  }
-});
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'note') openN(null); else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openSheet(null); });
-
-/* ---------- sheet ---------- */
-const dlg = $('#sheet');
-let editId = null, formDays = Array(7).fill(true), delArmed = false;
-
-$('#f-days').innerHTML = DAYS.map((d, i) => '<button type="button" data-i="' + i + '" aria-pressed="true" aria-label="' + DAYS_LONG[i] + '">' + d + '</button>').join('');
-$('#min-chips').innerHTML = [10, 15, 20, 30, 45, 60].map(m => '<button type="button" class="chip" data-m="' + m + '" aria-pressed="false">' + m + '</button>').join('');
-
-function paintDays() { dlg.querySelectorAll('#f-days button').forEach(b => b.setAttribute('aria-pressed', String(!!formDays[+b.dataset.i]))); }
-function paintChips() { const v = Number($('#f-min').value); dlg.querySelectorAll('#min-chips .chip').forEach(b => b.setAttribute('aria-pressed', String(+b.dataset.m === v))); }
-function showErr(msg) { const e = $('#f-err'); e.textContent = msg; e.hidden = false; }
-
-function paintStats(r) {
-  const st = stats(r), tk = todayKey();
-  const tot = st.total >= 3600 ? (Math.round(st.total / 360) / 10).toLocaleString('de-DE') + ' h' : Math.round(st.total / 60) + ' min';
-  $('#figs').innerHTML =
-    '<div class="fig"><b>' + st.cur + '</b><span>Tage in Folge</span></div>' +
-    '<div class="fig"><b>' + st.best + '</b><span>Bestwert</span></div>' +
-    '<div class="fig"><b>' + tot + '</b><span>insgesamt</span></div>';
-  const now = new Date(), mon = addDays(now, -wd(now) - 28);
-  let h = DAYS.map(d => '<span class="h">' + d + '</span>').join('');
-  for (let i = 0; i < 35; i++) {
-    const d = addDays(mon, i), k = keyOf(d);
-    let c = k < r.created && !entry(k, r.id) ? 'none'
-      : doneOn(k, r.id) ? 'done'
-      : secsOf(k, r.id) > 0 ? 'part'
-      : !r.days[wd(d)] ? 'off'
-      : k < tk ? 'miss' : 'open';
-    if (k === tk) c += ' now';
-    h += '<i class="' + c + '"></i>';
-  }
-  $('#cal').innerHTML = h;
-}
-
-function openSheet(id) {
-  const r = id ? byId(id) : null;
-  editId = r ? r.id : null; delArmed = false;
-  $('#sh-title').textContent = r ? 'Routine bearbeiten' : 'Neue Routine';
-  $('#f-name').value = r ? r.name : '';
-  $('#f-min').value = r ? r.minutes : 30;
-  formDays = r ? r.days.slice() : Array(7).fill(true);
-  paintDays(); paintChips();
-  $('#f-err').hidden = true;
-  $('#f-save').textContent = r ? 'Speichern' : 'Anlegen';
-  $('#sh-extra').hidden = !r; $('#sh-stats').hidden = !r;
-  if (r) {
-    paintStats(r);
-    const tk = todayKey(), dn = doneOn(tk, r.id);
-    $('#act-done').hidden = dn;
-    $('#act-reset').hidden = !(dn || secsOf(tk, r.id) > 0 || isRunning(r));
-    $('#act-del').textContent = 'Routine löschen';
-  }
-  openDlg(dlg);
-  dlg.scrollTop = 0;
-  if (!r) fokus($('#f-name'));
-}
-function closeSheet() { if (dlg.open) dlg.close(); }
-
-$('#sh-close').addEventListener('click', closeSheet);
-dlg.addEventListener('click', e => { if (e.target === dlg) closeSheet(); });
-$('#f-days').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; formDays[+b.dataset.i] = !formDays[+b.dataset.i]; paintDays(); });
-$('#day-chips').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const s = b.dataset.set;
-  formDays = formDays.map((_, i) => s === 'all' ? true : s === 'work' ? i < 5 : i >= 5);
-  paintDays();
-});
-$('#min-chips').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; $('#f-min').value = b.dataset.m; paintChips(); });
-const stepMin = d => { const v = Math.round(Number($('#f-min').value)) || 0; $('#f-min').value = clamp(d > 0 ? Math.floor(v / 5) * 5 + 5 : Math.ceil(v / 5) * 5 - 5, 1, 600); paintChips(); };
-$('#min-dec').addEventListener('click', () => stepMin(-1));
-$('#min-inc').addEventListener('click', () => stepMin(1));
-$('#f-min').addEventListener('input', paintChips);
-
-$('#form').addEventListener('submit', e => {
-  e.preventDefault();
-  const name = $('#f-name').value.trim(), min = Math.round(Number($('#f-min').value));
-  if (!name) return showErr('Gib der Routine einen Namen.');
-  if (!(min >= 1 && min <= 600)) return showErr('Die Dauer muss zwischen 1 und 600 Minuten liegen.');
-  if (!formDays.some(Boolean)) return showErr('Wähle mindestens einen Tag.');
-  const r = editId ? byId(editId) : null;
-  if (r) {
-    if (isRunning(r)) pause(true);
-    r.name = name; r.minutes = min; r.days = formDays.slice();
-    const tk = todayKey();
-    if (!doneOn(tk, r.id) && secsOf(tk, r.id) >= goal(r)) setEntry(tk, r.id, { s: secsOf(tk, r.id), d: 1 });
-  } else {
-    S.routines.push({ id: newId(), name, minutes: min, days: formDays.slice(), created: todayKey() });
-  }
-  saveLocal(); closeSheet(); render();
-});
-$('#act-done').addEventListener('click', () => { const r = byId(editId); closeSheet(); if (r) finish(r, todayKey()); });
-$('#act-reset').addEventListener('click', () => {
-  const r = byId(editId); closeSheet(); if (!r) return;
-  if (isRunning(r)) { S.running = null; saveLocal(); }
-  setEntry(todayKey(), r.id, { s: 0, d: 0 }); render();
-});
-$('#act-del').addEventListener('click', () => {
-  if (!delArmed) { delArmed = true; $('#act-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
-  const id = editId; closeSheet();
-  if (S.running && S.running.id === id) S.running = null;
-  S.routines = S.routines.filter(r => r.id !== id);
-  saveLocal(); render();
-});
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openN(null); });
 
 /* ---------- Gewicht ---------- */
 function normW(o) {
@@ -3010,23 +2582,12 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'plan') openP(t.dataset.id || null);
 });
 
-/* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: Routinen und Training zusammen. */
-const CAL = { all: 'Übersicht', rout: 'Routinen', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
+/* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: das Training (Läufe und Gym). */
+const CAL = { all: 'Übersicht', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
 const cdlg = $('#csheet');
 const DF_DAY = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 let cSel = '', cMode = 'all';
-/* Routinen eines Tages: fällig oder mit Eintrag */
-function routDay(k) {
-  const i = wd(parseKey(k)), list = []; let done = 0, part = 0;
-  S.routines.forEach(r => {
-    const e = entry(k, r.id), d = !!(e && e.d), sec = Math.max(0, Number(e && e.s) || 0);
-    if (!(k >= r.created && r.days[i]) && !d && !sec) return;
-    if (d) done++; else if (sec > 0) part++;
-    list.push({ r, d, sec });
-  });
-  return { due: list.length, done, part, list };
-}
-/* Punkte pro Tag als Buchstabenfolge: g = Training, b = erledigt bzw. eingetragen, p = teilweise */
+/* Punkte pro Tag als Buchstabenfolge: g = Training, b = eingetragen */
 function calMarks(mode) {
   const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
   if (mode === 'gym' || mode === 'all') kDates().forEach(d => { gym[d] = 1; });
@@ -3037,9 +2598,7 @@ function calMarks(mode) {
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
-    const q = routDay(k), full = q.due > 0 && q.done === q.due;
-    if (mode === 'rout') return full ? 'b' : q.done || q.part ? 'p' : '';
-    return (full ? 'b' : '') + (gym[k] || run[k] ? 'g' : '');
+    return gym[k] || run[k] ? 'g' : '';
   };
 }
 const dotsHTML = m => '<i>' + m.split('').map(c => '<u class="' + c + '"></u>').join('') + '</i>';
@@ -3059,7 +2618,6 @@ function calFirst(mode) {
   if (mode === 'cardio' || mode === 'all') for (const id in T.runs) if (T.runs[id]) take(T.runs[id].d);
   if (mode === 'weight') for (const k in W.entries) if (typeof W.entries[k] === 'number') take(k);
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) take(MY[y].tx[id].d);
-  if (mode === 'rout' || mode === 'all') S.routines.forEach(r => take(r.created));
   return f;
 }
 function calSum(mode, ym, g, b, span) {
@@ -3068,8 +2626,7 @@ function calSum(mode, ym, g, b, span) {
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
-  if (mode === 'rout') return 'An ' + n(b, 'Tag', 'Tagen') + ' alles erledigt';
-  return g || b ? [g ? g + '× Training' : '', b ? n(b, 'Tag', 'Tage') + ' alle Routinen' : ''].filter(Boolean).join(' · ') : 'Keine Einträge';
+  return g ? g + '× Training' : 'Keine Einträge';
 }
 function calHTML() {
   const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode);
@@ -3101,7 +2658,6 @@ function calDayHTML() {
   const gymOf = () => { const day = kDay(k), m = (K.meta || {})[k]; return day.length ? { day, name: (m && planName(m.plan)) || 'Training', dur: m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen') } : null; };
   const runsOf = () => tRuns().filter(r => r.d === k);
   const txOf = () => txIn(k.slice(0, 7)).filter(x => x.t.d === k);
-  const routRows = q => q.list.map(o => row(esc(o.r.name), o.d ? 'Erledigt · ' + o.r.minutes + ' min' : o.sec > 0 ? fmt(o.sec) + ' von ' + o.r.minutes + ' min' : k < tk ? 'Nicht gemacht' : 'Offen', o.d ? CHECK : '', 'up fold')).join('');
   if (cMode === 'gym') {
     const s = gymOf();
     if (!s) return h + note(K.live && K.live.date === k ? 'Dein Training läuft gerade.' : 'Kein Training an diesem Tag.');
@@ -3121,11 +2677,8 @@ function calDayHTML() {
     const tx = txOf();
     return h + (tx.length ? '<ul class="entries">' + tx.map(x => btn('data-c="tx" data-id="' + esc(x.id) + '" aria-label="Eintrag ändern"', (x.t.k === 'in' ? 'Einnahme' : catName(x.t.c)) + (x.t.n ? ' · ' + esc(x.t.n) : ''), '', (x.t.k === 'in' ? '+' : '−') + eur(x.t.a))).join('') + '</ul>' : note('Keine Ausgabe an diesem Tag.')) + add('tx', 'Ausgabe eintragen');
   }
-  const q = routDay(k);
-  if (cMode === 'rout') return h + (q.due ? '<ul class="entries">' + routRows(q) + '</ul>' : note('Keine Routine an diesem Tag.'));
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
-  if (q.due) rows += row('Routinen', q.list.filter(o => o.d).map(o => esc(o.r.name)).join(', '), q.done + ' von ' + q.due, q.done === q.due ? 'up' : '');
   const s = gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
   runsOf().forEach(r => { rows += row('Lauf', kindName(r.k) + ' · ' + fmt(r.s), kmf(r.m) + ' km'); });
   if (typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
@@ -3141,8 +2694,6 @@ function paintCal(keep) {
 function openCal(mode, sel) {
   cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && sel <= todayKey() ? sel : todayKey();
   $('#cs-title').textContent = CAL[cMode];
-  const leg = cMode === 'all' ? '<span><u class="b"></u>alle Routinen</span><span><u class="g"></u>Training</span>' : cMode === 'rout' ? '<span><u class="b"></u>alles erledigt</span><span><u class="p"></u>teilweise</span>' : '';
-  $('#cs-leg').innerHTML = leg; $('#cs-leg').hidden = !leg;
   openDlg(cdlg);
   paintCal(false);
 }
@@ -3577,7 +3128,7 @@ $('#p-del').addEventListener('click', () => {
 });
 
 /* ---------- Planer: Notizen, Arbeit, Uni ---------- */
-/* Liegen im Bereich Routinen hinter dem Umschalter „Routinen / Notizen / Arbeit / Uni“ (rSub). Ordner gelten für die Notizen.
+/* Liegen im Planer hinter dem Umschalter „Notizen / Arbeit / Uni“ (rSub). Ordner gelten für die Notizen.
    N = { folders: { id: { n } },
          notes: { id: { x Text, f Ordner, c angelegt, m geändert } },
          tasks: Aufgaben aus v49 bis v73. Die App zeigt sie seit v74 nicht mehr (Wunsch des Nutzers), sie bleiben aber gespeichert und in der Sicherung: So geht nichts verloren.
@@ -3639,9 +3190,9 @@ function cleanFolders() {
   for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
   if (n) ndoc.patch(p);
 }
-let rSub = 'rout', nFolder = '', nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), Suchtext der Notizen
+let rSub = 'note', nFolder = '', nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), Suchtext der Notizen
 const inFolder = x => !nFolder || x.f === nFolder;
-const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
+const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
 const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + esc(f[0]) + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
 /* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
 const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
@@ -3658,7 +3209,7 @@ function noteListHTML() {
   const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
   return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
 }
-/* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben Routinen und Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
+/* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben den Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
    Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile.
    Darunter stehen jeweils die Notizen des gleichnamigen Ordners; eine dort angelegte Notiz bekommt ihn von selbst (siehe openN). */
 const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
@@ -3720,13 +3271,13 @@ function nAct(e) {
   else if (a === 'newuni') openU(null);
   else if (a === 'uni') openU(id);
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
-  else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderRoutines(); }
-  else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
+  else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderPlaner(); }
+  else if (a === 'folder') { nFolder = b.dataset.v; renderPlaner(); }
   return true;
 }
 $('#n-main').addEventListener('click', nAct);
 $('#n-main').addEventListener('input', e => { if (e.target.id === 'n-q') { nQuery = e.target.value; $('#n-list').innerHTML = noteListHTML(); } });
-$('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderRoutines(); } });
+$('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderPlaner(); } });
 
 /* Ordner-Chips in den Blättern: „Kein Ordner“, alle Ordner, „+ Ordner“ legt einen neuen an und wählt ihn */
 const folderPickHTML = st => [['', 'Kein Ordner']].concat(allFolders()).map(f => '<button type="button" class="chip" data-f="' + esc(f[0]) + '" aria-pressed="' + (st.f === f[0]) + '">' + f[1] + '</button>').join('') +
@@ -3872,15 +3423,6 @@ $('#n-del').addEventListener('click', () => {
 const kvRow = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
 const monOf = d => addDays(d, -wd(d));
 const PLUS = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M1.5 7h11M7 1.5v11"/></svg>';
-function homeRoutine() {
-  if (!S.routines.length) return { v: '', s: 'Tippe, um die erste anzulegen' };
-  const tk = todayKey(), wi = wd(new Date()), now = Date.now(), due = S.routines.filter(r => r.days[wi]);
-  if (!due.length) return { v: 'Heute frei', s: 'Keine Routine für heute geplant' };
-  let open = 0, done = 0;
-  due.forEach(r => { if (doneOn(tk, r.id) && !isRunning(r)) done++; else open += goal(r) - liveSecs(r, now); });
-  const run = S.running ? byId(S.running.id) : null;
-  return { v: done === due.length ? 'Alles erledigt' : Math.ceil(open / 60) + ' min offen', s: done + ' von ' + due.length + ' erledigt' + (run ? ' · ' + run.name + ' läuft' : '') };
-}
 function weekCtx() {
   const runs = tRuns(); let firstTx = null;
   for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && (!firstTx || t.d < firstTx)) firstTx = t.d; }
@@ -3888,15 +3430,13 @@ function weekCtx() {
 }
 /* Kennzahlen einer Woche (Montag bis Sonntag), mk = Datum des Montags */
 function weekStats(mk, c) {
-  const mon = parseKey(mk), tk = todayKey(), end = keyOf(addDays(mon, 6)), prevMk = keyOf(addDays(mon, -7));
-  let plan = 0, done = 0;
-  for (let i = 0; i < 7; i++) { const k = keyOf(addDays(mon, i)); if (k > tk) break; S.routines.forEach(r => { if (k >= r.created && r.days[i]) { plan++; if (doneOn(k, r.id)) done++; } }); }
+  const mon = parseKey(mk), end = keyOf(addDays(mon, 6)), prevMk = keyOf(addDays(mon, -7));
   let wEnd = null, wPrev = null;
   c.wl.forEach(e => { if (e.k >= mk && e.k <= end) wEnd = e.m; else if (e.k >= prevMk && e.k < mk) wPrev = e.m; });
   let flex = 0, eat = 0;
   for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && t.d >= mk && t.d <= end) { flex += t.a; if (t.c === 'aus') eat += t.a; } }
   const g = tAgg(c.runs.filter(r => r.d >= mk && r.d <= end));
-  return { mk, end, plan, done, quote: plan ? done / plan : null, wEnd, wDelta: wEnd != null && wPrev != null ? wEnd - wPrev : null, flex, eat, km: g.m / 1000, runs: g.n,
+  return { mk, end, wEnd, wDelta: wEnd != null && wPrev != null ? wEnd - wPrev : null, flex, eat, km: g.m / 1000, runs: g.n,
     kraft: c.kd.filter(d => d >= mk && d <= end).length, money: !!c.firstTx && c.firstTx <= end, cardio: !!c.firstRun && c.firstRun <= end, gym: !!c.kd.length && c.kd[0] <= end };
 }
 /* Zusammenhänge: die letzten 12 abgeschlossenen Wochen am Median einer Größe teilen und die andere Größe vergleichen */
@@ -3913,8 +3453,7 @@ function insightsHTML(c) {
   const kgw = v => signed(v) + ' kg pro Woche';
   const defs = [
     ['Laufen und Gewicht', w => w.cardio ? w.km : null, w => w.wDelta, 'mehr Laufkilometern', kgw],
-    ['Essen gehen und Gewicht', w => w.money ? w.eat : null, w => w.wDelta, 'höheren Ausgaben für Essen gehen', kgw],
-    ['Routinen und Ausgaben', w => w.quote, w => w.money ? w.flex : null, 'höherer Routinen-Quote', v => eur0(v) + ' € flexible Ausgaben']
+    ['Essen gehen und Gewicht', w => w.money ? w.eat : null, w => w.wDelta, 'höheren Ausgaben für Essen gehen', kgw]
   ];
   let h = '', maxN = 0;
   defs.forEach(d => {
@@ -3933,11 +3472,6 @@ function weekHTML() {
   let h = navHTML(isCur ? 'Diese Woche' : label, !isCur, 'Eine Woche');
   h += '<p class="note">' + (isCur ? label + ' · ' : '') + 'Vergleich mit der Woche davor</p>';
   let rows = '';
-  if (w.plan) {
-    const q = Math.round(w.quote * 100); let d = '', cls = '';
-    if (p.quote != null) { const df = q - Math.round(p.quote * 100); d = df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte'; cls = df > 0 ? 'up' : df < 0 ? 'down' : ''; }
-    rows += kvRow('Routinen', q + ' %', w.done + ' von ' + w.plan, d, cls);
-  }
   if (w.wEnd != null) {
     let cls = '';
     if (w.wDelta != null && W.goal != null && Math.abs(w.wDelta) >= 0.05) cls = Math.sign(W.goal - (w.wEnd - w.wDelta)) === Math.sign(w.wDelta) ? 'up' : 'down';
@@ -3963,13 +3497,11 @@ function weekHTML() {
    Der laufende Monat wird mit dem Vormonat bis zum selben Tag verglichen, sonst stünde bis zum Monatsende überall „weniger“. */
 function monthStats(ym, c, cut) {
   const tk = todayKey(), last = new Date(+ym.slice(0, 4), +ym.slice(5), 0).getDate(), to = ym + '-' + pad(Math.min(cut || 31, last)), inM = d => d.slice(0, 7) === ym && d <= to && d <= tk;
-  let plan = 0, done = 0;
-  for (let d = 1; d <= last; d++) { const k = ym + '-' + pad(d); if (!inM(k)) break; const wi = wd(parseKey(k)); S.routines.forEach(r => { if (k >= r.created && r.days[wi]) { plan++; if (doneOn(k, r.id)) done++; } }); }
   let wEnd = null, flex = 0;
   c.wl.forEach(e => { if (e.k.slice(0, 7) === ym) wEnd = e.m; });
   txIn(ym).forEach(x => { if (x.t.k !== 'in' && inM(x.t.d)) flex += x.t.a; });
   const g = tAgg(c.runs.filter(r => inM(r.d)));
-  return { plan, done, quote: plan ? done / plan : null, wEnd, flex, km: g.m / 1000, runs: g.n, kraft: c.kd.filter(inM).length,
+  return { wEnd, flex, km: g.m / 1000, runs: g.n, kraft: c.kd.filter(inM).length,
     money: !!c.firstTx && c.firstTx.slice(0, 7) <= ym, cardio: !!c.firstRun && c.firstRun.slice(0, 7) <= ym, gym: !!c.kd.length && c.kd[0].slice(0, 7) <= ym };
 }
 /* Zeilen des Monatsabschlusses; leer, wenn es für den Monat nichts gibt */
@@ -3977,10 +3509,6 @@ function monthRowsHTML(ym, c) {
   const tk = todayKey(), isCur = ym === tk.slice(0, 7), prevYM = ymOfIdx(ymIdx(ym) - 1), w = monthStats(ym, c), p = monthStats(prevYM, c, isCur ? +tk.slice(8) : 0);
   const count = df => df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df), dir = df => df > 0 ? 'up' : df < 0 ? 'down' : '';
   let rows = '';
-  if (w.plan) {
-    const q = Math.round(w.quote * 100), df = p.quote != null ? q - Math.round(p.quote * 100) : null;
-    rows += kvRow('Routinen', q + ' %', w.done + ' von ' + w.plan, df == null ? '' : df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte', df == null ? '' : dir(df));
-  }
   if (w.wEnd != null) {
     const df = p.wEnd != null ? w.wEnd - p.wEnd : null;
     rows += kvRow('Gewicht', kg(w.wEnd), 'kg im Schnitt', df != null ? signed(df) + ' kg' : '', df != null && W.goal != null && Math.abs(df) >= 0.05 ? (Math.sign(W.goal - p.wEnd) === Math.sign(df) ? 'up' : 'down') : '');
@@ -4023,7 +3551,6 @@ function recapDue() {
 }
 /* Symbole der Bereiche, dieselben wie in der Leiste unten */
 const AREA = {
-  routinen: '<circle cx="12" cy="12" r="8.5"/><path d="M8.3 12.3l2.5 2.5 4.9-5.2"/>',
   gewicht: '<path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/>',
   haushalt: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/>',
   training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>',
@@ -4092,8 +3619,6 @@ function renderHome() {
   if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
   const rcYM = recapDue();
   if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
-  const r = homeRoutine(), wi = wd(new Date()), nowMs = Date.now();
-  const due = S.routines.filter(x => x.days[wi] || isRunning(x) || secsOf(tk, x.id) > 0 || doneOn(tk, x.id));
   const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
   if (wl.length) {
     const rate = weeklyRate(wl, dayNum(tk));
@@ -4117,9 +3642,7 @@ function renderHome() {
   let tv = '', ts = 'Tippe, um zu starten';
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   h += liveCardHTML();
-  /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
-  if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false, true)).join('') + '</ul>';
-  h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
+  h += '<div class="ovs">' + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
      Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
      ein Fehler der iPhone-App im Wortlaut darunter. */
@@ -4134,8 +3657,6 @@ $('#v-heute').addEventListener('click', e => {
   if (nAct(e)) return;
   const n = e.target.closest('[data-m]');
   if (n) { const d = n.dataset.m === 'prev' ? -1 : 1; if (hMode === 'month') hMonth = ymOfIdx(ymIdx(hMonth) + d); else hWeek = keyOf(addDays(parseKey(hWeek), 7 * d)); renderHome(); return; }
-  const ra = e.target.closest('[data-act]');
-  if (ra) { const row = ra.closest('.row'), rt = row ? byId(row.dataset.id) : null; if (rt) { if (ra.dataset.act === 'edit') openSheet(rt.id); else toggle(rt); } return; }
   if (e.target.closest('[data-k="live"]')) return openL();
   const t = e.target.closest('[data-h]'); if (!t) return;
   const a = t.dataset.h, v = t.dataset.v;
@@ -4178,7 +3699,7 @@ const stripNull = o => { if (Array.isArray(o) || !o || typeof o !== 'object') re
 /* Einlesen ergänzt: vorhandene Einträge bleiben, gleiche Einträge werden überschrieben */
 function importData(d) {
   if (!d || d.app !== 'takt') throw new Error('format');
-  (Array.isArray(d.routines) ? d.routines : []).map(normRoutine).filter(Boolean).forEach(r => { if (!byId(r.id)) S.routines.push(r); });
+  (Array.isArray(d.routines) ? d.routines : []).map(normRoutine).filter(Boolean).forEach(r => { if (!S.routines.some(x => x.id === r.id)) S.routines.push(r); });
   if (d.LY && typeof d.LY === 'object') for (const y in d.LY) {
     if (!/^\d{4}$/.test(y) || !d.LY[y] || typeof d.LY[y] !== 'object') continue;
     const patch = {};
@@ -4218,7 +3739,7 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'note' ? 'Notiz schreiben' : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Neue Routine anlegen');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
 document.addEventListener('click', e => {
@@ -4245,7 +3766,7 @@ function show(v, user) {
 document.querySelector('.tabs').addEventListener('click', e => { const b = e.target.closest('.tab'); if (b) show(b.dataset.view, true); });
 window.addEventListener('hashchange', () => { const v = location.hash.slice(1); if (VIEWS.indexOf(v) >= 0) show(v); });
 
-function render() { renderRoutines(); renderWeight(); renderMoney(); renderTraining(); ensureLiveTick(); renderHome(); }
+function render() { renderPlaner(); renderWeight(); renderMoney(); renderTraining(); ensureLiveTick(); renderHome(); }
 
 /* ---------- Rückgängig ---------- */
 /* Nach jedem Löschen steht für einige Sekunden „Gelöscht · Rückgängig“ unten. Der Weg ist für alle Löschknöpfe derselbe (id endet auf -del, oder data-vdel):
@@ -4272,7 +3793,7 @@ toastEl.lastElementChild.addEventListener('click', () => {
   try { if (localStorage.getItem(LS) !== u.after) return; localStorage.setItem(LS, u.before); } catch (x) { return; }
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
   /* Der Weg geht an saveLocal() vorbei: Ein zurückgeholter laufender Timer muss wieder ticken, und die iPhone-Hülle braucht den Stand für das Widget und die Sicherung */
-  loadLocal(); render(); ensureTicker(); hSoon(); sMerk();
+  loadLocal(); render(); hSoon(); sMerk();
 });
 
 /* ---------- Graphen ablesen ---------- */
@@ -4393,16 +3914,14 @@ let hInfo = {}, hTimer = 0, hFaelligAlt = null;
 function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
 function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeout(() => hPost(hStand()), 300); }
 /* Stand für heute und die nächsten sieben Tage: So stimmt das Widget auch nach Mitternacht, ohne dass die App geöffnet wurde.
-   Je Tag: Routinen geplant (rn) und erledigt (rd). Die Felder an und auf (offene Aufgaben) bleiben leer stehen: Die iPhone-App liest sie, und so zeigt ihr Widget seit v74 keine Aufgaben mehr. */
+   Routinen (rn, rd) und Aufgaben (an, auf) gibt es nicht mehr; die Felder bleiben leer stehen, weil die iPhone-App bis Fassung 0.6 sie beim Lesen erwartet. */
 /* Text für das Widget auf n Zeichen kürzen, nach ganzen Zeichen: slice() könnte ein Emoji in der Mitte teilen, und mit einem halben Zeichen lässt sich der Stand nicht als Datei schreiben.
    Halbe Zeichen, die schon im Text stehen, fallen dabei weg. */
 const hCut = (s, n) => Array.from(s).filter(c => c.length > 1 || c < '\uD800' || c > '\uDFFF').slice(0, n).join('');
 function hStand() {
   const tk = todayKey(), tage = [];
   for (let i = 0; i < 8; i++) {
-    const dt = addDays(parseKey(tk), i), k = keyOf(dt), wi = wd(dt);
-    const due = S.routines.filter(r => r.days[wi] || doneOn(k, r.id) || (!i && (isRunning(r) || secsOf(k, r.id) > 0)));
-    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: 0, auf: [] });
+    tage.push({ d: keyOf(addDays(parseKey(tk), i)), rn: 0, rd: 0, an: 0, auf: [] });
   }
   /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
   const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
@@ -4617,7 +4136,7 @@ if (HUELLE) window.TrackHuelle = {
 if (HUELLE) window.addEventListener('pagehide', sJetzt);
 
 /* ---------- boot ---------- */
-document.addEventListener('visibilitychange', () => { if (!document.hidden) { ensureTicker(); render(); if (ldlg.open) wakeOn(); } });
+document.addEventListener('visibilitychange', () => { if (!document.hidden) { render(); if (ldlg.open) wakeOn(); } });
 setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 
 loadLocal();
@@ -4626,7 +4145,6 @@ cleanCats();
 cleanFolders();
 show(location.hash.slice(1));
 render();
-ensureTicker();
 /* Kurzbefehl: Die Adresse mit ?neu=ausgabe (oder notiz, gewicht) öffnet die App gleich mit diesem Blatt.
    Der Zusatz kommt danach aus der Adresse, damit ein Neuladen das Blatt nicht noch einmal öffnet. */
 const neu = new URLSearchParams(location.search).get('neu');

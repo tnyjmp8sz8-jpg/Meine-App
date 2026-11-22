@@ -230,8 +230,7 @@ lauf(async () => {
         P.ok('320 px, ' + wo + ': alles aufgeklappt, nichts ragt seitlich hinaus', m.auf >= min && m.zu === 0 && passtHinein(m), JSON.stringify(m));
       };
       await bereich(p, 'heute'); await passt('Heute', 1);
-      await bereich(p, 'routinen'); await passt('Routinen', 0);
-      await p.click('#r-subs [data-v="note"]'); await k(); await passt('Notizen', 0);
+      await bereich(p, 'routinen'); await passt('Notizen', 0);
       await bereich(p, 'gewicht'); await passt('Gewicht', 3);
       await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await passt('Vermögen', 1);
       await p.click('#v-haushalt [data-m="mode"][data-v="year"]'); await k(); await passt('Vermögen im Jahr', 1);
@@ -250,12 +249,9 @@ lauf(async () => {
   await bereich(page, 'heute');
   /* Sieben Notizen: Heute zeigt die neuesten fünf, je in einer Zeile (ohne Ordner und Datum darunter) */
   P.ok('Heute: fünf von sieben Notizen, ohne zweite Zeile', (await z('#v-heute .nrow')) === 5 && (await z('#v-heute .nrow .l small')) === 0 && (await text(page, '#v-heute .nrow:first-child')) === 'Gliederung: Einleitung, Stand der Forschung, Methode', await text(page, '#v-heute .nrow'));
-  P.ok('Heute: Routinen ohne Wochenpunkte', (await z('#v-heute .rows .row')) >= 1 && (await z('#v-heute .week')) === 0);
   P.ok('Heute: „Alle 7“ steht bei den Notizen; Aufgaben aus dem Speicher stehen nicht da', (await text(page, '#v-heute h2:has([data-n="allnotes"])')) === 'Notizen Alle 7' && (await z('#v-heute .trow:not(.nrow)')) === 0 && !(await text(page, '#v-heute')).includes('Aufgaben'), await text(page, '#v-heute h2'));
   await page.click('#v-heute .sec-a[data-n="allnotes"]'); await kurz();
   P.ok('„Alle 7“ führt in den Planer zu den Notizen: alle sieben, dort mit zweiter Zeile', (await page.isVisible('#v-routinen')) && (await text(page, '#r-subs [aria-pressed="true"]')) === 'Notizen' && (await z('#n-main .nrow')) === 7 && (await z('#n-main .nrow .l small')) === 7, await text(page, '#r-subs [aria-pressed="true"]'));
-  await page.click('#r-subs [data-v="rout"]'); await kurz();
-  P.ok('Planer: Routinen mit Wochenpunkten', (await z('#main .row')) === 3 && (await z('#main .row .week')) === 3);
 
   // --- Teil 6: Sicherung ---
   /* Ohne gespeicherte Sicherung und mit Einträgen, die älter als 7 Tage sind, ist die Sicherung fällig: Der Satz steht in der Erinnerung oben, nicht noch einmal in der Zeile. */

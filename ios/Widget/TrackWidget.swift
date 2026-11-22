@@ -6,7 +6,7 @@ struct Eintrag: TimelineEntry {
     let stand: Stand?
 }
 
-/// Ein Eintrag für jetzt und je einer für die nächsten sieben Mitternächte. Neu gezeichnet wird außerdem, sobald die App einen neuen Stand speichert.
+/// Ein Eintrag genügt: Notizen hängen nicht am Tag. Neu gezeichnet wird, sobald die App einen neuen Stand speichert, ein Kurzbefehl eine Notiz vormerkt oder im Widget abgehakt wird.
 struct Quelle: TimelineProvider {
     func placeholder(in context: Context) -> Eintrag { Eintrag(date: Date(), stand: .beispiel) }
 
@@ -15,30 +15,7 @@ struct Quelle: TimelineProvider {
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<Eintrag>) -> Void) {
-        let stand = Ablage.lesen(), jetzt = Date(), kalender = Calendar.current
-        var liste = [Eintrag(date: jetzt, stand: stand)]
-        for i in 1...7 {
-            if let tag = kalender.date(byAdding: .day, value: i, to: kalender.startOfDay(for: jetzt)) { liste.append(Eintrag(date: tag, stand: stand)) }
-        }
-        completion(Timeline(entries: liste, policy: .atEnd))
-    }
-}
-
-struct HeuteAnsicht: View {
-    @Environment(\.widgetFamily) private var groesse
-    @Environment(\.colorScheme) private var schema
-    let eintrag: Eintrag
-
-    var body: some View {
-        let f = Farben(dunkel: schema == .dark)
-        Group {
-            if let stand = eintrag.stand, let tag = stand.tag(eintrag.date) {
-                if groesse == .systemMedium { Mittel(tag: tag, notizen: (stand.nz ?? []).map { $0.x }, f: f) } else { Klein(tag: tag, f: f) }
-            } else {
-                Leer(f: f)
-            }
-        }
-        .containerBackground(for: .widget) { f.grund }
+        completion(Timeline(entries: [Eintrag(date: Date(), stand: Ablage.lesen())], policy: .never))
     }
 }
 
@@ -70,19 +47,9 @@ struct NotizenWidget: Widget {
     }
 }
 
-struct HeuteWidget: Widget {
-    var body: some WidgetConfiguration {
-        StaticConfiguration(kind: "heute", provider: Quelle()) { HeuteAnsicht(eintrag: $0) }
-            .configurationDisplayName("Heute")
-            .description("Routinen, Aufgaben und Notizen von heute.")
-            .supportedFamilies([.systemSmall, .systemMedium])
-    }
-}
-
 @main
 struct TrackWidgets: WidgetBundle {
     var body: some Widget {
         NotizenWidget()
-        HeuteWidget()
     }
 }

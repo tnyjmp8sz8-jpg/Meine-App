@@ -7,22 +7,15 @@ lauf(async () => {
   const P = pruefer('Ablauf'), { browser, page, fehler } = await oeffnen(), heute = tag();
   const txAlle = d => Object.values(d.MY || {}).flatMap(y => Object.values(y.tx)).filter(Boolean);
 
-  await bereich(page, 'routinen'); await page.click('#add'); await page.fill('#f-name', 'Testroutine'); await page.click('#f-save'); await page.waitForTimeout(150);
-  P.ok('Routine angelegt', (await gespeichert(page)).S.routines.some(r => r.name === 'Testroutine'));
+  await bereich(page, 'routinen'); await page.click('#add'); await page.keyboard.type('Testnotiz'); await page.click('#n-done'); await page.waitForTimeout(150);
+  P.ok('Notiz angelegt', Object.values((await gespeichert(page)).N.notes).some(n => n && n.x === 'Testnotiz'));
 
   const datei = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'track-')), 'sicherung.json');
   fs.writeFileSync(datei, JSON.stringify(alsSicherung(beispiel())));
   await bereich(page, 'heute'); await page.setInputFiles('#bk-file', datei); await page.waitForTimeout(400);
   let d = await gespeichert(page);
-  P.ok('Sicherung eingelesen: vier Routinen, Gewicht, Läufe, Gym, Konten', d.S.routines.length === 4 && Object.keys(d.W.entries).length > 50 && Object.keys(d.T.runs).length === 8 && Object.keys(d.K.log).length === 22 && Object.keys(d.MF.acc).length === 3);
+  P.ok('Sicherung eingelesen: Gewicht, Läufe, Gym, Konten; die drei Routinen der Sicherung bleiben gespeichert (gezeigt werden sie seit v75 nicht mehr)', d.S.routines.length === 3 && Object.keys(d.W.entries).length > 50 && Object.keys(d.T.runs).length === 8 && Object.keys(d.K.log).length === 22 && Object.keys(d.MF.acc).length === 3);
   const vorher = txAlle(d).length;
-
-  await bereich(page, 'routinen'); await page.click('#main .row:has-text("Testroutine") .go'); await page.waitForTimeout(1300);
-  P.ok('Routine läuft', !!(await gespeichert(page)).S.running);
-  await page.click('#main .row:has-text("Testroutine") .go'); await page.waitForTimeout(150);
-  d = await gespeichert(page);
-  const rid = d.S.routines.find(r => r.name === 'Testroutine').id, e = ((d.LY[heute.slice(0, 4)] || {})[heute] || {})[rid];
-  P.ok('Routine pausiert, Zeit gespeichert', !d.S.running && e && e.s >= 1 && e.s <= 4 && e.d === 0, JSON.stringify(e));
 
   await bereich(page, 'gewicht'); await page.click('#add'); await page.fill('#w-val', '79,9'); await page.click('#w-save'); await page.waitForTimeout(150);
   P.ok('Gewicht 79,9 kg gespeichert', (await gespeichert(page)).W.entries[heute] === 79.9);

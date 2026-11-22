@@ -10,9 +10,9 @@ lauf(async () => {
   const liste = () => text(page, '#n-main');
   const aufgaben = async () => Object.values((await gespeichert(page)).N.tasks).filter(Boolean);
   const notizen = async () => Object.values((await gespeichert(page)).N.notes).filter(Boolean);
-  // --- Aufgaben sind seit v74 ausgebaut: kein Umschalter im Planer, vier Teile ---
+  // --- Aufgaben (seit v74) und Routinen (seit v75) sind ausgebaut: Der Planer hat drei Teile und öffnet mit den Notizen ---
   await bereich(page, 'routinen');
-  P.ok('Planer hat vier Teile, „Aufgaben“ ist nicht dabei', (await page.$$eval('#r-subs button', l => l.map(b => b.textContent).join())) === 'Routinen,Notizen,Arbeit,Uni');
+  P.ok('Planer hat drei Teile, gewählt ist „Notizen“', (await page.$$eval('#r-subs button', l => l.map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join())) === 'Notizen*,Arbeit,Uni');
 
   // --- Notizen: schnelle Aufnahme. Nur ein Textfeld, jede Notiz mit Kreis, Abhaken löscht sie ---
   const roh = () => page.evaluate(() => localStorage.getItem('takt.v1'));
@@ -100,10 +100,10 @@ lauf(async () => {
   await b.page.waitForTimeout(500);
   const nach = (await gespeichert(b.page)).N || { tasks: {}, notes: {} };
   P.ok('Sicherung einlesen bringt Notizen mit und behält alte Aufgaben im Speicher', Object.keys(nach.tasks).length === Object.keys(d.N.tasks).length && Object.keys(nach.notes).length === Object.keys(d.N.notes).length, Object.keys(nach.tasks).length + ' Aufgaben, ' + Object.keys(nach.notes).length + ' Notizen');
-  // --- Heute: Notizen stehen ganz oben, vor den Routinen; Aufgaben stehen dort nicht mehr, auch wenn welche gespeichert sind ---
+  // --- Heute: Notizen stehen ganz oben; Routinen und Aufgaben stehen dort nicht mehr, auch wenn welche gespeichert sind (die Beispieldaten haben drei Routinen) ---
   await bereich(b.page, 'heute');
   const lagen = await b.page.evaluate(() => { const o = {}; document.querySelectorAll('#v-heute .sec').forEach(h => { o[h.firstChild.textContent.trim()] = Math.round(h.getBoundingClientRect().top); }); return o; });
-  P.ok('auf Heute stehen die Notizen über den Routinen, einen Abschnitt „Aufgaben“ gibt es nicht', lagen.Notizen < lagen.Routinen && !('Aufgaben' in lagen) && !(await b.page.$('#v-heute [data-n="tog"]')), JSON.stringify(lagen));
+  P.ok('auf Heute gibt es den Abschnitt „Notizen“, aber weder „Routinen“ noch „Aufgaben“', 'Notizen' in lagen && !('Routinen' in lagen) && !('Aufgaben' in lagen) && !(await b.page.$('#v-heute .rows .row')) && !(await b.page.$('#v-heute [data-n="tog"]')), JSON.stringify(lagen));
   await bereich(b.page, 'routinen');
 
   const q = b.page, warte = () => q.waitForTimeout(200);
@@ -122,6 +122,14 @@ lauf(async () => {
   P.ok('Abhaken in der Liste löscht die Notiz', (await q.$$eval('#n-list [data-n="note"]', a => a.length)) === 6);
   // Nach diesem Speichern stehen die alten Aufgaben noch alle im Speicher (und damit in jeder Sicherung): Es geht nichts verloren.
   P.ok('gespeicherte Aufgaben bleiben beim Speichern erhalten', Object.values((await gespeichert(q)).N.tasks).filter(Boolean).length === Object.values(d.N.tasks).filter(Boolean).length && Object.values(d.N.tasks).filter(Boolean).length > 0);
+  // Dasselbe für die Routinen (seit v75 ausgebaut): Die drei Routinen der Beispieldaten und jeder Eintrag ihres Protokolls stehen nach dem Speichern noch da, ein Timer läuft nicht mehr.
+  const gs = await gespeichert(q), tage = o => Object.values(o || {}).reduce((n, y) => n + Object.values(y).reduce((m, t) => m + Object.keys(t).length, 0), 0);   // Einträge im Protokoll (Routine × Tag); ein Tag ohne Eintrag zählt nicht
+  P.ok('gespeicherte Routinen und ihr Protokoll bleiben beim Speichern erhalten', gs.S.routines.length === 3 && d.S.routines.length === 3 && tage(gs.LY) === tage(d.LY) && tage(d.LY) > 0 && gs.S.running === null, gs.S.routines.length + ' Routinen, ' + tage(gs.LY) + ' von ' + tage(d.LY) + ' Einträgen');
+  await bereich(q, 'heute'); await q.click('#v-heute [data-h="mode"][data-v="week"]'); await warte();
+  P.ok('Woche auf Heute: keine Zeile „Routinen“, kein Zusammenhang mit Routinen', !(await text(q, '#v-heute')).includes('Routinen'), await text(q, '#v-heute'));
+  await q.click('#v-heute [data-h="mode"][data-v="day"]'); await q.click('#v-heute .wk .wd.now'); await warte();
+  P.ok('Kalender „Übersicht“: keine Routinen, keine Legende', !(await text(q, '#csheet')).includes('Routinen') && !(await q.$('#cs-leg')), await text(q, '#csheet'));
+  await q.evaluate(() => document.querySelector('#csheet').close());
   await b.browser.close();
 
   // --- Erinnerung an die Sicherung: Ohne Sicherung zählt der älteste Eintrag, auch wenn es nur Notizen gibt (Tag des Anlegens). Aufgaben zählen nicht mehr: Sie sind nicht zu sehen. ---

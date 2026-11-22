@@ -37,7 +37,6 @@ lauf(async () => {
       await versuch('notizen', async () => { await bereich(page, 'routinen'); await page.click('#r-subs [data-v="note"]'); await nachOben(page); });
       await versuch('blatt-notiz', async () => { await page.click('#n-main [data-n="note"]:has-text("Betreuer")'); });
       await versuch('blatt-notiz-neu', async () => { await page.click('#add'); await page.keyboard.type('Bib-Ausweis verlängern'); });
-      await versuch('routinen-zurueck', async () => { await page.click('#r-subs [data-v="rout"]'); });
       await versuch('blatt-routine', async () => { await bereich(page, 'routinen'); await page.click('#add'); });
       await versuch('blatt-gewicht', async () => { await bereich(page, 'gewicht'); await page.click('#add'); });
       // Aufgeklappte Listen: Die Klappzeile steht oben im Bild, darunter ihre Zeilen
