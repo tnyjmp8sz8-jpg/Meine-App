@@ -1,4 +1,4 @@
-// Arbeit und Uni: zwei eigene Teile des Planers neben Routinen, Aufgaben und Notizen, mit Arbeitszeiten (Verdienst je Monat) und Terminen der Uni (Punkte je Fach).
+// Arbeit und Uni: zwei eigene Teile des Planers neben Routinen und Notizen, mit Arbeitszeiten (Verdienst je Monat) und Terminen der Uni (Punkte je Fach).
 const { oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
 
 lauf(async () => {
@@ -21,7 +21,7 @@ lauf(async () => {
 
   // --- Umschalter und Ordner ---
   const subs = await page.evaluate(() => { const b = [...document.querySelectorAll('#r-subs [data-r="sub"]')]; return b.map(x => x.textContent).join(' | ') + ' · Reihen: ' + new Set(b.map(x => Math.round(x.getBoundingClientRect().top))).size + ' · rechts: ' + (b[b.length - 1].getBoundingClientRect().right <= innerWidth - 16); });
-  P.ok('Umschalter: Routinen, Aufgaben, Notizen, Arbeit, Uni in einer Reihe (390 px)', subs === 'Routinen | Aufgaben | Notizen | Arbeit | Uni · Reihen: 1 · rechts: true', subs);
+  P.ok('Umschalter: Routinen, Notizen, Arbeit, Uni in einer Reihe (390 px)', subs === 'Routinen | Notizen | Arbeit | Uni · Reihen: 1 · rechts: true', subs);
   await teil('note');
   const leiste = await text(page, '#n-main .chips .chip');
   P.ok('Ordner in der Reihe: Alle, Uni, Arbeit, Promotion, Privat', leiste === 'Alle | Uni | Arbeit | Promotion | Privat', leiste);
@@ -111,8 +111,9 @@ lauf(async () => {
   await page.setViewportSize({ width: 320, height: 700 }); await kurz();
   const quer = await page.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth > s.clientWidth || document.documentElement.scrollWidth > innerWidth || [...document.querySelectorAll('#n-main *')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 0.5); });
   P.ok('320 px: nichts steht seitlich hinaus (Uni)', !quer);
-  const sub320 = await page.evaluate(() => { const b = [...document.querySelectorAll('#r-subs [data-r="sub"]')]; return b.every(x => x.getBoundingClientRect().right <= innerWidth - 16) && new Set(b.map(x => Math.round(x.getBoundingClientRect().top))).size === 2; });
-  P.ok('320 px: der Umschalter bricht in zwei Reihen um, nichts ragt hinaus', sub320);
+  const sub320 = await page.evaluate(() => { const b = [...document.querySelectorAll('#r-subs [data-r="sub"]')]; return b.every(x => x.getBoundingClientRect().right <= innerWidth - 16) && new Set(b.map(x => Math.round(x.getBoundingClientRect().top))).size === 1; });
+  // vier Teile (seit v74 ohne „Aufgaben“): Der letzte endet bei 273 px, der Rand liegt bei 320 − 16 = 304 px
+  P.ok('320 px: die vier Umschalter stehen in einer Reihe, nichts ragt hinaus', sub320);
   await teil('work');
   const quer2 = await page.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth > s.clientWidth || [...document.querySelectorAll('#n-main *')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 0.5); });
   P.ok('320 px: nichts steht seitlich hinaus (Arbeit)', !quer2);

@@ -199,11 +199,6 @@ dialog,.scroll{overflow-x:hidden}
 dialog{overscroll-behavior:contain}
 .fld{min-width:0}
 .stepper{display:flex;align-items:center;gap:8px}
-/* Eigener Takt einer Aufgabe: „Alle [2] Tage | Wochen“ */
-.cus{display:flex;align-items:center;flex-wrap:wrap;gap:8px;margin-top:8px}
-.cus[hidden]{display:none}
-.cus>span{color:var(--muted)}
-.cus input{flex:none;width:58px;text-align:center;font-variant-numeric:tabular-nums}
 .stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
 .stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
 .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
@@ -473,7 +468,7 @@ body{font-size:14px}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
-/* Aufgaben und Notizen */
+/* Notizen, Arbeit und Uni im Planer */
 #main[hidden],#n-main[hidden]{display:none}
 #n-main,#n-list{display:flex;flex-direction:column;gap:12px}
 #n-main>.sec{margin:8px 2px -6px}
@@ -482,13 +477,7 @@ input.n-q{margin-bottom:-8px}
 .tk{flex:none;width:44px;min-height:40px;border:0;background:none;display:grid;place-items:center;padding:0}
 .entries .tk{width:44px;padding:0 0 0 8px;justify-content:center;align-items:center}
 .tk i{width:22px;height:22px;border-radius:50%;border:2px solid var(--mid);display:grid;place-items:center;color:#fff}
-.tk i svg{width:12px;height:12px}
-.tk[aria-pressed="true"] i{border-color:var(--good);background:var(--good)}
 .entries .trow .two{padding-left:8px;min-width:0}
-.trow.done .l{opacity:.45}
-.trow.done .l>span{text-decoration:line-through}
-.when{flex:none;font-size:12px;color:var(--muted);white-space:nowrap}
-.when.late{color:var(--danger)}
 
 .nrow .l{min-width:0}
 .ntxt{white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
@@ -717,7 +706,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .entries .irow .info{flex:none;width:auto;display:inline-grid;padding:0;margin:0 13px 0 0}
 /* Zeile „Sicherung“: Meldet die iPhone-App einen Fehler, steht sein Wortlaut in Rot (die Unterzeile trägt dann .neg). Ein langer Ordnername ohne Leerzeichen bricht darin um, statt Heute breiter zu machen. */
 #bk-err{color:var(--danger);overflow-wrap:anywhere}
-/* Heute zeigt die Kurzfassung: eine Zeile je Notiz und Aufgabe (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
+/* Heute zeigt die Kurzfassung: eine Zeile je Notiz (Ordner und Datum stehen im Planer), Routinen ohne Wochenpunkte */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
 .fld>span,.streak span{text-transform:none;letter-spacing:0}
@@ -726,8 +715,6 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .subtabs{gap:16px}
 .subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
-/* Planer hat fünf Teile: etwas enger, damit sie bei 375 und 390 px in einer Reihe stehen; auf schmaleren Geräten rutschen die letzten in eine zweite Reihe */
-#r-subs .subtabs{flex-wrap:wrap;gap:2px 13px}
 .mark{font-size:17px;font-weight:700}
 .hero h1 .num,.clock,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
@@ -778,7 +765,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v73</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v74</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -891,53 +878,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
-<dialog tabindex="-1" id="asheet" aria-labelledby="as-title">
-  <form id="aform" novalidate>
-    <div class="sh-head">
-      <h2 id="as-title">Neue Aufgabe</h2>
-      <button type="button" class="x" id="as-close" aria-label="Schließen">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
-      </button>
-    </div>
-    <label class="fld" for="a-title">
-      <span>Aufgabe</span>
-      <input id="a-title" type="text" maxlength="120" autocomplete="off" placeholder="z. B. Kapitel 3 überarbeiten">
-    </label>
-    <div class="fld">
-      <span id="lbl-a-due">Fällig</span>
-      <div class="chips" id="a-due" role="group" aria-labelledby="lbl-a-due"></div>
-    </div>
-    <label class="fld" for="a-date" id="a-date-fld" hidden>
-      <span>Tag</span>
-      <input id="a-date" type="date">
-    </label>
-    <div class="fld" id="a-rep-fld">
-      <span id="lbl-a-rep">Wiederholen</span>
-      <div class="chips" id="a-rep" role="group" aria-labelledby="lbl-a-rep"></div>
-      <div class="cus" id="a-cus" hidden>
-        <span>Alle</span>
-        <input id="a-cn" type="text" inputmode="numeric" maxlength="2" autocomplete="off" aria-label="Alle wie viele Tage oder Wochen">
-        <div class="chips" id="a-cu" role="group" aria-label="Tage oder Wochen"></div>
-      </div>
-    </div>
-    <div class="fld">
-      <span id="lbl-a-folder">Ordner</span>
-      <div class="chips" id="a-folder" role="group" aria-labelledby="lbl-a-folder"></div>
-      <div class="stepper" id="a-fnew-row" hidden>
-        <input id="a-fnew" type="text" maxlength="24" autocomplete="off" placeholder="Name des Ordners" aria-label="Name des neuen Ordners">
-        <button type="button" id="a-fnew-add" aria-label="Ordner anlegen">+</button>
-      </div>
-    </div>
-    <label class="fld" for="a-note">
-      <span>Notiz</span>
-      <input id="a-note" type="text" maxlength="200" autocomplete="off" placeholder="optional">
-    </label>
-    <p class="err" id="a-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="a-save">Speichern</button>
-    <button type="button" class="ghost danger" id="a-del" hidden>Aufgabe löschen</button>
-  </form>
-</dialog>
-
 <dialog tabindex="-1" id="bsheet" aria-labelledby="bs-title">
   <form id="bform" novalidate>
     <div class="sh-head">
@@ -1026,7 +966,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </div>
     <p class="err" id="n-err" role="alert" hidden></p>
     <button type="button" class="primary" id="n-done">Fertig</button>
-    <button type="button" class="ghost center" id="n-task" hidden>Als Aufgabe</button>
     <button type="button" class="ghost danger" id="n-del" hidden>Notiz löschen</button>
   </form>
 </dialog>
@@ -1331,7 +1270,7 @@ let mMode = 'month', mYM = '', mYear = 0, mNow = '';   // mNow: der laufende Mon
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
 let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
-let N = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } };   // Aufgaben und Notizen, Aufbau siehe normN()
+let N = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } };   // Planer: Notizen, Arbeit, Uni; Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'cardio', hMode = 'day', hWeek = '', hMonth = '';
 
@@ -1552,11 +1491,11 @@ function renderRoutines() {
   const strip = $('#r-strip'), showStrip = S.routines.length > 0;
   strip.innerHTML = showStrip ? weekStripHTML('rout') : ''; strip.hidden = !showStrip;
   document.querySelector('#v-routinen .hero').hidden = !showStrip;   // leer: nur der leere Zustand, wie in den anderen Bereichen
-  /* Aufgaben und Notizen teilen sich den Bereich mit den Routinen */
+  /* Notizen, Arbeit und Uni teilen sich den Bereich mit den Routinen */
   $('#r-subs').innerHTML = subsRHTML();
   const nm = $('#n-main'), other = rSub !== 'rout';
   nm.hidden = !other; main.hidden = other;
-  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'task' ? tasksHTML() : rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML(); return; }
+  if (other) { strip.hidden = true; document.querySelector('#v-routinen .hero').hidden = true; nm.innerHTML = rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML(); return; }
   nm.innerHTML = '';
 
   if (!S.routines.length) {
@@ -1591,7 +1530,7 @@ $('#main').addEventListener('click', e => {
     saveLocal(); render();
   }
 });
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'task') openA(null); else if (rSub === 'note') openN(null); else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openSheet(null); });
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'note') openN(null); else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openSheet(null); });
 
 /* ---------- sheet ---------- */
 const dlg = $('#sheet');
@@ -3072,7 +3011,7 @@ $('#v-training').addEventListener('click', e => {
 });
 
 /* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: Routinen und Training zusammen. */
-const CAL = { all: 'Übersicht', rout: 'Routinen', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym', task: 'Aufgaben' };
+const CAL = { all: 'Übersicht', rout: 'Routinen', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
 const cdlg = $('#csheet');
 const DF_DAY = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 let cSel = '', cMode = 'all';
@@ -3089,8 +3028,7 @@ function routDay(k) {
 }
 /* Punkte pro Tag als Buchstabenfolge: g = Training, b = erledigt bzw. eingetragen, p = teilweise */
 function calMarks(mode) {
-  const gym = {}, run = {}, tx = {}, dn = {}, liveD = K.live ? K.live.date : '';
-  if (mode === 'task') taskList().forEach(t => { if (t.done) dn[doneKey(t)] = 1; });
+  const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
   if (mode === 'gym' || mode === 'all') kDates().forEach(d => { gym[d] = 1; });
   if (mode === 'cardio' || mode === 'all') for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out') tx[t.d] = 1; }
@@ -3098,7 +3036,6 @@ function calMarks(mode) {
     if (mode === 'gym') return gym[k] ? 'g' : liveD === k ? 'b' : '';
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
-    if (mode === 'task') return dn[k] ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
     const q = routDay(k), full = q.due > 0 && q.done === q.due;
     if (mode === 'rout') return full ? 'b' : q.done || q.part ? 'p' : '';
@@ -3122,7 +3059,6 @@ function calFirst(mode) {
   if (mode === 'cardio' || mode === 'all') for (const id in T.runs) if (T.runs[id]) take(T.runs[id].d);
   if (mode === 'weight') for (const k in W.entries) if (typeof W.entries[k] === 'number') take(k);
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) take(MY[y].tx[id].d);
-  if (mode === 'task') taskList().forEach(t => take(doneKey(t) || (t.c ? keyOf(new Date(t.c)) : '')));
   if (mode === 'rout' || mode === 'all') S.routines.forEach(r => take(r.created));
   return f;
 }
@@ -3131,7 +3067,6 @@ function calSum(mode, ym, g, b, span) {
   if (mode === 'gym') return n(g, 'Einheit', 'Einheiten') + (g ? ' · ' + kg(g / span * 7) + ' pro Woche' : '');
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
-  if (mode === 'task') return n(taskList().filter(t => doneKey(t).slice(0, 7) === ym).length, 'Aufgabe', 'Aufgaben') + ' erledigt';
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
   if (mode === 'rout') return 'An ' + n(b, 'Tag', 'Tagen') + ' alles erledigt';
   return g || b ? [g ? g + '× Training' : '', b ? n(b, 'Tag', 'Tage') + ' alle Routinen' : ''].filter(Boolean).join(' · ') : 'Keine Einträge';
@@ -3187,8 +3122,6 @@ function calDayHTML() {
     return h + (tx.length ? '<ul class="entries">' + tx.map(x => btn('data-c="tx" data-id="' + esc(x.id) + '" aria-label="Eintrag ändern"', (x.t.k === 'in' ? 'Einnahme' : catName(x.t.c)) + (x.t.n ? ' · ' + esc(x.t.n) : ''), '', (x.t.k === 'in' ? '+' : '−') + eur(x.t.a))).join('') + '</ul>' : note('Keine Ausgabe an diesem Tag.')) + add('tx', 'Ausgabe eintragen');
   }
   const q = routDay(k);
-  const tasksOf = () => taskList().filter(t => doneKey(t) === k);
-  if (cMode === 'task') { const ts = tasksOf(); return h + (ts.length ? '<ul class="entries">' + ts.map(t => btn('data-c="task" data-id="' + esc(t.id) + '" aria-label="Aufgabe ändern"', esc(t.t), folderName(t.f), '')).join('') + '</ul>' : note('An diesem Tag wurde keine Aufgabe erledigt.')); }
   if (cMode === 'rout') return h + (q.due ? '<ul class="entries">' + routRows(q) + '</ul>' : note('Keine Routine an diesem Tag.'));
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
@@ -3196,7 +3129,6 @@ function calDayHTML() {
   const s = gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
   runsOf().forEach(r => { rows += row('Lauf', kindName(r.k) + ' · ' + fmt(r.s), kmf(r.m) + ' km'); });
   if (typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
-  const td = tasksOf(); if (td.length) rows += row('Aufgaben', td.map(t => esc(t.t)).join(', '), td.length + ' erledigt');
   const out = txOf().filter(x => x.t.k === 'out');
   if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
   return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.'));
@@ -3227,7 +3159,6 @@ cdlg.addEventListener('click', e => {
   else if (a === 'run') openT(c.dataset.id);
   else if (a === 'w') openW('entry', cSel);
   else if (a === 'tx') openM('tx', c.dataset.id);
-  else if (a === 'task') openA(c.dataset.id);
   else if (a === 'add') { if (v === 'run') openT(null, cSel); else if (v === 'w') openW('entry', cSel); else openM('tx', null, null, cSel); }
 });
 
@@ -3645,12 +3576,12 @@ $('#p-del').addEventListener('click', () => {
   closeP(); renderTraining();
 });
 
-/* ---------- Aufgaben und Notizen ---------- */
-/* Liegen im Bereich Routinen hinter dem Umschalter „Routinen / Aufgaben / Notizen“ (rSub). Ordner gelten für beide.
+/* ---------- Planer: Notizen, Arbeit, Uni ---------- */
+/* Liegen im Bereich Routinen hinter dem Umschalter „Routinen / Notizen / Arbeit / Uni“ (rSub). Ordner gelten für die Notizen.
    N = { folders: { id: { n } },
-         tasks: { id: { t Titel, f Ordner, d fällig (Datum oder null), done Zeitpunkt des Abhakens oder null, c angelegt, n Notiz,
-                        r Wiederholung ('' | 'day' | 'week' | 'month'), nx id der beim Abhaken angelegten nächsten Aufgabe } },
-         notes: { id: { x Text, f Ordner, c angelegt, m geändert } } }
+         notes: { id: { x Text, f Ordner, c angelegt, m geändert } },
+         tasks: Aufgaben aus v49 bis v73. Die App zeigt sie seit v74 nicht mehr (Wunsch des Nutzers), sie bleiben aber gespeichert und in der Sicherung: So geht nichts verloren.
+         work, uni: siehe unten }
    Notizen sind für die schnelle Aufnahme: nur Text, jede mit einem Kreis davor, Abhaken löscht sie. */
 function normN(o) {
   const out = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
@@ -3659,7 +3590,7 @@ function normN(o) {
   if (ta && typeof ta === 'object') for (const id in ta) {
     const x = ta[id];
     if (!x || typeof x !== 'object' || !str(x.t, 120).trim()) { out.tasks[id] = null; continue; }
-    out.tasks[id] = { t: str(x.t, 120), f: str(x.f, 24), d: isKey(x.d) ? x.d : null, done: num(x.done) || null, c: num(x.c), n: str(x.n, 200), r: repOk(x.r) ? x.r : '', nx: str(x.nx, 24) };
+    out.tasks[id] = { t: str(x.t, 120), f: str(x.f, 24), d: isKey(x.d) ? x.d : null, done: num(x.done) || null, c: num(x.c), n: str(x.n, 200), r: str(x.r, 8), nx: str(x.nx, 24) };
   }
   if (no && typeof no === 'object') for (const id in no) {
     const x = no[id];
@@ -3687,90 +3618,33 @@ function normN(o) {
   return out;
 }
 const ndoc = patchDoc(() => N, v => { N = normN(v); });
-/* Wiederkehrende Aufgaben: Beim Abhaken bleibt die Aufgabe als erledigt stehen, und eine neue mit dem nächsten Datum entsteht (nx merkt sich ihre id).
-   Wird der Haken wieder entfernt, verschwindet die neue, solange sie noch offen ist. So bleibt sichtbar, was wann erledigt wurde. */
-function nextDue(d, r, day) {
-  const tk = todayKey(); let k = d;
-  do {
-    if (r === 'month') { const y = +k.slice(0, 4), m = +k.slice(5, 7), ny = m === 12 ? y + 1 : y, nm = m === 12 ? 1 : m + 1; k = ny + '-' + pad(nm) + '-' + pad(Math.min(day || +d.slice(8), new Date(ny, nm, 0).getDate())); }
-    else { const q = repOf(r); k = keyOf(addDays(parseKey(k), (q.u === 'week' ? 7 : 1) * q.n)); }
-  } while (k <= tk);   // Liegengebliebenes springt nicht in die Vergangenheit, sondern auf den nächsten Termin nach heute. Gezählt wird vom Datum der Aufgabe aus: Bei einem eigenen Takt („alle 3 Tage“) bleibt er so am gewählten Starttag hängen.
-  return k;
-}
-/* Tag im Monat, der bei einer monatlichen Aufgabe gemeint ist. Er steht nirgends eigens, sondern ergibt sich aus der Kette der abgehakten Aufgaben (nx zeigt auf die nächste):
-   Liegt eine Aufgabe nur deshalb früher als ihre Vorgängerin, weil ihr Monat kürzer ist (31. → 30.), gilt deren Tag weiter, und nach dem 30.11. kommt wieder der 31.12.
-   Ein von Hand geändertes Datum passt nicht zu dieser Rechnung und zählt deshalb neu. Ist die Vorgängerin gelöscht, gilt der Tag der Aufgabe selbst. */
-function monthDay(t) {
-  const all = taskList(), chain = [t];
-  for (let p; chain.length < 120 && (p = all.find(x => x.nx === chain[chain.length - 1].id && x.r === 'month' && x.d));) chain.push(p);
-  return chain.reduceRight((want, x) => { const day = +x.d.slice(8); return day === Math.min(want, new Date(+x.d.slice(0, 4), +x.d.slice(5, 7), 0).getDate()) ? want : day; }, 0);
-}
 const FOLDERS = [['uni', 'Uni'], ['arb', 'Arbeit'], ['prom', 'Promotion'], ['priv', 'Privat']];
 /* Fächer der Zahnmedizin, in denen der Nutzer Punkte sammelt */
 const FACH = [['kons', 'Kons'], ['paro', 'Paro'], ['proth', 'Prothetik']];
-/* Wiederholung einer Aufgabe: '' nie, 'day', 'week', 'month', dazu ein eigener Takt als 'day' oder 'week' mit angehängter Zahl von 2 bis 99 ('day3' = alle 3 Tage; v69).
-   repOf() zerlegt das in Einheit und Zahl, repOk() prüft es (auch für eingelesene Sicherungen), repName() ist der Text in der Zeile, 'x' ist der Knopf „Alle …“ im Blatt. */
-const REPEAT = [['', 'Nie'], ['day', 'Täglich'], ['week', 'Wöchentlich'], ['month', 'Monatlich'], ['x', 'Alle …']];
-const repOf = r => { const m = /^(day|week)(\d{1,2})?$/.exec(r || ''); return m ? { u: m[1], n: +(m[2] || 1) } : { u: r === 'month' ? 'month' : '', n: 1 }; };
-const repOk = r => r === 'month' || (/^(day|week)(\d{1,2})?$/.test(r) && !/^(day|week)[01]$/.test(r) && !/^(day|week)0\d$/.test(r));
-const repName = r => { const q = repOf(r); return q.u === 'month' ? 'monatlich' : !q.u ? '' : q.n === 1 ? (q.u === 'day' ? 'täglich' : 'wöchentlich') : 'alle ' + q.n + (q.u === 'day' ? ' Tage' : ' Wochen'); };
 /* Feste Ordner plus eigene. Eigene Namen sind Nutzertext: allFolders() liefert sie schon sicher für HTML. */
 const allFolders = () => FOLDERS.concat(Object.keys(N.folders).filter(id => N.folders[id]).map(id => [id, esc(N.folders[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
 const folderName = id => { const f = id && allFolders().find(x => x[0] === id); return f ? f[1] : ''; };
-const taskList = () => Object.keys(N.tasks).filter(id => N.tasks[id]).map(id => Object.assign({ id }, N.tasks[id]));
 const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
-/* Eigene Ordner ohne Aufgabe und ohne Notiz verschwinden beim Start von selbst (wie eigene Kategorien) */
+/* Eigene Ordner ohne Notiz verschwinden beim Start von selbst (wie eigene Kategorien) */
 function cleanFolders() {
-  const used = {}, p = { folders: {}, tasks: {}, notes: {} }; let n = 0;
+  const used = {}, p = { folders: {}, notes: {} }; let n = 0;
   /* Ein eigener Ordner, der wie ein fester heißt (z. B. „Arbeit“, fest seit v72), geht in diesem auf: Sonst stünde der Name zweimal in der Reihe */
   for (const id in N.folders) {
     const f = N.folders[id], fix = f && FOLDERS.find(x => x[1].toLowerCase() === f.n.trim().toLowerCase()); if (!fix) continue;
-    taskList().forEach(t => { if (t.f === id) p.tasks[t.id] = { f: fix[0] }; }); noteList().forEach(x => { if (x.f === id) p.notes[x.id] = { f: fix[0] }; });
+    noteList().forEach(x => { if (x.f === id) p.notes[x.id] = { f: fix[0] }; });
     p.folders[id] = null; n++;
   }
-  if (n) { ndoc.patch(p); p.tasks = {}; p.notes = {}; p.folders = {}; n = 0; }
-  taskList().concat(noteList()).forEach(x => { used[x.f] = 1; });
+  if (n) { ndoc.patch(p); p.notes = {}; p.folders = {}; n = 0; }
+  noteList().forEach(x => { used[x.f] = 1; });
   for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
   if (n) ndoc.patch(p);
 }
 let rSub = 'rout', nFolder = '', nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), Suchtext der Notizen
 const inFolder = x => !nFolder || x.f === nFolder;
-const doneKey = t => t.done ? keyOf(new Date(t.done)) : '';
-const dueText = d => d === keyOf(addDays(new Date(), 1)) ? 'Morgen' : dRow(d);
-/* Aufgaben nach Abschnitten. Heute = alles Offene, das heute oder früher fällig ist: Was liegen bleibt, rutscht so von selbst auf den nächsten Tag.
-   Heute Abgehaktes bleibt bis Mitternacht durchgestrichen stehen, danach liegt es unter „Erledigt“. */
-function taskParts(list) {
-  const tk = todayKey(), open = list.filter(t => !t.done), byC = (a, b) => a.c - b.c;
-  return { today: open.filter(t => t.d && t.d <= tk).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), doneToday: list.filter(t => doneKey(t) === tk).sort((a, b) => a.done - b.done),
-    soon: open.filter(t => t.d && t.d > tk).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), none: open.filter(t => !t.d).sort(byC),
-    old: list.filter(t => t.done && doneKey(t) !== tk).sort((a, b) => b.done - a.done) };
-}
-function taskRow(t, when, late, slim) {
-  const sub = slim ? '' : [folderName(t.f), repName(t.r), esc(t.n)].filter(Boolean).join(' · ');
-  return '<li class="trow' + (t.done ? ' done' : '') + '"><button type="button" class="tk" data-n="tog" data-id="' + esc(t.id) + '" aria-pressed="' + !!t.done + '" aria-label="' + esc(t.t) + (t.done ? ' wieder öffnen' : ' abhaken') + '"><i>' + (t.done ? CHECK : '') + '</i></button>' +
-    '<button type="button" class="two" data-n="task" data-id="' + esc(t.id) + '" aria-label="' + esc(t.t) + ' ändern"><span class="l"><span>' + esc(t.t) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' +
-    (when ? '<small class="when' + (late ? ' late' : '') + '">' + when + '</small>' : '') + '</button></li>';
-}
-const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['task', 'Aufgaben'], ['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
+const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['rout', 'Routinen'], ['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
 const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + esc(f[0]) + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
-function tasksHTML() {
-  if (!taskList().length) return emptyHTML('aufgaben', 'Noch keine Aufgabe', 'Schreib auf, was ansteht. Was offen bleibt, rutscht auf den nächsten Tag.', '<button type="button" class="primary" data-n="newtask">Aufgabe anlegen</button>');
-  const tk = todayKey(), p = taskParts(taskList().filter(inFolder)), n = p.today.length, all = n + p.doneToday.length;
-  let h = weekStripHTML('task') + folderBarHTML() + '<section class="hero w-hero"><p class="date">Heute</p><h1><span class="num">' + n + '</span><span class="unit">offen</span></h1><p class="sub">' + (all ? p.doneToday.length + ' von ' + all + ' erledigt' : 'Nichts für heute') + '</p></section>';
-  if (all) h += '<ul class="entries">' + p.today.map(t => taskRow(t, t.d < tk ? dRow(t.d) : '', true)).join('') + p.doneToday.map(t => taskRow(t)).join('') + '</ul>';
-  if (p.soon.length) h += '<h2 class="sec">Demnächst</h2><ul class="entries">' + p.soon.map(t => taskRow(t, dueText(t.d))).join('') + '</ul>';
-  if (p.none.length) h += '<h2 class="sec">Ohne Datum</h2><ul class="entries">' + p.none.map(t => taskRow(t)).join('') + '</ul>';
-  /* Erledigtes: eingeklappt, die letzten 50 */
-  if (p.old.length) h += foldHTML('erledigt', 'Erledigt', '', p.old.length, p.old.slice(0, 50).map(t => taskRow(t, dRow(doneKey(t)))).join(''));
-  return h;
-}
 /* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
 const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
-/* Aufgaben von heute auf der Seite Heute, als Kurzfassung in einer Zeile: abhaken geht direkt dort */
-function homeTasksHTML() {
-  const tk = todayKey(), p = taskParts(taskList()), list = p.today.concat(p.doneToday); if (!list.length) return '';
-  return secHTML('Aufgaben', p.today.length + ' offen', list.length > 6 ? allAct('alltasks', list.length) : '') + '<ul class="entries">' + list.slice(0, 6).map(t => taskRow(t, !t.done && t.d < tk ? dRow(t.d) : '', true, true)).join('') + '</ul>';
-}
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 const notesNew = () => noteList().sort((a, b) => b.m - a.m);
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
@@ -3784,7 +3658,7 @@ function noteListHTML() {
   const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
   return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
 }
-/* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben Routinen, Aufgaben und Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
+/* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben Routinen und Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
    Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile.
    Darunter stehen jeweils die Notizen des gleichnamigen Ordners; eine dort angelegte Notiz bekommt ihn von selbst (siehe openN). */
 const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
@@ -3835,24 +3709,11 @@ function homeNotesHTML() {
   const list = notesNew(); if (!list.length) return '';
   return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true, true)).join('') + '</ul>';
 }
-/* Tipp in einer Liste mit Aufgaben oder Notizen (im Bereich und auf Heute). Liefert true, wenn er hierher gehörte. */
+/* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
   const b = e.target.closest('[data-n]'); if (!b) return false;
   const a = b.dataset.n, id = b.dataset.id;
-  if (a === 'tog') {
-    const t = N.tasks[id], p = { tasks: {} }; if (!t) return true;
-    if (!t.done) {
-      p.tasks[id] = { done: Date.now(), nx: '' };
-      if (t.r && t.d) { const nid = newId(); p.tasks[nid] = { t: t.t, f: t.f, d: nextDue(t.d, t.r, t.r === 'month' ? monthDay(Object.assign({ id }, t)) : 0), done: null, c: Date.now(), n: t.n, r: t.r, nx: '' }; p.tasks[id].nx = nid; }
-    } else {
-      p.tasks[id] = { done: null, nx: '' };
-      if (t.nx && N.tasks[t.nx] && !N.tasks[t.nx].done) p.tasks[t.nx] = null;
-    }
-    ndoc.patch(p); render();
-  }
-  else if (a === 'task') openA(id);
-  else if (a === 'newtask') openA(null);
-  else if (a === 'note') openN(id);
+  if (a === 'note') openN(id);
   else if (a === 'newnote') openN(null);
   else if (a === 'newwork') openB(null);
   else if (a === 'work') openB(id);
@@ -3861,7 +3722,6 @@ function nAct(e) {
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
   else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderRoutines(); }
   else if (a === 'folder') { nFolder = b.dataset.v; renderRoutines(); }
-  else if (a === 'alltasks') { rSub = 'task'; nFolder = ''; show('routinen', true); renderRoutines(); }
   return true;
 }
 $('#n-main').addEventListener('click', nAct);
@@ -3884,58 +3744,6 @@ function folderAdd(st, input, err) {
   err.hidden = true; input.value = ''; st.f = id; st.newF = false;
   return true;
 }
-
-/* Blatt „Aufgabe“ */
-const adlg = $('#asheet');
-let aE = { id: null, f: '', due: 'today', r: '', newF: false };
-const DUE = [['today', 'Heute'], ['tomorrow', 'Morgen'], ['date', 'Anderer Tag'], ['none', 'Ohne Datum']];
-function paintA() {
-  $('#a-folder').innerHTML = folderPickHTML(aE); $('#a-fnew-row').hidden = !aE.newF;
-  $('#a-due').innerHTML = DUE.map(d => '<button type="button" class="chip" data-d="' + d[0] + '" aria-pressed="' + (aE.due === d[0]) + '">' + d[1] + '</button>').join('');
-  $('#a-date-fld').hidden = aE.due !== 'date';
-  /* Wiederholen braucht einen Tag, von dem aus gezählt wird */
-  $('#a-rep-fld').hidden = aE.due === 'none';
-  $('#a-rep').innerHTML = REPEAT.map(q => '<button type="button" class="chip" data-r="' + q[0] + '" aria-pressed="' + (aE.r === q[0]) + '">' + q[1] + '</button>').join('');
-  /* Eigener Takt: Zahl und Einheit stehen nur bei „Alle …“ da. Das Zahlenfeld wird hier nicht neu geschrieben, sonst verlöre es beim Tippen den Fokus. */
-  $('#a-cus').hidden = aE.r !== 'x';
-  $('#a-cu').innerHTML = [['day', 'Tage'], ['week', 'Wochen']].map(q => '<button type="button" class="chip" data-u="' + q[0] + '" aria-pressed="' + (aE.cu === q[0]) + '">' + q[1] + '</button>').join('');
-}
-function openA(id) {
-  const t = id ? N.tasks[id] : null, tk = todayKey(), tm = keyOf(addDays(new Date(), 1)), rq = repOf(t ? t.r : '');
-  aE = { id: t ? id : null, f: t ? (folderName(t.f) ? t.f : '') : nFolder, due: t ? (!t.d ? 'none' : t.d === tk ? 'today' : t.d === tm ? 'tomorrow' : 'date') : 'today', r: t ? (rq.n > 1 ? 'x' : t.r) : '', cu: rq.u === 'week' ? 'week' : 'day', newF: false };
-  $('#a-cn').value = rq.n > 1 ? rq.n : 2;
-  $('#as-title').textContent = t ? 'Aufgabe ändern' : 'Neue Aufgabe';
-  $('#a-title').value = t ? t.t : ''; $('#a-note').value = t ? t.n : ''; $('#a-fnew').value = '';
-  $('#a-date').value = t && t.d ? t.d : tm;
-  $('#a-err').hidden = true; $('#a-del').hidden = !t;
-  paintA();
-  openDlg(adlg); adlg.scrollTop = 0;
-  if (!t) $('#a-title').focus();   // sofort, siehe openN()
-}
-function closeA() { if (adlg.open) adlg.close(); }
-$('#as-close').addEventListener('click', closeA);
-adlg.addEventListener('click', e => { if (e.target === adlg) closeA(); });
-$('#a-folder').addEventListener('click', e => { if (folderClick(e, aE, $('#a-fnew'))) paintA(); });
-$('#a-fnew-add').addEventListener('click', () => { if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); });
-$('#a-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (folderAdd(aE, $('#a-fnew'), $('#a-err'))) paintA(); } });
-$('#a-due').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.due = b.dataset.d; paintA(); } });
-$('#a-rep').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.r = b.dataset.r; paintA(); } });
-$('#a-cu').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { aE.cu = b.dataset.u; paintA(); } });
-$('#aform').addEventListener('submit', e => {
-  e.preventDefault();
-  const err = m => { const x = $('#a-err'); x.textContent = m; x.hidden = false; };
-  const title = $('#a-title').value.trim(), old = aE.id ? N.tasks[aE.id] : null;
-  if (!title) return err('Schreib kurz auf, was zu tun ist.');
-  let d = null;
-  if (aE.due === 'today') d = todayKey(); else if (aE.due === 'tomorrow') d = keyOf(addDays(new Date(), 1));
-  else if (aE.due === 'date') { d = $('#a-date').value; if (!isKey(d)) return err('Wähle einen Tag.'); }
-  /* Eigener Takt: „alle 1 Tage“ ist täglich, leer oder Unsinn gilt nicht */
-  let r = aE.r;
-  if (d && r === 'x') { const n = Math.round(Number($('#a-cn').value.trim())); if (!(n >= 1 && n <= 99)) return err('Trag ein, alle wie viele ' + (aE.cu === 'week' ? 'Wochen' : 'Tage') + ' (1 bis 99).'); r = aE.cu + (n > 1 ? n : ''); }
-  const p = { tasks: {} }; p.tasks[aE.id || newId()] = { t: title.slice(0, 120), f: aE.f, d, done: old ? old.done : null, c: old ? old.c : Date.now(), n: $('#a-note').value.trim().slice(0, 200), r: d ? r : '', nx: old ? old.nx : '' };
-  ndoc.patch(p); closeA(); render();
-});
-$('#a-del').addEventListener('click', () => { if (aE.id) { const p = { tasks: {} }; p.tasks[aE.id] = null; ndoc.patch(p); } closeA(); render(); });
 
 /* Blatt „Arbeitszeit“ (v72). Neu: Beginn, Ende, Pause und Lohn stehen wie beim letzten Eintrag da, eine gleiche Schicht ist so ein Tipp auf „Speichern“.
    Unter den Feldern steht schon vor dem Speichern, was herauskommt (Stunden und Verdienst). */
@@ -4005,7 +3813,7 @@ $('#uform').addEventListener('submit', e => {
 });
 $('#u-del').addEventListener('click', () => { if (uE.id) { const p = { uni: { e: {} } }; p.uni.e[uE.id] = null; ndoc.patch(p); } closeU(); render(); });
 
-/* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Ordner, „Als Aufgabe“, Löschen.
+/* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Ordner und Löschen.
    Gespeichert wird von selbst (kurz nach jeder Eingabe, beim Verlassen des Feldes, beim Schließen), damit nichts verloren geht, auch wenn das Blatt weggezogen wird.
    Eine leere Notiz wird nicht angelegt, eine geleerte gelöscht. nE = null heißt: nichts zu speichern (z. B. nach dem Löschen). */
 const ndlg = $('#nsheet');
@@ -4018,7 +3826,7 @@ function openN(id) {
   $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz'; $('#n-text').placeholder = 'Was willst du festhalten?';
   $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = ''; $('#n-err').hidden = true;
   /* Neu: nur das Textfeld. Was hier verborgen ist, bleibt es, solange das Blatt offen ist: So verschiebt sich beim Speichern nichts unter dem Finger. */
-  $('#n-folder-fld').hidden = !x; $('#n-task').hidden = !x; $('#n-del').hidden = !x;
+  $('#n-folder-fld').hidden = !x; $('#n-del').hidden = !x;
   paintN();
   openDlg(ndlg); ndlg.scrollTop = 0; growN();
   /* Sofort und ohne Verzögerung ins Feld: Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp heraus gesetzt wird */
@@ -4054,16 +3862,6 @@ $('#n-text').addEventListener('keydown', e => {
 $('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
 $('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
 $('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });
-/* Aus der Notiz wird eine Aufgabe für heute: die erste Zeile als Titel, alles Weitere als Notiz der Aufgabe. Die Notiz selbst ist damit erledigt und verschwindet.
-   Passt nicht alles in die Aufgabe (Titel 120, Notiz 200 Zeichen), bleibt die Notiz stehen: So geht kein Text verloren. */
-$('#n-task').addEventListener('click', () => {
-  if (!nE) return; noteSave();
-  const id = nE.id, lines = $('#n-text').value.split('\n').map(l => l.trim()).filter(Boolean), title = lines[0] || ''; if (!id || !title) return;
-  const rest = (title.slice(120) + ' ' + lines.slice(1).join(' ')).trim(), p = { tasks: {}, notes: {} };
-  p.tasks[newId()] = { t: title.slice(0, 120), f: nE.f, d: todayKey(), done: null, c: Date.now(), n: rest.slice(0, 200), r: '', nx: '' };
-  if (rest.length <= 200) p.notes[id] = null;
-  ndoc.patch(p); nE = null; closeN();
-});
 $('#n-del').addEventListener('click', () => {
   const id = nE && nE.id; nE = null; clearTimeout(nTimer);
   if (id) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); }
@@ -4171,7 +3969,7 @@ function monthStats(ym, c, cut) {
   c.wl.forEach(e => { if (e.k.slice(0, 7) === ym) wEnd = e.m; });
   txIn(ym).forEach(x => { if (x.t.k !== 'in' && inM(x.t.d)) flex += x.t.a; });
   const g = tAgg(c.runs.filter(r => inM(r.d)));
-  return { plan, done, quote: plan ? done / plan : null, wEnd, flex, km: g.m / 1000, runs: g.n, kraft: c.kd.filter(inM).length, tasks: taskList().filter(t => t.done && inM(doneKey(t))).length,
+  return { plan, done, quote: plan ? done / plan : null, wEnd, flex, km: g.m / 1000, runs: g.n, kraft: c.kd.filter(inM).length,
     money: !!c.firstTx && c.firstTx.slice(0, 7) <= ym, cardio: !!c.firstRun && c.firstRun.slice(0, 7) <= ym, gym: !!c.kd.length && c.kd[0].slice(0, 7) <= ym };
 }
 /* Zeilen des Monatsabschlusses; leer, wenn es für den Monat nichts gibt */
@@ -4183,7 +3981,6 @@ function monthRowsHTML(ym, c) {
     const q = Math.round(w.quote * 100), df = p.quote != null ? q - Math.round(p.quote * 100) : null;
     rows += kvRow('Routinen', q + ' %', w.done + ' von ' + w.plan, df == null ? '' : df === 0 ? 'gleich' : (df > 0 ? '+' : '−') + Math.abs(df) + ' Prozentpunkte', df == null ? '' : dir(df));
   }
-  if (w.tasks || p.tasks) rows += kvRow('Aufgaben', String(w.tasks), 'erledigt', count(w.tasks - p.tasks), dir(w.tasks - p.tasks));
   if (w.wEnd != null) {
     const df = p.wEnd != null ? w.wEnd - p.wEnd : null;
     rows += kvRow('Gewicht', kg(w.wEnd), 'kg im Schnitt', df != null ? signed(df) + ' kg' : '', df != null && W.goal != null && Math.abs(df) >= 0.05 ? (Math.sign(W.goal - p.wEnd) === Math.sign(df) ? 'up' : 'down') : '');
@@ -4230,7 +4027,6 @@ const AREA = {
   gewicht: '<path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/>',
   haushalt: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/>',
   training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>',
-  aufgaben: '<path d="M4 7l1.8 1.8L9 5.5M4 15.5l1.8 1.8L9 14"/><path d="M12.5 7.5H20M12.5 16H20"/>',
   notizen: '<path d="M6.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M8.5 11.5h7M8.5 15h7M8.5 8h3"/>'
 };
 const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
@@ -4272,7 +4068,7 @@ const BK_DAYS = 7;
 function backupDay() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
   const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : '']
-    .concat(taskList().concat(noteList()).map(x => x.c ? keyOf(new Date(x.c)) : ''), workList().concat(uniList()).map(x => x.d)).filter(Boolean).sort()[0] || '';   // Aufgaben und Notizen zählen ab dem Tag, an dem sie angelegt wurden
+    .concat(noteList().map(x => x.c ? keyOf(new Date(x.c)) : ''), workList().concat(uniList()).map(x => x.d)).filter(Boolean).sort()[0] || '';   // Notizen zählen ab dem Tag, an dem sie angelegt wurden
   return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
 }
 /* Legt die iPhone-App von selbst eine Kopie in den gewählten Ordner (sSelbst), gibt es nichts zu erinnern. Sichert sie nur in ihren eigenen Ordner,
@@ -4323,7 +4119,6 @@ function renderHome() {
   h += liveCardHTML();
   /* Routinen von heute stehen direkt hier und starten mit einem Tipp */
   if (due.length) h += '<h2 class="sec">Routinen<small id="ov-r-v">' + esc(r.v) + '</small></h2><ul class="rows" aria-label="Routinen heute">' + due.map(x => rowHTML(x, tk, nowMs, false, true)).join('') + '</ul>';
-  h += homeTasksHTML();
   h += '<div class="ovs">' + (due.length ? '' : ovCard('routinen', 'Routinen', esc(r.v), esc(r.s), '', 'ov-r')) + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
      Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
@@ -4423,7 +4218,7 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 function paintTop() {
   const add = $('#add');
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'task' ? 'Aufgabe anlegen' : rSub === 'note' ? 'Notiz schreiben' : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Neue Routine anlegen');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'note' ? 'Notiz schreiben' : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Neue Routine anlegen');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
 document.addEventListener('click', e => {
@@ -4598,17 +4393,16 @@ let hInfo = {}, hTimer = 0, hFaelligAlt = null;
 function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
 function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeout(() => hPost(hStand()), 300); }
 /* Stand für heute und die nächsten sieben Tage: So stimmt das Widget auch nach Mitternacht, ohne dass die App geöffnet wurde.
-   Je Tag: Routinen geplant (rn) und erledigt (rd), offene Aufgaben, die bis dahin fällig sind (an, die ersten vier Titel in auf). */
+   Je Tag: Routinen geplant (rn) und erledigt (rd). Die Felder an und auf (offene Aufgaben) bleiben leer stehen: Die iPhone-App liest sie, und so zeigt ihr Widget seit v74 keine Aufgaben mehr. */
 /* Text für das Widget auf n Zeichen kürzen, nach ganzen Zeichen: slice() könnte ein Emoji in der Mitte teilen, und mit einem halben Zeichen lässt sich der Stand nicht als Datei schreiben.
    Halbe Zeichen, die schon im Text stehen, fallen dabei weg. */
 const hCut = (s, n) => Array.from(s).filter(c => c.length > 1 || c < '\uD800' || c > '\uDFFF').slice(0, n).join('');
 function hStand() {
-  const tk = todayKey(), open = taskList().filter(t => !t.done && t.d).sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : a.c - b.c), tage = [];
+  const tk = todayKey(), tage = [];
   for (let i = 0; i < 8; i++) {
     const dt = addDays(parseKey(tk), i), k = keyOf(dt), wi = wd(dt);
     const due = S.routines.filter(r => r.days[wi] || doneOn(k, r.id) || (!i && (isRunning(r) || secsOf(k, r.id) > 0)));
-    const auf = open.filter(t => t.d <= k);
-    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: auf.length, auf: auf.slice(0, 4).map(t => hCut(t.t, 80)) });
+    tage.push({ d: k, rn: due.length, rd: due.filter(r => doneOn(k, r.id)).length, an: 0, auf: [] });
   }
   /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
   const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);

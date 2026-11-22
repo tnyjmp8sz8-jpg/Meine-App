@@ -500,7 +500,7 @@ async function vonSelbst(p) {
 }
 
 /* Beispieldaten: zwei tägliche Routinen (eine heute erledigt), eine nur am morgigen Wochentag, alle vor 20 Tagen angelegt.
-   Aufgaben (vor 3 Tagen angelegt): eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte.
+   Aufgaben aus der Zeit vor v74 (vor 3 Tagen angelegt): eine seit zwei Tagen fällig, eine in drei Tagen, eine ohne Datum, eine erledigte. Sie dürfen nirgends mehr auftauchen.
    Zwei Notizen, die ältere vor 25 Tagen angelegt: Sie ist der älteste Eintrag überhaupt. Ein Lauf von Hand vor zwei Tagen (5 km).
    Eine eigene Kategorie „Haus & Garten“ (mit Budget, sonst räumt die App sie beim Start als unbenutzt weg). */
 const jahr = tag(0).slice(0, 4), LY = {}; LY[jahr] = {}; LY[jahr][tag(0)] = { r1: { s: 1800, d: 1 } };
@@ -531,14 +531,13 @@ lauf(async () => {
   let m = await post(page), st = await letzter(page);
   p.ok('beim Start: „bereit“ und ein Stand', m[0] && m[0].art === 'bereit' && !!st, JSON.stringify(m).slice(0, 200));
   p.ok('Stand für heute und sieben weitere Tage', st.tage.length === 8 && st.tage[0].d === tag(0) && st.tage[7].d === tag(-7), JSON.stringify(st.tage.map(t => t.d)));
-  /* heute: 2 Routinen geplant (r3 nur morgen), 1 erledigt; 1 Aufgabe offen (die überfällige) */
-  p.ok('heute: 2 Routinen, 1 erledigt, 1 Aufgabe', st.tage[0].rn === 2 && st.tage[0].rd === 1 && st.tage[0].an === 1 && st.tage[0].auf[0] === 'Seminararbeit abgeben', JSON.stringify(st.tage[0]));
+  /* heute: 2 Routinen geplant (r3 nur morgen), 1 erledigt. Aufgaben gibt es seit v74 nicht mehr: Die Felder an und auf bleiben für das Widget der iPhone-App stehen, sind aber leer */
+  p.ok('heute: 2 Routinen, 1 erledigt, keine Aufgabe', st.tage[0].rn === 2 && st.tage[0].rd === 1 && st.tage[0].an === 0 && Array.isArray(st.tage[0].auf) && st.tage[0].auf.length === 0, JSON.stringify(st.tage[0]));
   /* morgen: 3 Routinen (r3 kommt dazu), nichts erledigt */
   p.ok('morgen: 3 Routinen, 0 erledigt', st.tage[1].rn === 3 && st.tage[1].rd === 0, JSON.stringify(st.tage[1]));
-  /* in drei Tagen ist auch „Zahnarzt“ fällig: 2 Aufgaben, die ältere zuerst; ohne Datum und Erledigtes zählen nie */
-  p.ok('in drei Tagen: 2 Aufgaben, ältere zuerst', st.tage[2].an === 1 && st.tage[3].an === 2 && st.tage[3].auf.join('|') === 'Seminararbeit abgeben|Zahnarzt anrufen', JSON.stringify(st.tage[3]));
+  p.ok('an keinem der acht Tage steht eine Aufgabe im Stand', st.tage.every(t => t.an === 0 && t.auf.length === 0), JSON.stringify(st.tage[3]));
   p.ok('Notizen: neueste zuerst, nur die erste Zeile', st.notizen.join('|') === 'Idee für Kapitel 3|Milch kaufen', st.notizen.join('|'));
-  /* ohne Sicherung zählt der älteste Eintrag, auch eine Notiz oder Aufgabe: hier die Notiz von vor 25 Tagen (älter als die Routinen), also fällig seit 25 − 7 = 18 Tagen */
+  /* ohne Sicherung zählt der älteste Eintrag, auch eine Notiz: hier die Notiz von vor 25 Tagen (älter als die Routinen), also fällig seit 25 − 7 = 18 Tagen */
   p.ok('Sicherung fällig: ältester Eintrag (eine Notiz) plus 7 Tage', st.sicherung === tag(18), st.sicherung);
   /* Kein Konto angelegt: Die Schnelleingabe der iPhone-App bekommt eine leere Liste und keine Vorbelegung */
   p.ok('Stand ohne Konten: leere Liste, keine Vorbelegung', Array.isArray(st.konten) && st.konten.length === 0 && st.konto === '', JSON.stringify([st.konten, st.konto]));
@@ -635,16 +634,16 @@ lauf(async () => {
   const kat = a => (Object.values(g.MY[jahr].tx).find(t => t && t.a === a) || {}).c; g = await gespeichert(page);
   p.ok('Eingang: Kategorie mit „&“ wird über Namen und Anfang gefunden', kat(990) === 'cgarten1' && kat(550) === 'cgarten1' && kat(440) === 'sonst', [kat(990), kat(550), kat(440)].join());
 
-  /* Texte für das Widget werden nach ganzen Zeichen gekürzt. Notiz und Aufgabe: 79 Buchstaben, ein Emoji, ein Buchstabe. 80 Zeichen sind die 79 Buchstaben und das Emoji
+  /* Texte für das Widget werden nach ganzen Zeichen gekürzt. Notiz: 79 Buchstaben, ein Emoji, ein Buchstabe. 80 Zeichen sind die 79 Buchstaben und das Emoji
      (81 Einheiten in UTF-16); nach Einheiten geschnitten bliebe ein halbes Emoji, mit dem sich der Stand nicht als Datei schreiben lässt.
-     Dazu ein Titel, in dem schon ein halbes Zeichen gespeichert ist: Es fällt weg. Fällig vor 9 und vor 8 Tagen, damit beide heute vorn stehen. */
+     Dazu eine Notiz, in der schon ein halbes Zeichen gespeichert ist: Es fällt weg. */
   await page.evaluate(d => { const o = JSON.parse(localStorage.getItem('takt.v1'));
     o.N.notes.em = { x: 'a'.repeat(79) + '😀b', f: '', c: d.c, m: Date.now() };
-    o.N.tasks.em = { t: 'b'.repeat(79) + '😀c', f: '', d: d.t9, done: null, c: d.c, n: '' }; o.N.tasks.hb = { t: 'Halb\ud83d', f: '', d: d.t8, done: null, c: d.c, n: '' };
-    localStorage.setItem('takt.v1', JSON.stringify(o)); }, { c: mittag(3), t9: tag(9), t8: tag(8) });
+    o.N.notes.hb = { x: 'Halb\ud83d', f: '', c: d.c, m: Date.now() - 1000 };
+    localStorage.setItem('takt.v1', JSON.stringify(o)); }, { c: mittag(3) });
   await page.reload(); await page.waitForTimeout(700); st = await letzter(page);
   p.ok('Stand: Notiz endet nach 80 Zeichen mit dem ganzen Emoji', st.nz[0].x === 'a'.repeat(79) + '😀', st.nz[0].x);
-  p.ok('Stand: Titel der Aufgabe ebenso, das halbe Zeichen im anderen Titel ist weg', st.tage[0].auf[0] === 'b'.repeat(79) + '😀' && st.tage[0].auf[1] === 'Halb', JSON.stringify(st.tage[0].auf));
+  p.ok('Stand: das halbe Zeichen in der anderen Notiz ist weg', st.nz[1].x === 'Halb', JSON.stringify(st.nz[1]));
   p.ok('Stand: kein Text mit halbem Zeichen', await page.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop();
     return s.nz.map(n => n.x).concat(s.notizen, ...s.tage.map(t => t.auf)).every(x => { try { encodeURIComponent(x); return true; } catch (e) { return false; } }); }));
 

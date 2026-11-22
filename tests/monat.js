@@ -49,8 +49,8 @@ lauf(async () => {
   const qB = Math.round(21 / letzter(B) * 100), qA = Math.round(14 / letzter(A) * 100), dq = qB - qA;
   let z = await zeilen();
   P.ok('Routinen: ' + qB + ' %, ' + (dq >= 0 ? '+' : '−') + Math.abs(dq) + ' Prozentpunkte', z.includes('Routinen ' + qB + ' %21 von ' + letzter(B) + ' ' + (dq === 0 ? 'gleich' : (dq > 0 ? '+' : '−') + Math.abs(dq) + ' Prozentpunkte')), z);
-  // Aufgaben: 3 erledigt, im Vormonat 1 → +2
-  P.ok('Aufgaben: 3 erledigt, +2', z.includes('Aufgaben 3erledigt +2'), z);
+  // Aufgaben gibt es seit v74 nicht mehr: Auch mit erledigten Aufgaben im Speicher (3 in diesem Monat, 1 im Vormonat) steht keine Zeile da
+  P.ok('keine Zeile „Aufgaben“, obwohl welche gespeichert sind', !z.includes('Aufgaben'), z);
   // Gewicht: Schnitt am Monatsende 79,0 kg, im Vormonat 80,0 → −1,0 kg; Ziel 75, also in die richtige Richtung (grün)
   P.ok('Gewicht: 79,0 kg, −1,0 kg', z.includes('Gewicht 79,0kg im Schnitt −1,0 kg'), z);
   P.ok('Gewicht Richtung Ziel ist grün', await page.evaluate(() => [...document.querySelectorAll('#v-heute .kv')].find(k => k.textContent.startsWith('Gewicht')).querySelector('.delta').classList.contains('up')));

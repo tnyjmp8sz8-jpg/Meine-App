@@ -1,11 +1,12 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v73 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 19.11.2026). `node tests/alle.js` (v73): alle 769 Prüfungen in 15 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 154, Gesten 21, Eingaben 24, Löschen 22, Aufgaben und Notizen 80, Arbeit und Uni 46, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10).
-- v72/v73 (sein Auftrag vom 19.11.: Arbeitszeiten mit Verdienst je Monat zum Ein- und Ausklappen; Termine der Zahnmedizin mit Punkten je Fach Kons, Paro, Prothetik): „Arbeit“ und „Uni“ sind zwei eigene Teile oben im Planer neben Routinen, Aufgaben, Notizen (v73; v72 hatte sie im Ordner der Notizen, er schrieb gleich: „allerdings eigenen ganzen bereich wie neben aufgaben notizen und routinen“). Meine Annahmen, ihm genannt: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Summen über alle Zeit. Offen an ihn: Punkte je Semester getrennt? Soll je Fach? Mehrere Jobs? Am iPhone noch nicht gesehen (Zeitfelder „Von/Bis“ zeigen dort das Rad; fünf Umschalter in einer Reihe).
+- App-Inhalt (`index.html`): live ist v74 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 22.11.2026). `node tests/alle.js` (v74): alle 723 Prüfungen in 15 Reihen stimmen (Ablauf 16, Aufbau 68, Klappzeilen 147, Gesten 21, Eingaben 24, Löschen 22, Notizen 41, Arbeit und Uni 46, Finanzen 68, Gym 35, Monat 30, Hülle 163, Apple Watch 24, Speichern 8, Aktualisierung 10); am 1.12. geprüft: Notizen, Klappzeilen, Monat.
+- v74 (sein Auftrag vom 22.11.: „mach jetzt aufgaben raus“): Aufgaben sind ausgebaut (Umschalter, Blatt, Heute, Kalender, Monat, „Als Aufgabe“ an der Notiz). Vorhandene Aufgaben bleiben im Speicher und in der Sicherung, werden aber nirgends gezeigt. Der Planer hat vier Teile: Routinen, Notizen, Arbeit, Uni. Das kleine Widget der iPhone-App schreibt bis zur nächsten Installation weiter „Keine Aufgabe offen“ (Text steckt in `ios/`; ihm gesagt). Am iPhone noch nicht gesehen.
+- v72/v73: „Arbeit“ und „Uni“ als eigene Teile oben im Planer. Meine Annahmen, ihm genannt: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Summen über alle Zeit. Offen an ihn: Punkte je Semester getrennt? Soll je Fach? Mehrere Jobs? Am iPhone noch nicht gesehen (Zeitfelder „Von/Bis“ zeigen dort das Rad).
 - v71 behebt seinen Fund (Bildschirmfoto 18.11., 23:47: Betrag im Budget mit blauem Rand, keine Tastatur): Der Fokus kam 60 ms nach dem Tipp, jetzt sofort in allen Blättern. Am iPhone noch nicht bestätigt. Auf seinem Foto standen die Konten „Girokonto“ und „PayPal“ (noch nicht in „Trade Republic“ umbenannt).
 - iPhone-App: Bei ihm läuft 0.4 („gültig bis 24. November“), soweit bekannt. Im Release „iphone-test“ liegt seit 18.11. abends Fassung 0.6 (Schnelleingabe mit Ausgabe/Einnahme und Konto, Sicherung von selbst, Läufe von der Apple Watch über Kurzbefehle, „Ausgabe eintragen“ mit Konto, neues Symbol). Gebaut bei Codemagic (Bau `6afdebc71ae4e76cb30891f0`, Selbsttest bestanden, `Track.ipa` 1.907.012 Bytes, Prüfsumme im Release geprüft). Die Bilder auf dem Zweig `ios-bild` stammen noch vom GitHub-Bau von 0.5. Ihm gemeldet; ob er installiert hat, ist offen. Am iPhone ist von 0.5/0.6 noch nichts geprüft.
-- Kurzbefehle: Er hat bisher nur den zum Erneuern („habe nur befehl für auto refresh“, 18.11. abends). Die Anleitung für die drei Automationen (Apple Pay, „Lauf merken“, „Läufe übernehmen“ mit Strecke und Puls) und die drei Einstellungen in der App (Konto in „Trade Republic“ umbenennen, feste Posten mit Konto und Tag, Ordner für die Sicherung in iCloud) hat er in einem Stück bekommen. Rat an ihn: mit Apple Pay anfangen. Hakt etwas: Bildschirmfoto der Automation bzw. der aufgeklappten Zeile „Apple Watch“ erbitten.
+- Kurzbefehle: Er hat bisher nur den zum Erneuern. Am 22.11. bat er noch einmal um die Anleitung für alle, die er braucht, und hat sie in einem Stück bekommen: zuerst Fassung 0.6 installieren (die Aktionen mit Konto und für Läufe gibt es erst ab 0.5), dann Apple Pay → „Ausgabe eintragen“, „Lauf merken“, „Läufe übernehmen“ mit Strecke und Puls; freiwillig „Notiz hinzufügen“ als Symbol. Alles am Gerät ungeprüft: Hakt etwas, Bildschirmfoto der Automation bzw. der aufgeklappten Zeile „Apple Watch“ erbitten.
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
 - Sparsam arbeiten: Regeln in `CLAUDE.md` unter „Zusammenarbeit“. Er arbeitet in Fable 5.2 auf Stufe „mittel“ und will jedes Mal ausdrücklich hören, wann „hoch“ nötig ist (22.11.). Er wollte sein Claude-Abo widerrufen („das Limit reicht nicht“, 17.11.).
 - Zweige: `main` ist der Standardzweig, eine neue Sitzung beginnt dort (22.11. geprüft: Arbeitsordner auf v73 wie `main`). Keine offenen Pull Requests oder Issues.
@@ -13,7 +14,7 @@
 - Umgebung: „Meine-App“ (persönlich; erlaubt `api.codemagic.io`, Schlüssel für Codemagic hinterlegt). Nur dort lässt sich die iPhone-App über Codemagic bauen; in „Default“ geht alles andere. `node tests/live.js` geht in beiden nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
 
 ## Gesammelte Wünsche (nur gemerkt, nichts gebaut; auf sein Zeichen alles in einem Zug)
-- Aufgaben raus (20.11.: „merke ich mir so und ist zu viel“). Betrifft: Umschalter „Aufgaben“ im Planer, Aufgaben auf Heute samt „Alle n“, Kalender-Modus `task`, Zeile „Aufgaben“ in Woche und Monat, „Als Aufgabe“ im Blatt der Notiz, Blatt `asheet`, Tests, Wochenleiste der Aufgaben. Vor dem Bau klären oder so lösen: vorhandene Aufgaben bleiben gespeichert und in der Sicherung, werden nur nicht mehr gezeigt (nichts geht verloren); prüfen, ob Widget „Heute“ und `hStand()` Aufgaben mitschicken (`IPHONE.md`), das ginge ohne neue Installation nur auf der Seite des Inhalts.
+- Zurzeit keiner.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
 Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“ (18.11.):
@@ -21,11 +22,11 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 2. Routine von selbst abhaken, wenn ein Lauf ankommt oder eine Gym-Einheit beendet wird.
 3. Zwei Rechenkanten beheben (siehe „Offene Probleme“: neues Konto zählt als Plus; geänderte Tage einer Routine brechen die Serie).
 4. Seine Entscheidung: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
-5. Routinen mit eigenem Takt („jeden zweiten Tag“), wie seit v69 bei den Aufgaben: vorgeschlagen, Antwort steht aus.
+5. Routinen mit eigenem Takt („jeden zweiten Tag“): vorgeschlagen, Antwort steht aus.
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
 Ältere Vorschläge:
-- Aufgaben und Notizen: Suche auch in den Aufgaben; Wiederholung „werktags“; Ordner umbenennen; Kalender der Aufgaben zeigt keine künftigen Termine.
+- Notizen: Ordner umbenennen.
 - Automatisierungen: wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen.
 - Oberfläche: Erinnerung „Noch keine Sicherung“ unter die Bereiche setzen; Zielkarte im Gewicht ruhiger; im Vermögen eine Plus-Form für alle Überschriften; großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert.
 - Nachgefragt ohne Antwort (v56): Feld „Steigung“ beim Laufband entfernen; Schnell-Knopf „Ausgabe“ in „Buchung“ umbenennen.
@@ -37,17 +38,17 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Konkurrenz gründlich recherchieren (falls die App für andere gedacht wird).
 
 ## Erledigt
-- v20–v59: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Finanzen mit Vermögen, Sparzielen, Konten; Tests; Wischgesten, Graphen ablesen, „Rückgängig“, eigene Kategorien; Aufgaben und Notizen; Kennfarben; Schnell-Knöpfe gekürzt; Tages-Check (Schlaf) gebaut und wieder entfernt; Monatsabschluss und Kurzbefehl-Adresse.
-- v60–v61 mit iPhone-App 0.2 und 0.3: Verbindung zwischen App-Inhalt und iPhone-Teil; Mitteilungen; Widgets „Heute“ und „Notizen“ (mit Abhaken); Aktionen für Kurzbefehle.
+- v20–v61: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Finanzen mit Vermögen, Sparzielen, Konten; Tests; Wischgesten, Graphen ablesen, „Rückgängig“, eigene Kategorien; Aufgaben und Notizen; Kennfarben; Schnell-Knöpfe gekürzt; Tages-Check (Schlaf) gebaut und wieder entfernt; Monatsabschluss und Kurzbefehl-Adresse; Verbindung zur iPhone-App mit Mitteilungen, Widgets und Aktionen für Kurzbefehle (iPhone-App 0.2 und 0.3).
 - v62–v63 mit iPhone-App 0.4: Blätter rücken über die Tastatur; Schnelleingabe aus dem Widget.
 - v64: Aufgeräumte Oberfläche (Klappzeilen mit Anzahl, kleines Plus in der Überschrift, Heute als Kurzform), dazu viele behobene Fehler; Tests laufen an jedem Tag im Monat. Gebaut ohne Rückfrage; wünscht er eine Liste wieder offen, ist das eine Zeile (Zeilen direkt statt über `foldHTML`).
 - v65 mit iPhone-App 0.5: Schnelleingabe mit Ausgabe/Einnahme und Konto; Sicherung von selbst; Läufe von der Apple Watch über Kurzbefehle (drei Aktionen, Zeile „Apple Watch“); „Ausgabe eintragen“ mit Konto.
 - v66: Cardio ruhiger („Letzter Lauf“ als Klappzeile, Vergleich der Effizienz in der Kachel). Die übrigen Bereiche danach durchgesehen und nichts geändert.
 - v67: In „Letzter Lauf“ steht rechts die Effizienz statt der Pace; von selbst gebuchte Ausgaben bekommen die Kategorie des Händlers.
-- v68–v69: Aufgaben mit eigenem Takt „Alle … Tage/Wochen“, gezählt ab dem Starttag.
+- v68–v69: Aufgaben mit eigenem Takt (mit v74 wieder entfallen).
 - v70 mit iPhone-App 0.6: neues App-Symbol (schwarz mit blauem Schein).
 - v71: Die Tastatur geht in allen Blättern sofort auf (Fokus ohne Wartezeit).
 - v72–v73: „Arbeit“ (Arbeitszeiten, Verdienst je Monat als Klappzeile) und „Uni“ (Termine mit Fach und Punkten, Summe je Fach), seit v73 als eigene Teile oben im Planer.
+- v74: Aufgaben ausgebaut (Gespeichertes bleibt erhalten); Projektdateien sortiert (`BEREICHE.md`).
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.
@@ -58,11 +59,9 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
   - Gym: Eine Einheit nachträglich von Hand anlegen geht nicht; der Code-Zweig dafür in `openK()` ist unerreichbar. Ihn fragen, ob er das braucht, sonst entfernen.
   - Training: Bleibt die App über den Monatswechsel offen, zeigt Training noch den alten Monat (Finanzen gehen mit).
   - Eine offene „i“-Erklärung schließt sich, wenn man im Graphen den Zeitraum wechselt.
-  - Monatliche Aufgabe: Löscht man die erledigte Vorgängerin, bleibt nach einem kurzen Monat der frühere Tag.
 - Negative Kontostände lassen sich speichern, aber auf dem iPhone nicht eintippen (Zahlentastatur ohne Minus).
 - Feste Posten, deren Tag im Monat des eingetragenen Stands schon vorbei ist, zählen erst ab dem Folgemonat (gewollt). Buchungen ohne Konto aus der Zeit vor v42 zählen nicht, bis er das Konto nachträgt (Zeile „Ohne Konto“).
 - `healBal()` wirkt nur im November 2026: Ab Dezember 2026 samt Prüfung entfernen.
-- Erledigte Aufgaben: gezeigt werden die letzten 50, ältere bleiben gespeichert.
 - Alte CSS-Regeln, die weiter unten überschrieben werden, sind nicht zusammengeführt (nur mit Bildvergleich anfassen).
 - Der Gesten-Test ist zeitempfindlich: bei einem einzelnen Fehlschlag dort einzeln wiederholen.
 
@@ -71,17 +70,18 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Kurzbefehle: feuert „Apple Watch-Training“ bei gesperrtem iPhone; nimmt der Datumsfilter Beginn und Ende; kommen Betrag und Händler aus „Transaktion“ an?
 - Erneuern: Steht der Zähler in AltStore nach einigen Tagen von selbst wieder bei 7?
 - Oberfläche (v64, v66): übersichtlich genug, oder fehlt eine eingeklappte Liste? Trifft man das kleine Plus und „Alle n“, ohne die erste Zeile zu erwischen? Reicht eine Zeile je Notiz auf Heute?
-- Arbeit und Uni (v73): Stehen die fünf Umschalter oben im Planer in einer Reihe, ohne gequetscht zu wirken? Lassen sich „Von“ und „Bis“ gut einstellen (Rad von iOS), ragen die Zeitfelder nicht hinaus? Stimmen seine Zahlen?
+- Arbeit und Uni (v73): Stehen die vier Umschalter oben im Planer (seit v74) gut in einer Reihe? Lassen sich „Von“ und „Bis“ gut einstellen (Rad von iOS), ragen die Zeitfelder nicht hinaus? Stimmen seine Zahlen?
 - Monatsabschluss (v59): dritter Umschalter „Monat“; Hinweis am Monatsanfang.
 - Eingaben: Umschalter Ausgabe/Einnahme im Blatt gut zu sehen (v56)? Geht seit v71 beim Betrag (Budget, Schnell-Knopf), beim Gewicht und beim Lauf die Tastatur sofort auf? Geht sie bei „+ Notiz“ sofort auf, legt Enter die Notiz an und bleibt das Feld offen (v51, v54)?
 - Größen und Farben (v52, v55): etwas zu klein zum Lesen oder Treffen? Kreis zum Abhaken? Farbiges Plus in den Schnell-Knöpfen?
 - Gesten (v44, v45): Blatt wegziehen, zwischen Monaten wischen (löst es beim Scrollen aus?), Graph ablesen, „Rückgängig“ über der Leiste unten.
-- Aufgaben (v50, v69): erscheint nach dem Abhaken die nächste unter „Demnächst“? Bleibt die Tastatur bei der Suche in den Notizen offen?
+- Notizen: Bleibt die Tastatur bei der Suche offen?
 - Finanzen (v42): Rechnet das Vermögen nach einer Buchung mit, ist das Konto im Blatt schon gewählt?
 - Ältere Punkte: Datumsfeld bei „Einheit ändern“, Monatsfeld im Blatt „Stand eintragen“, Konto-Chips bei mehreren Konten, Kontoname ändern.
 
 ## Nächste Schritte
 - Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), sagen, ob „mittel“ reicht, seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` und `BEREICHE.md` nur bei Bedarf.
-- Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: v73 (fünf Umschalter im Planer, „Arbeit“, „Uni“), v71 (Tastatur beim Betrag), Fassung 0.6 und die drei Automationen (je mit Bildschirmfoto).
+- Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: v74 (Planer ohne Aufgaben), v73 („Arbeit“, „Uni“), v71 (Tastatur beim Betrag), Fassung 0.6 und die drei Automationen (je mit Bildschirmfoto).
+- Bei der nächsten Arbeit an `ios/` (neue Installation): im Widget die Zeile „Aufgabe offen“ und die Beschreibung „Routinen, Aufgaben und Notizen“ entfernen (Stellen in `IPHONE.md`, Vertrag „Hin“).
 - Offene Fragen an ihn: Punkte je Semester getrennt? Soll je Fach als Ziel?
 - Bei Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen.
