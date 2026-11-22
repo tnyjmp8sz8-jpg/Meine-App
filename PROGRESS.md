@@ -9,7 +9,7 @@
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
 - Sparsam arbeiten: Regeln in `CLAUDE.md` unter „Zusammenarbeit“. Er arbeitet in Fable 5.2 auf Stufe „mittel“ und will jedes Mal ausdrücklich hören, wann „hoch“ nötig ist (22.11.). Er wollte sein Claude-Abo widerrufen („das Limit reicht nicht“, 17.11.).
 - Zweige: `main` ist der Standardzweig, eine neue Sitzung beginnt dort (22.11. geprüft: Arbeitsordner auf v73 wie `main`). Keine offenen Pull Requests oder Issues.
-- Freigaben gelten nur je Sitzung: in jeder neuen Sitzung neu erfragen, außer er schreibt es gleich dazu.
+- Freigaben: Veröffentlichen nach `main` ist seit 22.11. dauerhaft erlaubt (Regel in `CLAUDE.md`). Projektdateien am 22.11. sortiert: Einzelheiten der Bereiche stehen jetzt in `BEREICHE.md`.
 - Umgebung: „Meine-App“ (persönlich; erlaubt `api.codemagic.io`, Schlüssel für Codemagic hinterlegt). Nur dort lässt sich die iPhone-App über Codemagic bauen; in „Default“ geht alles andere. `node tests/live.js` geht in beiden nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
 
 ## Gesammelte Wünsche (nur gemerkt, nichts gebaut; auf sein Zeichen alles in einem Zug)
@@ -81,7 +81,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Ältere Punkte: Datumsfeld bei „Einheit ändern“, Monatsfeld im Blatt „Stand eintragen“, Konto-Chips bei mehreren Konten, Kontoname ändern.
 
 ## Nächste Schritte
-- Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` nur, wenn es um die iPhone-App geht.
+- Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), sagen, ob „mittel“ reicht, seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` und `BEREICHE.md` nur bei Bedarf.
 - Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: v73 (fünf Umschalter im Planer, „Arbeit“, „Uni“), v71 (Tastatur beim Betrag), Fassung 0.6 und die drei Automationen (je mit Bildschirmfoto).
 - Offene Fragen an ihn: Punkte je Semester getrennt? Soll je Fach als Ziel?
 - Bei Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen.
