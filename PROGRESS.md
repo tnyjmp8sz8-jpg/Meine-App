@@ -9,7 +9,7 @@
 - Er testet die App seit 18.11. ausgiebig und meldet sich; Rückmeldung am iPhone steht aus.
 - Sparsam arbeiten: Regeln in `CLAUDE.md` unter „Zusammenarbeit“. Er arbeitet in Fable 5.2 auf Stufe „mittel“ und will jedes Mal ausdrücklich hören, wann „hoch“ nötig ist (22.11.). Er wollte sein Claude-Abo widerrufen („das Limit reicht nicht“, 17.11.).
 - Zweige: `main` ist der Standardzweig, eine neue Sitzung beginnt dort (22.11. geprüft: Arbeitsordner auf v73 wie `main`). Keine offenen Pull Requests oder Issues.
-- Freigaben: Veröffentlichen nach `main` ist seit 22.11. dauerhaft erlaubt (Regel in `CLAUDE.md`). Projektdateien am 22.11. sortiert: Einzelheiten der Bereiche stehen jetzt in `BEREICHE.md`.
+- Freigaben: Veröffentlichen nach `main` ist seit 22.11. dauerhaft erlaubt (Regel in `CLAUDE.md`). Projektdateien am 22.11. sortiert: Einzelheiten der Bereiche, Entscheidungen je Bereich, Felder des Datenmodells und Test-Einzelheiten stehen jetzt in `BEREICHE.md` (`CLAUDE.md` von 56.000 auf rund 36.000 Zeichen).
 - Umgebung: „Meine-App“ (persönlich; erlaubt `api.codemagic.io`, Schlüssel für Codemagic hinterlegt). Nur dort lässt sich die iPhone-App über Codemagic bauen; in „Default“ geht alles andere. `node tests/live.js` geht in beiden nicht (Pages-Adresse nicht erlaubt); Ersatz: der Lauf „pages build and deployment“ bei GitHub.
 
 ## Gesammelte Wünsche (nur gemerkt, nichts gebaut; auf sein Zeichen alles in einem Zug)
