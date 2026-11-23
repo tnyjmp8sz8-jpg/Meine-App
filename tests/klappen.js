@@ -247,7 +247,7 @@ lauf(async () => {
   // --- Teil 5: Heute ist die Kurzfassung ---
   ({ browser, page, fehler } = await oeffnen({ daten: d }));
   await bereich(page, 'heute');
-  /* Sieben Notizen: Heute zeigt die neuesten fünf, je in einer Zeile (ohne Ordner und Datum darunter) */
+  /* Sieben Notizen: Heute zeigt die neuesten fünf, je in einer Zeile (ohne das Datum darunter) */
   P.ok('Heute: fünf von sieben Notizen, ohne zweite Zeile', (await z('#v-heute .nrow')) === 5 && (await z('#v-heute .nrow .l small')) === 0 && (await text(page, '#v-heute .nrow:first-child')) === 'Gliederung: Einleitung, Stand der Forschung, Methode', await text(page, '#v-heute .nrow'));
   P.ok('Heute: „Alle 7“ steht bei den Notizen; Aufgaben aus dem Speicher stehen nicht da', (await text(page, '#v-heute h2:has([data-n="allnotes"])')) === 'Notizen Alle 7' && (await z('#v-heute .trow:not(.nrow)')) === 0 && !(await text(page, '#v-heute')).includes('Aufgaben'), await text(page, '#v-heute h2'));
   await page.click('#v-heute .sec-a[data-n="allnotes"]'); await kurz();

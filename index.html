@@ -434,7 +434,6 @@ body{font-size:14px}
 /* Notizen, Arbeit und Uni im Planer */
 #n-main,#n-list{display:flex;flex-direction:column;gap:12px}
 #n-main>.sec{margin:8px 2px -6px}
-input.n-q{margin-bottom:-8px}
 .entries .trow{display:flex;align-items:stretch}
 .tk{flex:none;width:44px;min-height:40px;border:0;background:none;display:grid;place-items:center;padding:0}
 .entries .tk{width:44px;padding:0 0 0 8px;justify-content:center;align-items:center}
@@ -662,7 +661,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .entries .irow .info{flex:none;width:auto;display:inline-grid;padding:0;margin:0 13px 0 0}
 /* Zeile „Sicherung“: Meldet die iPhone-App einen Fehler, steht sein Wortlaut in Rot (die Unterzeile trägt dann .neg). Ein langer Ordnername ohne Leerzeichen bricht darin um, statt Heute breiter zu machen. */
 #bk-err{color:var(--danger);overflow-wrap:anywhere}
-/* Heute zeigt die Kurzfassung: eine Zeile je Notiz (Ordner und Datum stehen im Planer) */
+/* Heute zeigt die Kurzfassung: eine Zeile je Notiz (das Datum steht im Planer) */
 #v-heute .trow .two{min-height:42px}
 #v-heute .ntxt{-webkit-line-clamp:2}
 .fld>span,.streak span{text-transform:none;letter-spacing:0}
@@ -712,7 +711,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v76</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v77</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -847,15 +846,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <textarea id="n-text" class="n-text" maxlength="20000" enterkeyhint="done" placeholder="Was willst du festhalten?" aria-label="Notiz"></textarea>
-    <div class="fld" id="n-folder-fld" hidden>
-      <span id="lbl-n-folder">Ordner</span>
-      <div class="chips" id="n-folder" role="group" aria-labelledby="lbl-n-folder"></div>
-      <div class="stepper" id="n-fnew-row" hidden>
-        <input id="n-fnew" type="text" maxlength="24" autocomplete="off" placeholder="Name des Ordners" aria-label="Name des neuen Ordners">
-        <button type="button" id="n-fnew-add" aria-label="Ordner anlegen">+</button>
-      </div>
-    </div>
-    <p class="err" id="n-err" role="alert" hidden></p>
     <button type="button" class="primary" id="n-done">Fertig</button>
     <button type="button" class="ghost danger" id="n-del" hidden>Notiz löschen</button>
   </form>
@@ -1203,7 +1193,7 @@ function renderPlaner() {
   lastDay = todayKey();
   paintTop();
   $('#r-subs').innerHTML = subsRHTML();
-  $('#n-main').innerHTML = rSub === 'work' ? teilHTML('arb') : rSub === 'uni' ? teilHTML('uni') : notesHTML();
+  $('#n-main').innerHTML = rSub === 'work' ? workHTML() : rSub === 'uni' ? uniHTML() : notesHTML();
 }
 $('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openN(null); });
 
@@ -3130,9 +3120,9 @@ $('#p-del').addEventListener('click', () => {
 });
 
 /* ---------- Planer: Notizen, Arbeit, Uni ---------- */
-/* Liegen im Planer hinter dem Umschalter „Notizen / Arbeit / Uni“ (rSub). Ordner gelten für die Notizen.
-   N = { folders: { id: { n } },
-         notes: { id: { x Text, f Ordner, c angelegt, m geändert } },
+/* Liegen im Planer hinter dem Umschalter „Notizen / Arbeit / Uni“ (rSub).
+   N = { notes: { id: { x Text, c angelegt, m geändert, f } },
+         folders und das Feld f der Notizen: Ordner aus v49 bis v76. Seit v77 gibt es keine Ordner mehr (Wunsch des Nutzers); beides bleibt gespeichert und in der Sicherung.
          tasks: Aufgaben aus v49 bis v73. Die App zeigt sie seit v74 nicht mehr (Wunsch des Nutzers), sie bleiben aber gespeichert und in der Sicherung: So geht nichts verloren.
          work, uni: siehe unten }
    Notizen sind für die schnelle Aufnahme: nur Text, jede mit einem Kreis davor, Abhaken löscht sie. */
@@ -3171,49 +3161,28 @@ function normN(o) {
   return out;
 }
 const ndoc = patchDoc(() => N, v => { N = normN(v); });
-const FOLDERS = [['uni', 'Uni'], ['arb', 'Arbeit'], ['prom', 'Promotion'], ['priv', 'Privat']];
 /* Fächer der Zahnmedizin, in denen der Nutzer Punkte sammelt */
 const FACH = [['kons', 'Kons'], ['paro', 'Paro'], ['proth', 'Prothetik']];
-/* Feste Ordner plus eigene. Eigene Namen sind Nutzertext: allFolders() liefert sie schon sicher für HTML. */
-const allFolders = () => FOLDERS.concat(Object.keys(N.folders).filter(id => N.folders[id]).map(id => [id, esc(N.folders[id].n)]).sort((a, b) => a[1].localeCompare(b[1], 'de')));
-const folderName = id => { const f = id && allFolders().find(x => x[0] === id); return f ? f[1] : ''; };
 const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
-/* Eigene Ordner ohne Notiz verschwinden beim Start von selbst (wie eigene Kategorien) */
-function cleanFolders() {
-  const used = {}, p = { folders: {}, notes: {} }; let n = 0;
-  /* Ein eigener Ordner, der wie ein fester heißt (z. B. „Arbeit“, fest seit v72), geht in diesem auf: Sonst stünde der Name zweimal in der Reihe */
-  for (const id in N.folders) {
-    const f = N.folders[id], fix = f && FOLDERS.find(x => x[1].toLowerCase() === f.n.trim().toLowerCase()); if (!fix) continue;
-    noteList().forEach(x => { if (x.f === id) p.notes[x.id] = { f: fix[0] }; });
-    p.folders[id] = null; n++;
-  }
-  if (n) { ndoc.patch(p); p.notes = {}; p.folders = {}; n = 0; }
-  noteList().forEach(x => { used[x.f] = 1; });
-  for (const id in N.folders) if (N.folders[id] && !used[id]) { p.folders[id] = null; n++; }
-  if (n) ndoc.patch(p);
-}
-let rSub = 'note', nFolder = '', nQuery = '';   // gewählter Teil des Bereichs, gewählter Ordner ('' = alle), Suchtext der Notizen
-const inFolder = x => !nFolder || x.f === nFolder;
+let rSub = 'note', nQuery = '';   // gewählter Teil des Planers, Suchtext der Notizen
 const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
-const folderBarHTML = () => '<div class="chips" role="group" aria-label="Ordner">' + [['', 'Alle']].concat(allFolders()).map(f => '<button type="button" class="chip" data-n="folder" data-v="' + esc(f[0]) + '" aria-pressed="' + (nFolder === f[0]) + '">' + f[1] + '</button>').join('') + '</div>';
 /* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
 const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 const notesNew = () => noteList().sort((a, b) => b.m - a.m);
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
-function noteRow(x, folder, slim) {
-  const sub = slim ? '' : [folder ? folderName(x.f) : '', dRow(keyOf(new Date(x.m || x.c || Date.now())))].filter(Boolean).join(' · ');
+function noteRow(x, slim) {
+  const sub = slim ? '' : dRow(keyOf(new Date(x.m || x.c || Date.now())));
   return '<li class="trow nrow"><button type="button" class="tk" data-n="notedone" data-undo data-id="' + esc(x.id) + '" aria-label="Notiz abhaken und löschen"><i></i></button>' +
     '<button type="button" class="two" data-n="note" data-id="' + esc(x.id) + '" aria-label="Notiz ändern"><span class="l"><span class="ntxt">' + esc(x.x) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></button></li>';
 }
-/* Liste der Notizen: gewählter Ordner und Suchtext. Steht in #n-list, damit beim Tippen nur die Liste neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
+/* Liste der Notizen, gefiltert nach dem Suchtext. Steht in #n-list, damit beim Tippen nur die Liste neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
 function noteListHTML() {
-  const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => inFolder(x) && (!q || x.x.toLowerCase().indexOf(q) >= 0));
-  return list.length ? '<ul class="entries">' + list.map(x => noteRow(x, !nFolder)).join('') + '</ul>' : '<p class="note">' + (q ? 'Keine Notiz gefunden.' : 'Keine Notiz in diesem Ordner.') + '</p>';
+  const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => !q || x.x.toLowerCase().indexOf(q) >= 0);
+  return list.length ? '<ul class="entries">' + list.map(x => noteRow(x)).join('') + '</ul>' : '<p class="note">Keine Notiz gefunden.</p>';
 }
 /* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben den Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
-   Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile.
-   Darunter stehen jeweils die Notizen des gleichnamigen Ordners; eine dort angelegte Notiz bekommt ihn von selbst (siehe openN). */
+   Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile. */
 const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
 const uniList = () => Object.keys(N.uni.e).filter(id => N.uni.e[id]).map(id => Object.assign({ id }, N.uni.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : x.id < y.id ? 1 : -1);
 /* Bezahlte Minuten: Ende minus Beginn (über Mitternacht plus ein Tag) minus Pause. Verdienst in Cent, je Eintrag gerundet. */
@@ -3245,22 +3214,18 @@ function uniHTML() {
   if (fs.length) h += '<div class="folds">' + fs.map(q => foldHTML('uni-' + q[0][0], q[0][1], nT(q[1].length), pktT(sum(q[1])) + ' Punkte', q[1].map(row).join(''))).join('') + '</div>';
   return h;
 }
-function teilHTML(f) {
-  const list = notesNew().filter(x => x.f === f);
-  return (f === 'arb' ? workHTML() : uniHTML()) + (list.length ? secHTML('Notizen', String(list.length), secAct('data-n="newnote"', '', 'Notiz schreiben')) + '<ul class="entries">' + list.map(x => noteRow(x)).join('') + '</ul>' : addFoldHTML('data-n="newnote"', 'Notizen'));
-}
 function notesHTML() {
   const n = noteList().length;
   if (!n) { nQuery = ''; return emptyHTML('notizen', 'Noch keine Notiz', 'Halte in Sekunden fest, was du nicht vergessen willst. Abhaken löscht die Notiz.', '<button type="button" class="primary" data-n="newnote">Notiz schreiben</button>'); }
   /* Das Suchfeld erscheint erst, wenn die Liste länger wird */
   if (n <= 5) nQuery = '';
   return (n > 5 ? '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' : '') +
-    folderBarHTML() + '<div id="n-list">' + noteListHTML() + '</div>';
+    '<div id="n-list">' + noteListHTML() + '</div>';
 }
 /* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
 function homeNotesHTML() {
   const list = notesNew(); if (!list.length) return '';
-  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true, true)).join('') + '</ul>';
+  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>';
 }
 /* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
@@ -3273,30 +3238,12 @@ function nAct(e) {
   else if (a === 'newuni') openU(null);
   else if (a === 'uni') openU(id);
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
-  else if (a === 'allnotes') { rSub = 'note'; nFolder = ''; show('routinen', true); renderPlaner(); }
-  else if (a === 'folder') { nFolder = b.dataset.v; renderPlaner(); }
+  else if (a === 'allnotes') { rSub = 'note'; show('routinen', true); renderPlaner(); }
   return true;
 }
 $('#n-main').addEventListener('click', nAct);
 $('#n-main').addEventListener('input', e => { if (e.target.id === 'n-q') { nQuery = e.target.value; $('#n-list').innerHTML = noteListHTML(); } });
 $('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderPlaner(); } });
-
-/* Ordner-Chips in den Blättern: „Kein Ordner“, alle Ordner, „+ Ordner“ legt einen neuen an und wählt ihn */
-const folderPickHTML = st => [['', 'Kein Ordner']].concat(allFolders()).map(f => '<button type="button" class="chip" data-f="' + esc(f[0]) + '" aria-pressed="' + (st.f === f[0]) + '">' + f[1] + '</button>').join('') +
-  '<button type="button" class="chip" data-f="__new" aria-expanded="' + !!st.newF + '">' + (st.newF ? 'Abbrechen' : '+ Ordner') + '</button>';
-function folderClick(e, st, input) {
-  const b = e.target.closest('.chip'); if (!b) return false;
-  if (b.dataset.f === '__new') st.newF = !st.newF; else st.f = b.dataset.f;
-  if (st.newF && b.dataset.f === '__new') setTimeout(() => input.focus(), 0);
-  return true;
-}
-function folderAdd(st, input, err) {
-  const name = input.value.trim().slice(0, 24); if (!name) { input.focus(); return false; }
-  if (allFolders().some(f => f[1].toLowerCase() === esc(name).toLowerCase())) { err.textContent = 'Diesen Ordner gibt es schon.'; err.hidden = false; return false; }
-  const id = 'f' + Date.now().toString(36).slice(-7) + Math.random().toString(36).slice(2, 5), p = { folders: {} }; p.folders[id] = { n: name }; ndoc.patch(p);
-  err.hidden = true; input.value = ''; st.f = id; st.newF = false;
-  return true;
-}
 
 /* Blatt „Arbeitszeit“ (v72). Neu: Beginn, Ende, Pause und Lohn stehen wie beim letzten Eintrag da, eine gleiche Schicht ist so ein Tipp auf „Speichern“.
    Unter den Feldern steht schon vor dem Speichern, was herauskommt (Stunden und Verdienst). */
@@ -3366,21 +3313,19 @@ $('#uform').addEventListener('submit', e => {
 });
 $('#u-del').addEventListener('click', () => { if (uE.id) { const p = { uni: { e: {} } }; p.uni.e[uE.id] = null; ndoc.patch(p); } closeU(); render(); });
 
-/* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Ordner und Löschen.
+/* Blatt „Notiz“: schnelle Aufnahme. Neu: nur das Textfeld; Enter, „Fertig“ oder jedes Schließen legt die Notiz an. Vorhandene: dazu Löschen.
    Gespeichert wird von selbst (kurz nach jeder Eingabe, beim Verlassen des Feldes, beim Schließen), damit nichts verloren geht, auch wenn das Blatt weggezogen wird.
    Eine leere Notiz wird nicht angelegt, eine geleerte gelöscht. nE = null heißt: nichts zu speichern (z. B. nach dem Löschen). */
 const ndlg = $('#nsheet');
 let nE = null, nTimer = 0;
 const growN = () => { const t = $('#n-text'); t.style.height = 'auto'; t.style.height = Math.max(72, t.scrollHeight) + 'px'; };
-function paintN() { $('#n-folder').innerHTML = folderPickHTML(nE); $('#n-fnew-row').hidden = !nE.newF; }
 function openN(id) {
   const x = id ? N.notes[id] : null;
-  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? (folderName(x.f) ? x.f : '') : view === 'routinen' ? (rSub === 'work' ? 'arb' : rSub === 'uni' ? 'uni' : nFolder) : '', newF: false, fresh: !x };
+  nE = { id: x ? id : null, c: x ? x.c : 0, f: x ? x.f : '', fresh: !x };   // f: Ordner aus der Zeit bis v76, bleibt an einer alten Notiz gespeichert
   $('#ns-title').textContent = x ? 'Notiz' : 'Neue Notiz'; $('#n-text').placeholder = 'Was willst du festhalten?';
-  $('#n-text').value = x ? x.x : ''; $('#n-fnew').value = ''; $('#n-err').hidden = true;
+  $('#n-text').value = x ? x.x : '';
   /* Neu: nur das Textfeld. Was hier verborgen ist, bleibt es, solange das Blatt offen ist: So verschiebt sich beim Speichern nichts unter dem Finger. */
-  $('#n-folder-fld').hidden = !x; $('#n-del').hidden = !x;
-  paintN();
+  $('#n-del').hidden = !x;
   openDlg(ndlg); ndlg.scrollTop = 0; growN();
   /* Sofort und ohne Verzögerung ins Feld: Das iPhone öffnet die Tastatur nur, wenn der Fokus direkt aus dem Tipp heraus gesetzt wird */
   if (!x) $('#n-text').focus();
@@ -3389,7 +3334,7 @@ function noteSave() {
   clearTimeout(nTimer); if (!nE) return;
   const x = $('#n-text').value.replace(/\s+$/, '').slice(0, 20000), old = nE.id ? N.notes[nE.id] : null, p = { notes: {} };
   if (!x.trim()) { if (old) { p.notes[nE.id] = null; ndoc.patch(p); } return; }
-  if (old && old.x === x && old.f === nE.f) return;
+  if (old && old.x === x) return;
   if (!nE.id) { nE.id = newId(); nE.c = Date.now(); }
   p.notes[nE.id] = { x, f: nE.f, c: nE.c, m: old && old.x === x ? old.m : Date.now() }; ndoc.patch(p);
 }
@@ -3409,12 +3354,9 @@ $('#n-text').addEventListener('keydown', e => {
   if (e.key !== 'Enter' || e.shiftKey || e.isComposing) return;
   e.preventDefault();
   if (!nE || !nE.fresh || !$('#n-text').value.trim()) return closeN();
-  noteSave(); nE = { id: null, c: 0, f: nE.f, newF: false, fresh: true };
+  noteSave(); nE = { id: null, c: 0, f: '', fresh: true };
   $('#n-text').value = ''; $('#n-text').placeholder = 'Nächste Notiz'; growN(); render();
 });
-$('#n-folder').addEventListener('click', e => { if (nE && folderClick(e, nE, $('#n-fnew'))) { paintN(); noteSave(); } });
-$('#n-fnew-add').addEventListener('click', () => { if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } });
-$('#n-fnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); if (nE && folderAdd(nE, $('#n-fnew'), $('#n-err'))) { paintN(); noteSave(); } } });
 $('#n-del').addEventListener('click', () => {
   const id = nE && nE.id; nE = null; clearTimeout(nTimer);
   if (id) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); }
@@ -4147,7 +4089,6 @@ setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 loadLocal();
 healBal();
 cleanCats();
-cleanFolders();
 show(location.hash.slice(1));
 render();
 /* Kurzbefehl: Die Adresse mit ?neu=ausgabe (oder notiz, gewicht) öffnet die App gleich mit diesem Blatt.

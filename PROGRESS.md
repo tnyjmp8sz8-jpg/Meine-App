@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v76 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026). `node tests/alle.js` (v76): alle 711 Prüfungen in 15 Reihen stimmen (Klappzeilen 147, Apple Watch 24, Hülle 161, Notizen 44, die übrigen wie in v75). Zuletzt mit gestellter Uhr geprüft in v75 (1.12. und 31.12.).
+- App-Inhalt (`index.html`): live ist v77 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026). `node tests/alle.js` (v77): alle 704 Prüfungen in 15 Reihen stimmen (Ablauf 14, Aufbau 62, Klappzeilen 147, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 43, Finanzen 68, Gym 35, Monat 30, Hülle 161, Apple Watch 24, Speichern 8, Aktualisierung 10). Zuletzt mit gestellter Uhr geprüft in v75 (1.12. und 31.12.).
+- v77 (23.11., sein Auftrag: „notizen unter kategorien können weg, notizen bei termin eintrag kann weg, notizen bei arbeit eintragen kann weg“; auf Nachfrage gewählt: „Ordner der Notizen“, nicht das Feld „Notiz“ bei Ausgaben): Die Notizen sind eine einzige Liste ohne Ordner (keine Reihe über der Liste, keine Auswahl im Blatt), unter „Arbeit“ und „Uni“ stehen keine Notizen mehr. Alte Ordner bleiben nur gespeichert. Am iPhone noch nicht gesehen.
 - v76 (23.11., er zu Cardio: „irgendwie noch unübersichtlich, weiß nicht warum“; nach Bild „jetzt / Vorschlag“ sein „ja anpassen“): Die Karte mit dem Verlauf erscheint erst ab zwei Läufen, die Zeile „Apple Watch“ nur, solange etwas zu tun ist. Oben (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) bewusst nichts angefasst; ihm angeboten, dazu ein eigenes Bild zu zeigen.
 - v74 und v75 (seine Aufträge vom 22.11.: „mach jetzt aufgaben raus“, „entferne routinen aus der app“): Aufgaben und Routinen sind ausgebaut (Umschalter, Blätter, Timer, Serien, Heute, Woche, Monat, Kalender, Zusammenhänge, „Als Aufgabe“ an der Notiz). Was gespeichert war, bleibt im Speicher und in der Sicherung, wird aber nirgends gezeigt. Der Planer hat drei Teile und öffnet mit den Notizen: Notizen, Arbeit, Uni (von ihm so gewählt: „ja“ auf meinen Vorschlag A; der Bereich heißt weiter „Planer“). Auf Heute zeigt die Wochenleiste nur noch die Punkte fürs Training. Am iPhone noch nicht gesehen.
 - v72/v73: „Arbeit“ und „Uni“ als eigene Teile oben im Planer. Meine Annahmen, ihm genannt: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Summen über alle Zeit. Offen an ihn: Punkte je Semester getrennt? Soll je Fach? Mehrere Jobs? Am iPhone noch nicht gesehen (Zeitfelder „Von/Bis“ zeigen dort das Rad).
@@ -28,7 +29,6 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
 Ältere Vorschläge:
-- Notizen: Ordner umbenennen.
 - Automatisierungen: wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen.
 - Oberfläche: Erinnerung „Noch keine Sicherung“ unter die Bereiche setzen; Zielkarte im Gewicht ruhiger; im Vermögen eine Plus-Form für alle Überschriften; großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert.
 - Nachgefragt ohne Antwort (v56): Feld „Steigung“ beim Laufband entfernen; Schnell-Knopf „Ausgabe“ in „Buchung“ umbenennen.
@@ -52,6 +52,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v72–v73: „Arbeit“ (Arbeitszeiten, Verdienst je Monat als Klappzeile) und „Uni“ (Termine mit Fach und Punkten, Summe je Fach), seit v73 als eigene Teile oben im Planer.
 - v74–v75 mit iPhone-App 0.7: Aufgaben und Routinen ausgebaut (Gespeichertes bleibt erhalten), Widget „Heute“ entfernt; Projektdateien sortiert (`BEREICHE.md`).
 - v76: Cardio ohne leere Flächen (Verlauf erst ab zwei Läufen, „Apple Watch“ nur bei Bedarf).
+- v77: Notizen ohne Ordner, keine Notizen mehr unter „Arbeit“ und „Uni“.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.

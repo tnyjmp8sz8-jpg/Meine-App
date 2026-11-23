@@ -10,7 +10,7 @@ Die Tests bedienen die App wie ein Mensch (Playwright mit Chromium) und vergleic
 - `eingabe.js`: Eingaben in den Blättern: Gewicht mit geändertem Datum, Zielgewicht unverändert speichern.
 - `loeschen.js`: „Rückgängig“ nach dem Löschen (Buchung, Konto im offenen Blatt, Training), eigene Kategorien.
 - `notizen.js`: Notizen (schnelle Aufnahme, Abhaken löscht, Ordner, Suche, Übernahme alter Notizen), Heute, Rückgängig, Sicherung; dazu: Von den Aufgaben (seit v74 ausgebaut) und den Routinen (seit v75) ist nichts mehr zu sehen, Gespeichertes bleibt erhalten.
-- `arbeit.js`: die Teile „Arbeit“ und „Uni“ im Planer (Umschalter mit fünf Teilen, Plus oben, Notizen des Ordners darunter): Arbeitszeiten mit Verdienst je Monat (Pause, Schicht über Mitternacht, alter und neuer Lohn), Termine mit Punkten je Fach, Blätter, Löschen mit „Rückgängig“, 320 px, leere App. Läuft mit fester Uhr (15.11.2026).
+- `arbeit.js`: die Teile „Arbeit“ und „Uni“ im Planer (Umschalter mit drei Teilen, Plus oben; Notizen stehen dort seit v77 nicht mehr): Arbeitszeiten mit Verdienst je Monat (Pause, Schicht über Mitternacht, alter und neuer Lohn), Termine mit Punkten je Fach, Blätter, Löschen mit „Rückgängig“, 320 px, leere App. Läuft mit fester Uhr (15.11.2026).
 - `finanzen.js`: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen, Sparziele, Sparquote, Monatswechsel bei offener App. Die Uhr der Seite steht auf dem 15. des Monats (für den 28. gibt es einen eigenen Teil), damit kein Ergebnis vom Tag abhängt.
 - `gym.js`: Recap für Monat und Jahr, Verbesserung, Blatt der Übung, laufendes Training.
 - `monat.js`: Monatsabschluss auf Heute (Vergleich mit dem Vormonat, Hinweis am Monatsanfang) und der Kurzbefehl `?neu=…`, mit gestellter Uhr.

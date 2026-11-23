@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v76)
+# Track. – Projektwissen (App-Stand v77)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -19,7 +19,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Name: „Track.“ mit Punkt (früher „Takt“). Oberfläche und Code-Kommentare auf Deutsch.
 - Kernfunktionen:
   - Heute: Wochenleiste, Schnell-Knöpfe, Notizen, Übersicht der Bereiche als Liste mit farbigem Symbol, Wochenansicht mit Vergleich zur Vorwoche und Zusammenhängen, Monatsansicht mit Vergleich zum Vormonat (Monatsabschluss, v59), Sicherung speichern/einlesen mit Erinnerung.
-  - Planer (im Code `routinen`), Umschalter oben: „Notizen“ (schnelle Aufnahme in Sekunden: nur Text, jede mit Kreis, Abhaken löscht), „Arbeit“ (Arbeitszeiten, Verdienst je Monat), „Uni“ (Termine der Zahnmedizin mit Punkten je Fach). Ausgebaut auf seinen Wunsch: Aufgaben (v74) und Routinen mit Timer und Serien (v75, die erste Funktion der App); Gespeichertes bleibt jeweils erhalten.
+  - Planer (im Code `routinen`), Umschalter oben: „Notizen“ (schnelle Aufnahme in Sekunden: nur Text in einer einzigen Liste, jede mit Kreis, Abhaken löscht), „Arbeit“ (Arbeitszeiten, Verdienst je Monat), „Uni“ (Termine der Zahnmedizin mit Punkten je Fach). Ausgebaut auf seinen Wunsch: Aufgaben (v74), Routinen mit Timer und Serien (v75, die erste Funktion der App), Ordner der Notizen und die Notizen unter „Arbeit“ und „Uni“ (v77); Gespeichertes bleibt jeweils erhalten.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
   - Training: „Cardio“ (Läufe, Pace, Effizienz) und „Gym“ (Pläne, laufendes Training, Übungen, Recap für Monat und Jahr).
@@ -138,7 +138,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Beim Laufen zählt für ihn die Effizienz mehr als das Tempo (18.11.): Wo nur Platz für einen Vergleich ist, steht die Effizienz.
 - Läufe: Er trägt immer die Zahlen der Apple Watch bzw. aus Apple Fitness ein, nie die Anzeige des Laufbands (18.11.). Was von selbst von der Uhr kommt, ist also genau seine Zahl.
 - Arbeit und Uni (19.11.): Was für ihn ein eigenes Thema ist, will er als eigenen Teil oben im Umschalter sehen, nicht als Unterpunkt in einem Ordner. Ich hatte es zuerst in die Ordner der Notizen gelegt (seine Worte „Notizen-Bereich für Uni, Arbeit“); bei einem neuen Teil vorher mit Bild fragen, wo er liegen soll.
-- Weniger ist ihm lieber (20. und 22.11.): Aufgaben („merke ich mir so und ist zu viel“, v74) und Routinen (v75) ließ er ausbauen. Vorhandenes bleibt nur im Speicher und in der Sicherung (`N.tasks`, `S`, `LY`, siehe `BEREICHE.md`). Keine Vorschläge mehr zu Aufgaben, Routinen, Timern oder Serien; vor neuen Funktionen eher fragen, was noch weg kann.
+- Weniger ist ihm lieber (20. bis 23.11.): Aufgaben („merke ich mir so und ist zu viel“, v74), Routinen (v75), die Ordner der Notizen und die Notizen unter „Arbeit“ und „Uni“ (v77) ließ er ausbauen. Vorhandenes bleibt nur im Speicher und in der Sicherung (`N.tasks`, `S`, `LY`, `N.folders`, Feld `f` der Notizen; siehe `BEREICHE.md`). Keine Vorschläge mehr zu Aufgaben, Routinen, Timern, Serien oder Ordnern; vor neuen Funktionen eher fragen, was noch weg kann.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
@@ -151,7 +151,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Eine Sitzung je Thema: Ist ein Thema fertig und veröffentlicht, ihm in einem Satz raten, für das nächste eine neue Sitzung zu beginnen (der Verlauf zählt bei jeder Nachricht mit). Alles Wissen steht in diesen Dateien.
   - Wünsche sammeln (sein Wunsch, 20.11.): Sagt er „erstmal nur merken“, den Wunsch nur in `PROGRESS.md` unter „Gesammelte Wünsche“ eintragen und hochladen, nichts bauen. Gebaut wird alles zusammen in einem Zug, sobald er es sagt.
   - Erst fragen, dann bauen, wenn bei einem neuen Teil unklar ist, wo er liegen oder wie er aufgebaut sein soll: eine kurze Frage kostet weniger als ein Umbau (v72 → v73).
-  - Dateien nicht ganz lesen: `index.html` hat rund 4200 Zeilen, also suchen und Ausschnitte lesen. `IPHONE.md` nur bei Bedarf.
+  - Dateien nicht ganz lesen: `index.html` hat rund 4150 Zeilen, also suchen und Ausschnitte lesen. `IPHONE.md` nur bei Bedarf.
   - Tests: während der Arbeit nur die betroffene Reihe, alle Reihen einmal vor dem Veröffentlichen; die Ausgabe auf Fehler und Summen kürzen.
   - Nach dem Hochladen einmal rund 45 Sekunden warten (im Hintergrund), dann den Pages-Lauf einmal prüfen, nicht mehrfach abfragen.
   - Bilder nur, wenn etwas neu aussieht.
@@ -162,7 +162,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v76` → `takt-v77`), `<span class="ver">v76</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v77` → `takt-v78`), `<span class="ver">v77</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Alles Neue wird ohne Nachfrage direkt nach `main` veröffentlicht, sobald es fertig und getestet ist (sein Wunsch, 22.11.2026: „immer alles neues direkt veröffentlichen“; er kann es jederzeit zurücknehmen). Auch reine Änderungen an den Projektdateien gehen nach `main`: Eine neue Sitzung beginnt dort. Ausnahme bleibt, was er „erstmal nur merken“ nennt.
 - Standardzweig bei GitHub ist `main` (seit 19.11.2026): Eine neue Sitzung beginnt dort. Trotzdem zu Beginn jeder Sitzung prüfen, dass der Arbeitsordner auf dem Stand von `main` ist (`git fetch origin main`, Überschrift dieser Datei vergleichen); wenn nicht, zuerst `main` holen und nichts auf dem alten Stand bauen. Warum: Einmal begann eine Sitzung auf einem alten Zweig und meldete v63 statt v73.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.

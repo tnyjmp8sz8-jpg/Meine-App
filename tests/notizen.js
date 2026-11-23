@@ -1,4 +1,4 @@
-// Notizen im Planer: schnelle Aufnahme (Abhaken löscht), Ordner, Suche, Rückgängig, Sicherung. Aufgaben gibt es seit v74 nicht mehr: Geprüft wird, dass nichts mehr von ihnen zu sehen ist und Gespeichertes erhalten bleibt.
+// Notizen im Planer: schnelle Aufnahme (Abhaken löscht), Suche, Rückgängig, Sicherung. Ordner gibt es seit v77 nicht mehr (eine Liste); alte Ordner bleiben nur gespeichert. Aufgaben gibt es seit v74 nicht mehr: Geprüft wird, dass nichts mehr von ihnen zu sehen ist und Gespeichertes erhalten bleibt.
 const { oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
 const { beispiel, alsSicherung } = require('./daten');
 
@@ -6,7 +6,6 @@ lauf(async () => {
   const P = pruefer('Notizen'), { browser, page, fehler } = await oeffnen();
   const sub = v => page.click('#r-subs [data-v="' + v + '"]');
   const kurz = () => page.waitForTimeout(200);
-  const chip = (box, name) => page.click(box + ' .chip:has-text("' + name + '")');
   const liste = () => text(page, '#n-main');
   const aufgaben = async () => Object.values((await gespeichert(page)).N.tasks).filter(Boolean);
   const notizen = async () => Object.values((await gespeichert(page)).N.notes).filter(Boolean);
@@ -21,7 +20,7 @@ lauf(async () => {
   await bereich(page, 'routinen'); await sub('note');
   P.enthaelt('leerer Zustand', await liste(), ['Noch keine Notiz']);
   await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="notiz"]');
-  P.ok('„+ Notiz“ auf Heute: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.isVisible('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
+  P.ok('„+ Notiz“ auf Heute: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.$('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
   await page.keyboard.type('Bib-Ausweis verlängern'); await page.keyboard.press('Enter'); await kurz();
   P.ok('Enter legt die Notiz an; das Blatt bleibt offen, leer und bereit für die nächste', (await page.evaluate(() => document.querySelector('#nsheet').open && document.activeElement.id === 'n-text' && document.querySelector('#n-text').value === '')) && (await notizen()).length === 1 && (await notizen())[0].x === 'Bib-Ausweis verlängern', JSON.stringify(await notizen()));
   P.ok('die Notiz steht schon dahinter auf Heute', (await text(page, '#v-heute')).includes('Bib-Ausweis verlängern'));
@@ -44,21 +43,16 @@ lauf(async () => {
   await page.click('#toast button'); await kurz();
   P.ok('Rückgängig holt sie zurück', (await roh()) === vorN);
 
-  // Im Bereich: neueste zuerst; vorhandene Notiz ändern, Ordner, „Als Aufgabe“
+  // Im Bereich: neueste zuerst; vorhandene Notiz ändern. Das Blatt hat nur den Text, „Fertig“ und „Notiz löschen“ (Ordner seit v77 weg, „Als Aufgabe“ seit v74)
   await bereich(page, 'routinen');
   const l2 = await liste();
   P.ok('Bereich Notizen: beide, die neueste zuerst', l2.includes('Paket abholen') && l2.indexOf('Paket abholen') < l2.indexOf('Bib-Ausweis verlängern'), l2);
-  P.ok('bei wenigen Notizen gibt es kein Suchfeld', !(await page.$('#n-q')));
+  P.ok('bei wenigen Notizen gibt es kein Suchfeld und keine Reihe mit Ordnern', !(await page.$('#n-q')) && !(await page.$('#n-main .chips')) && !(await page.$('#n-main [data-n="folder"]')));
   await page.click('#n-main [data-n="note"]:has-text("Paket abholen")');
-  P.ok('vorhandene Notiz: Ordner und Löschen sind da, „Als Aufgabe“ gibt es nicht mehr', (await sichtbar('#n-folder-fld', '#n-del')) && !(await page.$('#n-task')));
-  await page.fill('#n-text', 'Paket bei der Post abholen'); await chip('#n-folder', 'Privat'); await page.click('#n-done'); await kurz();
-  P.ok('Text und Ordner geändert', (await notizen()).some(n => n.x === 'Paket bei der Post abholen' && n.f === 'priv'));
-  P.enthaelt('Zeile nennt Ordner und Tag', await liste(), ['Paket bei der Post abholen Privat · Heute']);
-  // eigener Ordner beim Ändern einer Notiz: „+ Ordner“ legt ihn an und wählt ihn
-  await page.click('#n-main [data-n="note"]:has-text("Paket bei der Post")'); await chip('#n-folder', '+ Ordner'); await page.fill('#n-fnew', 'Haushalt'); await page.click('#n-fnew-add');
-  P.ok('eigener Ordner ist angelegt und gewählt', (await text(page, '#n-folder [aria-pressed="true"]')) === 'Haushalt');
-  await page.click('#n-done'); await kurz();
-  P.ok('die Notiz liegt im eigenen Ordner', (await notizen()).length === 2 && (await liste()).includes('Paket bei der Post abholen Haushalt'), await liste());
+  P.ok('vorhandene Notiz: Löschen ist da; Ordner und „Als Aufgabe“ gibt es nicht', (await sichtbar('#n-text', '#n-done', '#n-del')) && !(await page.$('#n-folder-fld')) && !(await page.$('#nsheet .chips')) && !(await page.$('#n-task')));
+  await page.fill('#n-text', 'Paket bei der Post abholen'); await page.click('#n-done'); await kurz();
+  P.ok('Text geändert, weiter zwei Notizen', (await notizen()).length === 2 && (await notizen()).some(n => n.x === 'Paket bei der Post abholen'));
+  P.enthaelt('Zeile nennt nur den Tag', await liste(), ['Paket bei der Post abholen Heute']);
   await page.click('#n-main [data-n="note"]:has-text("Bib-Ausweis")'); await page.fill('#n-text', '   '); await page.click('#n-done'); await kurz();
   P.ok('geleerte Notiz ist weg', (await notizen()).length === 1);
   await page.click('#add'); await page.keyboard.type('<b>Fett</b>'); await page.keyboard.press('Enter'); await page.click('#n-done'); await kurz();
@@ -74,23 +68,20 @@ lauf(async () => {
   await page.click('#n-main .nrow:has-text("Offener Punkt") .tk'); await kurz();
   P.ok('danach ist alles im neuen Aufbau gespeichert', (await notizen()).every(n => typeof n.x === 'string' && !('t' in n) && !('items' in n) && !('pin' in n)) && (await notizen()).length === 3, JSON.stringify(await notizen()));
 
-  // --- Bestand: Neuladen, eigener Ordner bleibt (benutzt), Sicherung enthält alles ---
+  // --- Bestand: Neuladen ändert nichts; der Ordner der alten Notiz (f: 'prom') bleibt gespeichert, auch wenn er nirgends mehr steht ---
   const stand = await gespeichert(page);
   await page.reload(); await page.waitForTimeout(300);
   P.ok('nach dem Neuladen unverändert', JSON.stringify((await gespeichert(page)).N) === JSON.stringify(stand.N));
-  P.ok('benutzter eigener Ordner bleibt', Object.values(stand.N.folders).filter(Boolean).map(f => f.n).join() === 'Haushalt');
+  P.ok('alter Ordner bleibt an der Notiz gespeichert, zu sehen ist er nicht', Object.values(stand.N.notes).some(n => n && n.x.startsWith('Besprechung') && n.f === 'prom') && !(await liste()).includes('Promotion'), await liste());
 
-  // --- Ordner mit fremder Kennung aus einer veränderten Sicherungsdatei: Anführungszeichen und HTML in der Kennung schleusen nichts ein, der Ordner bleibt benutzbar ---
+  // --- Sicherung mit eigenem Ordner, dessen Kennung Anführungszeichen und HTML trägt: Die Notiz kommt an, nichts wird eingeschleust (Ordner werden nirgends mehr gezeichnet), gespeichert bleibt alles ---
   const fid = '"><b id="inj">';
   await page.setInputFiles('#bk-file', { name: 'fremd.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, N: { folders: { [fid]: { n: 'Fremd' } }, tasks: {}, notes: { fremd: { x: 'Notiz im fremden Ordner', f: fid, c: 7, m: 8 } } } })) });
   await page.waitForTimeout(400); await bereich(page, 'routinen'); await sub('note');
-  P.ok('Ordner-Leiste: der Ordner ist da, nichts eingeschleust', (await text(page, '#n-main [data-n="folder"]')).includes('Fremd') && !(await page.$('#inj')), await text(page, '#n-main .chips'));
-  await page.click('#n-main [data-n="folder"]:has-text("Fremd")'); await kurz();
-  P.ok('der fremde Ordner filtert wie jeder andere', (await liste()).includes('Notiz im fremden Ordner') && !(await liste()).includes('Besprechung'), await liste());
-  await page.click('#n-main [data-n="note"]:has-text("Notiz im fremden Ordner")');
-  P.ok('Blatt: der Ordner ist gewählt, nichts eingeschleust', (await text(page, '#n-folder [aria-pressed="true"]')) === 'Fremd' && !(await page.$('#inj')));
-  await chip('#n-folder', 'Privat'); await chip('#n-folder', 'Fremd'); await page.click('#n-done'); await kurz();
-  P.ok('umgestellt und zurück: die Notiz liegt wieder im fremden Ordner', (await notizen()).some(n => n.x === 'Notiz im fremden Ordner' && n.f === fid));
+  P.ok('Notiz aus der Sicherung steht in der einen Liste, nichts eingeschleust, kein Ordner zu sehen', (await liste()).includes('Notiz im fremden Ordner') && (await liste()).includes('Besprechung') && !(await page.$('#inj')) && !(await liste()).includes('Fremd'), await liste());
+  await page.click('#n-main [data-n="note"]:has-text("Notiz im fremden Ordner")'); await page.fill('#n-text', 'Notiz im fremden Ordner, geändert'); await page.click('#n-done'); await kurz();
+  const nachF = (await gespeichert(page)).N;
+  P.ok('nach dem Ändern trägt die Notiz ihren Ordner weiter, und der Ordner selbst steht noch im Speicher', Object.values(nachF.notes).some(n => n && n.x === 'Notiz im fremden Ordner, geändert' && n.f === fid) && !!nachF.folders[fid] && !(await page.$('#inj')));
 
   await browser.close();
 
