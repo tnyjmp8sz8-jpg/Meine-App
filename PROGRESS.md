@@ -27,6 +27,7 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 3. Eine Rechenkante beheben (siehe „Offene Probleme“: neues Konto zählt als Plus).
 4. Seine Entscheidung: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
 5. Ein neues Widget „Heute“ mit Zahlen statt Routinen (Gewicht, übrig im Monat, Kilometer): bräuchte neue Felder im Stand und eine neue Installation.
+6. Auf seine Frage „noch Vorschläge bezüglich Design, Funktion oder Übersichtlichkeit/Nutzen?“ (23.11.) genannt, Antwort steht aus: (a) Wochenleiste auf Heute mit einem lila Punkt fürs Wiegen neben dem grünen fürs Training; (b) Uni: Soll je Fach mit Balken „noch n Punkte“; (c) Zeile für Arbeit und Uni in der Übersicht auf Heute (wie Punkt 2); (d) Zielkarte im Gewicht: „0 %“ erst zeigen, wenn es Fortschritt gibt; (e) Gym: im laufenden Training zeigen, ob ein Satz besser war als beim letzten Mal; (f) Finanzen: erst die Apple-Pay-Automation einrichten und nach zwei Wochen entscheiden, ob der Bereich bleibt. Meine Reihenfolge: a, b, c.
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
 Ältere Vorschläge:
