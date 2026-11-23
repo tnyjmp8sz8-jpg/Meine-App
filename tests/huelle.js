@@ -552,7 +552,7 @@ lauf(async () => {
 
   /* Läufe aus Health:
      A neu (gestern 5,23 km) → wird eingetragen. B am Tag des Laufs von Hand, 5,3 km statt 5,0 (6 % Unterschied) → derselbe Lauf, nicht doppelt.
-     C ohne Strecke → ungültig. D in der Zukunft → nein. A noch einmal → nein. E Laufband vor drei Tagen → wird eingetragen. */
+     C ohne Strecke → ungültig. D in der Zukunft → nein. A noch einmal → nein. E als Laufband gemeldet, vor drei Tagen → wird eingetragen wie jeder Lauf (eine Art gibt es seit v79 nicht mehr). */
   const A = { id: 'AAAA1111-22', t: mittag(1), m: 5230.4, s: 1800.2, hr: 151.6, k: 'out' };
   const liste = [A, { id: 'BBBB', t: mittag(2), m: 5300, s: 1600, hr: 140, k: 'out' }, { id: 'CCCC', t: mittag(1), m: 0, s: 900, k: 'out' },
     { id: 'DDDD', t: mittag(-2), m: 4000, s: 1300, k: 'out' }, A, { id: 'EEEE', t: mittag(3), m: 3000, s: 1200, hr: null, k: 'in' }];
@@ -560,14 +560,14 @@ lauf(async () => {
   const runs = () => Object.values(g.T.runs).filter(Boolean);
   p.ok('Health: 2 von 6 werden eingetragen', n === 2 && runs().length === 3, n + ' · ' + JSON.stringify(g.T.runs));
   const a = runs().find(r => r.d === tag(1));
-  p.ok('Health: Werte gerundet übernommen', a && a.m === 5230 && a.s === 1800 && a.hr === 152 && a.k === 'out', JSON.stringify(a));
-  p.ok('Health: Laufband bleibt Laufband', runs().some(r => r.d === tag(3) && r.k === 'in' && r.m === 3000));
+  p.ok('Health: Werte gerundet übernommen', a && a.m === 5230 && a.s === 1800 && a.hr === 152 && !('k' in a), JSON.stringify(a));
+  p.ok('Health: ein als Laufband gemeldeter Lauf wird eingetragen, ohne Art', runs().some(r => r.d === tag(3) && !('k' in r) && r.m === 3000));
   p.ok('Health: gemerkt sind A, B, E (nicht Ungültiges, nicht die Zukunft)', Object.keys(g.T.hk).sort().join('|') === 'AAAA1111-22|BBBB|EEEE', Object.keys(g.T.hk).join('|'));
   n = await page.evaluate(l => window.TrackHuelle.laeufe(l), liste);
   p.ok('Health: zweites Mal kommt nichts doppelt', n === 0);
 
   /* Löschen: Der Lauf aus Health kommt nicht wieder */
-  await bereich(page, 'training'); await page.click('[data-t="kind"][data-v="all"]');
+  await bereich(page, 'training');
   if (!(await page.$('#v-training [data-fold="laeufe"]'))) await page.click('#v-training .mnav button:first-child');   // am Monatsersten liegen alle Läufe im Vormonat
   await page.click('#v-training [data-fold="laeufe"]');   // Läufe aufklappen
   const zeile = page.locator('[data-t="edit"]').first(); await zeile.click(); await page.waitForTimeout(150);

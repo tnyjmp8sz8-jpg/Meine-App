@@ -713,7 +713,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v78</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v79</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -936,10 +936,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
-    <div class="chips" id="t-kind" role="group" aria-label="Ort">
-      <button type="button" class="chip" data-k="out" aria-pressed="true">Outdoor</button>
-      <button type="button" class="chip" data-k="in" aria-pressed="false">Laufband</button>
-    </div>
     <div class="fld">
       <span id="lbl-t-km">Strecke</span>
       <div class="stepper">
@@ -961,13 +957,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <div class="stepper">
         <input id="t-hr" name="heartrate" type="number" inputmode="numeric" min="30" max="250" placeholder="0" aria-labelledby="lbl-t-hr">
         <span class="unit">Schläge/min</span>
-      </div>
-    </div>
-    <div class="fld" id="t-in-fld" hidden>
-      <span id="lbl-t-inc">Steigung</span>
-      <div class="stepper">
-        <input id="t-inc" name="incline" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-labelledby="lbl-t-inc">
-        <span class="unit">%</span>
       </div>
     </div>
     <label class="fld" for="t-date">
@@ -2154,6 +2143,10 @@ $('#m-del').addEventListener('click', () => {
 });
 
 /* ---------- Training: Cardio ---------- */
+/* Es gibt nur noch Läufe draußen (v79, Wunsch des Nutzers: „laufe nur noch draußen“, „lösche die Daten von indoor“; auf Nachfrage „Endgültig löschen“).
+   Läufe vom Laufband (k 'in', bis v78) werden beim Laden verworfen, auch aus einer eingelesenen alten Sicherung; tBand zählt sie, damit der Start das Löschen gleich speichert.
+   Die Felder k (Art) und inc (Steigung) gibt es nicht mehr. */
+let tBand = 0;
 function normT(o) {
   const out = { runs: {}, hk: {} }, r = o && o.runs, hk = o && o.hk;
   /* hk: Kennungen der Läufe, die schon aus Health übernommen wurden. So kommt ein gelöschter Lauf nicht wieder. */
@@ -2161,36 +2154,29 @@ function normT(o) {
   const num = (n, a, b) => typeof n === 'number' && isFinite(n) && n >= a && n <= b;
   if (r && typeof r === 'object') for (const id in r) {
     const x = r[id];
+    if (x && typeof x === 'object' && x.k === 'in') { tBand++; out.runs[id] = null; continue; }
     if (!x || typeof x !== 'object' || !isKey(x.d) || !num(x.m, 50, 1000000) || !num(x.s, 10, 360000)) { out.runs[id] = null; continue; }
-    const k = x.k === 'in' ? 'in' : 'out';
-    /* Bis v55 gab es ein Laufband-Tempo (spd), mit dem statt der Strecke gerechnet wurde. Solche Läufe behalten ihre Zahlen: Ihre Strecke wird Tempo x Dauer. */
-    const m = k === 'in' && num(x.spd, 1, 30) ? clamp(Math.round(x.spd / 3.6 * x.s), 50, 1000000) : Math.round(x.m);
-    out.runs[id] = { d: x.d, m, s: Math.round(x.s), hr: num(x.hr, 30, 250) ? Math.round(x.hr) : null, k, inc: k === 'in' && num(x.inc, 0, 30) ? Math.round(x.inc * 10) / 10 : null };
+    out.runs[id] = { d: x.d, m: Math.round(x.m), s: Math.round(x.s), hr: num(x.hr, 30, 250) ? Math.round(x.hr) : null };
     /* h: Kennung eines Laufs aus Health oder aus dem Kurzbefehl, solange ihn niemand von Hand geändert hat. Nur ein solcher Lauf wird nachgebessert, wenn die Uhr Werte nachliefert. */
     if (typeof x.h === 'string' && /^[A-Za-z0-9-]{1,40}$/.test(x.h)) out.runs[id].h = x.h;
   }
   return out;
 }
 const tdoc = patchDoc(() => T, v => { T = normT(v); });
-let tKind = null;                           // 'out' | 'in' (Laufband) | 'all'; null = Art des letzten Laufs
 
 const fmtPace = sk => { const t = Math.round(sk); return Math.floor(t / 60) + ':' + pad(t % 60); };
 const fmtHM = s => { const m = Math.round(s / 60); return Math.floor(m / 60) + ':' + pad(m % 60) + ' h'; };
 const kmf = m => (m / 1000).toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-const kindName = k => k === 'in' ? 'Laufband' : 'Outdoor';
 /* Effizienz = Meter pro Herzschlag = Strecke / (Dauer in Minuten x Puls) */
 const effOf = (m, s, hr) => hr ? m / (s / 60 * hr) : null;
 
 function tRuns() {
   const a = Object.keys(T.runs).filter(id => T.runs[id]).map(id => {
     const r = T.runs[id];
-    return { id, d: r.d, m: r.m, s: r.s, hr: r.hr, k: r.k, inc: r.inc, h: r.h || '', pace: r.s / r.m * 1000, eff: effOf(r.m, r.s, r.hr) };
+    return { id, d: r.d, m: r.m, s: r.s, hr: r.hr, h: r.h || '', pace: r.s / r.m * 1000, eff: effOf(r.m, r.s, r.hr) };
   }).sort((x, y) => x.d < y.d ? -1 : x.d > y.d ? 1 : x.id < y.id ? -1 : 1);
-  const last = {}, lastEff = {};
-  a.forEach(r => {
-    r.prev = last[r.k] || null; r.prevEff = lastEff[r.k] || null;       // Vergleich immer mit derselben Art
-    last[r.k] = r; if (r.eff != null) lastEff[r.k] = r;
-  });
+  let last = null, lastEff = null;
+  a.forEach(r => { r.prev = last; r.prevEff = lastEff; last = r; if (r.eff != null) lastEff = r; });   // Vergleich mit dem Lauf davor; für die Effizienz mit dem letzten Lauf, der einen Puls hat
   return a;
 }
 function dPace(r) {
@@ -2205,7 +2191,6 @@ function dEff(r) {
   return Math.abs(p) < 0.05 ? { t: 'gleich', c: '' } : { t: (p > 0 ? '+' : '−') + kg(Math.abs(p)) + ' %', c: p > 0 ? 'up' : 'down' };
 }
 const dHr = (hr, ref) => hr === ref ? 'gleich' : (hr > ref ? '+' : '−') + Math.abs(hr - ref) + (Math.abs(hr - ref) === 1 ? ' Schlag' : ' Schläge');
-const n1 = n => n.toLocaleString('de-DE', { maximumFractionDigits: 1 });
 function tAgg(list) {
   const o = { n: list.length, m: 0, s: 0, hb: 0, sH: 0, mH: 0 };
   list.forEach(r => { o.m += r.m; o.s += r.s; if (r.hr) { o.hb += r.s / 60 * r.hr; o.sH += r.s; o.mH += r.m; } });
@@ -2261,47 +2246,46 @@ function kmBarsSVG(vals, label) {
   return s + '</svg>';
 }
 
-/* Letzter Lauf im Vergleich mit dem Lauf derselben Art davor: eine Klappzeile unter dem Graphen (v66; als offene Karte schob er den Graphen aus dem ersten Blick).
-   Zu sehen sind Tag, Art, Strecke und Zeit, rechts der Vergleich der Effizienz in Grün oder Rot (v67, Wunsch des Nutzers: Man kann langsamer sein und trotzdem effizienter;
+/* Letzter Lauf im Vergleich mit dem Lauf davor: eine Klappzeile unter dem Graphen (v66; als offene Karte schob er den Graphen aus dem ersten Blick).
+   Zu sehen sind Tag, Strecke und Zeit, rechts der Vergleich der Effizienz in Grün oder Rot (v67, Wunsch des Nutzers: Man kann langsamer sein und trotzdem effizienter;
    ohne Puls gibt es keine Effizienz, dann steht dort die Pace). Aufgeklappt: Pace, Effizienz und Puls je mit Vergleich, darunter, womit verglichen wird. */
-function lastFoldHTML(r, mitArt) {
+function lastFoldHTML(r) {
   const dp = dPace(r), de = dEff(r), kv = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
   const rows = '<li class="kvs">' + kv('Pace', fmtPace(r.pace), '/km', dp && dp.t, dp && dp.c) + (r.eff != null ? kv('Effizienz', kg(r.eff, 2), 'm pro Herzschlag', de && de.t, de && de.c) : '') +
     (r.hr ? kv('Puls', r.hr, '', r.prev && r.prev.hr ? dHr(r.hr, r.prev.hr) : '', '') : '') +
-    '<p class="note">' + (r.prev ? 'Vergleich mit dem ' + kindName(r.k) + '-Lauf davor (' + dRow(r.prev.d) + ').' : 'Erster ' + kindName(r.k) + '-Lauf, noch kein Vergleich.') + '</p></li>';
-  /* Die Art steht nur bei „Alle“ dabei (wie in der Liste der Läufe): Sonst zeigt sie schon der Filter oben, und die Zeile bräche bei 390 px um. */
-  return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + (mitArt ? ' · ' + kindName(r.k) : '') + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), de && de.c ? 'Effizienz <span class="' + de.c + '">' + de.t + '</span>' : dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
+    '<p class="note">' + (r.prev ? 'Vergleich mit dem Lauf davor (' + dRow(r.prev.d) + ').' : 'Erster Lauf, noch kein Vergleich.') + '</p></li>';
+  return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), de && de.c ? 'Effizienz <span class="' + de.c + '">' + de.t + '</span>' : dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
 }
 
-function tMonthHTML(all, list0, kind, curYM) {
-  const list = list0.filter(r => r.d.slice(0, 7) === tYM), g = tAgg(list), name = MONTHS[+tYM.slice(5) - 1];
-  const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(list0.filter(r => r.d.slice(0, 7) === prevYM));
+function tMonthHTML(all, curYM) {
+  const list = all.filter(r => r.d.slice(0, 7) === tYM), g = tAgg(list), name = MONTHS[+tYM.slice(5) - 1];
+  const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(all.filter(r => r.d.slice(0, 7) === prevYM));
   let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g);
   h += '<button type="button" class="primary" data-t="add">Lauf eintragen</button>';
   /* Reihenfolge wie in den anderen Bereichen: Zahl, Knopf, Kennzahlen des Monats, Graph, darunter die Klappzeilen (letzter Lauf im Vergleich, Läufe des Monats).
-     Die Effizienz im Schnitt trägt ihr Plus oder Minus zum Vormonat (nicht bei „Alle“: Outdoor und Laufband lassen sich nicht mitteln). */
-  const p = kind !== 'all' && g.eff != null && gp.eff != null ? (g.eff / gp.eff - 1) * 100 : null;
+     Die Effizienz im Schnitt trägt ihr Plus oder Minus zum Vormonat. */
+  const p = g.eff != null && gp.eff != null ? (g.eff / gp.eff - 1) * 100 : null;
   /* Ab 10 % ohne Nachkommastelle: Mit „−12,5 %“ wäre die Kachel bei 320 px zu eng. */
   h += tTiles(g, p == null || Math.abs(p) < 0.05 ? null : { t: (p > 0 ? '+' : '−') + (Math.abs(p) >= 9.95 ? Math.round(Math.abs(p)) : kg(Math.abs(p))) + ' %', c: p > 0 ? 'up' : 'down' });
-  const last = list0[list0.length - 1];
-  /* Die Karte mit dem Verlauf gibt es erst, wenn es etwas zu zeigen gibt: ab zwei Läufen dieser Art (für die Effizienz mit Puls). Vorher stünde nur eine leere Karte mit zwei Knöpfen da.
+  const last = all[all.length - 1];
+  /* Die Karte mit dem Verlauf gibt es erst, wenn es etwas zu zeigen gibt: ab zwei Läufen (für die Effizienz mit Puls). Vorher stünde nur eine leere Karte mit zwei Knöpfen da.
      Gibt es nur für den anderen Messwert einen Graphen (Läufe ohne Puls), bleibt die Karte, damit man umschalten kann. */
-  const ck = kind === 'all' ? (last ? last.k : 'out') : kind, rs = all.filter(r => r.k === ck), svg = runSVG(rs, tMetric);
-  if (svg || runSVG(rs, tMetric === 'eff' ? 'pace' : 'eff')) h += '<div class="card chart"><div class="card-head"><p class="note">Letzte ' + kindName(ck) + '-Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
+  const svg = runSVG(all, tMetric);
+  if (svg || runSVG(all, tMetric === 'eff' ? 'pace' : 'eff')) h += '<div class="card chart"><div class="card-head"><p class="note">Letzte Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
     [['eff', 'Effizienz'], ['pace', 'Pace']].map(m => '<button type="button" class="chip" data-t="metric" data-v="' + m[0] + '" aria-pressed="' + (tMetric === m[0]) + '">' + m[1] + '</button>').join('') + '</div></div>' +
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
   /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht in der Zeile darüber im Vergleich. */
   const rev = list.slice().reverse();
-  h += '<div class="folds">' + (tYM === curYM && last ? lastFoldHTML(last, kind === 'all') : '');
+  h += '<div class="folds">' + (tYM === curYM && last ? lastFoldHTML(last) : '');
   if (rev.length) h += foldHTML('laeufe', 'Läufe', '', rev.length, rev.map(r => {
     const de = dEff(r), dp = dPace(r);
-    return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (kind === 'all' ? ' · ' + kindName(r.k) : '') + (r.hr ? ' · Puls ' + r.hr : '') + (r.inc ? ' · ' + n1(r.inc) + ' % Steigung' : '') + '</small></span>' +
+    return '<li><button type="button" class="two" data-t="edit" data-id="' + esc(r.id) + '" aria-label="Lauf vom ' + dRow(r.d) + ' ändern"><span class="l"><span>' + kmf(r.m) + ' km · ' + fmt(r.s) + '</span><small>' + dRow(r.d) + (r.hr ? ' · Puls ' + r.hr : '') + '</small></span>' +
       '<span class="r"><b>' + fmtPace(r.pace) + ' /km</b>' + (r.eff != null ? '<small>Effizienz ' + kg(r.eff, 2) + (de ? ' · ' + (de.c ? '<span class="' + de.c + '">' + de.t + '</span>' : de.t) : '') + '</small>' : dp ? '<small class="' + dp.c + '">' + dp.t + '</small>' : '') + '</span></button></li>';
   }).join(''));
   return h + '</div>';
 }
-function tYearHTML(list0, curYM) {
-  const y = String(tYear), list = list0.filter(r => r.d.slice(0, 4) === y), g = tAgg(list), per = [];
+function tYearHTML(all, curYM) {
+  const y = String(tYear), list = all.filter(r => r.d.slice(0, 4) === y), g = tAgg(list), per = [];
   for (let m = 1; m <= 12; m++) per.push(tAgg(list.filter(r => r.d.slice(5, 7) === pad(m))));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
@@ -2323,9 +2307,7 @@ function renderTraining() {
       '<button type="button" class="primary" data-t="add">Lauf eintragen</button>') + uhrFoldHTML() + healthBtnHTML();
     return;
   }
-  const kind = tKind || all[all.length - 1].k, list0 = kind === 'all' ? all : all.filter(r => r.k === kind);
-  el.innerHTML = '<div class="card-head">' + subs + '<div class="seg" role="group" aria-label="Art">' +
-    [['out', 'Outdoor'], ['in', 'Laufband'], ['all', 'Alle']].map(c => '<button type="button" class="chip" data-t="kind" data-v="' + c[0] + '" aria-pressed="' + (kind === c[0]) + '">' + c[1] + '</button>').join('') + '</div></div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(list0, curYM) : tMonthHTML(all, list0, kind, curYM)) + uhrFoldHTML() + healthBtnHTML();
+  el.innerHTML = '<div class="card-head">' + subs + '</div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(all, curYM) : tMonthHTML(all, curYM)) + uhrFoldHTML() + healthBtnHTML();
 }
 $('#v-training').addEventListener('click', e => {
   const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
@@ -2336,7 +2318,6 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'uhr') return t.dataset.id ? openT(t.dataset.id) : openT(null, keyOf(new Date(+t.dataset.von)), Math.round((t.dataset.bis - t.dataset.von) / 1000));
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
-  else if (a === 'kind') tKind = t.dataset.v;
   else if (a === 'metric') tMetric = t.dataset.v;
   else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else tYM = ymOfIdx(ymIdx(tYM) + d); }
@@ -2344,12 +2325,12 @@ $('#v-training').addEventListener('click', e => {
 });
 
 const tdlg = $('#tsheet');
-let tEdit = null, tK = 'out';
+let tEdit = null;
 const dec = v => { const s = String(v).trim().replace(',', '.').replace(/[^0-9.]/g, ''); return s === '' ? NaN : parseFloat(s); };
 function readT() {
-  const km = dec($('#t-km').value), inc = dec($('#t-inc').value);
+  const km = dec($('#t-km').value);
   const min = Math.max(0, Math.round(Number($('#t-min').value) || 0)), sec = Math.max(0, Math.round(Number($('#t-sec').value) || 0));
-  return { m: isFinite(km) ? Math.round(km * 1000) : 0, s: min * 60 + sec, sec, hr: Math.round(Number($('#t-hr').value) || 0), inc: tK === 'in' && isFinite(inc) ? Math.round(inc * 10) / 10 : null };
+  return { m: isFinite(km) ? Math.round(km * 1000) : 0, s: min * 60 + sec, sec, hr: Math.round(Number($('#t-hr').value) || 0) };
 }
 function paintCalc() {
   const v = readT(), el = $('#t-calc');
@@ -2357,26 +2338,17 @@ function paintCalc() {
   const e = v.hr >= 30 && v.hr <= 250 ? effOf(v.m, v.s, v.hr) : null;
   el.textContent = 'Pace ' + fmtPace(v.s / v.m * 1000) + ' pro km' + (e != null ? ' · Effizienz ' + kg(e, 2) + ' m pro Herzschlag' : '');
 }
-function paintTK() {
-  tdlg.querySelectorAll('#t-kind .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === tK)));
-  $('#t-in-fld').hidden = tK !== 'in';
-  /* Neue Laufband-Läufe übernehmen die Steigung des letzten */
-  if (tK === 'in' && !tEdit && !$('#t-inc').value) { const li = tRuns().filter(r => r.k === 'in').pop(); if (li && li.inc) $('#t-inc').value = n1(li.inc); }
-  paintCalc();
-}
 function openT(id, date, sek) {
-  const r = id ? T.runs[id] : null, tk = todayKey(), all = tRuns();
+  const r = id ? T.runs[id] : null, tk = todayKey();
   tEdit = r ? id : null;
-  tK = r ? r.k : tKind === 'in' || tKind === 'out' ? tKind : all.length ? all[all.length - 1].k : 'out';
   $('#ts-title').textContent = r ? 'Lauf ändern' : 'Lauf eintragen';
   $('#t-km').value = r ? kmf(r.m) : '';
   $('#t-min').value = r ? Math.floor(r.s / 60) : sek ? Math.floor(sek / 60) : '';
   $('#t-sec').value = r ? r.s % 60 : sek ? sek % 60 : '';
   $('#t-hr').value = r && r.hr ? r.hr : '';
-  $('#t-inc').value = r && r.inc ? n1(r.inc) : '';
   $('#t-date').max = tk; $('#t-date').value = r ? r.d : isKey(date) ? date : tk;
   $('#t-err').hidden = true; $('#t-del').hidden = !r;
-  paintTK();
+  paintCalc();
   openDlg(tdlg);
   tdlg.scrollTop = 0;
   fokus($('#t-km'));
@@ -2384,24 +2356,20 @@ function openT(id, date, sek) {
 function closeT() { if (tdlg.open) tdlg.close(); }
 $('#ts-close').addEventListener('click', closeT);
 tdlg.addEventListener('click', e => { if (e.target === tdlg) closeT(); });
-$('#t-kind').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { tK = b.dataset.k; paintTK(); } });
 $('#tform').addEventListener('input', paintCalc);
 $('#tform').addEventListener('submit', e => {
   e.preventDefault();
   const err = m => { const x = $('#t-err'); x.textContent = m; x.hidden = false; };
   const v = readT(), d = $('#t-date').value, hrRaw = String($('#t-hr').value).trim();
-  const incRaw = tK === 'in' ? $('#t-inc').value.trim() : '';
   if (v.sec > 59) return err('Sekunden gehen von 0 bis 59.');
   if (!(v.s >= 10 && v.s <= 360000)) return err('Gib die Dauer in Minuten und Sekunden ein.');
-  if (incRaw && !(v.inc >= 0 && v.inc <= 30)) return err('Die Steigung muss zwischen 0 und 30 % liegen.');
   if (!(v.m >= 50 && v.m <= 1000000)) return err('Gib die Strecke in Kilometern ein, zum Beispiel 5,2.');
   if (hrRaw && !(v.hr >= 30 && v.hr <= 250)) return err('Der Puls muss zwischen 30 und 250 liegen. Ohne Puls bleibt das Feld leer.');
   if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
   const p = { runs: {} };
-  p.runs[tEdit || newId()] = { d, m: v.m, s: v.s, hr: hrRaw ? v.hr : null, k: tK, inc: incRaw ? v.inc : null, h: null };
+  p.runs[tEdit || newId()] = { d, m: v.m, s: v.s, hr: hrRaw ? v.hr : null, h: null };
   tdoc.patch(p);
   tYM = d.slice(0, 7); tMode = 'month';
-  if (tKind !== 'all') tKind = tK;
   closeT(); renderTraining();
 });
 $('#t-del').addEventListener('click', () => {
@@ -2658,7 +2626,7 @@ function calDayHTML() {
   }
   if (cMode === 'cardio') {
     const rs = runsOf();
-    return h + (rs.length ? '<ul class="entries">' + rs.map(r => btn('data-c="run" data-id="' + esc(r.id) + '" aria-label="Lauf ändern"', kmf(r.m) + ' km · ' + fmt(r.s), kindName(r.k) + (r.hr ? ' · Puls ' + r.hr : ''), fmtPace(r.pace) + ' /km')).join('') + '</ul>' : note('Kein Lauf an diesem Tag.')) + add('run', 'Lauf eintragen');
+    return h + (rs.length ? '<ul class="entries">' + rs.map(r => btn('data-c="run" data-id="' + esc(r.id) + '" aria-label="Lauf ändern"', kmf(r.m) + ' km · ' + fmt(r.s), r.hr ? 'Puls ' + r.hr : '', fmtPace(r.pace) + ' /km')).join('') + '</ul>' : note('Kein Lauf an diesem Tag.')) + add('run', 'Lauf eintragen');
   }
   if (cMode === 'weight') {
     const w = W.entries[k];
@@ -2673,7 +2641,7 @@ function calDayHTML() {
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
   const s = gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
-  runsOf().forEach(r => { rows += row('Lauf', kindName(r.k) + ' · ' + fmt(r.s), kmf(r.m) + ' km'); });
+  runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
   if (typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
   const out = txOf().filter(x => x.t.k === 'out');
   if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
@@ -3876,7 +3844,7 @@ function hStand() {
      sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
   return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
 }
-/* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, k, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
+/* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
    Wäre das Tempo damit über 30 km/h, waren es Meter. Puls: ein Durchschnitt oder viele Einzelwerte, dann ihr Mittel; was nicht zwischen 30 und 250 liegt (eine Summe), zählt nicht.
    Rechnung: 5,62 km in 2713 s sind 7,5 km/h, also km → 5620 m. 5620 in 2713 s wären 7457 km/h, also Meter → 5620 m. */
@@ -3889,9 +3857,8 @@ function healthRuns(list) {
   (Array.isArray(list) ? list : []).forEach(x => {
     const id = String((x && x.id) || '').replace(/[^A-Za-z0-9-]/g, '').slice(0, 40);
     if (!id || p.hk[id] || !isFinite(x.t)) return;
-    /* Art: wie gemeldet. Der Kurzbefehl kennt sie nicht (die Uhr meldet nur „Laufen“): dann wie der letzte Lauf, auf dem Laufband mit dessen Steigung. So belegt es auch das Blatt vor. */
-    const zuletzt = have[have.length - 1], k = x.k === 'in' || x.k === 'out' ? x.k : zuletzt ? zuletzt.k : 'out', band = k === 'in' ? have.filter(o => o.k === 'in').pop() : null;
-    const r = normT({ runs: { a: { d: keyOf(new Date(x.t)), m: Array.isArray(x.km) ? uhrMeter(x.km, x.s) : Math.round(x.m), s: Math.round(x.s), hr: Array.isArray(x.pu) ? uhrPuls(x.pu) : x.hr, k, inc: band ? band.inc : null, h: id } } }).runs.a;
+    /* Eine gemeldete Art (k) zählt nicht mehr: Jeder Lauf ist ein Lauf. Sie geht auch nicht an normT(), sonst würde ein als Laufband gemeldeter Lauf dort verworfen. */
+    const r = normT({ runs: { a: { d: keyOf(new Date(x.t)), m: Array.isArray(x.km) ? uhrMeter(x.km, x.s) : Math.round(x.m), s: Math.round(x.s), hr: Array.isArray(x.pu) ? uhrPuls(x.pu) : x.hr, h: id } } }).runs.a;
     if (!r || r.d > tk) return;
     if (T.hk[id]) {
       /* Derselbe Lauf noch einmal: Die Uhr hat nachgeliefert. Nachgebessert wird nur ein Lauf, der die Kennung noch trägt (nicht von Hand geändert, nicht gelöscht). Ein Puls geht dabei nie verloren. */
@@ -3901,7 +3868,7 @@ function healthRuns(list) {
     }
     p.hk[id] = 1;
     /* Steht am selben Tag schon ein Lauf aus einer anderen Quelle (von Hand, oder Health gegen Kurzbefehl) mit fast gleicher Strecke oder fast gleicher Dauer (bis 10 %), ist es derselbe:
-       Er kommt nicht doppelt. Auf dem Laufband weicht die Strecke der Uhr leicht mehr als 10 % von der Anzeige ab, die Dauer nicht. Zwei Läufe aus derselben Quelle sind zwei Läufe. */
+       Er kommt nicht doppelt. Zwei Läufe aus derselben Quelle sind zwei Läufe. */
     if (have.some(o => o.d === r.d && laufQuelle(o.h) !== laufQuelle(id) && (Math.abs(o.m - r.m) <= r.m * 0.1 || Math.abs(o.s - r.s) <= r.s * 0.1))) return;
     p.runs[newId()] = r; have.push(r); n++;
   });
@@ -4090,6 +4057,7 @@ document.addEventListener('visibilitychange', () => { if (!document.hidden) { re
 setInterval(() => { if (todayKey() !== lastDay) render(); }, 30000);
 
 loadLocal();
+if (tBand) saveLocal();   // Läufe vom Laufband wurden beim Laden verworfen: gleich speichern, damit sie auch im Speicher gelöscht sind
 healBal();
 cleanCats();
 show(location.hash.slice(1));

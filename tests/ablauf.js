@@ -43,22 +43,26 @@ lauf(async () => {
   P.ok('nach dem Neuladen ist alles unverändert', vor === JSON.stringify(await gespeichert(page)));
   await browser.close();
 
-  // --- Laufband ohne Tempo (v56): Das Feld für km/h ist weg. Läufe aus älteren Versionen, bei denen mit dem Tempo gerechnet wurde, behalten ihre Zahlen. ---
-  // Alter Lauf: 30 min bei 10 km/h, laut Uhr 4,8 km. Gerechnet wurde mit 10 / 3,6 × 1800 s = 5000 m, also 5,0 km und Pace 1800 / 5 = 360 s = 6:00.
-  // Der Lauf ist von heute: Die Ansicht zeigt nur den laufenden Monat, und „gestern“ läge am Monatsersten im Vormonat.
-  const alt = beispiel(); alt.T = { runs: { a1: { d: tag(0), m: 4800, s: 1800, hr: 150, k: 'in', spd: 10, inc: 1.5 } } };
+  // --- Laufband gibt es nicht mehr (v79, sein Wunsch: „laufe nur noch draußen“, „lösche die Daten von indoor“) ---
+  // Im Speicher liegen ein Laufband-Lauf (auch einer aus der Zeit mit Tempo, v55) und ein Lauf draußen, beide von heute: Der Laufband-Lauf ist nach dem Start weg, im Speicher wie in der Ansicht.
+  const alt = beispiel(); alt.T = { runs: { a1: { d: tag(0), m: 4800, s: 1800, hr: 150, k: 'in', spd: 10, inc: 1.5 }, a2: { d: tag(0), m: 3000, s: 1200, hr: null, k: 'in' }, a3: { d: tag(0), m: 5000, s: 1500, hr: 150, k: 'out' } } };
   const b = await oeffnen({ daten: alt });
+  await b.page.reload(); await b.page.waitForTimeout(400);   // oeffnen() spielt die Daten nach dem Laden ein: Erst dieser Start liest sie
+  const nachStart = (await gespeichert(b.page)).T.runs, da = Object.keys(nachStart).filter(i => nachStart[i]);
+  P.ok('Start: Laufband-Läufe sind aus dem Speicher gelöscht, der Lauf draußen bleibt (ohne Felder für Art und Steigung)', da.join() === 'a3' && !('k' in nachStart.a3) && !('inc' in nachStart.a3) && nachStart.a3.m === 5000, JSON.stringify(nachStart));
   await bereich(b.page, 'training'); await b.page.click('#v-training .subtabs button:nth-child(1)'); await b.page.waitForTimeout(150);
-  await b.page.click('#v-training [data-fold="laeufe"]');   // Läufe sind eine eingeklappte Zeile
   const seite = await b.page.evaluate(() => document.querySelector('#v-training').innerText.replace(/\s+/g, ' '));
-  P.ok('alter Laufband-Lauf: weiter 5,0 km und Pace 6:00, kein km/h mehr', seite.includes('5,0 km in 30:00') && seite.includes('6:00 /km') && !seite.includes('km/h') && seite.includes('1,5 % Steigung'), seite.slice(0, 400));
-  await b.page.click('#v-training [data-t="edit"]');
-  P.ok('Blatt: Strecke 5,0, Steigung 1,5, kein Feld für das Tempo', (await b.page.inputValue('#t-km')) === '5,0' && (await b.page.inputValue('#t-inc')) === '1,5' && (await b.page.$('#t-spd')) === null && await b.page.isVisible('#t-in-fld'));
-  await b.page.click('#t-save'); await b.page.waitForTimeout(150);
-  const lauf1 = (await gespeichert(b.page)).T.runs.a1;
-  P.ok('gespeichert: 5000 m, ohne Tempo', lauf1.m === 5000 && lauf1.s === 1800 && lauf1.inc === 1.5 && !('spd' in lauf1), JSON.stringify(lauf1));
-  await b.page.click('#add'); await b.page.click('#t-kind [data-k="out"]');
-  P.ok('Outdoor: keine Steigung', !(await b.page.isVisible('#t-in-fld')));
+  P.ok('Cardio: ein Lauf, 5,0 km; kein Filter „Outdoor / Laufband / Alle“, kein Wort „Laufband“', seite.includes('1 Lauf') && seite.includes('5,0') && !(await b.page.$('#v-training [data-t="kind"]')) && !seite.includes('Laufband') && !seite.includes('Outdoor'), seite.slice(0, 300));
+  await b.page.click('#add');
+  P.ok('Blatt „Lauf eintragen“: keine Wahl der Art, keine Steigung', !(await b.page.$('#t-kind')) && !(await b.page.$('#t-inc')) && await b.page.isVisible('#t-km'));
+  await b.page.fill('#t-km', '6'); await b.page.fill('#t-min', '30'); await b.page.click('#t-save'); await b.page.waitForTimeout(150);
+  const neuL = Object.values((await gespeichert(b.page)).T.runs).filter(Boolean);
+  P.ok('neuer Lauf gespeichert, zwei Läufe', neuL.length === 2 && neuL.some(r => r.m === 6000 && r.s === 1800 && !('k' in r)), JSON.stringify(neuL));
+  // Eine alte Sicherung mit Laufband-Läufen einlesen: Sie kommen nicht zurück
+  await bereich(b.page, 'heute'); await b.page.setInputFiles('#bk-file', { name: 'alt.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, T: { runs: { z1: { d: tag(0), m: 7000, s: 2400, hr: 140, k: 'in' }, z2: { d: tag(0), m: 8000, s: 2700, hr: 141, k: 'out' } } } })) });
+  await b.page.waitForTimeout(400);
+  const nachSich = (await gespeichert(b.page)).T.runs;
+  P.ok('alte Sicherung eingelesen: der Lauf draußen kommt an, der Laufband-Lauf nicht', !nachSich.z1 && !!nachSich.z2 && nachSich.z2.m === 8000, JSON.stringify(nachSich));
   await b.browser.close();
   fehler.push(...b.fehler);
   await P.ende(null, fehler);

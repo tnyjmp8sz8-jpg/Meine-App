@@ -6,9 +6,9 @@ const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { 
 const M = monat(0), JM = M.slice(0, 4), am = t => M + '-' + pad(t), um = (t, h, m = 0, s = 0) => new Date(+JM, +M.slice(5) - 1, t, h, m, s).getTime();
 const ruf = (page, name, arg) => page.evaluate(([n, a]) => window.TrackHuelle[n](a), [name, arg]);
 const kennung = t => 'k' + Math.floor(t / 60000);
-/* Vorgeschichte: zwei Laufband-Läufe von Hand (am 3. mit 1,5 % Steigung, am 8. mit 2 %), der letzte Lauf ist also Laufband mit 2 % */
+/* Vorgeschichte: zwei Läufe von Hand (am 3. und am 8.) */
 const daten = () => ({ S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, K: {}, N: {},
-  T: { hk: {}, runs: { a: { d: am(3), m: 5000, s: 1800, hr: 150, k: 'in', inc: 1.5 }, b: { d: am(8), m: 6000, s: 2100, hr: 152, k: 'in', inc: 2 } } } });
+  T: { hk: {}, runs: { a: { d: am(3), m: 5000, s: 1800, hr: 150 }, b: { d: am(8), m: 6000, s: 2100, hr: 152 } } } });
 
 lauf(async () => {
   const p = pruefer('Läufe von der Apple Watch');
@@ -18,13 +18,13 @@ lauf(async () => {
   const auftrag = (id, l) => [{ id, art: 'lauf', t: um(15, 11, 59), lauf: l }];
 
   /* 1. Lauf am 14. von 18:02:10 bis 18:47:23 = 2713 s. Strecke 5,62 (km): 5,62 / (2713 / 3600) = 7,46 km/h, also km → 5620 m. Puls 151,4 → 151.
-        Art fehlt: wie der letzte Lauf (Laufband), mit dessen Steigung 2 %. */
+        Eine Art (Laufband, draußen) gibt es seit v79 nicht mehr: Der Lauf trägt weder k noch inc. */
   const von = um(14, 18, 2, 10), bis = um(14, 18, 47, 23), id = kennung(von);
   let ids = await ruf(page, 'eingang', auftrag('u1', { id, t: von, s: (bis - von) / 1000, km: [5.62], pu: [151.4] }));
   let r = await einer(id);
   p.ok('Auftrag wird als übernommen gemeldet', ids.join() === 'u1', ids.join());
   p.ok('Lauf eingetragen: 5620 m, 2713 s, Puls 151, Tag des Beginns', r && r.m === 5620 && r.s === 2713 && r.hr === 151 && r.d === am(14), JSON.stringify(r));
-  p.ok('Art wie der letzte Lauf: Laufband mit 2 % Steigung', r && r.k === 'in' && r.inc === 2, JSON.stringify(r));
+  p.ok('der Lauf trägt keine Art und keine Steigung', r && !('k' in r) && !('inc' in r), JSON.stringify(r));
   p.ok('es sind jetzt drei Läufe', (await runs()).length === 3);
 
   /* 2. Die Uhr liefert nach: 5,71 km, Puls als Einzelwerte 150 und 153 → Mittel 151,5 → 152. Derselbe Lauf wird nachgebessert, es entsteht kein zweiter. */
@@ -51,7 +51,7 @@ lauf(async () => {
   const v2 = um(13, 7, 0, 0), id2 = kennung(v2);
   await ruf(page, 'eingang', auftrag('u5', { id: id2, t: v2, s: 1500, km: [4200], pu: [81234], k: 'out' }));
   r = await einer(id2);
-  p.ok('Meter erkannt: 4200 m, Summe als Puls verworfen, Art draußen ohne Steigung', r && r.m === 4200 && r.hr === null && r.k === 'out' && r.inc === null, JSON.stringify(r));
+  p.ok('Meter erkannt: 4200 m, Summe als Puls verworfen', r && r.m === 4200 && r.hr === null, JSON.stringify(r));
 
   /* 6. Zwei Läufe am selben Tag über den Kurzbefehl mit fast gleicher Strecke (4,2 und 4,3 km): Beide kommen, weil sie aus derselben Quelle stammen. */
   const v3 = um(13, 19, 0, 0), id3 = kennung(v3);
