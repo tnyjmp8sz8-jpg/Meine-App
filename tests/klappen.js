@@ -479,5 +479,23 @@ lauf(async () => {
   // zwei Läufe ohne Puls: Für die Effizienz gibt es keinen Graphen, für die Pace schon. Die Karte bleibt, damit man auf „Pace“ umschalten kann.
   const ohne = await karte({ a: lf(0, null), b: lf(3, null) });
   P.ok('Cardio, zwei Läufe ohne Puls: Karte bleibt mit dem Hinweis und den Knöpfen (Pace hat einen Graphen)', ohne.karte && !ohne.graph && ohne.knoepfe === 2 && ohne.satz, JSON.stringify(ohne));
+
+  // --- Gewicht und Heute ohne Doppeltes und ohne leere Zeilen (v78, seine Bildschirmfotos vom 23.11.) ---
+  // Wie bei ihm: erster Eintrag 90,0 kg, der letzte knapp darunter (89,99 kg), Ziel 93 ab 90. Der Schnitt liegt damit um weniger als 0,05 kg unter dem Anfang:
+  // gerundet „0,0“. Davor konnte dort „−0,0 kg“ stehen; ein Vorzeichen vor einer Null gibt es nicht mehr.
+  const gwi = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, W: { goal: 93, goalFrom: 90, entries: { [tag(66)]: 90, [tag(3)]: 89.99 } } } });
+  await bereich(gwi.page, 'gewicht');
+  const kacheln = await gwi.page.$$eval('#v-gewicht .figs .fig', l => l.map(f => f.innerText.replace(/\s+/g, ' ').trim()));
+  P.ok('Gewicht: Kachel „0,0 kg seit …“ ohne Vorzeichen', kacheln.length === 1 && /^0,0 ?kg seit /.test(kacheln[0]), JSON.stringify(kacheln));
+  P.ok('Gewicht: keine Kachel „bis zum Ziel“, das Ziel steht einmal in der Karte darunter', !kacheln.join().includes('Ziel') && (await text(gwi.page, '#v-gewicht .row.goal')).includes('Ziel 93,0 kg') && (await text(gwi.page, '#v-gewicht .row.goal')).includes('noch 3,0 kg'), await text(gwi.page, '#v-gewicht .row.goal'));
+  P.ok('Gewicht: das Symbol der Zielkarte ist getönt, nicht voll blau', await gwi.page.evaluate(() => { const p = document.createElement('i'); p.style.background = 'var(--accent)'; document.body.appendChild(p); const voll = getComputedStyle(p).backgroundColor; p.remove(); return getComputedStyle(document.querySelector('#v-gewicht .row.goal .glyph')).backgroundColor !== voll; }));
+  // Heute: Nur Gewicht ist eingetragen → eine Zeile in der Übersicht, keine für Finanzen und Training, kein „Tippe, um …“
+  await bereich(gwi.page, 'heute');
+  const ov = await gwi.page.$$eval('#v-heute .ov', l => l.map(b => b.dataset.v).join());
+  P.ok('Heute: Übersicht zeigt nur Bereiche mit Inhalt (hier Gewicht)', ov === 'gewicht' && !(await text(gwi.page, '#v-heute')).includes('Tippe, um'), ov + ' · ' + await text(gwi.page, '#v-heute .ovs'));
+  fehler.push(...gwi.fehler); await gwi.browser.close();
+  const le = await oeffnen(); await bereich(le.page, 'heute');
+  P.ok('Heute, leere App: keine Übersicht und keine leere Fläche dafür', !(await le.page.$('#v-heute .ovs')) && !(await le.page.$('#v-heute .ov')) && !(await text(le.page, '#v-heute')).includes('Tippe, um'), await text(le.page, '#v-heute'));
+  fehler.push(...le.fehler); await le.browser.close();
   await P.ende(null, fehler);
 });

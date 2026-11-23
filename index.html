@@ -248,6 +248,8 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .linkbtn{align-self:flex-start;border:0;border-radius:9px;background:none;color:var(--at);font-weight:600;font-size:15px;padding:8px 4px}
 .ghost.center{text-align:center}
 .goal .streak b{font-size:24px}
+/* Ein offenes Ziel (Gewicht, Sparziel) ist kein Startknopf: Das Symbol ist nur getönt, wie die Symbole der Bereiche auf Heute. Voll blau bleibt der Startknopf eines Plans. */
+.goal.is-idle .glyph{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--at)}
 
 /* Finanzen (im Code „haushalt“) */
 .tabs-in{grid-template-columns:repeat(5,1fr);padding-left:4px;padding-right:4px}
@@ -711,7 +713,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v77</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v78</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1221,7 +1223,8 @@ function patchW(p) { W = normW(deep(W, clone(p))); saveLocal(); }
 
 const kg = (n, d) => n.toLocaleString('de-DE', { minimumFractionDigits: d == null ? 1 : d, maximumFractionDigits: d == null ? 1 : d });
 const kg2 = n => n.toLocaleString('de-DE', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
-const signed = n => (n > 0.049 ? '+' : n < -0.049 ? '−' : '±') + kg(Math.abs(n));
+/* Zahl mit Vorzeichen, eine Nachkommastelle. Das Vorzeichen richtet sich nach dem, was dasteht: Vor „0,0“ steht keines (vorher konnte aus −0,049 ein „−0,0“ werden). */
+const signed = n => { const t = kg(Math.abs(n)); return (t === '0,0' ? '' : n > 0 ? '+' : '−') + t; };
 const dayNum = k => { const p = k.split('-').map(Number); return Date.UTC(p[0], p[1] - 1, p[2]) / 86400000; };
 const dayDate = t => { const d = new Date(t * 86400000); return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate(), 12); };
 const DF_SHORT = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'short' });
@@ -1366,9 +1369,7 @@ function renderWeight() {
   h += '<div class="figs on-bg">' +
     fig(rate == null ? '–' : signed(rate), 'kg', 'pro Woche') +
     fig(signed(last.m - first.w), 'kg', 'seit ' + DF_SHORT.format(parseKey(first.k))) +
-    (W.goal == null ? fig(String(all.length), '', all.length === 1 ? 'Eintrag' : 'Einträge')
-      : reached ? fig(kg(W.goal), 'kg', 'Ziel erreicht') : fig(kg(Math.abs(W.goal - last.m)), 'kg', 'bis zum Ziel')) +
-    '</div>';
+    '</div>';   // Ziel und Anzahl der Einträge stehen nicht noch einmal als Kachel da: Die Zielkarte und die Klappzeile „Einträge“ darunter sagen es schon
 
   const from = wRange === 'all' ? -Infinity : t0 - (Number(wRange) - 1);
   const pts = all.filter(e => e.t >= from);
@@ -3500,7 +3501,7 @@ const AREA = {
   training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>',
   notizen: '<path d="M6.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M8.5 11.5h7M8.5 15h7M8.5 8h3"/>'
 };
-const ovCard = (to, label, v, s, cls, id) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '"' + (id ? ' id="' + id + '-v"' : '') + '>' + v + '</span><span class="s"' + (id ? ' id="' + id + '-s"' : '') + '>' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
+const ovCard = (to, label, v, s, cls) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
 const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); };
 /* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
@@ -3563,13 +3564,13 @@ function renderHome() {
   if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
   const rcYM = recapDue();
   if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
-  const wl = withTrend(wList()); let wv = '', ws = 'Tippe, um dein Gewicht einzutragen';
+  const wl = withTrend(wList()); let wv = '', ws = '';
   if (wl.length) {
     const rate = weeklyRate(wl, dayNum(tk));
     wv = kg(wl[wl.length - 1].m) + ' kg';
     ws = (rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt') + (typeof W.entries[tk] === 'number' ? '' : ' · heute noch nicht gewogen');
   }
-  let mv = '', ms = 'Tippe, um zu starten', mc = '';
+  let mv = '', ms = '', mc = '';
   if (hasMoney()) {
     const s = mSum(curYM), now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     mv = minus(s.bal) + eur0(s.bal) + ' € ' + (minus(s.bal) ? 'im Minus' : 'übrig'); mc = minus(s.bal) ? 'neg' : '';
@@ -3583,10 +3584,12 @@ function renderHome() {
     ms = [wNow.d != null ? eurS(wNow.d) + ' im ' + mName : '', left != null ? minus(left) + eur0(left) + ' € ' + (minus(left) ? 'im Minus' : 'übrig') : ''].filter(Boolean).join(' · ') || 'Vermögen';
   }
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
-  let tv = '', ts = 'Tippe, um zu starten';
+  let tv = '', ts = '';
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   h += liveCardHTML();
-  h += '<div class="ovs">' + ovCard('gewicht', 'Gewicht', wv, ws) + ovCard('haushalt', 'Finanzen', mv, ms, mc) + ovCard('training', 'Training', tv, ts) + '</div>';
+  /* Übersicht: nur Bereiche, in denen etwas eingetragen ist. Ein leerer Bereich stünde sonst jeden Tag als Zeile ohne Inhalt da („Tippe, um zu starten“); er bleibt über die Leiste unten erreichbar. */
+  const ovs = (wv ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv ? ovCard('training', 'Training', tv, ts) : '');
+  if (ovs) h += '<div class="ovs">' + ovs + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
      Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
      ein Fehler der iPhone-App im Wortlaut darunter. */

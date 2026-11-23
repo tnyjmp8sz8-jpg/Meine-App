@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v77 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026). `node tests/alle.js` (v77): alle 704 Prüfungen in 15 Reihen stimmen (Ablauf 14, Aufbau 62, Klappzeilen 147, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 43, Finanzen 68, Gym 35, Monat 30, Hülle 161, Apple Watch 24, Speichern 8, Aktualisierung 10). Zuletzt mit gestellter Uhr geprüft in v75 (1.12. und 31.12.).
+- App-Inhalt (`index.html`): live ist v78 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026). `node tests/alle.js` (v78): alle 709 Prüfungen in 15 Reihen stimmen (Klappzeilen 152, die übrigen wie in v77: Ablauf 14, Aufbau 62, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 43, Finanzen 68, Gym 35, Monat 30, Hülle 161, Apple Watch 24, Speichern 8, Aktualisierung 10). Zuletzt mit gestellter Uhr geprüft in v75 (1.12. und 31.12.).
+- v78 (23.11., er zu Gewicht und Heute: „findest du da alles passend übersichtlich apple niveau?“, nach Bild sein „alles anpassen, so übersichtlich und apple look wie geht“): Gewicht: kein „−0,0 kg“ mehr (`signed()`), Kacheln nur noch „pro Woche“ und „seit …“ (Ziel und Anzahl standen doppelt da), Symbol der Zielkarte und der Sparziele getönt statt voll blau. Heute: Übersicht nur mit Bereichen, in denen etwas eingetragen ist (bei ihm fehlt damit „Finanzen“). Am iPhone noch nicht gesehen.
 - v77 (23.11., sein Auftrag: „notizen unter kategorien können weg, notizen bei termin eintrag kann weg, notizen bei arbeit eintragen kann weg“; auf Nachfrage gewählt: „Ordner der Notizen“, nicht das Feld „Notiz“ bei Ausgaben): Die Notizen sind eine einzige Liste ohne Ordner (keine Reihe über der Liste, keine Auswahl im Blatt), unter „Arbeit“ und „Uni“ stehen keine Notizen mehr. Alte Ordner bleiben nur gespeichert. Am iPhone noch nicht gesehen.
 - v76 (23.11., er zu Cardio: „irgendwie noch unübersichtlich, weiß nicht warum“; nach Bild „jetzt / Vorschlag“ sein „ja anpassen“): Die Karte mit dem Verlauf erscheint erst ab zwei Läufen, die Zeile „Apple Watch“ nur, solange etwas zu tun ist. Oben (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) bewusst nichts angefasst; ihm angeboten, dazu ein eigenes Bild zu zeigen.
 - v74 und v75 (seine Aufträge vom 22.11.: „mach jetzt aufgaben raus“, „entferne routinen aus der app“): Aufgaben und Routinen sind ausgebaut (Umschalter, Blätter, Timer, Serien, Heute, Woche, Monat, Kalender, Zusammenhänge, „Als Aufgabe“ an der Notiz). Was gespeichert war, bleibt im Speicher und in der Sicherung, wird aber nirgends gezeigt. Der Planer hat drei Teile und öffnet mit den Notizen: Notizen, Arbeit, Uni (von ihm so gewählt: „ja“ auf meinen Vorschlag A; der Bereich heißt weiter „Planer“). Auf Heute zeigt die Wochenleiste nur noch die Punkte fürs Training. Am iPhone noch nicht gesehen.
@@ -26,7 +27,6 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 3. Eine Rechenkante beheben (siehe „Offene Probleme“: neues Konto zählt als Plus).
 4. Seine Entscheidung: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
 5. Ein neues Widget „Heute“ mit Zahlen statt Routinen (Gewicht, übrig im Monat, Kilometer): bräuchte neue Felder im Stand und eine neue Installation.
-6. Gewicht und Heute (23.11., er: „findest du da alles passend übersichtlich apple niveau?“). Meine Antwort mit Bild „jetzt / Vorschlag“: Gewicht: Fehler „−0,0 kg“ beheben (Vorzeichen aus dem gerundeten Wert), Kachel „bis zum Ziel“ weg (steht in der Zielkarte darunter), Symbol der Zielkarte ruhiger (getönt statt voll blau, es ist kein Startknopf). Heute: Bereiche ohne Daten nicht in der Übersicht zeigen (bei ihm „Finanzen · Tippe, um zu starten“). Antwort steht aus.
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
 Ältere Vorschläge:
@@ -41,8 +41,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Konkurrenz gründlich recherchieren (falls die App für andere gedacht wird).
 
 ## Erledigt
-- v20–v61: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Finanzen mit Vermögen, Sparzielen, Konten; Tests; Wischgesten, Graphen ablesen, „Rückgängig“, eigene Kategorien; Aufgaben und Notizen; Kennfarben; Schnell-Knöpfe gekürzt; Tages-Check (Schlaf) gebaut und wieder entfernt; Monatsabschluss und Kurzbefehl-Adresse; Verbindung zur iPhone-App mit Mitteilungen, Widgets und Aktionen für Kurzbefehle (iPhone-App 0.2 und 0.3).
-- v62–v63 mit iPhone-App 0.4: Blätter rücken über die Tastatur; Schnelleingabe aus dem Widget.
+- v20–v63: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Finanzen mit Vermögen, Sparzielen, Konten; Tests; Wischgesten, Graphen ablesen, „Rückgängig“, eigene Kategorien; Aufgaben und Notizen; Kennfarben; Schnell-Knöpfe gekürzt; Tages-Check (Schlaf) gebaut und wieder entfernt; Monatsabschluss und Kurzbefehl-Adresse; Verbindung zur iPhone-App mit Mitteilungen, Widgets und Aktionen für Kurzbefehle (iPhone-App 0.2 und 0.3); Blätter rücken über die Tastatur, Schnelleingabe aus dem Widget (iPhone-App 0.4).
 - v64: Aufgeräumte Oberfläche (Klappzeilen mit Anzahl, kleines Plus in der Überschrift, Heute als Kurzform), dazu viele behobene Fehler; Tests laufen an jedem Tag im Monat. Gebaut ohne Rückfrage; wünscht er eine Liste wieder offen, ist das eine Zeile (Zeilen direkt statt über `foldHTML`).
 - v65 mit iPhone-App 0.5: Schnelleingabe mit Ausgabe/Einnahme und Konto; Sicherung von selbst; Läufe von der Apple Watch über Kurzbefehle (drei Aktionen, Zeile „Apple Watch“); „Ausgabe eintragen“ mit Konto.
 - v66: Cardio ruhiger („Letzter Lauf“ als Klappzeile, Vergleich der Effizienz in der Kachel). Die übrigen Bereiche danach durchgesehen und nichts geändert.
@@ -54,6 +53,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v74–v75 mit iPhone-App 0.7: Aufgaben und Routinen ausgebaut (Gespeichertes bleibt erhalten), Widget „Heute“ entfernt; Projektdateien sortiert (`BEREICHE.md`).
 - v76: Cardio ohne leere Flächen (Verlauf erst ab zwei Läufen, „Apple Watch“ nur bei Bedarf).
 - v77: Notizen ohne Ordner, keine Notizen mehr unter „Arbeit“ und „Uni“.
+- v78: Gewicht und Heute ohne Doppeltes und ohne leere Zeilen.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.
