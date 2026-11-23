@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v82 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026 spätabends). `node tests/alle.js` (v82): alle 762 Prüfungen in 16 Reihen stimmen (Ablauf 15, Aufbau 66, Klappzeilen 159, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 44, Finanzen 68, Gym 35, Monat 30, Hülle 169, Apple Watch 24, Haptik und Druck 32, Speichern 8, Aktualisierung 10).
+- App-Inhalt (`index.html`): live ist v83 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026 nachts). `node tests/alle.js` (v83): alle 771 Prüfungen in 16 Reihen stimmen (Ablauf 15, Aufbau 66, Klappzeilen 159, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 44, Finanzen 68, Gym 35, Monat 30, Hülle 169, Apple Watch 24, Haptik und Druck 41, Speichern 8, Aktualisierung 10). Mit gestellter Uhr geprüft: 1.12. und 31.10. (Haptik und Druck).
+- v83 (23.11. nachts; er fragte „wie ist das mit den animationen? ist das eingebaut? was noch verbessern?“, auf meine vier Vorschläge dann „mach alles dann alles auf neuen stand“): Notiz abhaken zeigt kurz den Haken, dann schließt sich die Liste; Klappzeilen fahren auf und zu; Balken (Budget, Sparziele, Zielgewicht, Uni-Termine) wachsen beim Öffnen einmal auf ihren Wert; die Markierung der Umschalter (Monat/Jahr, Heute/Woche/Monat, Ausgabe/Einnahme) gleitet. Keine neue Installation nötig. Am iPhone noch nicht gesehen.
 - v82 mit iPhone-App 0.9 (23.11. spätabends, sein Wunsch: „ich will noch beim bezahlen die kategorie der ausgabe schnell auswählen können zb lebensmittel“): Nach einer Zahlung bei einem neuen Händler fragt das iPhone nach der Kategorie (Liste, meistbenutzte oben); die Ausgabe ist da schon gebucht. Bekannte Händler laufen ohne Frage. An seiner Automation muss er nichts ändern (Kategorie bleibt leer), er braucht nur die neue Installation. Am iPhone ungeprüft: ob die Liste nach Apple Pay von selbst aufgeht, auch bei gesperrtem iPhone.
 - v81 mit iPhone-App 0.8 (23.11. abends, sein Auftrag: „passe die gesamte haptik für schnellen aber premium feel an“): Die iPhone-App vibriert fein bei Auswahl, Abhaken, Löschen, Speichern und Fehler (braucht die neue Installation 0.8). Ohne neue Installation wirkt schon: Jede Zeile und jeder Knopf antwortet sofort auf den Finger, Blätter fahren beim Schließen kurz weg, statt zu verschwinden. Nicht gebaut und ihm gesagt: Vibration beim Öffnen von Blättern (iOS macht das auch nicht). Am iPhone noch nicht gespürt: Stärke und Häufigkeit kann nur er beurteilen.
 - v76 bis v80 (23.11.) und v71 bis v75 (18. bis 22.11.) stehen unter „Erledigt“. Am iPhone hat er davon noch nichts bestätigt. Ihm gesagt zu v79: Die Laufband-Läufe waren der größte Teil seiner Läufe; zurück geht es nur aus einer älteren Sicherungsdatei mit einer älteren Fassung der App. Meine Annahmen zu Arbeit und Uni: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Soll 18 Termine insgesamt (nicht je Fach).
@@ -42,9 +43,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 ## Erledigt
 - v20–v65: Umzug ins Repository; dunkler, kompakter Look; GitHub Pages; Selbst-Aktualisierung; Gym nach Vorbild Alpha Progression; Finanzen mit Vermögen, Sparzielen, Konten; Tests; Wischgesten, Graphen ablesen, „Rückgängig“, eigene Kategorien; Aufgaben und Notizen; Kennfarben; Schnell-Knöpfe gekürzt; Tages-Check (Schlaf) gebaut und wieder entfernt; Monatsabschluss und Kurzbefehl-Adresse; Verbindung zur iPhone-App mit Mitteilungen, Widgets und Aktionen für Kurzbefehle (iPhone-App 0.2 und 0.3); Blätter rücken über die Tastatur, Schnelleingabe aus dem Widget (iPhone-App 0.4); aufgeräumte Oberfläche mit Klappzeilen (v64); Schnelleingabe mit Konto, Sicherung von selbst, Läufe von der Apple Watch über Kurzbefehle (v65, iPhone-App 0.5).
 - v66–v69: Cardio ruhiger, Effizienz in „Letzter Lauf“, Händler bestimmt die Kategorie.
-- v70 mit iPhone-App 0.6: neues App-Symbol (schwarz mit blauem Schein).
-- v71: Die Tastatur geht in allen Blättern sofort auf (Fokus ohne Wartezeit).
-- v72–v73: „Arbeit“ (Arbeitszeiten, Verdienst je Monat als Klappzeile) und „Uni“ (Termine mit Fach und Punkten, Summe je Fach), seit v73 als eigene Teile oben im Planer.
+- v70–v73 mit iPhone-App 0.6: neues App-Symbol, Tastatur geht in allen Blättern sofort auf, „Arbeit“ und „Uni“ als eigene Teile im Planer.
 - v74–v75 mit iPhone-App 0.7: Aufgaben und Routinen ausgebaut (Gespeichertes bleibt erhalten), Widget „Heute“ entfernt; Projektdateien sortiert (`BEREICHE.md`).
 - v76: Cardio ohne leere Flächen (Verlauf erst ab zwei Läufen, „Apple Watch“ nur bei Bedarf).
 - v77: Notizen ohne Ordner, keine Notizen mehr unter „Arbeit“ und „Uni“.
@@ -53,6 +52,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v80: Titel je Bereich, Monat/Jahr klein im Kopf, Punkt fürs Wiegen, Arbeit und Uni auf Heute, Soll der Termine, Satz-Vergleich im Gym, Einblenden.
 - v81 mit iPhone-App 0.8: Haptik, Druck-Zustände, Blätter fahren beim Schließen weg.
 - v82 mit iPhone-App 0.9: Kategorie gleich beim Bezahlen wählen (nur bei neuem Händler).
+- v83: Bewegung im Kleinen (Notiz abhaken, Klappzeilen, Balken, Umschalter).
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -69,6 +69,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - Der Gesten-Test ist zeitempfindlich: bei einem einzelnen Fehlschlag dort einzeln wiederholen.
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
+- Bewegung (v83): Wirkt das Abhaken einer Notiz, das Auf- und Zufahren der Klappzeilen, das Wachsen der Balken und das Gleiten der Umschalter flüssig, oder ruckelt etwas auf dem iPhone 12 Pro? Ist etwas davon zu langsam?
 - Haptik (0.8, v81): Spürt er die Impulse (Bereich wechseln, Umschalter, Klappzeile, Notiz abhaken, Speichern, Löschen, Graph ablesen)? Zu viel, zu wenig, zu stark? Fährt ein Blatt beim Schließen sauber weg, auch mit offener Tastatur? Dunkeln Zeilen beim Scrollen nicht störend auf?
 - Kategorie beim Bezahlen (0.9, v82): Geht nach einer Zahlung bei einem neuen Händler die Liste der Kategorien auf (oben als Einblendung)? Auch bei gesperrtem iPhone? Steht die Ausgabe danach unter der gewählten Kategorie, und bleibt die Frage beim zweiten Mal aus?
 - Fassung 0.9: Installation über AltStore mit „Keep App Extensions“; neues Symbol; Widget „Notizen“ da, „Heute“ weg; Zeile „Sicherung“ und einmal „Ordner in iCloud wählen“; Schnelleingabe „Ausgabe“ mit seinen Konten; legt „Sicherung speichern“ von Hand eine Datei ab?
@@ -86,6 +87,6 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 
 ## Nächste Schritte
 - Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` und `BEREICHE.md` nur bei Bedarf.
-- Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: v75 (Heute und Planer ohne Routinen und Aufgaben), v73 („Arbeit“, „Uni“), v71 (Tastatur beim Betrag), die neue Installation und die drei Automationen (je mit Bildschirmfoto).
-- Offene Fragen an ihn: Punkte je Semester getrennt? Soll je Fach als Ziel?
+- Der Nutzer entscheidet, was als Nächstes kommt. Erwartet wird seine Rückmeldung vom iPhone: die neue Installation 0.9 (Vibration, Nachfrage nach der Kategorie bei der ersten Zahlung mit Bildschirmfoto), v83 (Bewegung), v76 bis v80 (Aussehen), der erste Lauf über „Läufe übernehmen“.
+- Offene Fragen an ihn: Punkte je Semester getrennt? Will er die Kategorie bei jeder Zahlung wählen oder nur bei neuen Händlern (so gebaut)?
 - Bei Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen.

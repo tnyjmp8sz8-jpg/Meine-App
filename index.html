@@ -256,8 +256,10 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .chips[hidden]{display:none}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
 .seg2.three{grid-template-columns:repeat(3,1fr)}
-.seg2 button{border:0;background:none;border-radius:10px;padding:9px;font-weight:600;font-size:15px;color:var(--muted)}
-.seg2 button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
+/* Die Markierung ist eine eigene Fläche hinter der Schrift (::before): So kann sie beim Umschalten zur neuen Seite gleiten (Klasse gleit, Startpunkt --von) */
+.seg2 button{position:relative;isolation:isolate;border:0;background:none;border-radius:10px;padding:9px;font-weight:600;font-size:15px;color:var(--muted)}
+.seg2 button[aria-pressed="true"]{color:var(--ink)}
+.seg2 button[aria-pressed="true"]::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--sel)}
 /* Monat/Jahr klein rechts neben den Umschaltern eines Bereichs (v80): so steht es in derselben Reihe und kostet keine eigene. Die Tippfläche reicht über das sichtbare Feld hinaus. */
 .seg2.mini{flex:none;grid-template-columns:auto auto;padding:3px;border-radius:11px}
 .seg2.mini button{position:relative;padding:4px 12px;font-size:12.5px;border-radius:8px}
@@ -282,7 +284,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .entries .l small{color:var(--muted);font-size:13px}
 .entries .dim{color:var(--muted);font-weight:500}
 .entries .neg{color:var(--danger)}
-.view>.note{margin-top:-8px}
+.view>.note,.view>.nach>.note{margin-top:-8px}
 .view>.sec+.note{margin-top:0}
 .g-pos{fill:var(--at)}
 .g-neg{fill:var(--danger)}
@@ -636,6 +638,15 @@ dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 @keyframes goP{from{opacity:.3;transform:translateX(-26px)}to{opacity:1;transform:none}}
 .view.go-n:not([hidden]){animation:goN .24s cubic-bezier(.16,1,.3,1)}
 .view.go-p:not([hidden]){animation:goP .24s cubic-bezier(.16,1,.3,1)}
+/* Bewegung im Kleinen (v83): Umschalter gleitet, Balken wachsen einmal beim Öffnen eines Bereichs (Klasse neu, für 0,7 s), eine abgehakte Notiz zeigt kurz den Haken und gibt dann ihren Platz frei.
+   Klappzeilen fahren über die Höhe ihrer Liste auf und zu (im Script: hoehe()). */
+@keyframes gleit{from{transform:translateX(var(--von,0))}}
+.seg2 button.gleit::before{animation:gleit .22s cubic-bezier(.3,.7,.3,1)}
+@keyframes wachs{from{transform:scaleX(0)}}
+.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{transform-origin:left;animation:wachs .5s cubic-bezier(.16,1,.3,1) .08s backwards}
+.nrow.weg{overflow:hidden;opacity:0;pointer-events:none;transition:height .2s ease .13s,opacity .16s ease .13s}
+.nrow.weg .tk i{background:var(--accent);border-color:var(--accent)}
+.nrow.weg .tk i::after{content:"";width:9px;height:5px;border-left:2px solid #fff;border-bottom:2px solid #fff;transform:translateY(-1px) rotate(-45deg)}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
@@ -650,7 +661,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .kx,.prow{background:var(--surface)}
 .kx input[type="text"]{background:var(--fill)}
 .kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
-.seg2 button[aria-pressed="true"]{box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.seg2 button[aria-pressed="true"]::before{box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
 .tabs{border-top-color:var(--line)}
 .top{border-bottom-color:transparent;transition:border-color .2s ease}
@@ -676,6 +687,8 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .sec-a.solo svg{width:13px;height:13px}
 /* Eingeklappte Listen: eine Zeile mit Name und Anzahl. Mehrere hintereinander rücken zusammen wie die Monate einer langen Liste. */
 .folds{display:flex;flex-direction:column;gap:6px}
+/* Was unter einer offenen Klappzeile steht und keine Zeile ist (Monate der Einträge, Kategorien): ein eigener Kasten, damit er auf- und zufahren kann; Abstände wie im Behälter darüber */
+.nach{display:flex;flex-direction:column;gap:inherit}
 .entries button.fo{min-height:42px;align-items:center}
 .entries button.fo .l>span{font-weight:600}
 .entries button.act{min-height:40px;align-items:center;color:var(--at);font-weight:600}
@@ -711,7 +724,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
-  .view.ein{animation:none}
+  .view.ein,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg{transition:none}
   .fill,.glyph{transition:none}
@@ -741,7 +754,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v82</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v83</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1198,11 +1211,12 @@ const normApp = d => ({ routines: (Array.isArray(d && d.routines) ? d.routines :
 /* Blatt öffnen. Der Browser setzt den Fokus sonst auf den ersten Knopf und zeichnet auf dem iPhone einen Rahmen darum; der Fokus gehört dann aufs Blatt selbst. */
 /* Schließen: Das Blatt fährt kurz nach unten weg, erst dann ist es zu (das Ereignis „close“ kommt also rund 0,15 s später).
    Sofort zu ist es, wenn es schon mit dem Finger weggezogen wurde oder „Bewegung reduzieren“ gilt. Solange es wegfährt, zählt es als offen, trägt aber die Klasse „zu“. */
+const ruhig = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 const zuT = new Map();
 function zuEnde(d) { clearTimeout(zuT.get(d)); zuT.delete(d); d.classList.remove('zu'); }
 function closeDlg(d) {
   if (!d.open || d.classList.contains('zu')) return;
-  if (d.style.transform || matchMedia('(prefers-reduced-motion: reduce)').matches) return d.close();
+  if (d.style.transform || ruhig()) return d.close();
   /* Die Tastatur fährt gleichzeitig ein, nicht erst danach */
   const a = document.activeElement; if (a && a !== d && d.contains(a)) a.blur();
   d.classList.add('zu');
@@ -1338,16 +1352,45 @@ const secAct = (attr, text, label) => '<button type="button" class="sec-a' + (te
 /* Klappzeile: eine Zeile mit Name, kleiner Zeile (sub) und Anzahl (right). Aufgeklappt folgen rows als Zeilen derselben Liste und after darunter (für Inhalt, der keine Zeile ist).
    Ob eine Klappzeile offen ist, steht in fo unter ihrem Schlüssel (key) und nur dort. Gespeichert wird es nicht: Der erste Blick in einen Bereich ist immer derselbe (foldsShut). */
 const fo = {};
-const foldHTML = (key, title, sub, right, rows, after, auf) => { const o = fo[key] === undefined ? !!auf : !!fo[key]; return '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + o + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (o ? rows + '</ul>' + (after || '') : '</ul>'); };
+const foldHTML = (key, title, sub, right, rows, after, auf) => { const o = fo[key] === undefined ? !!auf : !!fo[key]; return '<ul class="entries"><li><button type="button" class="two fo" data-fold="' + key + '" aria-expanded="' + o + '"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span><b class="dim fold">' + right + CHEV_D + '</b></button></li>' + (o ? rows + '</ul>' + (after ? '<div class="nach">' + after + '</div>' : '') : '</ul>'); };
 /* Der eine Weg für alle Klappzeilen (foldHTML und die Monate aus monthsHTML): Ein Tipp kehrt um, was die Zeile gerade zeigt, dann wird neu gezeichnet.
    Maßgeblich ist aria-expanded und nicht fo, weil die jüngsten Monate einer Liste auch ohne Merker offen sind.
-   Eine offene Erklärung („i“) bleibt dabei stehen: Sonst verschwände sie beim Zeichnen, und die angetippte Zeile darunter spränge nach oben. */
+   Eine offene Erklärung („i“) bleibt dabei stehen: Sonst verschwände sie beim Zeichnen, und die angetippte Zeile darunter spränge nach oben.
+   Mit Bewegung fährt die Liste über ihre Höhe auf und zu: Beim Öffnen wird sofort gezeichnet und die Höhe wächst von der alten zur neuen; beim Schließen schrumpft sie zuerst
+   um die Zeilen, die verschwinden, und erst dann wird gezeichnet (0,2 s später; so lange nimmt die Liste keinen weiteren Tipp an). */
+function hoehe(el, von, bis, dann) {
+  el.style.overflow = 'hidden'; el.style.height = von + 'px'; void el.offsetHeight;
+  el.style.transition = 'height .2s cubic-bezier(.3,.7,.3,1)'; el.style.height = bis + 'px';
+  setTimeout(() => { if (dann) dann(); else { el.style.height = ''; el.style.transition = ''; el.style.overflow = ''; } }, 210);
+}
+const nachVon = ul => { const n = ul && ul.nextElementSibling; return n && n.classList.contains('nach') ? n : null; };
 $('#scroll').addEventListener('click', e => {
   const b = e.target.closest('[data-fold]'); if (!b) return;
-  fo[b.dataset.fold] = b.getAttribute('aria-expanded') !== 'true';
-  const infos = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
-  render();
-  infos.forEach(id => { const i = document.querySelector('.info[data-info="' + id + '"]'), p = document.getElementById('info-' + id); if (i && p) { p.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
+  const key = b.dataset.fold, auf = b.getAttribute('aria-expanded') !== 'true', ul = b.closest('ul'), box = b.closest('.view');
+  if (ul && ul.dataset.klappt) return;
+  const zeichne = () => {
+    fo[key] = auf;
+    const infos = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
+    render();
+    infos.forEach(id => { const i = document.querySelector('.info[data-info="' + id + '"]'), p = document.getElementById('info-' + id); if (i && p) { p.hidden = false; i.setAttribute('aria-expanded', 'true'); } });
+  };
+  if (!ul || !box || ruhig()) return zeichne();
+  const h = ul.offsetHeight;
+  if (auf) {
+    zeichne();
+    const nb = [...box.querySelectorAll('[data-fold]')].find(x => x.dataset.fold === key), nu = nb && nb.closest('ul');
+    if (nu && nu.offsetHeight !== h) hoehe(nu, h, nu.offsetHeight);
+    const nn = nachVon(nu); if (nn) hoehe(nn, 0, nn.offsetHeight);
+    return;
+  }
+  /* Was verschwindet: bei einer Klappzeile alle Zeilen danach und der Kasten darunter (.nach), bei einem Monat die Zeilen bis zum nächsten Monat */
+  let weg = 0;
+  for (let li = b.closest('li').nextElementSibling; li && (b.classList.contains('fo') || !li.querySelector('[data-fold]')); li = li.nextElementSibling) weg += li.offsetHeight;
+  const na = nachVon(ul);
+  if (!weg && !na) return zeichne();
+  b.setAttribute('aria-expanded', 'false'); ul.dataset.klappt = '1';
+  if (na) hoehe(na, na.offsetHeight, 0);
+  hoehe(ul, h, h - weg, zeichne);
 });
 /* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
@@ -3187,6 +3230,12 @@ const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + 
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 const notesNew = () => noteList().sort((a, b) => b.m - a.m);
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
+/* Abgehakt: Gelöscht ist sofort (auch „Rückgängig“ steht sofort da). Die Zeile zeigt noch kurz den Haken und gibt dann ihren Platz frei, erst danach wird gezeichnet. */
+function raus(li, dann) {
+  if (!li || ruhig()) return dann();
+  li.style.height = li.offsetHeight + 'px'; li.classList.add('weg'); void li.offsetHeight; li.style.height = '0px';
+  setTimeout(dann, 340);
+}
 function noteRow(x, slim) {
   const sub = slim ? '' : dRow(keyOf(new Date(x.m || x.c || Date.now())));
   return '<li class="trow nrow"><button type="button" class="tk" data-n="notedone" data-undo data-id="' + esc(x.id) + '" aria-label="Notiz abhaken und löschen"><i></i></button>' +
@@ -3257,7 +3306,7 @@ function nAct(e) {
   else if (a === 'work') openB(id);
   else if (a === 'newuni') openU(null);
   else if (a === 'uni') openU(id);
-  else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); render(); } }
+  else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); raus(b.closest('.nrow'), render); } }
   else if (a === 'allnotes') { rSub = 'note'; show('routinen', true); renderPlaner(); }
   return true;
 }
@@ -3727,13 +3776,16 @@ document.addEventListener('click', e => {
    Im Bereich selbst bleibt es offen, auch beim Blättern durch Monate und nach einem Blatt. Gespeichert wird davon nichts.
    Die Merker werden gelöscht, nicht auf false gesetzt: In einer Liste nach Monaten sind dann wieder die jüngsten Monate offen (monthsHTML). */
 function foldsShut() { for (const k in fo) delete fo[k]; }
+/* Frisch geöffnet: Für 0,7 s wachsen die Balken der Ansicht auf ihren Wert (CSS: .view.neu). Danach ist die Klasse weg, damit späteres Neuzeichnen nichts noch einmal wachsen lässt. */
+let neuT = 0;
+function frisch(el) { clearTimeout(neuT); document.querySelectorAll('.view.neu').forEach(v => v.classList.remove('neu')); void el.offsetWidth; el.classList.add('neu'); neuT = setTimeout(() => el.classList.remove('neu'), 700); }
 function show(v, user) {
   const was = view;
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
-  if (user && view !== was) { foldsShut(); render(); const el = $('#v-' + view); el.classList.remove('ein'); void el.offsetWidth; el.classList.add('ein'); }
+  if (user && view !== was) { foldsShut(); render(); const el = $('#v-' + view); el.classList.remove('ein'); void el.offsetWidth; el.classList.add('ein'); frisch(el); }
   if (user) {
     $('#scroll').scrollTop = 0;
     try { if (location.hash.slice(1) !== view) location.hash = view; } catch (e) {}
@@ -3824,6 +3876,24 @@ document.addEventListener('click', e => {
     requestAnimationFrame(step);
   }, 0);
 }, true);
+
+/* Umschalter (.seg2): Die Markierung gleitet von der alten zur neuen Seite. Vor dem Tipp wird gemerkt, wo sie steht; nach dem Tipp (die Ansicht ist dann meist neu gezeichnet)
+   startet die neue Markierung von dort. Der zweite Lauscher hängt am Dokument und kommt deshalb nach denen der Bereiche, aber noch vor dem nächsten Bild.
+   Dazu: Wechselt oben der Teil eines Bereichs (Cardio/Gym, Vermögen/Budget, Notizen/Arbeit/Uni), wachsen die Balken wie beim Öffnen des Bereichs. */
+let segVon = null;
+document.addEventListener('click', e => {
+  segVon = null;
+  const b = e.target.closest && e.target.closest('.seg2 button'), seg = b && b.closest('.seg2'), alt = seg && seg.querySelector('[aria-pressed="true"]'), box = b && b.closest('.view, dialog');
+  if (alt && alt !== b && box && !ruhig()) segVon = { seg, box, nr: [...box.querySelectorAll('.seg2')].indexOf(seg), x: alt.getBoundingClientRect().left };
+}, true);
+document.addEventListener('click', e => {
+  const sub = e.target.closest && e.target.closest('.subtabs button'), v = sub && sub.closest('.view');
+  if (v) frisch(v);
+  const a = segVon; segVon = null; if (!a) return;
+  const seg = a.seg.isConnected ? a.seg : a.box.querySelectorAll('.seg2')[a.nr], neu = seg && seg.querySelector('[aria-pressed="true"]'), dx = neu ? a.x - neu.getBoundingClientRect().left : 0;
+  if (!dx) return;
+  neu.style.setProperty('--von', dx + 'px'); neu.classList.remove('gleit'); void neu.offsetWidth; neu.classList.add('gleit');
+});
 
 /* ---------- Wischgesten ---------- */
 /* Blatt nach unten wegziehen. Nur wenn das Blatt und alles Scrollbare unter dem Finger ganz oben steht, sonst scrollt es wie gewohnt.

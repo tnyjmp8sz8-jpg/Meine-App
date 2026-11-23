@@ -7,7 +7,7 @@ const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { 
 const M = monat(0), am = t => M + '-' + pad(t), UHR = new Date(+M.slice(0, 4), +M.slice(5) - 1, 15, 12);
 /* Daten: fünf Gewichte (Graph und Einträge), zwei Läufe (damit Cardio den Umschalter Monat/Jahr zeigt), zwei Notizen, ein Plan mit einer Übung */
 const daten = () => {
-  const W = { entries: {} }; [[3, 80], [6, 79.6], [9, 79.8], [12, 79.2], [14, 79]].forEach(e => { W.entries[am(e[0])] = e[1]; });
+  const W = { goal: 85, goalFrom: 79, entries: {} }; [[3, 80], [6, 79.6], [9, 79.8], [12, 79.2], [14, 79]].forEach(e => { W.entries[am(e[0])] = e[1]; });
   return { S: { routines: [], running: null }, LY: {}, W, MF: {}, MY: {}, T: { runs: { r1: { d: am(5), m: 5000, s: 1500, hr: 150 }, r2: { d: am(10), m: 6000, s: 1860, hr: 152 } } },
     K: { ex: { a: { n: 'Rudern' } }, log: {}, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 2 }] } }, meta: {}, live: null },
     N: { folders: {}, tasks: {}, notes: { n1: { x: 'Erste Notiz', f: '', c: UHR.getTime() - 5e3, m: UHR.getTime() - 5e3 }, n2: { x: 'Zweite Notiz', f: '', c: UHR.getTime() - 4e3, m: UHR.getTime() - 4e3 } } } };
@@ -148,6 +148,41 @@ lauf(async () => {
   const nKreis = await nz();
   await page.mouse.move(5, 5); await page.mouse.up(); await page.waitForTimeout(250);
   P.ok('Notiz gedrückt: Zeile dunkler; Kreis gedrückt: Zeile bleibt', nText !== nRuhig && nKreis === nRuhig, nRuhig + ' · Text ' + nText + ' · Kreis ' + nKreis);
+  // --- Bewegung im Kleinen (v83) ---
+  // Notiz abhaken: sofort gelöscht (2 − 1 = 1 Notiz im Speicher) und „Rückgängig“ da; die Zeile zeigt noch den Haken und ist 0,5 s später weg
+  const notizen = async () => Object.values((await gespeichert(page)).N.notes).filter(Boolean).length;
+  await page.click('#v-routinen .nrow .tk'); await page.waitForTimeout(60);
+  const ab = await page.evaluate(() => { const z = document.querySelectorAll('#v-routinen .nrow'), w = document.querySelector('#v-routinen .nrow.weg'), i = w && w.querySelector('.tk i');
+    return { zeilen: z.length, weg: !!w, haken: !!i && getComputedStyle(i, '::after').content !== 'none', hinweis: !document.querySelector('#toast').hidden }; });
+  P.ok('abgehakt, gleich danach: gelöscht, Zeile steht noch mit Haken da, „Rückgängig“ ist zu sehen', (await notizen()) === 1 && ab.zeilen === 2 && ab.weg && ab.haken && ab.hinweis, JSON.stringify(ab) + ' · ' + await notizen());
+  await page.waitForTimeout(500);
+  P.ok('0,5 s später: nur noch eine Zeile', await page.evaluate(() => document.querySelectorAll('#v-routinen .nrow').length === 1 && !document.querySelector('.nrow.weg')));
+  // Klappzeile: auf = sofort gezeichnet, die Liste wächst über ihre Höhe; zu = erst schrumpfen, dann zeichnen
+  await bereich(page, 'gewicht'); await page.waitForTimeout(400);
+  const klapp = () => page.evaluate(() => { const b = document.querySelector('#v-gewicht [data-fold="eintraege"]'), u = b.closest('ul'); const n = u.nextElementSibling; return { auf: b.getAttribute('aria-expanded'), zeilen: document.querySelectorAll('#v-gewicht [data-w="edit"]').length, hoehe: u.style.height !== '' || !!(n && n.classList.contains('nach') && n.style.height !== '') }; });
+  await page.click('#v-gewicht [data-fold="eintraege"]');
+  let k = await klapp();
+  P.ok('aufklappen, gleich danach: Zeilen sind da, die Liste fährt noch (feste Höhe)', k.auf === 'true' && k.zeilen > 0 && k.hoehe, JSON.stringify(k));
+  await page.waitForTimeout(320); k = await klapp();
+  P.ok('0,3 s später: Höhe wieder frei', k.auf === 'true' && k.zeilen > 0 && !k.hoehe, JSON.stringify(k));
+  await page.click('#v-gewicht [data-fold="eintraege"]');
+  k = await klapp();
+  P.ok('zuklappen, gleich danach: Pfeil schon zu, Zeilen noch da, die Liste fährt', k.auf === 'false' && k.zeilen > 0 && k.hoehe, JSON.stringify(k));
+  await page.waitForTimeout(320); k = await klapp();
+  P.ok('0,3 s später: Zeilen weg, Höhe frei', k.auf === 'false' && k.zeilen === 0 && !k.hoehe, JSON.stringify(k));
+  // Balken: Nach dem Wechsel des Bereichs trägt die Ansicht 0,7 s lang „neu“, der Balken der Zielkarte wächst; danach ist die Klasse weg
+  await bereich(page, 'heute'); await bereich(page, 'gewicht');
+  const bal = () => page.evaluate(() => ({ neu: document.querySelector('#v-gewicht').classList.contains('neu'), name: getComputedStyle(document.querySelector('#v-gewicht .goal .fill')).animationName }));
+  let ba = await bal();
+  P.ok('Bereich geöffnet: Balken der Zielkarte wächst („wachs“)', ba.neu && ba.name === 'wachs', JSON.stringify(ba));
+  await page.waitForTimeout(900); ba = await bal();
+  P.ok('0,9 s später: Klasse „neu“ weg, nichts wächst noch einmal', !ba.neu && ba.name === 'none', JSON.stringify(ba));
+  // Umschalter Monat/Jahr: Die Markierung ist eine eigene Fläche und startet dort, wo sie vorher stand („Monat“ steht links von „Jahr“: Start links, also ein negativer Versatz)
+  await bereich(page, 'training'); await page.waitForTimeout(300);
+  await page.click('#v-training .seg2.mini button[aria-pressed="false"]');
+  const um = await page.evaluate(() => { const b = document.querySelector('#v-training .seg2.mini button[aria-pressed="true"]'), v = getComputedStyle(b, '::before');
+    return { text: b.textContent.trim(), gleit: b.classList.contains('gleit'), von: parseFloat(b.style.getPropertyValue('--von')), name: v.animationName, flaeche: v.backgroundColor, knopf: getComputedStyle(b).backgroundColor }; });
+  P.ok('„Jahr“ gewählt: Markierung gleitet von links herüber', um.text === 'Jahr' && um.gleit && um.von < 0 && um.name === 'gleit' && um.flaeche !== 'rgba(0, 0, 0, 0)' && um.knopf === 'rgba(0, 0, 0, 0)', JSON.stringify(um));
   P.ok('mit Bewegung: kein Fehler', !fehler.length, fehler.join(' · '));
   await P.ende(browser, []);
 });
