@@ -741,7 +741,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v81</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v82</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -3923,7 +3923,13 @@ function hStand() {
   const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
   /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer.
      sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
-  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '' };
+  /* kats und haendler (v82, iPhone-App ab 0.9): Damit fragt „Ausgabe eintragen“ gleich beim Bezahlen nach der Kategorie, aber nur bei einem Händler, der noch nicht einsortiert ist.
+     kats: alle Kategorien mit Kennung und Name als reiner Text, die meistbenutzten zuerst, „Sonstiges“ am Ende. haendler: klein geschrieben, die 300 zuletzt benutzten. */
+  const zahl = {}, hk = haendlerKats();
+  for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c) zahl[t.c] = (zahl[t.c] || 0) + 1; } }
+  const kats = allCats().map((k, i) => ({ id: k[0], n: hCut(MF.cats && MF.cats[k[0]] ? MF.cats[k[0]].n : k[1], 40), i })).sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || (zahl[b.id] || 0) - (zahl[a.id] || 0) || a.i - b.i).map(k => ({ id: k.id, n: k.n }));
+  const haendler = [...hk.keys()].sort((a, b) => (hk.get(b).d > hk.get(a).d) - (hk.get(b).d < hk.get(a).d) || (hk.get(b).t || 0) - (hk.get(a).t || 0)).slice(0, 300);
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler };
 }
 /* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
@@ -3988,16 +3994,20 @@ function uhrFoldHTML() {
 }
 /* Was außerhalb der App eingetragen wurde (Widget, Kurzbefehle), sammelt die Hülle und übergibt es beim Öffnen: [{ id, art, t (Zeitpunkt in ms), … }].
    art: 'notiz' (x Text), 'notizWeg' (nid Kennung der Notiz), 'ausgabe' (a Cent, n Notiz, kat Kategorie als Wort; aus der Schnelleingabe dazu k 'in' für eine Einnahme
-   und acc für das Konto), 'lauf' (lauf wie in healthRuns).
+   und acc für das Konto), 'kat' (zu Kennung des Auftrags 'ausgabe', kid Kennung der Kategorie), 'lauf' (lauf wie in healthRuns).
    Jede Kennung wird nur einmal angewendet (takt.eingang merkt die letzten 100), falls die Hülle etwas doppelt übergibt.
    Zurück gehen alle Kennungen: Die Hülle streicht sie dann aus ihrer Liste. */
-/* Kategorie eines Händlers: die der jüngsten Ausgabe mit derselben Notiz (Groß und klein egal), die schon einsortiert ist. So landet eine Zahlung, die von selbst gebucht wird
+/* Kategorie eines Händlers (haendlerKats: Händler klein geschrieben → Buchung): die der jüngsten Ausgabe mit derselben Notiz (Groß und klein egal), die schon einsortiert ist. So landet eine Zahlung, die von selbst gebucht wird
    (Apple Pay über den Kurzbefehl), dort, wo man den Händler zuletzt einsortiert hat. „Sonstiges“ zählt nicht als einsortiert: Sonst bliebe ein Händler dort hängen. */
-function katVon(name) {
-  const n = String(name || '').trim().toLowerCase(); let best = null;
-  if (n) for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c && t.c !== 'sonst' && String(t.n || '').trim().toLowerCase() === n && (!best || t.d > best.d || (t.d === best.d && (t.t || 0) > (best.t || 0)))) best = t; } }
-  return best && allCats().some(k => k[0] === best.c) ? best.c : '';
+function haendlerKats() {
+  const m = new Map();
+  for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id], n = t && t.k === 'out' && t.c && t.c !== 'sonst' ? String(t.n || '').trim().toLowerCase() : ''; if (!n) continue;
+    const best = m.get(n); if (!best || t.d > best.d || (t.d === best.d && (t.t || 0) > (best.t || 0))) m.set(n, t); } }
+  const gibt = new Set(allCats().map(k => k[0]));
+  m.forEach((t, n) => { if (!gibt.has(t.c)) m.delete(n); });
+  return m;
 }
+function katVon(name) { const t = haendlerKats().get(String(name || '').trim().toLowerCase()); return t ? t.c : ''; }
 function hEingang(list) {
   let seen = []; try { seen = JSON.parse(localStorage.getItem('takt.eingang') || '[]'); } catch (e) {}
   if (!Array.isArray(seen)) seen = [];
@@ -4016,7 +4026,12 @@ function hEingang(list) {
       const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), ein = c.k === 'in', kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
       const hit = !ein && kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
       const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null, n = String(c.n || '').trim().slice(0, 60);
-      if (okCents(a)) { p.tx[newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+      /* Die Buchung trägt die Kennung des Auftrags: So findet ein Nachtrag ('kat') sie wieder */
+      if (okCents(a)) { p.tx[/^[\w-]{1,64}$/.test(c.id) ? c.id : newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+    } else if (c.art === 'kat') {
+      /* Nachtrag: Beim Bezahlen wurde nach der Kategorie gefragt, die Ausgabe (Auftrag zu) war da schon gebucht. Gilt nur für eine Ausgabe, die es noch gibt, und eine Kategorie, die es gibt. */
+      for (const y in MY) { const alt = ((MY[y] || {}).tx || {})[c.zu];
+        if (alt && alt.k === 'out' && allCats().some(k => k[0] === c.kid)) { const p = { tx: {} }; p.tx[c.zu] = Object.assign({}, alt, { c: c.kid }); mdoc(y).patch(p); } }
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
   });
   /* Abgehaktes zuletzt und mit „Rückgängig“: Ein Fehltipp im Widget soll nichts kosten */

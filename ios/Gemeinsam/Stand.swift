@@ -21,6 +21,9 @@ struct Stand: Codable {
     // Für die Schnelleingabe (ab v65 der Web-App; fehlt in einer älteren stand.json, deshalb wahlfrei)
     var konten: [Konto]?    // alle Konten, nach Name sortiert
     var konto: String?      // Kennung des Kontos, das die Web-App vorbelegen würde; leer = keines
+    // Für die Nachfrage nach der Kategorie beim Bezahlen (ab v82 der Web-App, wahlfrei)
+    var kats: [Konto]?      // alle Kategorien mit Kennung und Name, die meistbenutzten zuerst
+    var haendler: [String]? // Händler (klein geschrieben), die schon einsortiert sind: Bei ihnen wird nicht gefragt
 
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]
@@ -72,7 +75,7 @@ enum Ablage {
         try? daten.write(to: ort, options: .atomic)
     }
 
-    /// Merkt etwas vor (art: notiz, notizWeg, ausgabe, lauf) und liefert die Kennung des Auftrags
+    /// Merkt etwas vor (art: notiz, notizWeg, ausgabe, kat, lauf) und liefert die Kennung des Auftrags
     @discardableResult static func vormerken(_ auftrag: [String: Any]) -> String {
         var neu = auftrag
         let id = UUID().uuidString

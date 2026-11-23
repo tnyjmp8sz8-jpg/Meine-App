@@ -30,7 +30,7 @@ struct NotizHinzufuegen: AppIntent {
 
 struct AusgabeEintragen: AppIntent {
     static var title: LocalizedStringResource = "Ausgabe eintragen"
-    static var description = IntentDescription("Trägt eine Ausgabe in Track. ein, ohne die App zu öffnen. Ohne Kategorie landet sie unter „Sonstiges“. Mit dem Namen eines Kontos zählt sie bei diesem Konto.")
+    static var description = IntentDescription("Trägt eine Ausgabe in Track. ein, ohne die App zu öffnen. Ohne Kategorie gilt die, unter der die Notiz (der Händler) zuletzt einsortiert wurde; bei einem neuen Händler fragt Track. nach. Mit dem Namen eines Kontos zählt sie bei diesem Konto.")
     static var openAppWhenRun: Bool = false
 
     @Parameter(title: "Betrag in Euro", requestValueDialog: "Wie viel hast du ausgegeben?")
@@ -53,9 +53,24 @@ struct AusgabeEintragen: AppIntent {
         // Das Konto wird nach seinem Namen gesucht (Groß und klein egal). Ohne Angabe oder ohne Treffer wählt die Web-App wie im Blatt: das zuletzt benutzte Konto.
         let name = (konto ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         if !name.isEmpty, let treffer = Ablage.lesen()?.konten?.first(where: { $0.n.lowercased() == name }) { auftrag["acc"] = treffer.id }
-        Ablage.vormerken(auftrag)
+        let id = Ablage.vormerken(auftrag)
         eingangMelden()
-        return .result(dialog: "\(String(format: "%.2f", cent / 100).replacingOccurrences(of: ".", with: ",")) € eingetragen.")
+        // Nachfrage beim Bezahlen (ab 0.9): Ist keine Kategorie mitgegeben und der Händler noch nie einsortiert worden, zeigt iOS die Kategorien zur Auswahl.
+        // Die Ausgabe ist da schon vorgemerkt: Wer die Frage übergeht oder wegwischt, verliert nichts; sie landet dann unter „Sonstiges“.
+        // Die Wahl geht als Nachtrag zum selben Auftrag hinterher. Beim nächsten Mal kennt die Web-App den Händler und fragt nicht mehr.
+        var gewaehlt = ""
+        let stand = Ablage.lesen(), kats = stand?.kats ?? []
+        let haendler = (notiz ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        if (kategorie ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !kats.isEmpty, !(stand?.haendler ?? []).contains(haendler) {
+            let frage: IntentDialog = haendler.isEmpty ? "Welche Kategorie?" : "Welche Kategorie für \(notiz ?? "")?"
+            let wahl: String? = try? await $kategorie.requestDisambiguation(among: kats.map { $0.n }, dialog: frage)
+            if let wahl, let k = kats.first(where: { $0.n == wahl }) {
+                Ablage.vormerken(["art": "kat", "zu": id, "kid": k.id])
+                eingangMelden()
+                gewaehlt = " unter „\(k.n)“"
+            }
+        }
+        return .result(dialog: "\(String(format: "%.2f", cent / 100).replacingOccurrences(of: ".", with: ",")) €\(gewaehlt) eingetragen.")
     }
 }
 

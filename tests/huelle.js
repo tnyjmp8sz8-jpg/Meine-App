@@ -119,6 +119,35 @@ async function schnelleingabe(p) {
   /* 9. Eine Einnahme vom selben Händler bekommt keine Kategorie */
   const t13 = await auftrag({ id: 'b13', art: 'ausgabe', k: 'in', a: 500, acc: '', n: 'Rewe' });
   p.ok('Einnahme vom selben Händler: keine Kategorie', t13.k === 'in' && t13.c === 'sonst', z(t13));
+  /* 10. Nachfrage beim Bezahlen (v82, iPhone-App ab 0.9): Die Ausgabe bei einem neuen Händler ist sofort gebucht (unter „Sonstiges“) und trägt die Kennung des Auftrags.
+     Wählt man in der Nachfrage eine Kategorie, kommt sie als Nachtrag 'kat' hinterher und setzt nur die Kategorie dieser Buchung. */
+  const bu = async id => ((await gespeichert(page)).MY[JM].tx || {})[id] || {};
+  const nach = async c => { await ruf(page, 'eingang', [c]); await page.waitForTimeout(40); };
+  await auftrag({ id: 'b14', art: 'ausgabe', a: 450, acc: '', n: 'Bäcker' });
+  let b14 = await bu('b14');
+  p.ok('neuer Händler: sofort gebucht unter „Sonstiges“, Kennung der Buchung = Kennung des Auftrags', b14.a === 450 && b14.c === 'sonst' && b14.n === 'Bäcker', z(b14));
+  await nach({ id: 'b15', art: 'kat', zu: 'b14', kid: 'essen' });
+  b14 = await bu('b14');
+  p.ok('Nachtrag: dieselbe Buchung steht jetzt unter „essen“, Betrag und Händler bleiben', b14.a === 450 && b14.c === 'essen' && b14.n === 'Bäcker' && b14.acc == null, z(b14));
+  // Was nicht passt, ändert nichts: unbekannte Kategorie, unbekannter Auftrag, eine Einnahme (b13)
+  await nach({ id: 'b16', art: 'kat', zu: 'b14', kid: 'gibtsnicht' }); await nach({ id: 'b17', art: 'kat', zu: 'fehlt', kid: 'frei' }); await nach({ id: 'b18', art: 'kat', zu: 'b13', kid: 'frei' });
+  p.ok('unbekannte Kategorie, unbekannter Auftrag, Einnahme: nichts ändert sich', (await bu('b14')).c === 'essen' && (await bu('b13')).c === 'sonst' && (await bu('b13')).k === 'in', z(await bu('b14')) + ' · ' + z(await bu('b13')));
+  const t19 = await auftrag({ id: 'b19', art: 'ausgabe', a: 320, acc: '', n: 'bäcker' });
+  p.ok('nächste Zahlung beim selben Händler landet von selbst unter „essen“', t19.a === 320 && t19.c === 'essen', z(t19));
+  /* Stand für die Nachfrage. Ausgaben je Kategorie bis hier: essen 8 (a, b, x, b4, b7, b8, b14, b19), frei 2 (b11, b12), sonst 7 (b1, b2, b5, b6, b9, b10, und b13 nicht: Einnahme → 6).
+     Reihenfolge: meistbenutzte zuerst (essen, frei), die übrigen wie im Blatt, „Sonstiges“ immer am Ende.
+     Einsortierte Händler, jüngster zuerst: bäcker (b19), rewe (b12). „Kiosk“ steht unter „Sonstiges“ und fehlt: Dort wird wieder gefragt. */
+  await page.waitForTimeout(450);
+  const stn = await letzter(page);
+  p.ok('Stand: Kategorien nach Benutzung, „Sonstiges“ zuletzt, Namen im Klartext', (stn.kats || []).map(k => k.id).join() === 'essen,frei,drog,aus,shop,mobil,gesund,uni,reise,gesch,sonst' && stn.kats[0].n === 'Lebensmittel' && stn.kats[10].n === 'Sonstiges', JSON.stringify(stn.kats));
+  p.ok('Stand: einsortierte Händler klein geschrieben, jüngster zuerst, ohne „Kiosk“', (stn.haendler || []).join() === 'bäcker,rewe', JSON.stringify(stn.haendler));
+  /* 11. Eigene Kategorie: Ihr Name geht als reiner Text hinaus (nicht für HTML umgeschrieben), und der Nachtrag mit ihrer Kennung greift. */
+  const eigen = zweiKonten(); eigen.MF.cats = { c1: { n: 'Katze & Hund' } }; eigen.MF.budgets = { c1: 5000 };   // mit Budget, sonst räumt die App eine unbenutzte Kategorie weg
+  await lade(page, eigen);
+  const ste = await letzter(page);
+  p.ok('eigene Kategorie im Stand: „Katze & Hund“ im Klartext, vor „Sonstiges“', (ste.kats || []).some(k => k.id === 'c1' && k.n === 'Katze & Hund') && ste.kats[ste.kats.length - 1].id === 'sonst' && ste.kats[0].id === 'essen', JSON.stringify(ste.kats));
+  await nach({ id: 'c1a', art: 'ausgabe', a: 990, acc: '', n: 'Fressnapf' }); await nach({ id: 'c1b', art: 'kat', zu: 'c1a', kid: 'c1' });
+  p.ok('Nachtrag mit eigener Kategorie', (await bu('c1a')).c === 'c1' && (await bu('c1a')).a === 990, z(await bu('c1a')));
   await o.browser.close();
   return o.fehler;
 }
