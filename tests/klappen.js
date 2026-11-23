@@ -497,5 +497,35 @@ lauf(async () => {
   const le = await oeffnen(); await bereich(le.page, 'heute');
   P.ok('Heute, leere App: keine Übersicht und keine leere Fläche dafür', !(await le.page.$('#v-heute .ovs')) && !(await le.page.$('#v-heute .ov')) && !(await text(le.page, '#v-heute')).includes('Tippe, um'), await text(le.page, '#v-heute'));
   fehler.push(...le.fehler); await le.browser.close();
+
+  // --- v80: Punkt fürs Wiegen in der Wochenleiste auf Heute, Zeilen für Arbeit und Uni, Überblenden, Satz-Vergleich im Gym ---
+  // Feste Uhr (Sonntag, 15.11.2026, 12 Uhr), damit „dieser Monat“ und die Woche feststehen. Gewogen am 14. und 15., Lauf am 15.
+  // Arbeit im November: 14.11. 14:00–20:30 mit 30 min Pause = 6 Std × 14,50 € = 87,00 €; 10.11. 10:00–16:00 = 6 Std × 14,50 € = 87,00 € → 174,00 €, 12 Std an 2 Tagen.
+  // Uni: 4 + 2,5 + 3 = 9,5 Punkte bei 3 Terminen → „3 von 18 Terminen“.
+  // Gym, letztes Mal (12.11.): Bankdrücken 70 × 8 und 60 × 7.
+  const hd = { S: { routines: [], running: null }, LY: {}, W: { goal: null, goalFrom: null, entries: { '2026-11-14': 80, '2026-11-15': 80.2 } }, T: { runs: { a: { d: '2026-11-15', m: 5000, s: 1500, hr: 150 } } },
+    N: { folders: {}, tasks: {}, notes: {}, work: { rate: 1450, e: { a1: { d: '2026-11-14', a: 840, b: 1230, p: 30, r: 1450 }, a2: { d: '2026-11-10', a: 600, b: 960, p: 0, r: 1450 } } },
+      uni: { e: { u1: { d: '2026-11-12', f: 'kons', p: 400, n: '' }, u2: { d: '2026-11-05', f: 'kons', p: 250, n: '' }, u3: { d: '2026-11-03', f: 'paro', p: 300, n: '' } } } },
+    K: { ex: { e1: { n: 'Bankdrücken' } }, log: { '2026-11-12': { e1: [[70, 8], [60, 7]] } }, plans: { p1: { n: 'Oberkörper', items: [{ id: 'e1', sets: 3 }] } }, meta: {}, live: null } };
+  const h8 = await oeffnen({ daten: hd, uhr: new Date(2026, 10, 15, 12) }), q8 = h8.page, w8 = () => q8.waitForTimeout(200);
+  await bereich(q8, 'heute');
+  const punkte = await q8.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(b => [...b.querySelectorAll('u')].map(u => u.className).join('')).join('|'));
+  P.ok('Heute, Wochenleiste: Donnerstag grün (Gym), Samstag lila (gewogen), Sonntag lila und grün (gewogen und gelaufen)', punkte === '|||g||w|wg', punkte);
+  P.ok('der Punkt fürs Wiegen trägt die Farbe des Bereichs Gewicht', await q8.evaluate(() => { const p = document.createElement('i'); p.style.background = 'var(--c-weight)'; document.body.appendChild(p); const soll = getComputedStyle(p).backgroundColor; p.remove(); return getComputedStyle(document.querySelector('#v-heute .wk u.w')).backgroundColor === soll; }));
+  const ov8 = await q8.$$eval('#v-heute .ov', l => l.map(b => b.innerText.replace(/\s+/g, ' ').trim()));
+  P.ok('Heute, Übersicht: Gewicht, Training, Arbeit (174,00 €, 12 Std an 2 Tagen im November), Uni (9,5 Punkte, 3 von 18 Terminen)', ov8.length === 4 && ov8[2] === 'Arbeit 174,00 € 12 Std an 2 Tagen im November' && ov8[3] === 'Uni 9,5 Punkte 3 von 18 Terminen', JSON.stringify(ov8));
+  await q8.click('#v-heute .ov[data-teil="uni"]'); await w8();
+  P.ok('Tipp auf „Uni“ öffnet den Planer im Teil Uni; oben steht „Planer.“', (await q8.isVisible('#v-routinen')) && (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Uni' && (await text(q8, '.mark')) === 'Planer.' && (await text(q8, '#n-main .hero')).includes('3 von 18 Terminen'));
+  P.ok('nach dem Wechsel trägt die neue Ansicht die Klasse zum Einblenden', await q8.evaluate(() => document.querySelector('#v-routinen').classList.contains('ein')));
+  await bereich(q8, 'heute'); await q8.click('#v-heute .ov[data-teil="work"]'); await w8();
+  P.ok('Tipp auf „Arbeit“ öffnet den Planer im Teil Arbeit', (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Arbeit' && (await text(q8, '#n-main .hero')).includes('174,00'));
+  // Gym: Satz 1 mit 72,5 × 8 (letztes Mal 70 × 8) → „+2,5“ am Gewicht. Satz 2 mit 60 × 9 (letztes Mal 60 × 7) → „+2“ an den Wiederholungen. Satz 3 gab es letztes Mal nicht → nichts.
+  await bereich(q8, 'training'); await q8.click('#v-training .subtabs button:nth-child(2)'); await w8(); await q8.click('#v-training [data-k="start"]'); await q8.waitForTimeout(300);
+  const satz = async (kg, wdh) => { await q8.fill('#l-w', kg); await q8.fill('#l-r', wdh); await q8.click('#l-items .chk'); await w8(); };
+  await satz('72,5', '8'); await satz('60', '9'); await satz('50', '5');
+  const zeilen8 = await q8.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [...z.querySelectorAll('.mehr')].map(m => m.parentElement.textContent.replace(/\s+/g, '')).join('/')));
+  P.ok('Gym: „+2,5“ am Gewicht von Satz 1, „+2“ an den Wiederholungen von Satz 2, nichts an Satz 3', zeilen8.join('|') === '72,5+2,5|9+2|', JSON.stringify(zeilen8));
+  await q8.click('#l-del'); await q8.click('#l-del'); await w8();
+  fehler.push(...h8.fehler); await h8.browser.close();
   await P.ende(null, fehler);
 });

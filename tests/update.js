@@ -54,7 +54,7 @@ lauf(async () => {
   P.ok('neue Version ist geholt', (await caches()).join() === 'takt-v' + (+alt + 1), (await caches()).join());
   P.ok('bei offenem Blatt wird nicht neu geladen, die Eingabe bleibt', geladen === 0 && (await page.inputValue('#w-val')) === '81,5');
   await page.click('#w-save'); await page.waitForTimeout(2000);
-  P.ok('nach dem Schließen lädt die App einmal neu und zeigt die neue Version', geladen === 1 && (await marke()) === 'Track. NEU', 'geladen ' + geladen + ', Titel ' + await marke());
+  P.ok('nach dem Schließen lädt die App einmal neu und zeigt die neue Version', geladen === 1 && (await marke()).endsWith('. NEU'), 'geladen ' + geladen + ', Titel ' + await marke());
   P.ok('die Eingabe ist gespeichert', (await page.evaluate(() => Object.values(JSON.parse(localStorage.getItem('takt.v1')).W.entries))).join() === '81.5');
   geladen = 0; await page.evaluate(() => document.dispatchEvent(new Event('visibilitychange'))); await page.waitForTimeout(1500);
   P.ok('ohne neue Version wird nicht noch einmal geladen', geladen === 0);

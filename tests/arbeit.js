@@ -71,7 +71,9 @@ lauf(async () => {
 
   // --- Uni ---
   await teil('uni');
-  P.enthaelt('Uni: 9,5 Punkte bei 3 Terminen', await text(page, '#n-main .hero'), ['Punkte gesamt', '9,5', '3 Termine']);
+  P.enthaelt('Uni: 9,5 Punkte, 3 von 18 Terminen', await text(page, '#n-main .hero'), ['Punkte gesamt', '9,5', '3 von 18 Terminen']);
+  // Balken des Solls: 3 von 18 Terminen = 16,7 %
+  P.ok('Uni: Balken zeigt 3 von 18 (16,7 %)', (await page.getAttribute('#n-main .soll i', 'style')) === 'width:16.7%', await page.getAttribute('#n-main .soll i', 'style'));
   const kacheln = await text(page, '#n-main .figs .fig');
   P.ok('Kacheln: Kons 6,5 · Paro 3 · Prothetik 0', kacheln === '6,5 Kons | 3 Paro | 0 Prothetik', kacheln);
   const uf = await text(page, '#n-main .folds [data-fold]');
@@ -84,7 +86,7 @@ lauf(async () => {
   await page.fill('#u-pts', 'viel'); await page.click('#u-save'); await kurz();
   P.ok('Punkte ohne Zahl: Meldung, nichts gespeichert', !(await page.isHidden('#u-err')) && zahl((await gespeichert(page)).N.uni.e) === 3);
   await page.click('#u-fach [data-f="proth"]'); await page.fill('#u-pts', '7,25'); await page.fill('#u-note', 'Krone 14 <b>'); await page.click('#u-save'); await kurz();
-  P.enthaelt('gespeichert: 16,75 Punkte, 4 Termine', await text(page, '#n-main .hero'), ['16,75', '4 Termine']);
+  P.enthaelt('gespeichert: 16,75 Punkte, 4 von 18 Terminen', await text(page, '#n-main .hero'), ['16,75', '4 von 18 Terminen']);
   P.ok('Kachel Prothetik 7,25', (await text(page, '#n-main .figs .fig')) === '6,5 Kons | 3 Paro | 7,25 Prothetik');
   await page.click('#n-main [data-fold="uni-proth"]'); await kurz();
   P.ok('Nutzertext wird als Text gezeigt, nicht als HTML', (await nm()).includes('Krone 14 <b>') && !(await page.$('#n-main .folds b b')));

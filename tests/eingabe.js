@@ -27,7 +27,7 @@ lauf(async () => {
   // Neues Ziel 74 kg: Der Startwert ist der heutige Schnitt (77,5). Noch 77,5 − 74 = 3,5 kg, Fortschritt 0 %.
   await page.click('#v-gewicht [data-w="goal"]'); await page.fill('#w-val', '74'); await page.click('#w-save'); await kurz();
   P.ok('geändertes Ziel: Startwert ist der heutige Schnitt 77,5', (await gw()).goal === 74 && (await gw()).goalFrom === 77.5, JSON.stringify(await gw()));
-  P.enthaelt('Ziel 74 kg: noch 3,5 kg, 0 %', await ziel(), ['Ziel 74,0 kg', 'noch 3,5 kg', '0 %']);
+  P.ok('Ziel 74 kg: noch 3,5 kg; ohne Fortschritt steht kein „0 %“ da (v80)', (await ziel()).includes('Ziel 74,0 kg') && (await ziel()).includes('noch 3,5 kg') && !(await ziel()).includes('%'), await ziel());
 
   // --- Gewicht eintragen: Das Datum steht unter dem Gewicht. Wer erst tippt und dann das Datum umstellt, behält seine Zahl. ---
   await page.click('#v-gewicht [data-w="add"]');

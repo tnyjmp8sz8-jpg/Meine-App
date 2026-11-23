@@ -258,6 +258,10 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .seg2.three{grid-template-columns:repeat(3,1fr)}
 .seg2 button{border:0;background:none;border-radius:10px;padding:9px;font-weight:600;font-size:15px;color:var(--muted)}
 .seg2 button[aria-pressed="true"]{background:var(--sel);color:var(--ink)}
+/* Monat/Jahr klein rechts neben den Umschaltern eines Bereichs (v80): so steht es in derselben Reihe und kostet keine eigene. Die Tippfläche reicht über das sichtbare Feld hinaus. */
+.seg2.mini{flex:none;grid-template-columns:auto auto;padding:3px;border-radius:11px}
+.seg2.mini button{position:relative;padding:4px 12px;font-size:12.5px;border-radius:8px}
+.seg2.mini button::after{content:"";position:absolute;inset:-9px 0}
 .mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-6px}
 .mnav b{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.01em}
 .mnav button{width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:transparent;display:grid;place-items:center}
@@ -322,6 +326,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent)}
 .ov .ic svg{width:17px;height:17px}
 .ov .ic.gewicht{--c:var(--c-weight)}
+.ov .ic.work,.ov .ic.uni{--c:var(--accent)}
 .ov .ic.haushalt{--c:var(--c-money)}
 .ov .ic.training{--c:var(--good)}
 .ov .k{grid-area:1/2;font-size:14px;font-weight:500}
@@ -482,6 +487,7 @@ body{font-size:14px}
 .wk u,.cd u{display:block;width:6px;height:6px;border-radius:50%;text-decoration:none}
 u.g{background:var(--good)}
 u.b{background:var(--accent)}
+u.w{background:var(--c-weight)}
 #csheet{height:92%;overflow:hidden}
 #csheet[open]{display:flex;flex-direction:column}
 .cs-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 14px 2px}
@@ -533,6 +539,13 @@ u.b{background:var(--accent)}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
 .lt-r .st svg{width:14px;height:14px}
+.lt-r .mehr{margin-left:6px;font-size:12px;font-weight:600;color:var(--good)}
+/* Soll der Termine im Teil „Uni“: schmaler Balken unter der großen Zahl */
+.soll{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:-4px}
+.soll i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+/* Wechsel des Bereichs: Die neue Ansicht blendet kurz ein */
+@keyframes ein{from{opacity:0}to{opacity:1}}
+.view.ein{animation:ein .18s ease}
 .linkbtn.danger{color:var(--danger)}
 .linkbtn.quiet{color:var(--muted);font-weight:500}
 .lastx{gap:0;padding:10px 12px 8px}
@@ -672,7 +685,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .subtabs{gap:16px}
 .subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
-.mark{font-size:17px;font-weight:700}
+.mark{font-size:24px;font-weight:700}
 .hero h1 .num,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
@@ -684,6 +697,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
+  .view.ein{animation:none}
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg{transition:none}
   .fill,.glyph{transition:none}
@@ -694,7 +708,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="scroll" id="scroll">
 <div class="app">
   <header class="top">
-    <span class="mark">Track<span class="dot">.</span></span>
+    <span class="mark"><span id="mark">Track</span><span class="dot">.</span></span>
     <button class="add" id="add" type="button" aria-label="Notiz schreiben">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
@@ -713,7 +727,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v79</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v80</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1348,7 +1362,8 @@ function renderWeight() {
       '<button type="button" class="go" data-w="goal" aria-label="Ziel ändern">' +
         '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
         '<span class="txt"><span class="name">Ziel ' + kg(W.goal) + ' kg</span><span class="meta">' + meta + '</span></span></button>' +
-      '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.round(p * 100) + '</b><span>%</span></span></div></div>';
+      /* Die Prozentzahl steht erst da, wenn es Fortschritt gibt: Ein großes „0 %“ sagt nichts */
+      (Math.round(p * 100) > 0 ? '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.round(p * 100) + '</b><span>%</span></span></div>' : '') + '</div>';
   }
 
   let h = weekStripHTML('weight') + '<section class="hero w-hero"><p class="date">7-Tage-Schnitt</p>' +
@@ -1572,7 +1587,7 @@ const CHEV = d => '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" st
 const navHTML = (label, canNext, what) => '<div class="mnav"><button type="button" data-m="prev" aria-label="' + what + ' zurück">' + CHEV(-1) + '</button><b>' + label + '</b>' +
   '<button type="button" data-m="next" aria-label="' + what + ' vor"' + (canNext ? '' : ' disabled') + '>' + CHEV(1) + '</button></div>';
 /* Umschalter Monat/Jahr als eigene Reihe über den Pfeilen. m und y sind die Attribute der beiden Knöpfe. */
-const segMY = (year, m, y) => '<div class="seg2" role="group" aria-label="Zeitraum"><button type="button" ' + m + ' aria-pressed="' + !year + '">Monat</button><button type="button" ' + y + ' aria-pressed="' + year + '">Jahr</button></div>';
+const segMY = (year, m, y, mini) => '<div class="seg2' + (mini ? ' mini' : '') + '" role="group" aria-label="Zeitraum"><button type="button" ' + m + ' aria-pressed="' + !year + '">Monat</button><button type="button" ' + y + ' aria-pressed="' + year + '">Jahr</button></div>';
 /* Kategorien eines Zeitraums; mit Budgets (nur Monat) zeigt der Balken den verbrauchten Anteil */
 function catsHTML(cats, budgets, ym) {
   const b = budgets || {}, ids = Object.keys(cats);
@@ -1828,17 +1843,18 @@ function renderMoney() {
   if (!mYear || (moved && mYear === +mNow.slice(0, 4))) mYear = +curYM.slice(0, 4);
   mNow = curYM;
   const sub = finSub();
-  const subs = '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
-  const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"');
-  if (sub === 'verm') { el.innerHTML = subs + (hasWealth() ? seg : '') + wealthHTML(curYM); return; }
+  /* Kopf: links Vermögen/Budget, rechts klein Monat/Jahr (nur wenn es etwas zu blättern gibt) */
+  const kopf = seg => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>' + seg + '</div>';
+  const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"', true);
+  if (sub === 'verm') { el.innerHTML = kopf(hasWealth() ? seg : '') + wealthHTML(curYM); return; }
   if (!hasMoney()) {
-    el.innerHTML = subs + emptyHTML('haushalt', 'Noch nichts eingetragen', 'Trag Einnahmen und feste Kosten ein. Dann siehst du, was im Monat übrig bleibt.',
+    el.innerHTML = kopf('') + emptyHTML('haushalt', 'Noch nichts eingetragen', 'Trag Einnahmen und feste Kosten ein. Dann siehst du, was im Monat übrig bleibt.',
       DUO +
       '<button type="button" class="ghost center" data-m="newfix">Fixkosten hinzufügen</button>' +
       '<button type="button" class="ghost center" data-m="newin">Feste Einnahme hinzufügen</button>');
     return;
   }
-  el.innerHTML = subs + weekStripHTML('money') + seg + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
+  el.innerHTML = kopf(seg) + weekStripHTML('money') + (mMode === 'year' ? yearHTML(curYM) : monthHTML(curYM));
 }
 
 $('#v-haushalt').addEventListener('click', e => {
@@ -2294,20 +2310,20 @@ function tYearHTML(all, curYM) {
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join(''));
   return h;
 }
-const segT = () => segMY(tMode === 'year', 'data-t="mode" data-v="month"', 'data-t="mode" data-v="year"');
+const segT = () => segMY(tMode === 'year', 'data-t="mode" data-v="month"', 'data-t="mode" data-v="year"', true);
 function renderTraining() {
   const el = $('#v-training'), curYM = todayKey().slice(0, 7);
   if (!isYM(tYM)) tYM = curYM;
   if (!tYear) tYear = +curYM.slice(0, 4);
   const subs = '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['cardio', 'Cardio'], ['kraft', 'Gym']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
-  if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + '</div>' + kraftHTML(curYM); return; }
+  if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + (kLeer() ? '' : segT()) + '</div>' + kraftHTML(curYM); return; }
   const all = tRuns();
   if (!all.length) {
     el.innerHTML = '<div class="card-head">' + subs + '</div>' + emptyHTML('training', 'Noch kein Lauf', 'Trag Strecke, Dauer und Puls ein. Du siehst Pace und Effizienz im Vergleich zum Lauf davor.',
       '<button type="button" class="primary" data-t="add">Lauf eintragen</button>') + uhrFoldHTML() + healthBtnHTML();
     return;
   }
-  el.innerHTML = '<div class="card-head">' + subs + '</div>' + weekStripHTML('cardio') + segT() + (tMode === 'year' ? tYearHTML(all, curYM) : tMonthHTML(all, curYM)) + uhrFoldHTML() + healthBtnHTML();
+  el.innerHTML = '<div class="card-head">' + subs + segT() + '</div>' + weekStripHTML('cardio') + (tMode === 'year' ? tYearHTML(all, curYM) : tMonthHTML(all, curYM)) + uhrFoldHTML() + healthBtnHTML();
 }
 $('#v-training').addEventListener('click', e => {
   const nav = e.target.closest('.mnav [data-m]'), t = nav || e.target.closest('[data-t]'); if (!t) return;
@@ -2513,11 +2529,12 @@ function kYearHTML(curYM) {
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFoldHTML() + '</div>';
 }
+const kLeer = () => !kDates().length && !kExs().length && !kPlans().length && !K.live;
 function kraftHTML(curYM) {
-  const dates = kDates(), exs = kExs(), plans = kPlans();
-  if (!dates.length && !exs.length && !plans.length && !K.live) return emptyHTML('training', 'Noch kein Training', 'Lege einen Plan mit deinen Übungen an. Dann hakst du jeden Satz ab und siehst, ob du dich steigerst.',
+  const dates = kDates(), plans = kPlans();
+  if (kLeer()) return emptyHTML('training', 'Noch kein Training', 'Lege einen Plan mit deinen Übungen an. Dann hakst du jeden Satz ab und siehst, ob du dich steigerst.',
     '<button type="button" class="primary" data-k="plan">Plan anlegen</button>');
-  let h = weekStripHTML('gym') + liveCardHTML() + segT();
+  let h = weekStripHTML('gym') + liveCardHTML();
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
@@ -2548,7 +2565,7 @@ const CAL = { all: 'Übersicht', weight: 'Gewicht', money: 'Ausgaben', cardio: '
 const cdlg = $('#csheet');
 const DF_DAY = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 let cSel = '', cMode = 'all';
-/* Punkte pro Tag als Buchstabenfolge: g = Training, b = eingetragen */
+/* Punkte pro Tag als Buchstabenfolge: g = Training, b = eingetragen, w = gewogen (nur in der Übersicht auf Heute, in der Farbe des Bereichs Gewicht) */
 function calMarks(mode) {
   const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
   if (mode === 'gym' || mode === 'all') kDates().forEach(d => { gym[d] = 1; });
@@ -2559,7 +2576,7 @@ function calMarks(mode) {
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
-    return gym[k] || run[k] ? 'g' : '';
+    return (typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '');
   };
 }
 const dotsHTML = m => '<i>' + m.split('').map(c => '<u class="' + c + '"></u>').join('') + '</i>';
@@ -2587,7 +2604,7 @@ function calSum(mode, ym, g, b, span) {
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
-  return g ? g + '× Training' : 'Keine Einträge';
+  return [g ? g + '× Training' : '', b ? b + '× gewogen' : ''].filter(Boolean).join(' · ') || 'Keine Einträge';
 }
 function calHTML() {
   const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode);
@@ -2602,7 +2619,7 @@ function calHTML() {
     for (let d = 1; d <= len; d++) {
       const k = ym + '-' + pad(d), mk = k > tk ? '' : mark(k);
       if (mk.indexOf('g') >= 0) g++;
-      if (mk.indexOf('b') >= 0 && !(cMode === 'gym')) b++;
+      if ((mk.indexOf('b') >= 0 || mk.indexOf('w') >= 0) && !(cMode === 'gym')) b++;
       cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + '" data-d="' + k + '"' + (k > tk ? ' disabled' : '') +
         ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + dotsHTML(mk) + '</button>';
     }
@@ -2938,12 +2955,15 @@ function paintL() {
   if (!it) { $('#l-items').innerHTML = ''; return; }
   const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1];
   const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v);
+  /* Ein abgehakter Satz zeigt in Grün, um wie viel er über demselben Satz vom letzten Mal liegt: mehr Gewicht („+2,5“ am Gewicht), bei gleichem Gewicht mehr Wiederholungen („+1“ an den Wiederholungen) */
+  const mehr = (s, j) => { const l = last && last.sets[j], w = dec(s.w), r = Math.round(Number(String(s.r).replace(',', '.'))), k = isFinite(w) ? w : 0, m = t => '<small class="mehr">+' + t + '</small>';
+    return !s.done || !l || !(r >= 1) ? ['', ''] : k > l[0] ? [m((Math.round((k - l[0]) * 100) / 100).toLocaleString('de-DE')), ''] : k === l[0] && r > l[1] ? ['', m(r - l[1])] : ['', '']; };
   let h = '<div class="lx"><h3>' + esc(name) + '</h3><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span></span></div>' + it.sets.map((s, j) => j === act
     ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' +
       '<input id="l-w" type="text" inputmode="decimal" autocomplete="off" data-f="w" data-s="' + j + '" value="' + esc(s.w) + '" placeholder="0" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', Gewicht in Kilogramm">' +
       '<input id="l-r" type="text" inputmode="numeric" autocomplete="off" data-f="r" data-s="' + j + '" value="' + esc(s.r) + '" placeholder="0" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', Wiederholungen">' +
       '<button type="button" class="chk" data-la="done" data-s="' + j + '" aria-pressed="' + s.done + '" aria-label="Satz ' + (j + 1) + (s.done ? ' ist erledigt, zurücknehmen' : ' erledigt') + '">' + CHECK + '</button></div>'
-    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + '</span><span>' + val(s.r) + '</span><span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
+    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span><span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   h += '<div class="links"><button type="button" class="linkbtn" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" class="linkbtn" data-la="rmset">− Satz</button>' : '') +
     '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
   if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets) + '</button>' + exFigsHTML(hist);
@@ -3173,9 +3193,13 @@ function workHTML() {
   if (ms.length) h += '<div class="folds">' + ms.map(m => foldHTML('arbeit-' + m, MONTHS[+m.slice(5) - 1] + ' ' + m.slice(0, 4), tage(by[m]) + ' · ' + stdT(mins(by[m])), eur(pay(by[m])), by[m].map(row).join(''), '', m === cur)).join('') + '</div>';
   return h;
 }
+/* Soll im Studium: 18 behandelte Termine (seine Angabe, 23.11.2026). Für Punkte gibt es kein Soll. */
+const UNI_SOLL = 18;
+const uniSollT = n => n + ' von ' + UNI_SOLL + ' Terminen';
 function uniHTML() {
   const list = uniList(), sum = l => l.reduce((s, x) => s + x.p, 0), nT = n => n + (n === 1 ? ' Termin' : ' Termine');
-  let h = '<section class="hero w-hero"><p class="date">Punkte gesamt</p><h1><span class="num">' + pktT(sum(list)) + '</span></h1><p class="sub">' + (list.length ? nT(list.length) : 'Noch kein Termin eingetragen') + '</p></section>' +
+  let h = '<section class="hero w-hero"><p class="date">Punkte gesamt</p><h1><span class="num">' + pktT(sum(list)) + '</span></h1><p class="sub">' + (list.length ? uniSollT(list.length) : 'Noch kein Termin eingetragen') + '</p></section>' +
+    (list.length ? '<div class="soll" role="img" aria-label="' + uniSollT(list.length) + '"><i style="width:' + Math.min(100, list.length / UNI_SOLL * 100).toFixed(1) + '%"></i></div>' : '') +
     '<div class="figs on-bg">' + FACH.map(f => fig(pktT(sum(list.filter(x => x.f === f[0]))), '', f[1])).join('') + '</div>' +
     '<button type="button" class="primary" data-n="newuni">Termin eintragen</button>';
   const row = x => '<li><button type="button" class="two" data-n="uni" data-id="' + esc(x.id) + '" aria-label="Termin ändern"><span class="l"><span>' + (x.n ? esc(x.n) : 'Termin') + '</span><small>' + dRow(x.d) + '</small></span><b>' + pktT(x.p) + ' Pkt.</b></button></li>';
@@ -3467,9 +3491,12 @@ const AREA = {
   gewicht: '<path d="M3.5 16.5l5-5 3.5 3.5 8-8"/><path d="M15 7h5v5"/>',
   haushalt: '<rect x="3.5" y="5.5" width="17" height="13" rx="2.5"/><path d="M3.5 10h17M7 14.5h3.5"/>',
   training: '<path d="M3 12.5h4l2.5-6.5 4.5 12 2.5-5.5H21"/>',
+  work: '<rect x="3.5" y="7.5" width="17" height="12" rx="2.5"/><path d="M9 7.5V6a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v1.5M3.5 13h17"/>',
+  uni: '<path d="M3 9.5l9-4.5 9 4.5-9 4.5z"/><path d="M7 12v4.2c1.4 1.2 3.1 1.8 5 1.8s3.6-.6 5-1.8V12"/>',
   notizen: '<path d="M6.5 3.5h8l4 4V19a1.5 1.5 0 0 1-1.5 1.5H6.5A1.5 1.5 0 0 1 5 19V5a1.5 1.5 0 0 1 1.5-1.5z"/><path d="M8.5 11.5h7M8.5 15h7M8.5 8h3"/>'
 };
-const ovCard = (to, label, v, s, cls) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"><span class="ic ' + to + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
+/* teil: Zeile für einen Teil des Planers (work, uni); der Tipp öffnet den Planer gleich dort */
+const ovCard = (to, label, v, s, cls, teil) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"' + (teil ? ' data-teil="' + teil + '"' : '') + '><span class="ic ' + (teil || to) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[teil || to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
 const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); };
 /* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
@@ -3556,7 +3583,11 @@ function renderHome() {
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   h += liveCardHTML();
   /* Übersicht: nur Bereiche, in denen etwas eingetragen ist. Ein leerer Bereich stünde sonst jeden Tag als Zeile ohne Inhalt da („Tippe, um zu starten“); er bleibt über die Leiste unten erreichbar. */
-  const ovs = (wv ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv ? ovCard('training', 'Training', tv, ts) : '');
+  /* Arbeit: Verdienst im laufenden Monat. Uni: Punkte gesamt und wie viele der Termine geschafft sind. */
+  const wk = workList(), wc = wk.filter(x => x.d.slice(0, 7) === curYM), un = uniList(), pkt = un.reduce((n, x) => n + x.p, 0), wTage = new Set(wc.map(x => x.d)).size;
+  const av = wk.length ? eur(wc.reduce((n, x) => n + workPay(x), 0)) : '', as = wc.length ? stdT(wc.reduce((n, x) => n + workMin(x), 0)) + ' an ' + wTage + (wTage === 1 ? ' Tag' : ' Tagen') + ' im ' + mName : 'Im ' + mName + ' noch nichts eingetragen';
+  const ovs = (wv ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv ? ovCard('training', 'Training', tv, ts) : '') +
+    (av ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '') + (un.length ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '');
   if (ovs) h += '<div class="ovs">' + ovs + '</div>';
   /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
      Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
@@ -3577,7 +3608,7 @@ $('#v-heute').addEventListener('click', e => {
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
-  else if (a === 'go') show(v, true);
+  else if (a === 'go') { if (t.dataset.teil) rSub = t.dataset.teil; show(v, true); }
   else if (a === 'q') quickOpen(v);
   else if (a === 'export') exportData();
   else if (a === 'import') $('#bk-file').click();
@@ -3652,8 +3683,11 @@ $('#bk-file').addEventListener('change', e => {
 });
 
 /* ---------- Bereiche ---------- */
+/* Oben steht der Name des Bereichs mit dem blauen Punkt der Marke (v80); auf Heute bleibt es „Track.“ */
+const TITEL = { heute: 'Track', routinen: 'Planer', gewicht: 'Gewicht', haushalt: 'Finanzen', training: 'Training' };
 function paintTop() {
   const add = $('#add');
+  $('#mark').textContent = TITEL[view] || 'Track';
   add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
   add.style.visibility = view === 'heute' ? 'hidden' : '';
 }
@@ -3672,7 +3706,7 @@ function show(v, user) {
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
-  if (user && view !== was) { foldsShut(); render(); }
+  if (user && view !== was) { foldsShut(); render(); const el = $('#v-' + view); el.classList.remove('ein'); void el.offsetWidth; el.classList.add('ein'); }
   if (user) {
     $('#scroll').scrollTop = 0;
     try { if (location.hash.slice(1) !== view) location.hash = view; } catch (e) {}
