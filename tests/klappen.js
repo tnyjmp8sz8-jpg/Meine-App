@@ -465,5 +465,19 @@ lauf(async () => {
     const ohne = (await text(page, '#v-training [data-fold="letzterLauf"]')).replace(/\s+/g, ' ');
     P.ok('Cardio „Letzter Lauf“ ohne Puls: rechts steht der Vergleich der Pace', ohne.includes('24 s schneller') && !ohne.includes('Effizienz'), ohne);
   }
-  await P.ende(browser, fehler);
+  await browser.close();
+
+  // --- Cardio: Die Karte mit dem Verlauf gibt es erst, wenn es einen Graphen gibt (v76; vorher stand bei einem einzigen Lauf eine leere Karte mit zwei Knöpfen da) ---
+  const lf = (i, hr) => ({ d: tag(i), m: 5000, s: 1500 + i * 60, hr, k: 'out' }), nurLaeufe = runs => ({ S: { routines: [], running: null }, LY: {}, T: { runs } });
+  const karte = async runs => { const o = await oeffnen({ daten: nurLaeufe(runs) }); await bereich(o.page, 'training');
+    const r = await o.page.evaluate(() => { const k = document.querySelector('#v-training .card.chart'), v = document.querySelector('#v-training'); return { karte: !!k, graph: !!(k && k.querySelector('svg')), knoepfe: k ? k.querySelectorAll('[data-t="metric"]').length : 0, satz: v.innerText.includes('Ab zwei Läufen'), letzter: !!v.querySelector('[data-fold="letzterLauf"]'), laeufe: !!v.querySelector('[data-fold="laeufe"]') }; });
+    fehler.push(...o.fehler); await o.browser.close(); return r; };
+  const einer = await karte({ a: lf(0, 143) });
+  P.ok('Cardio, ein Lauf: keine Karte mit dem Verlauf, kein Satz „Ab zwei Läufen“; „Letzter Lauf“ und „Läufe“ stehen da', !einer.karte && !einer.satz && einer.letzter && einer.laeufe, JSON.stringify(einer));
+  const zwei = await karte({ a: lf(0, 143), b: lf(3, 150) });
+  P.ok('Cardio, zwei Läufe mit Puls: Karte mit Graph und beiden Knöpfen', zwei.karte && zwei.graph && zwei.knoepfe === 2, JSON.stringify(zwei));
+  // zwei Läufe ohne Puls: Für die Effizienz gibt es keinen Graphen, für die Pace schon. Die Karte bleibt, damit man auf „Pace“ umschalten kann.
+  const ohne = await karte({ a: lf(0, null), b: lf(3, null) });
+  P.ok('Cardio, zwei Läufe ohne Puls: Karte bleibt mit dem Hinweis und den Knöpfen (Pace hat einen Graphen)', ohne.karte && !ohne.graph && ohne.knoepfe === 2 && ohne.satz, JSON.stringify(ohne));
+  await P.ende(null, fehler);
 });

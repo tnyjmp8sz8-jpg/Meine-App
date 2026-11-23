@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v75 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 22.11.2026). `node tests/alle.js` (v75): alle 708 Prüfungen in 15 Reihen stimmen (Ablauf 14, Aufbau 62, Klappzeilen 144, Gesten 21, Eingaben 21, Löschen 20, Notizen 44, Arbeit und Uni 46, Finanzen 68, Gym 35, Monat 30, Hülle 161, Apple Watch 24, Speichern 8, Aktualisierung 10); am 1.12. und 31.12. geprüft: Notizen, Klappzeilen, Monat (am 1.12. auch Hülle).
+- App-Inhalt (`index.html`): live ist v76 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 23.11.2026). `node tests/alle.js` (v76): alle 711 Prüfungen in 15 Reihen stimmen (Klappzeilen 147, Apple Watch 24, Hülle 161, Notizen 44, die übrigen wie in v75). Zuletzt mit gestellter Uhr geprüft in v75 (1.12. und 31.12.).
+- v76 (23.11., er zu Cardio: „irgendwie noch unübersichtlich, weiß nicht warum“; nach Bild „jetzt / Vorschlag“ sein „ja anpassen“): Die Karte mit dem Verlauf erscheint erst ab zwei Läufen, die Zeile „Apple Watch“ nur, solange etwas zu tun ist. Oben (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) bewusst nichts angefasst; ihm angeboten, dazu ein eigenes Bild zu zeigen.
 - v74 und v75 (seine Aufträge vom 22.11.: „mach jetzt aufgaben raus“, „entferne routinen aus der app“): Aufgaben und Routinen sind ausgebaut (Umschalter, Blätter, Timer, Serien, Heute, Woche, Monat, Kalender, Zusammenhänge, „Als Aufgabe“ an der Notiz). Was gespeichert war, bleibt im Speicher und in der Sicherung, wird aber nirgends gezeigt. Der Planer hat drei Teile und öffnet mit den Notizen: Notizen, Arbeit, Uni (von ihm so gewählt: „ja“ auf meinen Vorschlag A; der Bereich heißt weiter „Planer“). Auf Heute zeigt die Wochenleiste nur noch die Punkte fürs Training. Am iPhone noch nicht gesehen.
 - v72/v73: „Arbeit“ und „Uni“ als eigene Teile oben im Planer. Meine Annahmen, ihm genannt: ein Stundenlohn je Eintrag (vorbelegt mit dem letzten), Pause in Minuten, Punkte trägt er je Termin selbst ein, Summen über alle Zeit. Offen an ihn: Punkte je Semester getrennt? Soll je Fach? Mehrere Jobs? Am iPhone noch nicht gesehen (Zeitfelder „Von/Bis“ zeigen dort das Rad).
 - v71 behebt seinen Fund (Bildschirmfoto 18.11., 23:47: Betrag im Budget mit blauem Rand, keine Tastatur): Der Fokus kam 60 ms nach dem Tipp, jetzt sofort in allen Blättern. Am iPhone noch nicht bestätigt. Auf seinem Foto standen die Konten „Girokonto“ und „PayPal“ (noch nicht in „Trade Republic“ umbenannt).
@@ -24,7 +25,6 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 3. Eine Rechenkante beheben (siehe „Offene Probleme“: neues Konto zählt als Plus).
 4. Seine Entscheidung: Entwickler-Konto von Apple (99 US-Dollar im Jahr) für echtes Health und kein Erneuern alle 7 Tage.
 5. Ein neues Widget „Heute“ mit Zahlen statt Routinen (Gewicht, übrig im Monat, Kilometer): bräuchte neue Felder im Stand und eine neue Installation.
-6. Cardio ruhiger (23.11., er: „irgendwie noch unübersichtlich, weiß nicht warum“). Meine Deutung, ihm mit Bild „jetzt / Vorschlag“ gezeigt: Unten stehen Flächen ohne Inhalt. Vorschlag: die Karte mit dem Verlauf erst zeigen, wenn es einen Graphen gibt (ab zwei Läufen), und die Zeile „Apple Watch“ nur, wenn etwas zu tun ist (wartet, Strecke fehlt), nicht bei „eingetragen“. Oben (Umschalter, Wochenleiste, Monat/Jahr, Pfeile) bewusst nichts angefasst. Antwort steht aus.
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
 Ältere Vorschläge:
@@ -51,6 +51,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 - v71: Die Tastatur geht in allen Blättern sofort auf (Fokus ohne Wartezeit).
 - v72–v73: „Arbeit“ (Arbeitszeiten, Verdienst je Monat als Klappzeile) und „Uni“ (Termine mit Fach und Punkten, Summe je Fach), seit v73 als eigene Teile oben im Planer.
 - v74–v75 mit iPhone-App 0.7: Aufgaben und Routinen ausgebaut (Gespeichertes bleibt erhalten), Widget „Heute“ entfernt; Projektdateien sortiert (`BEREICHE.md`).
+- v76: Cardio ohne leere Flächen (Verlauf erst ab zwei Läufen, „Apple Watch“ nur bei Bedarf).
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe sind Laufband-Läufe.

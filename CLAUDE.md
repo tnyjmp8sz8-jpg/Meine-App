@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v75)
+# Track. – Projektwissen (App-Stand v76)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -106,7 +106,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Kennfarben der Bereiche (Planer blau, Gewicht lila `--c-weight`, Finanzen orange `--c-money`, Training grün `--good`): am Symbol in der Übersicht auf Heute, am Plus der Schnell-Knöpfe auf Heute und am Symbol der leeren Seiten (`emptyHTML()` gibt `.e-ic` die Klasse des Bereichs; seit v55, vom Nutzer nach Vorschaubild gewählt). Nicht in der Leiste unten und nicht an Überschriften: Dort bliebe Blau nicht mehr „antippbar“, und es würde bunt.
 - Systemschrift, große Zahlen mit `var(--round)`. Abschnittstitel fett und normal geschrieben.
 - Erklärungen nie dauerhaft, sondern hinter `INFO()`. Ein „i“ am Ende einer Textzeile steht mit dem letzten Wort in einem Stück ohne Umbruch, sonst rutscht es allein in eine zweite Zeile. Bedienreihen (Wochenleiste, Monat/Jahr, Pfeile) bleiben je eine eigene Reihe: nicht zusammenlegen, um Platz zu sparen.
-- Nur was nötig ist: keine erklärenden Texte ohne Nutzen, keine Töne, keine ungefragten Einstellungen, lange Listen einklappen.
+- Nur was nötig ist: keine erklärenden Texte ohne Nutzen, keine Töne, keine ungefragten Einstellungen, lange Listen einklappen. Keine Fläche ohne Inhalt (v76): Eine Karte oder Zeile erscheint erst, wenn sie etwas zeigt oder etwas zu tun ist; ein Platzhalter-Satz wie „ab zwei Läufen …“ in einer sonst leeren Karte wirkt unübersichtlich (seine Rückmeldung zu Cardio, 23.11.).
 - Erst das Wichtigste, der Rest eingeklappt (v64): Verläufe und Stammdaten als Klappzeile mit Anzahl (6 px Abstand untereinander, `.folds`), „Hinzufügen“ als kleines Plus in der Überschrift, keine Überschrift ohne Inhalt, in Listen trägt nur die Veränderung Farbe (grün/rot), der Wert davor nicht. Was auf Heute steht, ist eine Kurzform des Bereichs.
 - Hell, dunkel und 320 px Breite müssen funktionieren. Nichts darf seitlich wischbar oder abgeschnitten sein.
 
@@ -162,7 +162,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v75` → `takt-v76`), `<span class="ver">v75</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v76` → `takt-v77`), `<span class="ver">v76</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Alles Neue wird ohne Nachfrage direkt nach `main` veröffentlicht, sobald es fertig und getestet ist (sein Wunsch, 22.11.2026: „immer alles neues direkt veröffentlichen“; er kann es jederzeit zurücknehmen). Auch reine Änderungen an den Projektdateien gehen nach `main`: Eine neue Sitzung beginnt dort. Ausnahme bleibt, was er „erstmal nur merken“ nennt.
 - Standardzweig bei GitHub ist `main` (seit 19.11.2026): Eine neue Sitzung beginnt dort. Trotzdem zu Beginn jeder Sitzung prüfen, dass der Arbeitsordner auf dem Stand von `main` ist (`git fetch origin main`, Überschrift dieser Datei vergleichen); wenn nicht, zuerst `main` holen und nichts auf dem alten Stand bauen. Warum: Einmal begann eine Sitzung auf einem alten Zweig und meldete v63 statt v73.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.

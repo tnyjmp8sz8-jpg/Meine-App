@@ -76,7 +76,7 @@ lauf(async () => {
   await ruf(page, 'eingang', auftrag('u9', { id: id3, t: v3, s: 1560, km: [4.4], pu: [149] }));
   p.ok('gelöschter Lauf kommt nicht wieder', !(await einer(id3)) && (await runs()).length === 4);
 
-  /* 10. Klappzeile „Apple Watch“: ohne uhr in info() gibt es sie nicht; mit uhr zeigt sie den letzten erkannten Lauf.
+  /* 10. Klappzeile „Apple Watch“: ohne uhr in info() gibt es sie nicht; mit uhr zeigt sie den letzten erkannten Lauf, solange etwas zu tun ist.
          Erkannt: der Lauf vom 14. (eingetragen: von Hand geändert, gleiche Dauer) und einer am 15. von 9:00 bis 9:40, zu dem keine Strecke kam (2 Versuche). */
   await ruf(page, 'info', { app: '0.5', health: 'fehlt' });
   p.ok('ohne uhr: keine Zeile', await page.locator('#v-training [data-fold="uhr"]').count() === 0);
@@ -91,7 +91,8 @@ lauf(async () => {
   const blatt = await page.evaluate(() => ({ auf: document.querySelector('#tsheet').open, d: document.querySelector('#t-date').value, min: document.querySelector('#t-min').value, sec: document.querySelector('#t-sec').value, km: document.querySelector('#t-km').value }));
   p.ok('Tipp darauf: Blatt mit dem 15. und 40:00, Strecke leer', blatt.auf && blatt.d === am(15) && blatt.min === '40' && blatt.sec === '0' && blatt.km === '', JSON.stringify(blatt));
   await page.fill('#t-km', '6,4'); await page.click('#t-save'); await page.waitForTimeout(150);
-  p.enthaelt('nach dem Eintragen von Hand gilt der Lauf als eingetragen', await text(page, '#v-training [data-fold="uhr"]'), ['eingetragen']);
+  /* Seit v76 steht die Zeile nur da, solange etwas zu tun ist: Sind alle erkannten Läufe eingetragen, verschwindet sie (der Lauf steht unter „Letzter Lauf“ und „Läufe“) */
+  p.ok('nach dem Eintragen von Hand ist alles eingetragen: Die Zeile „Apple Watch“ ist weg', await page.locator('#v-training [data-fold="uhr"]').count() === 0 && (await runs()).some(r => r.d === am(15) && r.m === 6400));
   /* Die Uhr liefert doch noch: gleiche Dauer wie der von Hand eingetragene → nicht doppelt */
   await ruf(page, 'eingang', auftrag('u10', { id: kennung(v6), t: v6, s: 2400, km: [5.9], pu: [150] }));
   p.ok('später doch geliefert: nicht doppelt', (await runs()).length === 5, JSON.stringify(await runs()));

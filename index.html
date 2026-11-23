@@ -712,7 +712,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v75</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v76</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2293,8 +2293,10 @@ function tMonthHTML(all, list0, kind, curYM) {
   /* Ab 10 % ohne Nachkommastelle: Mit „−12,5 %“ wäre die Kachel bei 320 px zu eng. */
   h += tTiles(g, p == null || Math.abs(p) < 0.05 ? null : { t: (p > 0 ? '+' : '−') + (Math.abs(p) >= 9.95 ? Math.round(Math.abs(p)) : kg(Math.abs(p))) + ' %', c: p > 0 ? 'up' : 'down' });
   const last = list0[list0.length - 1];
-  const ck = kind === 'all' ? (last ? last.k : 'out') : kind, svg = runSVG(all.filter(r => r.k === ck), tMetric);
-  h += '<div class="card chart"><div class="card-head"><p class="note">Letzte ' + kindName(ck) + '-Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
+  /* Die Karte mit dem Verlauf gibt es erst, wenn es etwas zu zeigen gibt: ab zwei Läufen dieser Art (für die Effizienz mit Puls). Vorher stünde nur eine leere Karte mit zwei Knöpfen da.
+     Gibt es nur für den anderen Messwert einen Graphen (Läufe ohne Puls), bleibt die Karte, damit man umschalten kann. */
+  const ck = kind === 'all' ? (last ? last.k : 'out') : kind, rs = all.filter(r => r.k === ck), svg = runSVG(rs, tMetric);
+  if (svg || runSVG(rs, tMetric === 'eff' ? 'pace' : 'eff')) h += '<div class="card chart"><div class="card-head"><p class="note">Letzte ' + kindName(ck) + '-Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
     [['eff', 'Effizienz'], ['pace', 'Pace']].map(m => '<button type="button" class="chip" data-t="metric" data-v="' + m[0] + '" aria-pressed="' + (tMetric === m[0]) + '">' + m[1] + '</button>').join('') + '</div></div>' +
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
   /* Läufe des Monats: eingeklappt wie die Einheiten im Gym. Der Graph zeigt sie schon als Punkte, der letzte steht in der Zeile darüber im Vergleich. */
@@ -3978,6 +3980,9 @@ function uhrFoldHTML() {
   /* Kam eine Strecke an und es steht trotzdem kein Lauf da, hat die App ihn nicht angenommen (z. B. unter 50 m): Dann fehlt nicht die Strecke. */
   const was = f => zu(f) ? 'eingetragen' : f.km ? 'nicht eingetragen' : f.lesungen ? 'Strecke fehlt' : 'wartet auf die Strecke';
   const l = u.letzte[u.letzte.length - 1];
+  /* Ist alles eingetragen, steht die Zeile nicht da: Der Lauf steht schon unter „Letzter Lauf“ und „Läufe“. Sie erscheint, sobald etwas zu tun ist
+     (ein Lauf läuft, das Ende fehlt, eine Strecke fehlt oder wartet) und solange noch kein Lauf erkannt wurde (dann erklärt sie die Kurzbefehle). */
+  if (u.n && !u.offen && u.letzte.every(zu)) return '';
   /* offen: Die Uhr hat einen Beginn gemeldet, das Ende steht aus. Nach vier Stunden kommt es nicht mehr: Dann fehlt es (so sieht man, wenn die Automation das Ende nicht meldet). */
   const haengt = u.offen && Date.now() - u.offen > 4 * 3600000;
   const sub = u.offen && !haengt ? 'Lauf läuft seit ' + uhrzeit(u.offen) + ' Uhr' : haengt && (!l || u.offen > l.bis) ? dRow(keyOf(new Date(u.offen))) + ' · ' + uhrzeit(u.offen) + ' Uhr · Ende fehlt' : l ? dRow(keyOf(new Date(l.von))) + ' · ' + was(l) : 'noch kein Lauf erkannt';
