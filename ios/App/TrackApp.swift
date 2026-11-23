@@ -40,6 +40,27 @@ struct TrackApp: App {
     }
 }
 
+/// Spürbare Rückmeldung (ab 0.8). Die Web-App sagt nur, was passiert ist; welcher Impuls dazu passt, steht hier.
+/// Die Geber bleiben bestehen und werden nach jedem Impuls wieder bereit gemacht, sonst käme der nächste spürbar verspätet.
+@MainActor
+enum Haptik {
+    private static let wahl = UISelectionFeedbackGenerator()
+    private static let leicht = UIImpactFeedbackGenerator(style: .light)
+    private static let mittel = UIImpactFeedbackGenerator(style: .medium)
+    private static let meldung = UINotificationFeedbackGenerator()
+
+    static func gib(_ was: String) {
+        switch was {
+        case "wahl": wahl.selectionChanged(); wahl.prepare()          // Umschalter, Bereich, Klappzeile, Punkt im Graphen
+        case "leicht": leicht.impactOccurred(); leicht.prepare()      // abhaken
+        case "mittel": mittel.impactOccurred(); mittel.prepare()      // löschen, Training starten
+        case "erfolg": meldung.notificationOccurred(.success)         // gespeichert
+        case "fehler": meldung.notificationOccurred(.error)           // Eingabe fehlt oder passt nicht
+        default: break
+        }
+    }
+}
+
 enum Web {
     static let scheme = "trackapp"
     static let start = URL(string: "trackapp://lokal/index.html")!
@@ -174,6 +195,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             ordnerWaehlen()
         } else if art == "ordnerWeg" {
             Sicherung.shared.ordnerVergessen()
+        } else if art == "haptik" {
+            Haptik.gib(inhalt["w"] as? String ?? "")
         }
     }
 
