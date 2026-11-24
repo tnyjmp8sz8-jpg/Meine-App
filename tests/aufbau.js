@@ -39,6 +39,17 @@ lauf(async () => {
     // Oben steht der Name des Bereichs (v80), hier „Training“; sein Punkt trägt die Akzentfarbe (dieselbe wie der blaue Plus-Knopf), der Name selbst nicht. Auf Heute steht „Track.“
     const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).color }));
     P.ok('Titel oben: „Training.“ mit blauem Punkt' + b, farben.punkt === farben.plus && farben.name !== farben.plus && (await text(page, '.mark')) === 'Training.', JSON.stringify(farben) + ' ' + await text(page, '.mark'));
+    /* Leiste unten (v92): eine Kapsel, die schwebt (Abstand links, rechts und unten, voll gerundet). Der gewählte Bereich liegt als Kapsel darin und ist nicht blau.
+       Ganz nach unten gescrollt steht die Fußzeile über der Leiste, nichts bleibt dahinter verborgen. */
+    const leiste = await page.evaluate(() => { const l = document.querySelector('.tabs-in'), r = l.getBoundingClientRect(), c = getComputedStyle(l), t = document.querySelector('.tab[aria-current="page"]'), ct = getComputedStyle(t);
+      const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; const fuss = document.querySelector('.ver').getBoundingClientRect();
+      return { links: r.left, rechts: innerWidth - r.right, unten: innerHeight - r.bottom, rund: parseFloat(c.borderRadius) >= r.height / 2, fest: getComputedStyle(l.parentElement).position, gewaehlt: ct.backgroundColor, farbe: ct.color, blau: getComputedStyle(document.querySelector('.mark .dot')).color, frei: fuss.bottom <= r.top }; });
+    P.ok('Leiste unten schwebt als Kapsel, der gewählte Bereich ist eine Kapsel darin und nicht blau, die Fußzeile bleibt erreichbar' + b, leiste.links >= 10 && leiste.rechts >= 10 && leiste.unten >= 6 && leiste.rund && leiste.fest === 'fixed' && leiste.gewaehlt !== 'rgba(0, 0, 0, 0)' && leiste.farbe !== leiste.blau && leiste.frei, JSON.stringify(leiste));
+    /* Balken je Monat (v92): im laufenden Jahr trägt nur der laufende Monat die volle Farbe; ein Jahr zurück alle */
+    await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; }); await page.click('#v-training [data-t="mode"][data-v="year"]');
+    const balken = () => page.evaluate(() => [...document.querySelectorAll('#v-training rect.g-pos')].map(e => e.classList.contains('jetzt') ? 'J' : '-').join(''));
+    const heuer = await balken(); await page.click('#v-training .mnav [data-m="prev"]'); const davor = await balken(); await page.click('#v-training .mnav [data-m="next"]'); await page.click('#v-training [data-t="mode"][data-v="month"]');
+    P.ok('Balken: im laufenden Jahr höchstens einer hervorgehoben (der laufende Monat, wenn er einen Wert hat), im Jahr davor alle' + b, (heuer.match(/J/g) || []).length <= 1 && /^-*J?$/.test(heuer) && !/-/.test(davor), heuer + ' · ' + davor);
     const titel = []; for (const v of ['heute', 'routinen', 'gewicht', 'haushalt', 'training']) { await bereich(page, v); titel.push(await text(page, '.mark')); }
     P.ok('Titel je Bereich: Track., Planer., Gewicht., Finanzen., Training.' + b, titel.join(' ') === 'Track. Planer. Gewicht. Finanzen. Training.', titel.join(' '));
     // Monat/Jahr steht klein in der Reihe der Umschalter, rechts von „Cardio / Gym“ und über der Wochenleiste; die Tippfläche ist mindestens 28 px hoch (wie die übrigen Umschalter)

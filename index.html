@@ -42,6 +42,7 @@
 :root{
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
+  --glass:rgba(255,255,255,.78); --glass-line:rgba(0,0,0,.07); --glass-sel:rgba(0,0,0,.07); --tab-cut:#ECECEE;
   --sheet:#F2F2F7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -67,7 +68,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#000000; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+    --bg:#000000; --glass:rgba(44,44,46,.74); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(0,0,0,.45); --tab-cut:#131314; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
@@ -76,7 +77,7 @@
 }
 :root[data-theme="dark"] dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
 :root[data-theme="dark"]{
-  --bg:#000000; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+  --bg:#000000; --glass:rgba(44,44,46,.74); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(0,0,0,.45); --tab-cut:#131314; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
   --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
   color-scheme:dark;
 }
@@ -90,13 +91,13 @@ button:disabled{cursor:default;opacity:.4}
 :focus-visible{outline:2px solid var(--at);outline-offset:2px}
 dialog:focus,dialog:focus-visible{outline:none}
 
-.app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px 24px;display:flex;flex-direction:column;gap:22px;min-height:100%}
+.app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(92px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:22px;min-height:100%}
 
 /* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
 .top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
 .mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
-.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center}
+.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line)}
 .add svg{width:20px;height:20px}
 
 .hero{display:flex;flex-direction:column;gap:6px}
@@ -205,15 +206,19 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .view{display:flex;flex-direction:column;gap:22px}
 .view[hidden],.fld[hidden],.hero[hidden]{display:none}
 .view>.sec{margin:6px 2px -12px}
-.tabs{flex:none;background:var(--bg);border-top:1px solid var(--line)}
-.tabs-in{max-width:480px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;padding:4px 16px calc(4px + env(safe-area-inset-bottom,0px))}
-.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:12px;font-variant-numeric:tabular-nums}
+/* Leiste unten (v92, sein Wunsch nach einem Bild aus iOS 26: „schwebende Elemente“): eine Kapsel aus Glas, die über dem Inhalt schwebt. Der Inhalt läuft darunter durch
+   und blendet nach unten in den Grund aus (::before), damit unter der Kapsel nichts hervorschaut. Der gewählte Bereich liegt als dunklere Kapsel darin, nicht mehr in Blau.
+   Die Leiste steht außerhalb des scrollenden Bereichs: Dort macht der Milchglas-Effekt das Element selbst nicht unscharf (anders als die Kopfzeile, v37). */
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px calc(8px + env(safe-area-inset-bottom,0px));pointer-events:none}
+.tabs::before{content:"";position:absolute;inset:-22px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,var(--bg) 62%)}
+.tabs-in{pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),0 8px 24px rgba(0,0,0,.3)}
+.tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:999px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
-.tab[aria-current="page"]{color:var(--accent);font-weight:600}
+.tab[aria-current="page"]{background:var(--glass-sel);color:var(--ink);font-weight:600}
 /* Aktiver Bereich: Flächen (.f) gefüllt, Details (.k, .d) in der Farbe der Leiste ausgespart, reine Linien (.b) kräftiger */
 .tab .d{display:none}
 .tab[aria-current="page"] .f{fill:currentColor}
-.tab[aria-current="page"] .k,.tab[aria-current="page"] .d{display:inline;stroke:var(--bg)}
+.tab[aria-current="page"] .k,.tab[aria-current="page"] .d{display:inline;stroke:var(--tab-cut)}
 .tab[aria-current="page"] .d{stroke-width:3.2;stroke-linecap:butt}
 .tab[aria-current="page"] .b{stroke-width:2.7}
 
@@ -259,7 +264,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .goal.is-idle .glyph{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--at)}
 
 /* Finanzen (im Code „haushalt“) */
-.tabs-in{grid-template-columns:repeat(5,1fr);padding-left:4px;padding-right:4px}
+.tabs-in{grid-template-columns:repeat(5,1fr)}
 .chips[hidden]{display:none}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
 .seg2.three{grid-template-columns:repeat(3,1fr)}
@@ -293,8 +298,10 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .entries .neg{color:var(--danger)}
 .view>.note,.view>.nach>.note{margin-top:-8px}
 .view>.sec+.note{margin-top:0}
-.g-pos{fill:var(--at)}
-.g-neg{fill:var(--danger)}
+/* Balken je Monat (v92): Kapseln; im laufenden Jahr trägt nur der laufende Monat die volle Farbe (Klasse jetzt), in früheren Jahren alle */
+.g-pos{fill:var(--at);opacity:.42}
+.g-neg{fill:var(--danger);opacity:.42}
+.g-pos.jetzt,.g-neg.jetzt{opacity:1}
 .g-zero{stroke:var(--muted);stroke-width:1}
 #mform .stepper input,#tform .stepper input,#vform #g-amt{text-align:left;padding-left:16px}
 
@@ -442,7 +449,7 @@ body{font-size:14px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(72px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(78px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
@@ -473,7 +480,7 @@ body{font-size:14px}
 .ins b{font-size:13.5px}
 .ins span{font-size:12.5px}
 .mbar{height:8px;margin-bottom:-6px}
-.tab{padding:5px 0 3px}
+.tab{padding:6px 0 5px}
 .tab svg{width:20px;height:20px}
 .foot{font-size:11.5px}
 .ver{display:block;margin-top:2px;font-size:10px;color:var(--mid)}
@@ -716,12 +723,11 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
 .seg2 button[aria-pressed="true"]::before{box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
-.tabs{border-top-color:var(--line)}
 .top{border-bottom-color:transparent;transition:border-color .2s ease}
 .top.scrolled{border-bottom-color:var(--line)}
 .tab{font-size:10px;font-weight:500}
-.primary{font-size:14px;font-weight:600;min-height:40px;border-radius:14px}
-.ghost{border-radius:14px}
+.primary{font-size:14px;font-weight:600;min-height:40px;border-radius:999px}
+.ghost{border-radius:999px}
 .x{width:32px;height:32px;position:relative}
 .x::after{content:"";position:absolute;inset:-6px}
 .x svg{width:12px;height:12px}
@@ -808,7 +814,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v91</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v92</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1803,7 +1809,7 @@ function monthHTML(curYM) {
   return h;
 }
 
-function yearSVG(ms) {
+function yearSVG(ms, hl) {
   const VW = 360, VH = 170, L = 4, R = 46, T = 10, B = 22;
   let lo = 0, hi = 0;
   ms.forEach(s => { if (s) { lo = Math.min(lo, s.bal); hi = Math.max(hi, s.bal); } });
@@ -1815,7 +1821,7 @@ function yearSVG(ms) {
   for (let v = lo; v <= hi; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + (v < 0 ? '−' : '') + eur0(v) + '</text>';
   ms.forEach((m, i) => {
     const cx = L + slot * (i + 0.5);
-    if (m) { const y = Y(m.bal), y0 = Y(0), hgt = Math.max(1.5, Math.abs(y - y0)); s += '<rect class="' + (m.bal < 0 ? 'g-neg' : 'g-pos') + '" x="' + f(cx - bw / 2) + '" y="' + f(Math.min(y, y0)) + '" width="' + f(bw) + '" height="' + f(hgt) + '" rx="3"/>'; }
+    if (m) { const y = Y(m.bal), y0 = Y(0), hgt = Math.max(1.5, Math.abs(y - y0)); s += '<rect class="' + (m.bal < 0 ? 'g-neg' : 'g-pos') + (hl < 0 || i === hl ? ' jetzt' : '') + '" x="' + f(cx - bw / 2) + '" y="' + f(Math.min(y, y0)) + '" width="' + f(bw) + '" height="' + f(hgt) + '" rx="' + f(Math.min(bw, hgt) / 2) + '"/>'; }
     s += '<text text-anchor="middle" x="' + f(cx) + '" y="' + (VH - 6) + '">' + MONTHS[i].charAt(0) + '</text>';
   });
   return s + '</svg>';
@@ -1843,7 +1849,7 @@ function yearHTML(curYM) {
   h += heroM('Bilanz ' + y, tot.bal, first ? span : 'Keine Einträge in diesem Jahr.');
   if (!first) return h;
   h += barHTML(tot) + sumTiles(tot) + rateHTML(tot, ySum(y - 1, 12).tot, 'Sparquote');
-  h += '<div class="card chart"><p class="note">Bilanz pro Monat in €</p>' + yearSVG(ms) + '</div>';
+  h += '<div class="card chart"><p class="note">Bilanz pro Monat in €</p>' + yearSVG(ms, y === curY ? +curYM.slice(5) - 1 : -1) + '</div>';
   /* Der Graph zeigt die Monate schon; die Liste dazu (Sprung in den Monat) und die Kategorien sind je eine eingeklappte Zeile */
   h += '<div class="folds">' + foldHTML('budgetMonate', 'Monate', '', ms.filter(Boolean).length, ms.map((s, i) => s ? '<li><button type="button" class="two" data-m="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + eur0(s.inc) + ' € ein · ' + eur0(s.fix + s.flex) + ' € aus</small></span>' +
@@ -2396,7 +2402,7 @@ function runSVG(runs, metric) {
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-function kmBarsSVG(vals, label) {
+function kmBarsSVG(vals, label, hl) {
   const VW = 360, VH = 170, L = 4, R = 40, T0 = 10, B = 22;
   let hi = Math.max.apply(null, vals.concat([5]));
   const step = [2, 5, 10, 20, 25, 50, 100, 200, 500].find(x => x >= hi / 3) || 1000;
@@ -2407,7 +2413,7 @@ function kmBarsSVG(vals, label) {
   for (let v = 0; v <= hi + 1e-9; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + v + '</text>';
   vals.forEach((v, i) => {
     const cx = L + slot * (i + 0.5);
-    if (v > 0) s += '<rect class="g-pos" x="' + f(cx - bw / 2) + '" y="' + f(Y(v)) + '" width="' + f(bw) + '" height="' + f(Math.max(1.5, Y(0) - Y(v))) + '" rx="3"/>';
+    if (v > 0) { const hgt = Math.max(1.5, Y(0) - Y(v)); s += '<rect class="g-pos' + (hl < 0 || i === hl ? ' jetzt' : '') + '" x="' + f(cx - bw / 2) + '" y="' + f(Y(v)) + '" width="' + f(bw) + '" height="' + f(hgt) + '" rx="' + f(Math.min(bw, hgt) / 2) + '"/>'; }
     s += '<text text-anchor="middle" x="' + f(cx) + '" y="' + (VH - 6) + '">' + MONTHS[i].charAt(0) + '</text>';
   });
   return s + '</svg>';
@@ -2456,7 +2462,7 @@ function tYearHTML(all, curYM) {
   for (let m = 1; m <= 12; m++) per.push(tAgg(list.filter(r => r.d.slice(5, 7) === pad(m))));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
-  h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000)) + '</div>';
+  h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000), '', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
   h += foldHTML('cardioMonate', 'Monate', '', per.filter(p => p.n).length, per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join(''));
   return h;
@@ -2768,7 +2774,7 @@ function kYearHTML(curYM) {
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
   h += kTiles(s) + kNote(s) + kGewHTML(y, y);
-  h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
+  h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFolds().join('') + '</div>';
 }
