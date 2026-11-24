@@ -327,17 +327,17 @@ lauf(async () => {
   P.ok('volle Runde aus der Vorwoche: neue Runde, Torso A ist dran', reihe9 === 'Torso A:is-idle | Extremitäten:is-wait | Torso B:is-wait', reihe9);
   await o9.browser.close();
   /* Laufendes Training im Vollbild (v96, sein Wunsch: „ganzer Bildschirm … will Fokus darauf“). Ein Plan mit einer Übung und drei Sätzen, ohne frühere Einheit:
-     Das Blatt deckt den ganzen Bildschirm (390 × 844), schwarz, ohne Rundung und ohne Milchglas; die Knöpfe zum Beenden stehen unten am Bildschirm.
+     Das Blatt deckt den ganzen Bildschirm (390 × 844), seit v98 in edlem Grau (#1C1C1E, die Seite dahinter bleibt schwarz), ohne Rundung und ohne Milchglas; die Knöpfe zum Beenden stehen unten am Bildschirm.
      „+ Satz“, „− Satz“ und „Übung entfernen“ stehen erst nach einem Tipp auf „…“ da. Schließen lässt das Training weiterlaufen; nach einem Neuladen steht es von selbst wieder im Vollbild da,
      außer die Adresse verlangt eine Schnelleingabe (?neu=notiz). */
   const o10 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: { ex: { a: { n: 'Rudern' } }, log: {}, meta: {}, live: null, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }], o: 1 } } } } }), f = o10.page;
   await bereich(f, 'training'); await f.click('#v-training [data-k="start"]'); await f.waitForTimeout(250);
   const voll = () => f.evaluate(() => { const d = document.querySelector('#lsheet'), r = d.getBoundingClientRect(), c = getComputedStyle(d);
     return [d.open, Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), c.backgroundColor, parseFloat(c.borderTopLeftRadius), /blur/.test(c.backdropFilter || '')].join(' '); });
-  P.ok('Training starten öffnet das Vollbild: ganzer Bildschirm, schwarz, ohne Rundung und Milchglas', (await voll()) === 'true 0 0 390 844 rgb(0, 0, 0) 0 false', await voll());
+  P.ok('Training starten öffnet das Vollbild: ganzer Bildschirm, edles Grau (#1C1C1E) statt Schwarz, ohne Rundung und Milchglas', (await voll()) === 'true 0 0 390 844 rgb(28, 28, 30) 0 false', await voll());
   const unten = await f.evaluate(() => Math.round(document.querySelector('#l-del').getBoundingClientRect().bottom));
   P.ok('„Beenden“ und „Verwerfen“ stehen unten am Bildschirm', unten > 844 - 40 && unten <= 844 && await f.isVisible('#l-save'), String(unten));
-  P.ok('Flächen im Vollbild wie in der App (#2C2C2E), nicht eine Stufe heller wie in Blättern', (await f.evaluate(() => getComputedStyle(document.querySelector('#l-w')).backgroundColor)) === 'rgb(44, 44, 46)');
+  P.ok('die Seite dahinter bleibt schwarz; Flächen im Vollbild eine Stufe heller als der graue Grund (#3A3A3C)', (await f.evaluate(() => getComputedStyle(document.body).backgroundColor + ' ' + getComputedStyle(document.querySelector('#l-w')).backgroundColor)) === 'rgb(0, 0, 0) rgb(58, 58, 60)');
   const saetzeF = () => f.$$eval('#l-items .lx > .lt > .lt-r', l => l.length);
   P.ok('ohne Tipp auf „…“: keine Zeile mit „+ Satz“', !(await f.$('#l-items [data-la="addset"]')) && (await saetzeF()) === 3);
   await f.click('#l-items [data-la="menu"]');
@@ -355,7 +355,7 @@ lauf(async () => {
   await f.click('#ls-close'); await f.waitForTimeout(100);
   P.ok('Schließen: Das Training läuft weiter, die Karte steht im Bereich', !(await f.evaluate(() => document.querySelector('#lsheet').open)) && !!(await gespeichert(f)).K.live && !!(await f.$('#v-training [data-k="live"]')));
   await f.goto(f.url().split('#')[0]); await f.waitForTimeout(300);
-  P.ok('App neu geladen, während ein Training läuft: Sie öffnet von selbst im Vollbild auf dem Training', (await voll()) === 'true 0 0 390 844 rgb(0, 0, 0) 0 false' && await f.isVisible('#l-w'), await voll());
+  P.ok('App neu geladen, während ein Training läuft: Sie öffnet von selbst im Vollbild auf dem Training', (await voll()) === 'true 0 0 390 844 rgb(28, 28, 30) 0 false' && await f.isVisible('#l-w'), await voll());
   await f.goto(f.url().split('#')[0].split('?')[0] + '?neu=notiz'); await f.waitForTimeout(300);
   P.ok('mit Schnelleingabe in der Adresse bleibt das Vollbild zu, das Training läuft weiter', !(await f.evaluate(() => document.querySelector('#lsheet').open)) && !!(await gespeichert(f)).K.live);
   await o10.browser.close();
