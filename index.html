@@ -96,7 +96,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
 .mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
-.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--accent);color:var(--on-accent);display:grid;place-items:center}
+.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center}
 .add svg{width:20px;height:20px}
 
 .hero{display:flex;flex-direction:column;gap:6px}
@@ -115,7 +115,7 @@ dialog:focus,dialog:focus-visible{outline:none}
   position:relative;overflow:hidden;border-radius:16px;background:var(--surface);border:1px solid var(--line);
   display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;color:var(--r-ink);
 }
-.fill{position:absolute;inset:0 auto 0 0;width:0;background:var(--accent-soft);transition:width .45s ease}
+.fill{position:absolute;inset:auto auto 0 0;height:3px;width:0;background:var(--accent);transition:width .45s ease}
 .go{position:relative;display:flex;align-items:center;gap:14px;padding:16px 6px 16px 16px;min-width:0;text-align:left;background:none;border:0}
 .go:active .glyph{transform:scale(.94)}
 .glyph{flex:none;width:46px;height:46px;border-radius:50%;display:grid;place-items:center;background:var(--r-accent);color:var(--on-accent);transition:transform .12s ease}
@@ -132,16 +132,11 @@ dialog:focus,dialog:focus-visible{outline:none}
 .more svg{width:20px;height:20px}
 
 .is-done .glyph{background:var(--good);color:var(--bg)}
-
-.is-run{
-  background:var(--accent);border-color:var(--accent);
-  --r-ink:var(--on-accent); --r-accent:var(--on-accent);
-  --r-muted:color-mix(in srgb,var(--on-accent) 76%,transparent);
-  --r-line:color-mix(in srgb,var(--on-accent) 34%,transparent);
-}
-.is-run .fill{background:var(--accent-deep);transition:width .3s linear}
-.is-run .glyph{background:var(--on-accent);color:var(--accent)}
-.is-run :focus-visible{outline-color:var(--on-accent)}
+.is-done .fill{background:var(--good)}
+/* Laufendes Training: dunkle Karte wie alle anderen, ein blauer Ring mit Punkt („läuft“) und der Fortschritt als Linie unten. Bis v89 eine voll blaue Fläche. */
+.is-run .fill{transition:width .3s linear}
+.is-run .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--accent)}
+.is-run .glyph i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
 
 
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
@@ -542,7 +537,8 @@ u.w{background:var(--c-weight)}
 .rows.one .row{border-radius:0;background:none}
 .rows.one .is-done .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .rows.one .is-done .glyph svg{width:13px;height:13px}
-.rows.one .is-wait .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--mid);color:var(--muted);font-family:var(--round);font-size:12.5px;font-weight:600}
+.rows.one .is-wait .glyph,.rows.one .is-idle .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--mid);color:var(--muted);font-family:var(--round);font-size:12.5px;font-weight:600}
+.rows.one .is-idle .glyph{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--at)}
 .rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
@@ -568,7 +564,8 @@ u.w{background:var(--c-weight)}
 .lx-tabs::-webkit-scrollbar{display:none}
 .lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:32px}
 .lx-tab[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
-.lx-tab.fin{color:var(--good)}
+.lx-tab.fin:not([aria-pressed="true"]){color:var(--good)}
+.lx-tab svg{width:11px;height:11px;margin-right:5px;vertical-align:-1px}
 .lx-tab.addx{width:36px;padding:0;font-size:17px;line-height:1;color:var(--at)}
 #l-add{display:flex;flex-direction:column;gap:8px}
 #l-add[hidden]{display:none}
@@ -701,7 +698,7 @@ dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
 .chip,.lx-tab{background:var(--surface)}
 .card .chip{background:var(--fill)}
-.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--accent);border-color:transparent;color:var(--on-accent)}
+.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--ink);border-color:transparent;color:var(--bg)}
 .stepper button,.mnav button{border-color:transparent;background:var(--surface)}
 .mnav button{background:none;color:var(--accent)}
 .mnav button:disabled{color:var(--muted)}
@@ -802,7 +799,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v89</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v90</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1225,7 +1222,6 @@ const fmt = sec => {
 };
 
 const ICON = {
-  play: '<svg viewBox="0 0 18 18" fill="currentColor" aria-hidden="true"><path d="M5 2.6v12.8a.8.8 0 0 0 1.2.7l10.3-6.4a.8.8 0 0 0 0-1.4L6.2 1.9A.8.8 0 0 0 5 2.6z"/></svg>',
   check: '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>',
   more: '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><circle cx="4" cy="10" r="1.7"/><circle cx="10" cy="10" r="1.7"/><circle cx="16" cy="10" r="1.7"/></svg>'
 };
@@ -2703,7 +2699,7 @@ function liveCardHTML() {
   const L = K.live; if (!L) return '';
   const done = L.items.reduce((n, it) => n + it.sets.filter(s => s.done).length, 0), tot = L.items.reduce((n, it) => n + it.sets.length, 0);
   return '<ul class="rows"><li class="row is-run"><div class="fill" style="width:' + (tot ? done / tot * 100 : 0).toFixed(1) + '%"></div>' +
-    '<button type="button" class="go" data-k="live" aria-label="Laufendes Training öffnen"><span class="glyph">' + ICON.play + '</span><span class="txt"><span class="name">' + esc(planName(L.plan) || 'Freies Training') + ' läuft</span><span class="meta">' + done + ' von ' + tot + ' Sätzen erledigt</span></span></button>' +
+    '<button type="button" class="go" data-k="live" aria-label="Laufendes Training öffnen"><span class="glyph"><i></i></span><span class="txt"><span class="name">' + esc(planName(L.plan) || 'Freies Training') + ' läuft</span><span class="meta">' + done + ' von ' + tot + ' Sätzen erledigt</span></span></button>' +
     '<div class="side"><span class="streak" style="padding-right:14px"><b class="lv-card-t">' + fmt((Date.now() - L.start) / 1000) + '</b><span>Gesamt</span></span></div></li></ul>';
 }
 const CHEV_D = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>';
@@ -2727,16 +2723,22 @@ const kUnitRow = d => {
     (rec ? '<span class="r">' + was + '<small class="up">' + rec + (rec === 1 ? ' Rekord' : ' Rekorde') + '</small></span>' : was) + '</button></li>';
 };
 /* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
-function kExFoldHTML() {
+/* Übungen in zwei Klappzeilen (v90, sein Wunsch: „nur Übungen der letzten 4 Wochen zeigen“): „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war,
+   alles andere steht in „Ältere Übungen“ ganz unten (auch Übungen ohne Einheit). Gemessen an der jüngsten Einheit und nicht an heute: Nach einer Pause bliebe die Liste sonst leer.
+   Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). Liefert [Übungen, Ältere Übungen]. */
+function kExFolds() {
   const pre = tMode === 'year' ? String(tYear) : tYM, when = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
-  if (!rows.length) return '';
-  return foldHTML('uebungen', 'Übungen', '', rows.length, rows.map(o => {
-      const d = exDelta(o.hist, pre);
-      return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
-        (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
-    }).join(''));
+  if (!rows.length) return ['', ''];
+  const ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '', jung = rows.filter(o => o.last && o.last.d > ab), alt = rows.filter(o => !(o.last && o.last.d > ab));
+  const zeile = o => {
+    const d = exDelta(o.hist, pre);
+    return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
+      (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
+  };
+  const klapp = (key, titel, l) => l.length ? foldHTML(key, titel, '', l.length, fo[key] ? l.map(zeile).join('') : '') : '';
+  return [klapp('uebungen', 'Übungen', jung), klapp('uebungenAlt', 'Ältere Übungen', alt)];
 }
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
@@ -2746,7 +2748,7 @@ function kYearHTML(curYM) {
   h += kTiles(s) + kNote(s) + kGewHTML(y, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFoldHTML() + '</div>';
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFolds().join('') + '</div>';
 }
 const kLeer = () => !kDates().length && !kExs().length && !kPlans().length && !K.live;
 function kraftHTML(curYM) {
@@ -2758,18 +2760,20 @@ function kraftHTML(curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
   if (s.n) h += kTiles(s) + kNote(s) + kGewHTML(tYM, 'im ' + name);
-  /* Pläne in einer Karte, in ihrer Reihenfolge. In der laufenden Runde erledigt: grüner Haken. Als Nächstes dran: der blaue Kreis zum Starten. Die übrigen: ihr Platz als Zahl. Jeder lässt sich antippen und starten. */
+  /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, als Nächstes dran blau mit seinem Platz, die übrigen grau mit ihrem Platz.
+     Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
   h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length : '', secAct('data-k="plan"', '', 'Plan anlegen'));
   h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
     const last = planLast(pl.id), ok = runde.done[pl.id], dran = !ok && i === runde.next;
-    return '<li class="row ' + (ok ? 'is-done' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : dran ? ICON.play : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
+    return '<li class="row ' + (ok ? 'is-done' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
       '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  return h + '<div class="folds">' + kExFoldHTML() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
+  const kx = kExFolds();
+  return h + '<div class="folds">' + kx[0] + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + kx[1] + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -3214,7 +3218,7 @@ function paintL() {
   const tabs = $('#l-tabs');
   tabs.innerHTML = Lw.items.map((it, i) => {
     const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = undone(it) < 0;
-    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? '✓ ' : '') + esc(name) + '</button>';
+    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>';
   }).join('') + '<button type="button" class="lx-tab addx" data-la="addx" aria-expanded="' + (lAdd || !Lw.items.length) + '" aria-label="Übung hinzufügen">+</button>';
   $('#l-add').hidden = !lAdd && Lw.items.length > 0;
   paintLPick();

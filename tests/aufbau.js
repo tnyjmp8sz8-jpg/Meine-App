@@ -37,7 +37,7 @@ lauf(async () => {
     await page.click('#v-training [data-t="mode"][data-v="month"]');
 
     // Oben steht der Name des Bereichs (v80), hier „Training“; sein Punkt trägt die Akzentfarbe (dieselbe wie der blaue Plus-Knopf), der Name selbst nicht. Auf Heute steht „Track.“
-    const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).backgroundColor }));
+    const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).color }));
     P.ok('Titel oben: „Training.“ mit blauem Punkt' + b, farben.punkt === farben.plus && farben.name !== farben.plus && (await text(page, '.mark')) === 'Training.', JSON.stringify(farben) + ' ' + await text(page, '.mark'));
     const titel = []; for (const v of ['heute', 'routinen', 'gewicht', 'haushalt', 'training']) { await bereich(page, v); titel.push(await text(page, '.mark')); }
     P.ok('Titel je Bereich: Track., Planer., Gewicht., Finanzen., Training.' + b, titel.join(' ') === 'Track. Planer. Gewicht. Finanzen. Training.', titel.join(' '));
@@ -69,7 +69,7 @@ lauf(async () => {
     // Leere Seiten: Symbol in der Kennfarbe des Bereichs (Planer blau wie der Plus-Knopf, die anderen jeweils eigen)
     const leer = await oeffnen({ breite });
     const farbe = async v => { await bereich(leer.page, v); await leer.page.waitForTimeout(150); return leer.page.evaluate(q => getComputedStyle(document.querySelector(q + ' .empty .e-ic')).color, '#v-' + v); };
-    const lf = { planer: await farbe('routinen'), gewicht: await farbe('gewicht'), finanzen: await farbe('haushalt'), training: await farbe('training'), plus: await leer.page.evaluate(() => getComputedStyle(document.querySelector('#add')).backgroundColor) };
+    const lf = { planer: await farbe('routinen'), gewicht: await farbe('gewicht'), finanzen: await farbe('haushalt'), training: await farbe('training'), plus: await leer.page.evaluate(() => getComputedStyle(document.querySelector('#add')).color) };
     P.ok('leere Seiten tragen die Farbe ihres Bereichs' + b, lf.planer === lf.plus && new Set([lf.planer, lf.gewicht, lf.finanzen, lf.training]).size === 4, JSON.stringify(lf));
     await leer.browser.close();
     leer.fehler.forEach(f => P.ok(f + b, false));

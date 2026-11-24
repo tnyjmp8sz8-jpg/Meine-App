@@ -195,21 +195,28 @@ lauf(async () => {
   /* Drei Pläne mit Platz 1 bis 3 (nach Namen stünde „Extremitäten“ vorn). Einheiten: vor 9 Tagen Torso B, vor 6 Tagen Torso A, vor 4 Tagen Extremitäten.
      Rückwärts gelesen: Extremitäten (Platz 2), Torso A (Platz 1), dann Torso B (Platz 3, steht nicht weiter vorn → gehört zur Runde davor).
      Laufende Runde: Torso A und Extremitäten erledigt, als Nächstes Torso B → „2 von 3“. */
-  const K4 = { ex: { x: { n: 'Rudern' } }, log: {}, meta: {}, live: null,
+  const K4 = { ex: { x: { n: 'Rudern' }, y: { n: 'Uralt' } }, log: { [tag(60)]: { y: [[30, 10]] } }, meta: {}, live: null,
     plans: { e: { n: 'Extremitäten', items: [{ id: 'x', sets: 1 }], o: 2 }, b: { n: 'Torso B', items: [{ id: 'x', sets: 1 }], o: 3 }, a: { n: 'Torso A', items: [{ id: 'x', sets: 1 }], o: 1 } } };
   [[9, 'b'], [6, 'a'], [4, 'e']].forEach(([n, pl]) => { K4.log[tag(n)] = { x: [[50, 10]] }; K4.meta[tag(n)] = { dur: 600, plan: pl }; });
   const r = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K4 } }), s = r.page;
   await bereich(s, 'training');
   const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
-  P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
+  P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:3' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
+  /* Übungen (v90): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → eigene Klappzeile „Ältere Übungen“ ganz unten.
+     Ihre Zeilen entstehen erst beim Aufklappen. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
+  const kl = async () => [await text(s, '#v-training [data-fold="uebungen"]'), await text(s, '#v-training [data-fold="uebungenAlt"]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
+  const zuerst = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
+  P.ok('Übungen: nur die der letzten vier Wochen, die ältere in „Ältere Übungen“', zuerst === 'Übungen 1 # Ältere Übungen 1 # ' && (await kl()) === 'Übungen 1 # Ältere Übungen 1 # Uralt', zuerst + ' → ' + await kl());
+  await s.click('#v-training [data-fold="uebungenAlt"]');
+  P.ok('Pläne ohne Play-Zeichen: Ringe ohne Füllung', await s.evaluate(() => [...document.querySelectorAll('#v-training .rows.one .glyph')].every(g => !g.querySelector('path[d^="M5"]') && getComputedStyle(g).backgroundColor === 'rgba(0, 0, 0, 0)')));
   P.ok('schwarzer Grund, Blätter eine Stufe heller', await s.evaluate(() => getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && getComputedStyle(document.querySelector('#lsheet')).backgroundColor === 'rgb(28, 28, 30)'));
   // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll, eine neue beginnt: nichts erledigt, Torso A als Nächstes, die anderen tragen ihren Platz als Zahl
   await s.click('#v-training [data-k="start"][aria-label^="Torso B"]'); await s.waitForTimeout(250); await s.click('#l-items .chk'); await s.click('#l-save'); await s.waitForTimeout(200); await s.click('#rs-ok');
-  P.ok('Runde voll: neue Runde, Torso A ist dran, Platz 2 und 3 als Zahl', (await plaene()) === 'Torso A:is-idle: | Extremitäten:is-wait:2 | Torso B:is-wait:3' && !(await text(s, '#v-training h2.sec')).includes(' von '), await plaene());
+  P.ok('Runde voll: neue Runde, Torso A ist dran, Platz 2 und 3 als Zahl', (await plaene()) === 'Torso A:is-idle:1 | Extremitäten:is-wait:2 | Torso B:is-wait:3' && !(await text(s, '#v-training h2.sec')).includes(' von '), await plaene());
   // Neuer Plan: hängt sich hinten an (Platz 4), obwohl „Arme“ nach Namen vorn stünde. Mit vier Plänen ist die Runde wieder offen: Die drei anderen waren dran, „Arme“ kommt als Nächstes.
   await s.click('#v-training h2.sec [data-k="plan"]'); await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
   const neuerPlan = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
-  P.ok('neuer Plan steht hinten, trägt Platz 4 und ist als Nächstes dran', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:' && neuerPlan.o === 4, await plaene());
+  P.ok('neuer Plan steht hinten, trägt Platz 4 und ist als Nächstes dran', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:4' && neuerPlan.o === 4, await plaene());
 
   /* Einlesen: Die Datei führt „RUDERN“ unter der Kennung q1 und einen Plan „Torso A“ unter pp. Beides gibt es schon (x, a): Die Einheit hängt sich an x, der Plan ersetzt a, nichts steht doppelt da.
      Ein Name mit 50 Zeichen bleibt ganz (bis v86 wurden Namen nach 40 abgeschnitten). */
@@ -217,7 +224,7 @@ lauf(async () => {
   const dateiK = { ex: { q1: { n: 'RUDERN' }, q2: { n: lang, z: 8 } }, log: { [tag(2)]: { q1: [[55, 9]], q2: [[30, 8]] } }, plans: { pp: { n: 'Torso A', items: [{ id: 'q1', sets: 2 }, { id: 'q2', sets: 3 }], o: 1 } }, meta: { [tag(2)]: { dur: 1200, plan: 'pp' } } };
   await bereich(s, 'heute'); await s.setInputFiles('#bk-file', { name: 'datei.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, K: dateiK })) }); await s.waitForTimeout(300);
   const nach = (await gespeichert(s)).K, namen = Object.values(nach.ex).filter(Boolean).map(e => e.n).sort().join(' | ');
-  P.ok('gleicher Name ist dieselbe Übung: zwei Übungen, die Einheit hängt an der vorhandenen', namen === 'RUDERN | ' + lang && !!nach.log[tag(2)].x && !nach.log[tag(2)].q1 && nach.ex.q2.z === 8, namen + ' · ' + JSON.stringify(nach.log[tag(2)]));
+  P.ok('gleicher Name ist dieselbe Übung: keine zweite „Rudern“, die Einheit hängt an der vorhandenen', namen === 'RUDERN | ' + lang + ' | Uralt' && !!nach.log[tag(2)].x && !nach.log[tag(2)].q1 && nach.ex.q2.z === 8, namen + ' · ' + JSON.stringify(nach.log[tag(2)]));
   P.ok('gleicher Name ist derselbe Plan: weiter vier Pläne, „Torso A“ hat jetzt zwei Übungen, die Einheit nennt ihn', Object.values(nach.plans).filter(Boolean).length === 4 && !nach.plans.pp && nach.plans.a.items.map(i => i.id).join() === 'x,q2' && nach.meta[tag(2)].plan === 'a', JSON.stringify(nach.plans.a));
   await r.browser.close();
 
