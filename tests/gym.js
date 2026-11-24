@@ -222,7 +222,7 @@ lauf(async () => {
   await r.browser.close();
 
   /* Übernahme aus Alpha Progression (v88): „Sicherung einlesen“ nimmt die Datei „Workouts“ aus dessen Export, hier ein erfundener.
-     Zwei Trainings am selben Tag werden eine Einheit (Dauer 0:30 + 1:00 = 90 min), „+15“ ist Zusatzgewicht 15 kg, „+0“ ein Satz ohne Gewicht, „Curls“ gibt es mit zwei Geräten (Name mit Gerät),
+     Zwei Trainings am selben Tag werden eine Einheit (Dauer 0:30 + 1:00 = 90 min), „+15“ ist Zusatzgewicht 15 kg, „+0“ ein Satz ohne Gewicht, „Curls“ gibt es mit zwei Geräten (das Gerät steht hinter dem Namen),
      Sauna und Laufen fehlen, 24 Std. zählt nicht als Dauer, das Ziel 8 Wdh steht an der Übung. Der Plan des jüngsten Trainings ist „Plan X“: Tag 1 und Tag 3 heißen beide „Torso“
      und werden „Torso A“ (Dips, 2 Sätze) und „Torso B“ (Curls, 1 Satz). Die Datei mit den Plänen wird erkannt und abgewiesen. */
   const csv = ['"Torso · Tag 3 · Woche 2 · Plan X";"2026-03-02 18:00 Uhr";"30 Min."', '"1. Curls · Kurzhanteln · 10 Wdh"', '#;KG;WDH', '1;12.5;10', '',
@@ -235,11 +235,44 @@ lauf(async () => {
   await wahl('Workouts.csv', csv); await e.page.waitForTimeout(300);
   const aus = (await gespeichert(e.page)).K, an = Object.values(aus.ex).map(x => x.n + (x.z ? ' z' + x.z : '')).sort().join(' | '), dips = Object.keys(aus.ex).find(i => aus.ex[i].n === 'Dips');
   P.ok('Übernahme: Meldung nennt Einheiten und Pläne', (await text(e.page, '#bk-msg')) === '2 Einheiten aus Alpha Progression übernommen, dazu die Pläne Torso A, Torso B. Du findest alles unter Training → Gym.', await text(e.page, '#bk-msg'));
-  P.ok('Übernahme: Übungen mit richtigem Namen und Ziel, ohne Sauna und Laufen', an === 'Curls (Kurzhanteln) | Curls (Langhantel) | Dips z8', an);
+  P.ok('Übernahme: Übungen mit Namen wie selbst eingetippt und Ziel, ohne Sauna und Laufen; Dips mit Körpergewicht, die Einheit trägt ihren Namen', an === 'Curls Kurzhanteln | Curls Langhantel | Dips z8' && aus.ex[dips].bw === 1 && aus.meta['2026-02-20'].n === 'Alt', an + ' · ' + JSON.stringify(aus.meta['2026-02-20']));
   P.ok('Übernahme: ein Tag, eine Einheit mit 90 min; Zusatzgewicht und Satz ohne Gewicht; 24 Std. zählt nicht', Object.keys(aus.log).sort().join() === '2026-02-20,2026-03-02' && aus.meta['2026-03-02'].dur === 5400 && JSON.stringify(aus.log['2026-03-02'][dips]) === '[[15,9],[0,7]]' && aus.meta['2026-02-20'].dur === 0, JSON.stringify(aus.meta));
-  P.ok('Übernahme: Pläne „Torso A“ (Platz 1, Dips 2 Sätze) und „Torso B“ (Platz 2, Curls 1 Satz), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => aus.ex[i.id].n + ' ' + i.sets).join()).join(' | ') === 'Torso A:1:Dips 2 | Torso B:2:Curls (Kurzhanteln) 1' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
+  P.ok('Übernahme: Pläne „Torso A“ (Platz 1, Dips 2 Sätze) und „Torso B“ (Platz 2, Curls 1 Satz), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => aus.ex[i.id].n + ' ' + i.sets).join()).join(' | ') === 'Torso A:1:Dips 2 | Torso B:2:Curls Kurzhanteln 1' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
   await bereich(e.page, 'training');
   P.enthaelt('beide Pläne stehen im Gym', await text(e.page, '#v-training .rows.one .name'), ['Torso A', 'Torso B']);
   await e.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler));
+
+  // --- Übungen mit dem eigenen Körper, Name der Einheit, fest eingebaute Trainings (v89) ---
+  /* Körpergewicht 90 kg (ein Eintrag vor 30 Tagen, gilt für alle Tage danach). Dips und Klimmzüge tragen bw: Gerechnet wird mit Körpergewicht plus Zusatzgewicht.
+     Dips: vor 10 Tagen +10 kg × 11 → 100 × (1 + 11/30) = 136,67. Heute +15 kg × 11 → 105 × 41/30 = 143,5 → +5,0 % und Rekord (ohne Körpergewicht wären es +50 %).
+     Klimmzüge: vor 10 Tagen +10 kg × 9 → 100 × 1,3 = 130. Heute ohne Gewicht × 12 → 90 × 1,4 = 126 → −3,1 % (ohne Körpergewicht gäbe es keinen Vergleich).
+     Vorgabe Dips (Ziel 10, heute 11 geschafft; Schritt 5 kg, weil +10 und +15 vorkamen): +20 kg mit (143,5 / 110 − 1) × 30 = 9,1 → 9 Wdh; 1RM 110 × 1,3 = 143.
+     Ohne Körpergewicht wären es (15 × 41/30 / 20 − 1) × 30 = 0,75 → 1 Wiederholung.
+     Die Einheit von heute hat keinen Plan, aber einen Namen („Pull A“): Er steht in der Liste wie sonst der Plan. */
+  const K5 = { ex: { d: { n: 'Dips', bw: 1 }, k: { n: 'Klimmzüge', bw: 1 } }, log: { [tag(10)]: { d: [[10, 11]], k: [[10, 9]] }, [heute]: { d: [[15, 11]], k: [[0, 12]] } },
+    plans: { p: { n: 'Körper', items: [{ id: 'd', sets: 1 }], o: 1 } }, meta: { [heute]: { dur: 0, plan: null, n: 'Pull A' } }, live: null };
+  const b5 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K5, W: { entries: { [tag(30)]: 90 } } } }), t = b5.page;
+  await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]');
+  P.enthaelt('Einheit ohne Plan zeigt ihren Namen', await text(t, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Pull A', '1 Rekord']);
+  const blattVon = async name => { await t.click('#v-training [data-k="ex"]:has-text("' + name + '")'); await t.waitForTimeout(150); const x = [await text(t, '#x-stats .fig'), await text(t, '#x-recap .lastx:first-child .note'), await text(t, '#x-recap .lastx:first-child .lt-r')].join(' # '); await t.click('#xs-close'); return x; };
+  const dipsK = await blattVon('Dips'), klimm = await blattVon('Klimmzüge');
+  P.ok('Dips mit Körpergewicht: Zusatzgewicht 15 kg, 1RM 143,5, „Rekord · +5,0 %“', dipsK.includes('15kg Zusatzgewicht') && dipsK.includes('143,5kg 1RM geschätzt') && dipsK.includes('Pull A Rekord · +5,0 %') && dipsK.endsWith('1 15 11 143,5'), dipsK);
+  P.ok('Klimmzüge: Einheit ohne Gewicht ist mit der mit Zusatzgewicht vergleichbar (−3,1 %, 1RM 126)', klimm.includes('−3,1 %') && klimm.endsWith('1 – 12 126'), klimm);
+  await t.click('#v-training [data-k="start"]'); await t.waitForTimeout(300);
+  const v5 = await t.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [...z.children].slice(1, 4).map(c => c.textContent).join('×')).join(' '));
+  P.ok('Vorgabe rechnet mit dem Körpergewicht: +20 kg × 9, 1RM 143', v5 === '20×9×143', v5);
+  await t.click('#l-del'); await t.click('#l-del'); await b5.browser.close();
+
+  /* Seine Trainings stehen fest in der App (Block start-gym) und kommen beim ersten Start von selbst: 304 Einheiten, die drei Pläne in seiner Reihenfolge,
+     alte Einheiten mit ihrem Namen. Der Merker takt.start trägt den Stand: Was er danach löscht, kommt beim nächsten Start nicht zurück. */
+  const h6 = await oeffnen({ historie: true }), u = h6.page, K6 = (await gespeichert(u)).K, stand = await u.evaluate(() => document.querySelector('#start-gym').dataset.stand);
+  P.ok('erster Start: 304 Einheiten und 61 Übungen sind da, der Merker trägt den Stand', Object.keys(K6.log).length === 304 && Object.values(K6.ex).filter(Boolean).length === 61 && stand === '2026-11-20' && (await u.evaluate(() => localStorage.getItem('takt.start'))) === stand, Object.keys(K6.log).length + ' · ' + stand);
+  P.ok('alte Einheit trägt ihren Namen, Dips und Klimmzüge rechnen mit Körpergewicht, Namen ohne Klammern', K6.meta['2026-07-06'].n === 'Pull A' && Object.values(K6.ex).filter(x => x.bw).map(x => x.n).sort().join() === 'Dips,Klimmzüge eng mit Neutralgriff,Klimmzüge weit mit Obergriff' && !Object.values(K6.ex).some(x => /[()]/.test(x.n)), JSON.stringify(K6.meta['2026-07-06']));
+  await bereich(u, 'training');
+  P.ok('seine drei Pläne stehen in seiner Reihenfolge im Gym', (await text(u, '#v-training .rows.one .name')) === 'Torso A | Extremitäten | Torso B', await text(u, '#v-training .rows.one .name'));
+  await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1')); delete d.K.log['2022-05-15']; delete d.K.meta['2022-05-15']; localStorage.setItem('takt.v1', JSON.stringify(d)); });
+  await u.reload(); await u.waitForTimeout(300);
+  P.ok('zweiter Start: nichts wird noch einmal eingelesen, Gelöschtes bleibt weg', Object.keys((await gespeichert(u)).K.log).length === 303);
+  await h6.browser.close();
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler));
 });

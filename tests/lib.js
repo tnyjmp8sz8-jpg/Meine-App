@@ -19,7 +19,10 @@ const zahl = n => Math.round(n).toLocaleString('de-DE');
     o.zone (z. B. 'Europe/Berlin') stellt die Zeitzone der Seite; ohne Angabe gilt die des Rechners.
    Nicht per Start-Skript mit Merker einspielen: Der Test-Browser vergisst den Merker gelegentlich und überschreibt dann die Daten der App. */
 async function oeffnen(o = {}) {
-  const browser = await chromium.launch(o.start || {});
+  /* Die App liest beim ersten Start die fest eingebauten Trainings des Nutzers ein (Block start-gym), aber nicht in einem ferngesteuerten Browser (navigator.webdriver):
+     Tests beginnen deshalb leer. Mit o.historie gibt sich der Test-Browser nicht als ferngesteuert zu erkennen, dann liest die App sie ein (tests/gym.js prüft das).
+     Nicht über ein Start-Skript mit Merker im Speicher lösen: Damit ging im Test-Browser bei jedem zweiten Neuladen der ganze Speicher verloren (v89 ausprobiert). */
+  const browser = await chromium.launch(o.start || (o.historie ? { args: ['--disable-blink-features=AutomationControlled'] } : {}));
   const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger, reducedMotion: o.bewegung ? 'no-preference' : 'reduce', timezoneId: o.zone });
   if (o.uhr) await ctx.clock.install({ time: o.uhr });
   if (o.skript) await ctx.addInitScript(o.skript);   // läuft vor jedem Laden der Seite, z. B. um die iPhone-Hülle nachzustellen
