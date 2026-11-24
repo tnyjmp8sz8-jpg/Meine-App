@@ -71,7 +71,7 @@ lauf(async () => {
   await kurz();
   P.ok('Budget, Knopf „Ausgabe“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="add"]')) === 'm-amt');
   // Feld beim Tippen (v95): kein blauer Rahmen mehr, nur eine feine graue Kante; die Einfügemarke ist blau; das Feld ist stark gerundet
-  const feld = await page.evaluate(() => { const c = getComputedStyle(document.activeElement); return { umriss: c.outlineStyle, kante: c.boxShadow, rund: parseFloat(c.borderRadius), marke: c.caretColor, blau: getComputedStyle(document.querySelector('.mark .dot')).color }; });
+  const feld = await page.evaluate(() => { const c = getComputedStyle(document.activeElement); return { umriss: c.outlineStyle, kante: c.boxShadow, rund: parseFloat(c.borderRadius), marke: c.caretColor, blau: getComputedStyle(document.querySelector('#add')).color }; });   // Blau wie das Plus oben (der Punkt im Titel trägt seit v102 die Farbe des Bereichs)
   P.ok('Feld beim Tippen: kein blauer Rahmen, feine graue Kante, blaue Einfügemarke, stark gerundet', feld.umriss === 'none' && feld.kante !== 'none' && !feld.kante.includes(feld.blau.slice(4, -1)) && feld.rund >= 20 && feld.marke === feld.blau, JSON.stringify(feld));
   P.ok('Budget, Knopf „Einnahme“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="income"]')) === 'm-amt');
   await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');   // seit v86 öffnet das Training mit Gym

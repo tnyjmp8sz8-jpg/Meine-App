@@ -36,15 +36,33 @@ lauf(async () => {
     P.ok('Jahr gewählt' + b, /^\d{4}$/.test(await text(page, '#v-training .mnav b')));
     await page.click('#v-training [data-t="mode"][data-v="month"]');
 
-    // Oben steht der Name des Bereichs (v80), hier „Training“; sein Punkt trägt die Akzentfarbe (dieselbe wie der blaue Plus-Knopf), der Name selbst nicht. Auf Heute steht „Track.“
+    // Oben steht der Name des Bereichs (v80), hier „Training“; sein Punkt trägt seit v102 die Kennfarbe des Bereichs (Training grün), der Name selbst nicht. Auf Heute steht „Track.“ mit blauem Punkt.
+    const kennfarbe = v => page.evaluate(n => { const t = document.createElement('i'); t.style.color = 'var(' + n + ')'; document.body.appendChild(t); const c = getComputedStyle(t).color; t.remove(); return c; }, v);
     const farben = await page.evaluate(() => ({ punkt: getComputedStyle(document.querySelector('.mark .dot')).color, name: getComputedStyle(document.querySelector('.mark')).color, plus: getComputedStyle(document.querySelector('#add')).color }));
-    P.ok('Titel oben: „Training.“ mit blauem Punkt' + b, farben.punkt === farben.plus && farben.name !== farben.plus && (await text(page, '.mark')) === 'Training.', JSON.stringify(farben) + ' ' + await text(page, '.mark'));
+    P.ok('Titel oben: „Training.“, der Punkt in der Kennfarbe des Bereichs (grün)' + b, farben.punkt === await kennfarbe('--good') && farben.name !== farben.punkt && (await text(page, '.mark')) === 'Training.', JSON.stringify(farben) + ' ' + await text(page, '.mark'));
     /* Leiste unten (v92): eine Kapsel, die schwebt (Abstand links, rechts und unten, voll gerundet). Der gewählte Bereich liegt als Kapsel darin und ist nicht blau.
        Ganz nach unten gescrollt steht die Fußzeile über der Leiste, nichts bleibt dahinter verborgen. */
     const leiste = await page.evaluate(() => { const l = document.querySelector('.tabs-in'), r = l.getBoundingClientRect(), c = getComputedStyle(l), t = document.querySelector('.tab[aria-current="page"]'), ct = getComputedStyle(t);
       const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; const fuss = document.querySelector('.ver').getBoundingClientRect();
-      return { links: r.left, rechts: innerWidth - r.right, unten: innerHeight - r.bottom, rund: parseFloat(c.borderRadius) >= r.height / 2, fest: getComputedStyle(l.parentElement).position, gewaehlt: ct.backgroundColor, farbe: ct.color, blau: getComputedStyle(document.querySelector('.mark .dot')).color, frei: fuss.bottom <= r.top }; });
-    P.ok('Leiste unten schwebt als Kapsel, der gewählte Bereich ist eine Kapsel darin und nicht blau, die Fußzeile bleibt erreichbar' + b, leiste.links >= 10 && leiste.rechts >= 10 && leiste.unten >= 6 && leiste.rund && leiste.fest === 'fixed' && leiste.gewaehlt !== 'rgba(0, 0, 0, 0)' && leiste.farbe !== leiste.blau && leiste.frei, JSON.stringify(leiste));
+      /* Die Markierung ist seit v102 eine Linse hinter den Knöpfen (.tabs-in::before), die zum gewählten Bereich gleitet: ihr linker Rand (5 px Rand der Leiste + Verschiebung) liegt auf dem des Knopfs */
+      const lin = getComputedStyle(l, '::before'), tx = new DOMMatrixReadOnly(lin.transform).m41;
+      return { links: r.left, rechts: innerWidth - r.right, unten: innerHeight - r.bottom, rund: parseFloat(c.borderRadius) >= r.height / 2, fest: getComputedStyle(l.parentElement).position, gewaehlt: lin.backgroundColor, linse: Math.abs(r.left + 5 + tx - t.getBoundingClientRect().left) < 1.5 && Math.abs(parseFloat(lin.width) - t.getBoundingClientRect().width) < 1.5, farbe: ct.color, blau: getComputedStyle(document.querySelector('#add')).color, frei: fuss.bottom <= r.top }; });
+    P.ok('Leiste unten schwebt als Kapsel, der gewählte Bereich ist eine Linse darin (liegt genau unter seinem Knopf) und nicht blau, die Fußzeile bleibt erreichbar' + b, leiste.links >= 10 && leiste.rechts >= 10 && leiste.unten >= 6 && leiste.rund && leiste.fest === 'fixed' && leiste.gewaehlt !== 'rgba(0, 0, 0, 0)' && leiste.linse && leiste.farbe !== leiste.blau && leiste.frei, JSON.stringify(leiste));
+    /* Glas und Licht (v102): Hinter der Seite liegt ein weiches Licht in der Kennfarbe des Bereichs (body[data-v]); die Kopfzeile zeichnet dasselbe Bild und deckt, was unter ihr durchscrollt
+       (schwarzer Grund, unten über eine Maske ausgeblendet). Karten sind durchscheinend (Weiß mit 8,5 % Deckkraft) und tragen statt eines Rands eine feine Kante.
+       Die Fußzeile ist eine Zeile: Die Version steht neben dem Satz, nicht darunter. */
+    const glas = await page.evaluate(() => { const bo = getComputedStyle(document.body), to = getComputedStyle(document.querySelector('.top')), ka = getComputedStyle(document.querySelector('#v-training .entries')),
+      fu = document.querySelector('#foot').getBoundingClientRect(), ve = document.querySelector('.ver').getBoundingClientRect();
+      return { v: document.body.dataset.v, licht: /radial-gradient/.test(bo.backgroundImage), gleich: bo.backgroundImage === to.backgroundImage, deckt: to.backgroundColor, maske: /calc\(100% - 18px\)/.test(to.maskImage || to.webkitMaskImage || ''),
+        karte: ka.backgroundColor, kante: ka.boxShadow !== 'none', zeile: ve.top - fu.top < 14 && ve.left > fu.left + 40 }; });
+    P.ok('Licht hinter der Seite in der Farbe des Bereichs, die Kopfzeile zeichnet dasselbe und deckt; Karten aus Glas mit feiner Kante; Fußzeile in einer Zeile' + b,
+      glas.v === 'training' && glas.licht && glas.gleich && glas.deckt === 'rgb(0, 0, 0)' && glas.maske && glas.karte.indexOf('rgba(255, 255, 255, 0.08') === 0 && glas.kante && glas.zeile, JSON.stringify(glas));
+    /* Der Punkt im Titel und die Linse folgen dem Bereich: Gewicht lila, Finanzen orange, Heute blau wie das Plus */
+    const folgt = [];
+    for (const [v, f] of [['gewicht', '--c-weight'], ['haushalt', '--c-money'], ['heute', '--accent']]) { await bereich(page, v);
+      folgt.push(await page.evaluate(() => { const l = document.querySelector('.tabs-in'), t = document.querySelector('.tab[aria-current="page"]'); return getComputedStyle(document.querySelector('.mark .dot')).color + ' ' + (Math.abs(l.getBoundingClientRect().left + 5 + new DOMMatrixReadOnly(getComputedStyle(l, '::before').transform).m41 - t.getBoundingClientRect().left) < 1.5); }) === (await kennfarbe(f)) + ' true'); }
+    await bereich(page, 'training');
+    P.ok('Punkt im Titel und Linse folgen dem Bereich (Gewicht lila, Finanzen orange, Heute blau)' + b, folgt.every(Boolean), folgt.join(' '));
     /* Balken je Monat (v92): im laufenden Jahr trägt nur der laufende Monat die volle Farbe; ein Jahr zurück alle */
     await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; }); await page.click('#v-training [data-t="mode"][data-v="year"]');
     const balken = () => page.evaluate(() => [...document.querySelectorAll('#v-training rect.g-pos')].map(e => e.classList.contains('jetzt') ? 'J' : '-').join(''));

@@ -57,6 +57,9 @@
   --on-accent:#FFFFFF;
   --mid:#AEAEB2;
   --sel:#E5E5EA;
+  /* Glas (v102): --edge und --edge-top sind die feine Kante und das Licht von oben an jeder Fläche, --cut und --schild deckende Farben für Stellen, an denen nichts durchscheinen darf
+     (Ring um den Punkt im Graphen, Schild beim Ablesen). --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
+  --edge:rgba(0,0,0,.05); --edge-top:rgba(255,255,255,.9); --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
   --danger:#D70015;
   --good:#248A3D;--warn:#D9A300;
   --c-weight:#AF52DE;
@@ -67,28 +70,30 @@
   color-scheme:light;
 }
 @media (prefers-color-scheme:dark){
-  :root:not([data-theme="light"]){
-    --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(0,0,0,.36); --glass-top:rgba(255,255,255,.12); --tab-cut:#111113; --sheet:rgba(30,30,32,.8); --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
-    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+  :root{
+    --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(255,255,255,.1); --glass-top:rgba(255,255,255,.12); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
+    /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
+    --surface:rgba(255,255,255,.085); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
+    --edge:rgba(255,255,255,.055); --edge-top:rgba(255,255,255,.1); --cut:#161618; --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
-  /* Blätter liegen eine Stufe über dem schwarzen Grund, ihre Flächen wieder eine darüber (wie in iOS) */
-  :root:not([data-theme="light"]) dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
-  :root:not([data-theme="light"]) #lsheet{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18)}   /* Vollbild aus Glas: Flächen durchscheinend */
-  :root:not([data-theme="light"]) #lsheet::backdrop{background:rgba(34,34,38,.64)}
-}
-:root[data-theme="dark"] dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
-:root[data-theme="dark"] #lsheet{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18)}
-:root[data-theme="dark"] #lsheet::backdrop{background:rgba(34,34,38,.64)}
-:root[data-theme="dark"]{
-  --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(0,0,0,.36); --glass-top:rgba(255,255,255,.12); --tab-cut:#111113; --sheet:rgba(30,30,32,.8); --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
-  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
-  color-scheme:dark;
+  /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
+  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.1);--edge-top:rgba(255,255,255,.12);--cut:#2B2B2E;--schild:#48484A}
 }
 
 *{box-sizing:border-box}
 html,body{height:100%}
-body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior-y:none}
+/* Licht hinter der Seite (v102, sein Auftrag: „future iOS-Look überall … luxury und modernes Feeling, next gen“): Von oben fällt ein weiches Licht in der Kennfarbe des Bereichs
+   (Heute und Planer blau, Gewicht lila, Finanzen orange, Training grün; body[data-v] setzt show()), dazu ein neutrales von links oben. Nach unten bleibt die Seite schwarz.
+   Die Größen stehen in vw und px, nicht in Prozent: So zeichnet die Kopfzeile (.top) dasselbe Bild an derselben Stelle und deckt, was unter ihr durchscrollt.
+   --amb steht an body und nicht an :root, weil es dort mit der Farbe des Bereichs ausgerechnet wird; @property lässt die Farbe beim Wechsel des Bereichs weich übergehen. */
+@property --amb-c{syntax:'<color>';inherits:true;initial-value:#0A84FF}
+body{--amb-c:var(--accent);--amb:radial-gradient(130vw 400px at 50% -160px,color-mix(in srgb,var(--amb-c) var(--amb-k),transparent),transparent 72%),radial-gradient(90vw 300px at 0% -120px,var(--amb-w),transparent 70%);transition:--amb-c .6s ease}
+body[data-v="gewicht"]{--amb-c:var(--c-weight)}
+body[data-v="haushalt"]{--amb-c:var(--c-money)}
+body[data-v="training"]{--amb-c:var(--good)}
+body{margin:0;background:var(--amb),var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.4;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent;touch-action:manipulation;overscroll-behavior-y:none}
 button,.row,.hero,.top,.tabs{-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 button{font:inherit;color:inherit;cursor:pointer}
 button:disabled{cursor:default;opacity:.4}
@@ -97,11 +102,12 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(82px + var(--unten));display:flex;flex-direction:column;gap:22px;min-height:100%}
 
-/* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
-.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(to bottom,var(--bg) calc(100% - 18px),transparent);pointer-events:none}
+/* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf.
+   Sie zeichnet dasselbe Licht wie die Seite (--amb) und wird auf den letzten 18 px über eine Maske ausgeblendet. */
+.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--amb),var(--bg);-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 18px),transparent);pointer-events:none}
 .top>*{pointer-events:auto}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
-.mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
+.mark .dot{color:var(--amb-c)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
 .add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top)}
 .add svg{width:20px;height:20px}
 
@@ -160,16 +166,17 @@ dialog:focus,dialog:focus-visible{outline:none}
 .chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:500;min-height:40px}
 .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-line);font-weight:600}
 
-.primary{border:0;border-radius:14px;background:var(--accent);color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px}
+/* Hauptknopf (v102): kein flaches Blau mehr, sondern ein leichter Verlauf mit Licht von oben und einem weichen Schein in seiner Farbe darunter */
+.primary{border:0;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,#fff),var(--accent) 52%,var(--accent-deep));color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 0 0 .5px rgba(255,255,255,.14),0 10px 24px -12px var(--accent)}
 .ghost{border:1px solid var(--line);border-radius:14px;background:var(--fill);font-weight:500;font-size:15px;padding:12px 16px;min-height:46px;text-align:left}
 .h-btn{display:block;width:100%;margin-top:14px;text-align:center}
-.ghost.danger{color:var(--danger)}
+.ghost.danger{color:var(--danger);text-align:center}
 
 .foot{margin-top:auto;padding-top:8px;color:var(--muted);font-size:13px;text-align:center}
 
 /* Blätter (v94): Sie schweben wie in iOS 26 mit 8 px Abstand zum Rand, sind rundum gerundet und aus Glas (halb durchsichtig mit Milchglas); dahinter wird die Seite dunkler und unscharf.
    Mit offener Tastatur (--kb) sitzen sie 8 px über ihr. */
-dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top);color:var(--ink);overflow:auto}
+dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
@@ -179,7 +186,7 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);ba
 .x svg{width:16px;height:16px}
 .fld{display:flex;flex-direction:column;gap:6px}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
 /* Eingabefelder (v95, mein Vorschlag, sein „überall nachziehen“): fast Kapseln und ohne blauen Rahmen. Beim Tippen zeigt wie in iOS die blaue Einfügemarke, wo man ist;
    das Feld bekommt nur eine feine graue Kante. Markierter Text ist zart blau hinterlegt statt kräftig. */
 input:focus-visible,.n-text:focus-visible{outline:none;box-shadow:inset 0 0 0 1.5px var(--mid)}
@@ -222,10 +229,13 @@ body{display:flex;flex-direction:column;overflow:hidden}
    Die Leiste steht außerhalb des scrollenden Bereichs: Dort macht der Milchglas-Effekt das Element selbst nicht unscharf (anders als die Kopfzeile, v37). */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px var(--unten);pointer-events:none}
 .tabs::before{content:"";position:absolute;inset:-26px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 82%,transparent))}
-.tabs-in{pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 10px 30px rgba(0,0,0,.32)}
+.tabs-in{position:relative;pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 10px 30px rgba(0,0,0,.32)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:999px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
-.tab[aria-current="page"]{background:var(--glass-sel);color:var(--ink);font-weight:600}
+.tab[aria-current="page"]{color:var(--ink);font-weight:600}
+/* Der gewählte Bereich (v102): eine helle Linse aus Glas, die beim Wechsel zum neuen Bereich gleitet und ganz leicht nachfedert (--i = Platz des Bereichs, setzt show()).
+   Sie liegt hinter den Knöpfen (z-index -1 im eigenen Stapel der Leiste). Bis v101 eine dunklere Kapsel, die sprang. */
+.tabs-in::before{content:"";position:absolute;z-index:-1;top:5px;bottom:5px;left:5px;width:calc((100% - 18px) / 5);border-radius:999px;background:var(--glass-sel);box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--glass-top);transform:translateX(calc(var(--i,0) * (100% + 2px)));transition:transform .36s cubic-bezier(.3,1.3,.45,1)}
 /* Aktiver Bereich: Flächen (.f) gefüllt, Details (.k, .d) in der Farbe der Leiste ausgespart, reine Linien (.b) kräftiger */
 .tab .d{display:none}
 .tab[aria-current="page"] .f{fill:currentColor}
@@ -242,29 +252,29 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .seg .chip{min-height:34px;padding:6px 12px;font-size:13px}
 .chart svg{display:block;width:100%;height:auto;overflow:visible}
 .chart text{font-family:var(--body);font-size:11px;fill:var(--muted);font-variant-numeric:tabular-nums}
-.g-grid{stroke:var(--line);stroke-width:1}
+.g-grid{stroke:var(--line);stroke-width:.5}
 /* Graphen (v91, sein Wunsch: moderner, „weiche Linie statt feste Punkte“): Die Linie läuft als Kurve durch alle echten Werte (kurve()), die Fläche darunter läuft nach unten aus
    (Verlauf #g-fade, steht einmal am Anfang der Seite), auf der Linie sitzt nur noch der letzte Wert mit einem leichten Schein. */
 .g-area{fill:url(#g-fade)}
 .gf0{stop-color:var(--at);stop-opacity:.26}
 .gf1{stop-color:var(--at);stop-opacity:0}
-.g-trend{fill:none;stroke:var(--at);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+.g-trend{fill:none;stroke:var(--at);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 3px 6px color-mix(in srgb,var(--at) 50%,transparent))}
 .g-raw{fill:var(--muted);opacity:.4}
 .g-halo{fill:var(--at);opacity:.16}
 .g-goal{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 4;opacity:.55}
-.g-end{fill:var(--at);stroke:var(--surface);stroke-width:2}
+.g-end{fill:var(--at);stroke:var(--cut);stroke-width:2}
 svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent}
 .g-scrub{pointer-events:none}
 .g-scrub line{stroke:var(--mid);stroke-width:1}
-.g-scrub circle{fill:var(--at);stroke:var(--surface);stroke-width:2}
+.g-scrub circle{fill:var(--at);stroke:var(--cut);stroke-width:2}
 /* Der Marker gleitet zum nächsten Wert, statt zu springen; beim ersten Erscheinen steht er sofort da */
 .g-scrub>*{transition:transform .14s cubic-bezier(.2,.8,.2,1)}
 .g-scrub.sofort>*{transition:none}
-.g-scrub rect{fill:var(--sel)}
+.g-scrub rect{fill:var(--schild)}
 .chart .g-scrub text{fill:var(--ink);font-weight:600}
 .note{margin:0;color:var(--muted);font-size:14px}
 .entries{list-style:none;margin:0;padding:0;background:var(--surface);border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.entries li+li{border-top:1px solid var(--line)}
+.entries li+li{border-top:.5px solid var(--line)}
 .entries button{width:100%;display:flex;justify-content:space-between;align-items:baseline;gap:12px;padding:14px 16px;background:none;border:0;text-align:left;font-size:16px}
 .entries .d{color:var(--muted)}
 .entries b{font-weight:600;font-variant-numeric:tabular-nums}
@@ -301,7 +311,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .cat{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:15px}
 .cat b{font-weight:600;font-variant-numeric:tabular-nums}
 .cat .track{grid-column:1/-1;height:6px;border-radius:3px;background:var(--fill);overflow:hidden}
-.cat .track i{display:block;height:100%;border-radius:3px;background:var(--accent)}
+.cat .track i{display:block;height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent-deep),var(--at))}
 .entries button.two{align-items:center}
 .entries .l{display:flex;flex-direction:column;min-width:0;gap:1px}
 .entries .l small{color:var(--muted);font-size:13px}
@@ -310,7 +320,9 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .view>.note,.view>.nach>.note{margin-top:-8px}
 .view>.sec+.note{margin-top:0}
 /* Balken je Monat (v92): Kapseln; im laufenden Jahr trägt nur der laufende Monat die volle Farbe (Klasse jetzt), in früheren Jahren alle */
-.g-pos{fill:var(--at);opacity:.42}
+.g-pos{fill:url(#g-bar);opacity:.42}
+.gb0{stop-color:var(--at)}
+.gb1{stop-color:var(--at);stop-opacity:.5}
 .g-neg{fill:var(--danger);opacity:.42}
 .g-pos.jetzt,.g-neg.jetzt{opacity:1}
 .g-zero{stroke:var(--muted);stroke-width:1}
@@ -323,7 +335,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .kvs .note{margin:3px 0 0}
 /* Zeile mit Wert: der Vergleich steht in einer eigenen Zeile darunter, rechtsbündig (vom Nutzer so gewünscht, wirkt ruhiger als daneben) */
 .kv{display:grid;grid-template-columns:1fr auto;gap:1px 12px;align-items:baseline;padding:11px 0}
-.kv+.kv{border-top:1px solid var(--line)}
+.kv+.kv{border-top:.5px solid var(--line)}
 .kv span{color:var(--muted);font-size:15px}
 .kv b{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
 .kv b small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:3px}
@@ -372,7 +384,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
-.ins+.ins{border-top:1px solid var(--line)}
+.ins+.ins{border-top:.5px solid var(--line)}
 .ins b{font-size:14px;font-weight:600}
 .ins span{font-size:13.5px;color:var(--muted)}
 button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100%;font:inherit;font-size:14px;color:inherit}
@@ -421,7 +433,7 @@ body{font-size:14px}
 .hero{gap:1px}
 .date{font-size:12px}
 .hero h1{font-size:clamp(20px,5.4vw,22px);line-height:1.05}
-.hero h1 .num,.w-hero h1 .num{font-size:clamp(30px,8.6vw,34px);line-height:1}
+.hero h1 .num,.w-hero h1 .num{font-size:clamp(30px,8.6vw,34px);line-height:1;background:linear-gradient(180deg,currentColor 38%,color-mix(in srgb,currentColor 64%,transparent));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
 .hero h1 .unit{font-size:clamp(13px,3.5vw,14px)}
 .sub{font-size:12px;margin-top:2px}
 .rows{gap:6px}
@@ -491,8 +503,11 @@ body{font-size:14px}
 .mbar{height:8px;margin-bottom:-6px}
 .tab{padding:6px 0 5px}
 .tab svg{width:20px;height:20px}
-.foot{font-size:11.5px}
-.ver{display:block;margin-top:2px;font-size:10px;color:var(--mid)}
+/* Fußzeile (v102): eine ruhige Zeile „Gespeichert auf diesem Gerät · v…“, darunter nur in der iPhone-App deren Fassung */
+.foot{font-size:11px;color:var(--mid)}
+.ver::before{content:" · "}
+#h-line{display:block;margin-top:2px;font-size:10px}
+#h-line::before{content:none}
 .linkbtn{font-size:13px}
 .legend{font-size:11.5px}
 #form .fig b{font-size:19px}
@@ -519,7 +534,7 @@ u.w{background:var(--c-weight)}
 .cs-top .linkbtn{justify-self:start}
 .cs-top .linkbtn:last-child{justify-self:end}
 .cs-top .linkbtn{font-size:15px;padding:8px 6px}
-.cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:1px solid var(--line)}
+.cs-wd{display:grid;grid-template-columns:repeat(7,1fr);padding:4px 10px 8px;border-bottom:.5px solid var(--line)}
 .cs-wd span{text-align:center;font-size:11px;font-weight:600;color:var(--mid)}
 .cs-body{flex:1;min-height:0;overflow-y:auto;padding:0 10px 18px}
 .cm{padding-top:16px}
@@ -531,7 +546,7 @@ u.w{background:var(--c-weight)}
 .cd.now b{color:var(--at);font-weight:700}
 .cd.sel b{background:var(--ink);color:var(--bg)}
 .cd:disabled{opacity:.28}
-.cs-day{flex:none;max-height:42%;overflow-y:auto;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
+.cs-day{flex:none;max-height:42%;overflow-y:auto;border-top:.5px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
 .cs-day h3{margin:0;font-size:15px;font-weight:700}
 .cs-day .note{margin:0}
 .cs-day .entries .l small{line-height:1.45;margin-top:2px}
@@ -547,7 +562,7 @@ u.w{background:var(--c-weight)}
 #lsheet{width:100%;max-width:480px;height:calc(100% - var(--kb,0px));max-height:none;margin:0 auto var(--kb,0px);border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 #lsheet::before{display:none}
 #lsheet::backdrop{background:rgba(242,242,247,.8);-webkit-backdrop-filter:blur(36px) saturate(1.7);backdrop-filter:blur(36px) saturate(1.7)}
-#lsheet .x,#lsheet .card,#lsheet .fig,.lx-tab,.lx-m,.lx-akt button,.lx>.lt>.lt-r.act .n,.lx>.lt>.lt-r .pv{box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top)}
+@media (prefers-color-scheme:dark){#lsheet::backdrop{background:rgba(34,34,38,.64)}}
 #lform{gap:14px;min-height:100%;padding:calc(8px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .l-grab{flex:none;align-self:center;width:36px;height:5px;border-radius:3px;background:var(--fill)}
 #lsheet .sh-head h2{font-size:15px}
@@ -630,7 +645,7 @@ u.w{background:var(--c-weight)}
 .lt-r .pv{height:40px;min-width:0;padding:0 4px;border:0;font-size:16px;font-weight:700;color:var(--ink);background:var(--fill);border-radius:12px}
 .lt-r .rm{font-size:13px;font-weight:500;color:var(--mid)}
 .lt-r .rm.rek{font-weight:700;color:var(--good)}
-.lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
+.lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:linear-gradient(180deg,color-mix(in srgb,var(--good) 82%,#fff),var(--good) 60%);color:#04241A;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 20px -12px var(--good)}
 .lt-r .chk svg{width:16px;height:16px}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
@@ -666,7 +681,7 @@ button.lastx:active{background:var(--fill)}
 .vrows{display:flex;flex-direction:column;gap:6px}
 .vrow{display:grid;grid-template-columns:minmax(0,1fr) 116px auto 36px;gap:8px;align-items:center}
 .vrow input[type="text"]{text-align:right;padding:9px 12px;font-family:var(--round);font-weight:600}
-.vrow input.vname{text-align:left;padding:9px 0;background:none;border-radius:8px;font-family:var(--body);font-weight:500}
+.vrow input.vname{text-align:left;padding:9px 0;background:none;box-shadow:none;border-radius:8px;font-family:var(--body);font-weight:500}
 .vrow em{font-style:normal;color:var(--muted);font-size:13px}
 .vrows .err{margin:-2px 0 4px}
 .rows .goal .streak b{font-size:19px}
@@ -756,6 +771,10 @@ dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
+/* Glas (v102): Statt eines Rands trägt jede Fläche eine feine helle Kante und Licht von oben, wie die Leiste unten; die Flächen selbst sind durchscheinend (Variablen oben).
+   Neue Flächen hier aufnehmen. Eingabefelder tragen die Kante in ihrer eigenen Regel, damit der Rahmen beim Tippen sie ablöst. */
+.row,.card,.entries,.ovs,.rows.one,.fig,.seg2,.remind,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab,.lx-m,.lx-akt button,.n-text,.stepper button,.zk,.z-list button,.lt-r.act .n,.lt-r .pv{box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
+.rows.one .row,.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"],#l-del{box-shadow:none}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
 .chip,.lx-tab{background:var(--surface)}
 .card .chip{background:var(--fill)}
@@ -767,7 +786,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .kx,.prow{background:var(--surface)}
 .kx input[type="text"]{background:var(--fill)}
 .kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
-.seg2 button[aria-pressed="true"]::before{box-shadow:0 1px 3px rgba(0,0,0,.22)}
+.seg2 button[aria-pressed="true"]::before{box-shadow:inset 0 1px 0 var(--edge-top),0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
 .tab{font-size:10px;font-weight:500}
 .primary{font-size:14px;font-weight:600;min-height:40px;border-radius:999px}
@@ -829,13 +848,13 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.ein,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg{transition:none}
+  button,.fold svg,body,.tabs-in::before{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
 }
 </style>
 </head>
 <body>
-<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="g-fade" x1="0" y1="0" x2="0" y2="1"><stop class="gf0" offset="0"/><stop class="gf1" offset="1"/></linearGradient></defs></svg>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="g-fade" x1="0" y1="0" x2="0" y2="1"><stop class="gf0" offset="0"/><stop class="gf1" offset="1"/></linearGradient><linearGradient id="g-bar" x1="0" y1="0" x2="0" y2="1"><stop class="gb0" offset="0"/><stop class="gb1" offset="1"/></linearGradient></defs></svg>
 <div class="scroll" id="scroll">
 <div class="app">
   <header class="top">
@@ -858,7 +877,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v101</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v102</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2753,7 +2772,12 @@ function kPeriod(pre) {
   return { n: ds.length, bes, cmp, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
 const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(s.cmp ? String(s.bes) : '–', '', s.bes === 1 ? 'Satz besser' : 'Sätze besser') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
-const kNote = s => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
+/* Erklärung hinter dem „i“ an „Verbesserung“, in Klartext (v102, seine Frage vom 24.11.: „was bedeutet die Jahres- und Monatsverbesserung? zu letztem Jahr und Monat?“).
+   pre = 'JJJJ' oder 'JJJJ-MM'. Gerechnet wird wie in exDelta(): Stand am Ende gegenüber dem Stand davor, je Übung. */
+const kNote = (s, pre) => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: ' + (pre.length === 4
+  ? 'dein Stand ' + (pre === todayKey().slice(0, 4) ? 'jetzt' : 'Ende ' + pre) + ' gegenüber Ende ' + (+pre - 1)
+  : 'dein bester Wert im ' + MONTHS[+pre.slice(5) - 1] + ' gegenüber dem letzten Monat davor mit dieser Übung (meist ' + MONTHS[(+pre.slice(5) + 10) % 12] + ')') +
+  '. Gemessen am geschätzten Maximum, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '; neue Übungen zählen ab ihrer ersten Einheit.</p>' : '';
 /* Körpergewicht im selben Zeitraum, eine Zeile unter den Kennzahlen (Kraft und Gewicht zusammen sehen): Schnitt der letzten 7 Tage am Ende gegenüber dem Stand davor,
    im ersten Zeitraum gegenüber dem ersten Eintrag. Ohne Vergleich keine Zeile. */
 function kGewHTML(pre, wann) {
@@ -2853,7 +2877,7 @@ function kYearHTML(curYM) {
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
-  h += kTiles(s) + kNote(s) + kGewHTML(y, y);
+  h += kTiles(s) + kNote(s, y) + kGewHTML(y, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFold() + '</div>';
@@ -2869,7 +2893,7 @@ function kraftHTML(curYM) {
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
-  if (s.n) h += kTiles(s) + kNote(s) + kGewHTML(tYM, 'im ' + name);
+  if (s.n) h += kTiles(s) + kNote(s, tYM) + kGewHTML(tYM, 'im ' + name);
   /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, übersprungen grau mit dem Zeichen dafür, als Nächstes dran blau mit seinem Platz,
      die übrigen grau mit ihrem Platz. Nur der Plan, der dran ist, trägt rechts den Knopf zum Überspringen (v93): So bleibt die Reihenfolge der Runde eindeutig.
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
@@ -4225,6 +4249,8 @@ function frisch(el) { clearTimeout(neuT); document.querySelectorAll('.view.neu')
 function show(v, user) {
   const was = view;
   view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
+  document.body.dataset.v = view;   // Kennfarbe des Bereichs für das Licht hinter der Seite
+  $('.tabs-in').style.setProperty('--i', [...document.querySelectorAll('.tab')].findIndex(b => b.dataset.view === view));   // die Linse in der Leiste gleitet dorthin
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
