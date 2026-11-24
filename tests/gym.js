@@ -20,6 +20,14 @@ lauf(async () => {
   // Sätze besser: heute 44×10, 44×9, 44×8 gegen 40×10 je Satz beim letzten Mal = alle drei mit mehr Gewicht
   P.enthaelt('3 Sätze besser, Zeit 0:40 h', await gym(), ['3 Sätze besser', '0:40 h']);
   P.ok('„bewegt“ gibt es nicht mehr', !(await gym()).includes('bewegt'));
+  /* Erklärung hinter dem „i“ an „Verbesserung“ in Klartext (v102, seine Frage: „was bedeutet die Jahres- und Monatsverbesserung? zu letztem Jahr und Monat?“):
+     im Monat „gegenüber dem letzten Monat davor mit dieser Übung (meist <Vormonat>)“, im laufenden Jahr „dein Stand jetzt gegenüber Ende <Vorjahr>“, in einem früheren Jahr „Ende <Jahr> gegenüber Ende <Jahr − 1>“. */
+  const MON = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'], jahr = +heute.slice(0, 4);
+  const erkl = () => page.evaluate(() => (document.querySelector('#info-k-imp') || {}).textContent || '');
+  P.enthaelt('Erklärung im Monat nennt den Vergleich', await erkl(), ['dein bester Wert im ' + MON[+heute.slice(5, 7) - 1], 'gegenüber dem letzten Monat davor mit dieser Übung (meist ' + MON[+vm.slice(5) - 1] + ')', 'im Schnitt über 1 Übung']);
+  await page.click('#v-training [data-t="mode"][data-v="year"]');
+  P.enthaelt('Erklärung im Jahr nennt den Vergleich', await erkl(), ['dein Stand jetzt gegenüber Ende ' + (jahr - 1)]);
+  await page.click('#v-training [data-t="mode"][data-v="month"]');
   // Pläne: Bei nur einem Plan ist die Runde nach einer Einheit voll. Heute trainiert (also diese Woche): Der Haken bleibt bis Montag stehen (v93), „1 von 1“.
   P.ok('ein einziger Plan, heute trainiert: Haken bis Montag', (await page.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(page, '#v-training h2.sec')).includes('1 von 1'), await text(page, '#v-training h2.sec'));
   await page.click('#v-training [data-fold="uebungen"]');
@@ -210,11 +218,13 @@ lauf(async () => {
      „Weitere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“; seit v99 steht oben, was in einem Plan steht: „Rudern“, und „Uralt“ steht in keinem). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
      Mit der Liste geht auch ihr älterer Teil wieder zu. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
   const kl = async () => [await text(s, '#v-training .folds [data-fold]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
+  /* „Einheiten“ gibt es nur, wenn im laufenden Monat trainiert wurde: Die Einheiten liegen 9, 6 und 4 Tage zurück, am Monatsanfang also im Vormonat (dann fehlt die Zeile) */
+  const nE = [9, 6, 4].filter(n => tag(n).slice(0, 7) === heute.slice(0, 7)).length, eT = nE ? ' | Einheiten ' + nE : '';
   const zuerst = await kl(); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   const offen = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
-  P.ok('zu: nur zwei Klappzeilen, „Übungen“ und „Einheiten“', zuerst === 'Übungen 1 | Einheiten 3 # ', zuerst);
-  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Weitere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Weitere Übungen 1 | Einheiten 3 # Rudern', offen);
-  P.ok('„Weitere Übungen“ offen: die Übung ohne Plan steht darunter', (await kl()) === 'Übungen 1 | Weitere Übungen 1 | Einheiten 3 # Rudern | Uralt', await kl());
+  P.ok('zu: nur „Übungen“ und (wenn im laufenden Monat trainiert wurde) „Einheiten“', zuerst === 'Übungen 1' + eT + ' # ', zuerst);
+  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Weitere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Weitere Übungen 1' + eT + ' # Rudern', offen);
+  P.ok('„Weitere Übungen“ offen: die Übung ohne Plan steht darunter', (await kl()) === 'Übungen 1 | Weitere Übungen 1' + eT + ' # Rudern | Uralt', await kl());
   await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   P.ok('„Übungen“ zu und wieder auf: der ältere Teil ist wieder zu', (await kl()) === offen, await kl());
   await s.click('#v-training [data-fold="uebungen"]');

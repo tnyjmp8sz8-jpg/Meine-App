@@ -11,6 +11,13 @@ lauf(async () => {
   const titel = () => text(page, '#v-haushalt .mnav b');
   const offen = sel => page.evaluate(q => document.querySelector(q).open, sel);
 
+  // --- Einblenden (v102): Beim Öffnen eines Bereichs steigen seine Teile nacheinander auf (Klasse neu); nach 0,7 s ist die Klasse weg und alles steht an seinem Platz ---
+  await bereich(page, 'gewicht');
+  const steigt = await page.evaluate(() => { const v = document.querySelector('#v-gewicht'), c = [...v.children]; return v.classList.contains('neu') + ' ' + getComputedStyle(c[0]).animationName + ' ' + (parseFloat(getComputedStyle(c[2]).animationDelay) > 0); });
+  await page.waitForTimeout(800);
+  const steht = await page.evaluate(() => { const v = document.querySelector('#v-gewicht'); return v.classList.contains('neu') + ' ' + [...v.children].every(e => getComputedStyle(e).opacity === '1' && getComputedStyle(e).transform === 'none'); });
+  P.ok('Bereich öffnen: Teile steigen nacheinander auf, danach steht alles', steigt === 'true auf true' && steht === 'false true', steigt + ' → ' + steht);
+
   // --- Zwischen Monaten wischen (Budget) ---
   await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]');
   P.ok('Start: laufender Monat', (await titel()) === name(monat(0)));

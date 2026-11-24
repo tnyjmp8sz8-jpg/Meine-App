@@ -153,7 +153,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
 /* Symbol der leeren Seite in der Kennfarbe des Bereichs, wie die Symbole in der Übersicht auf Heute */
-.empty .e-ic{--c:var(--accent);width:60px;height:60px;border-radius:50%;background:color-mix(in srgb,var(--c) 17%,transparent);color:var(--c);display:grid;place-items:center;margin-bottom:6px}
+.empty .e-ic{--c:var(--accent);width:60px;height:60px;border-radius:50%;background:color-mix(in srgb,var(--c) 17%,transparent);color:var(--c);display:grid;place-items:center;margin-bottom:6px;box-shadow:inset 0 0 0 .5px color-mix(in srgb,var(--c) 30%,transparent),0 0 44px -8px color-mix(in srgb,var(--c) 55%,transparent)}
 .empty .e-ic.gewicht{--c:var(--c-weight)}
 .empty .e-ic.haushalt{--c:var(--c-money)}
 .empty .e-ic.training{--c:var(--good)}
@@ -258,7 +258,9 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .g-area{fill:url(#g-fade)}
 .gf0{stop-color:var(--at);stop-opacity:.26}
 .gf1{stop-color:var(--at);stop-opacity:0}
-.g-trend{fill:none;stroke:var(--at);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round;filter:drop-shadow(0 3px 6px color-mix(in srgb,var(--at) 50%,transparent))}
+.g-trend{fill:none;stroke:var(--at);stroke-width:2.2;stroke-linejoin:round;stroke-linecap:round}
+/* Schein um die Linie (v102): dieselbe Linie noch einmal, breit und blass. Kein CSS-Filter, weil Safari Filter an einzelnen Teilen eines SVG nicht verlässlich anwendet. */
+.g-glow{fill:none;stroke:var(--at);stroke-width:8;stroke-linejoin:round;stroke-linecap:round;opacity:.13}
 .g-raw{fill:var(--muted);opacity:.4}
 .g-halo{fill:var(--at);opacity:.16}
 .g-goal{stroke:var(--ink);stroke-width:1.2;stroke-dasharray:4 4;opacity:.55}
@@ -305,7 +307,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .mbar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--accent-soft);margin-bottom:-10px}
 .mbar i{display:block;height:100%}
 .mbar .fx{background:var(--mid)}
-.mbar .fl{background:var(--accent)}
+.mbar .fl{background:linear-gradient(90deg,var(--accent-deep),var(--at))}
 .fig .dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:4px;vertical-align:1px}
 .cats{display:flex;flex-direction:column;gap:13px}
 .cat{display:grid;grid-template-columns:1fr auto;gap:5px 12px;font-size:15px}
@@ -362,7 +364,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:8px 12px;border:0;background:none}
 .ov+.ov::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--line)}
 .ov:active{background:var(--fill)}
-.ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent)}
+.ov .ic{grid-area:1/1/3/2;width:30px;height:30px;border-radius:9px;display:grid;place-items:center;color:var(--c);background:color-mix(in srgb,var(--c) 17%,transparent);box-shadow:inset 0 0 0 .5px color-mix(in srgb,var(--c) 30%,transparent)}
 .ov .ic svg{width:17px;height:17px}
 .ov .ic.gewicht{--c:var(--c-weight)}
 .ov .ic.work,.ov .ic.uni{--c:var(--accent)}
@@ -664,8 +666,14 @@ u.w{background:var(--c-weight)}
 .soll{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:-4px}
 .soll i{display:block;height:100%;border-radius:2px;background:var(--accent)}
 /* Wechsel des Bereichs: Die neue Ansicht blendet kurz ein */
-@keyframes ein{from{opacity:0}to{opacity:1}}
-.view.ein{animation:ein .18s ease}
+/* Beim Öffnen eines Bereichs oder Teils (Klasse neu, 0,7 s lang; frisch()) steigen seine Teile nacheinander leicht auf, statt als Ganzes einzublenden (v102). Zusammen höchstens 0,5 s. */
+@keyframes auf{from{opacity:0;transform:translateY(10px)}}
+.view.neu>*{animation:auf .36s cubic-bezier(.2,.9,.25,1) backwards}
+.view.neu>*:nth-child(2){animation-delay:.025s}
+.view.neu>*:nth-child(3){animation-delay:.05s}
+.view.neu>*:nth-child(4){animation-delay:.075s}
+.view.neu>*:nth-child(5){animation-delay:.1s}
+.view.neu>*:nth-child(n+6){animation-delay:.125s}
 .lastx{gap:0;padding:10px 12px 8px}
 .lastx .note{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lastx .note b{flex:none;font-weight:600}
@@ -744,7 +752,7 @@ button:active{transition-duration:.04s}
 .tab:active svg{transform:scale(.88)}
 .tk:active i{transform:scale(.84)}
 .cd:not(.sel):active b{background:var(--fill)}
-@keyframes sheet{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:none}}
+@keyframes sheet{from{opacity:0;transform:translateY(34px) scale(.985)}to{opacity:1;transform:none}}
 @keyframes dim{from{opacity:0}to{opacity:1}}
 @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 dialog[open]{animation:sheet .26s cubic-bezier(.16,1,.3,1)}
@@ -754,6 +762,7 @@ dialog[open]::backdrop{animation:dim .2s ease}
 dialog[open].zu{animation:sheetZu .15s ease-in forwards;pointer-events:none}
 dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 .view:not([hidden]){animation:fade .22s cubic-bezier(.16,1,.3,1)}
+.view.neu:not([hidden]){animation:none}
 @keyframes goN{from{opacity:.3;transform:translateX(26px)}to{opacity:1;transform:none}}
 @keyframes goP{from{opacity:.3;transform:translateX(-26px)}to{opacity:1;transform:none}}
 .view.go-n:not([hidden]){animation:goN .24s cubic-bezier(.16,1,.3,1)}
@@ -846,7 +855,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
-  .view.ein,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
+  .view.neu>*,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg,body,.tabs-in::before{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
@@ -1489,7 +1498,7 @@ function chartSVG(pts, t0) {
   const last = pts[pts.length - 1];
   s += '<path class="g-area" d="' + line + ' L' + f(X(last.t)) + ' ' + base + ' L' + f(X(pts[0].t)) + ' ' + base + ' Z"/>';
   s += pts.map(e => '<circle class="g-raw" cx="' + f(X(e.t)) + '" cy="' + f(Y(e.w)) + '" r="1.8"/>').join('');
-  s += '<path class="g-trend" d="' + line + '"/>';
+  s += '<path class="g-glow" d="' + line + '"/><path class="g-trend" d="' + line + '"/>';
   s += '<circle class="g-halo" cx="' + f(X(last.t)) + '" cy="' + f(Y(last.m)) + '" r="9"/><circle class="g-end" cx="' + f(X(last.t)) + '" cy="' + f(Y(last.m)) + '" r="4.5"/>';
   const lab = t => t === t0 ? 'heute' : DF_SHORT.format(dayDate(t));
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + lab(tMin) + '</text>';
@@ -2467,7 +2476,7 @@ function runSVG(runs, metric) {
     s += '<line class="g-grid" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 8) + '" y="' + f(Y(v) + 4) + '">' + (metric === 'pace' ? fmtPace(-v) : kg(v, 2)) + '</text>';
   }
   const line = kurve(pts.map((r, i) => [X(i), Y(val(r))])), ex = f(X(pts.length - 1)), ey = f(Y(val(pts[pts.length - 1])));
-  s += '<path class="g-area" d="' + line + ' L' + ex + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-trend" d="' + line + '"/>';
+  s += '<path class="g-area" d="' + line + ' L' + ex + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-glow" d="' + line + '"/><path class="g-trend" d="' + line + '"/>';
   s += '<circle class="g-halo" cx="' + ex + '" cy="' + ey + '" r="9"/><circle class="g-end" cx="' + ex + '" cy="' + ey + '" r="4.5"/>';
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
@@ -3163,7 +3172,7 @@ function seriesSVG(pts, fmtV, steps, label, unit, fmtD) {
   const n = Math.round((hi - lo) / step);
   for (let i = 0; i <= n; i++) { const v = lo + i * step; s += '<line class="g-grid" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 8) + '" y="' + f(Y(v) + 4) + '">' + fmtV(v) + '</text>'; }
   const line = kurve(pts.map((q, i) => [X(i), Y(q.v)])), ex = f(X(pts.length - 1)), ey = f(Y(pts[pts.length - 1].v));
-  s += '<path class="g-area" d="' + line + ' L' + ex + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-trend" d="' + line + '"/>';
+  s += '<path class="g-area" d="' + line + ' L' + ex + ' ' + base + ' L' + f(X(0)) + ' ' + base + ' Z"/><path class="g-glow" d="' + line + '"/><path class="g-trend" d="' + line + '"/>';
   s += '<circle class="g-halo" cx="' + ex + '" cy="' + ey + '" r="9"/><circle class="g-end" cx="' + ex + '" cy="' + ey + '" r="4.5"/>';
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + fd(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + fd(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
@@ -4254,7 +4263,7 @@ function show(v, user) {
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
-  if (user && view !== was) { foldsShut(); render(); const el = $('#v-' + view); el.classList.remove('ein'); void el.offsetWidth; el.classList.add('ein'); frisch(el); }
+  if (user && view !== was) { foldsShut(); render(); frisch($('#v-' + view)); }
   if (user) {
     $('#scroll').scrollTop = 0;
     try { if (location.hash.slice(1) !== view) location.hash = view; } catch (e) {}

@@ -57,6 +57,16 @@ lauf(async () => {
         karte: ka.backgroundColor, kante: ka.boxShadow !== 'none', zeile: ve.top - fu.top < 14 && ve.left > fu.left + 40 }; });
     P.ok('Licht hinter der Seite in der Farbe des Bereichs, die Kopfzeile zeichnet dasselbe und deckt; Karten aus Glas mit feiner Kante; Fußzeile in einer Zeile' + b,
       glas.v === 'training' && glas.licht && glas.gleich && glas.deckt === 'rgb(0, 0, 0)' && glas.maske && glas.karte.indexOf('rgba(255, 255, 255, 0.08') === 0 && glas.kante && glas.zeile, JSON.stringify(glas));
+    /* Edler statt flach (v102): Der Hauptknopf trägt einen Verlauf mit Licht von oben; Liniengraphen haben unter der Linie dieselbe Linie noch einmal breit und blass (Schein ohne CSS-Filter);
+       Balken laufen nach unten aus (Verlauf #g-bar). Geprüft im Cardio-Teil, der Knopf, Liniengraph und im Jahr Balken zeigt. */
+    await page.click('#v-training .subtabs [data-v="cardio"]');
+    const edel = await page.evaluate(() => { const k = getComputedStyle(document.querySelector('#v-training .primary')), v = document.querySelector('#v-training');
+      return { knopf: /linear-gradient/.test(k.backgroundImage) && k.boxShadow !== 'none', schein: v.querySelectorAll('.g-glow').length, linien: v.querySelectorAll('.g-trend').length,
+        gleich: [...v.querySelectorAll('.g-glow')].every(g => g.nextElementSibling && g.nextElementSibling.classList.contains('g-trend') && g.getAttribute('d') === g.nextElementSibling.getAttribute('d')) }; });
+    await page.click('#v-training [data-t="mode"][data-v="year"]');
+    edel.balken = await page.evaluate(() => { const r = document.querySelector('#v-training rect.g-pos'); return r ? getComputedStyle(r).fill : ''; });
+    await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training .subtabs [data-v="kraft"]');
+    P.ok('Hauptknopf mit Verlauf und Schein, Linie mit Schein darunter, Balken mit Verlauf' + b, edel.knopf && edel.linien >= 1 && edel.schein === edel.linien && edel.gleich && (edel.balken === '' || /g-bar/.test(edel.balken))   /* am Jahresanfang gibt es noch keinen Balken */, JSON.stringify(edel));
     /* Der Punkt im Titel und die Linse folgen dem Bereich: Gewicht lila, Finanzen orange, Heute blau wie das Plus */
     const folgt = [];
     for (const [v, f] of [['gewicht', '--c-weight'], ['haushalt', '--c-money'], ['heute', '--accent']]) { await bereich(page, v);

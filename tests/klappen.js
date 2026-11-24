@@ -515,9 +515,9 @@ lauf(async () => {
   P.ok('der Punkt fürs Wiegen trägt die Farbe des Bereichs Gewicht', await q8.evaluate(() => { const p = document.createElement('i'); p.style.background = 'var(--c-weight)'; document.body.appendChild(p); const soll = getComputedStyle(p).backgroundColor; p.remove(); return getComputedStyle(document.querySelector('#v-heute .wk u.w')).backgroundColor === soll; }));
   const ov8 = await q8.$$eval('#v-heute .ov', l => l.map(b => b.innerText.replace(/\s+/g, ' ').trim()));
   P.ok('Heute, Übersicht: Gewicht, Training, Arbeit (174,00 €, 12 Std an 2 Tagen im November), Uni (9,5 Punkte, 3 von 18 Terminen)', ov8.length === 4 && ov8[2] === 'Arbeit 174,00 € 12 Std an 2 Tagen im November' && ov8[3] === 'Uni 9,5 Punkte 3 von 18 Terminen', JSON.stringify(ov8));
-  await q8.click('#v-heute .ov[data-teil="uni"]'); await w8();
+  await q8.click('#v-heute .ov[data-teil="uni"]'); const neu8 = await q8.evaluate(() => document.querySelector('#v-routinen').classList.contains('neu')); await w8();
   P.ok('Tipp auf „Uni“ öffnet den Planer im Teil Uni; oben steht „Planer.“', (await q8.isVisible('#v-routinen')) && (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Uni' && (await text(q8, '.mark')) === 'Planer.' && (await text(q8, '#n-main .hero')).includes('3 von 18 Terminen'));
-  P.ok('nach dem Wechsel trägt die neue Ansicht die Klasse zum Einblenden', await q8.evaluate(() => document.querySelector('#v-routinen').classList.contains('ein')));
+  P.ok('nach dem Wechsel trägt die neue Ansicht die Klasse zum Einblenden (neu, 0,7 s lang: ihre Teile steigen nacheinander auf)', neu8);
   await bereich(q8, 'heute'); await q8.click('#v-heute .ov[data-teil="work"]'); await w8();
   P.ok('Tipp auf „Arbeit“ öffnet den Planer im Teil Arbeit', (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Arbeit' && (await text(q8, '#n-main .hero')).includes('174,00'));
   // Gym: Satz 1 mit 72,5 × 8 (letztes Mal 70 × 8) → „+2,5“ am Gewicht. Satz 2 mit 60 × 9 (letztes Mal 60 × 7) → „+2“ an den Wiederholungen. Satz 3 gab es letztes Mal nicht → nichts.
