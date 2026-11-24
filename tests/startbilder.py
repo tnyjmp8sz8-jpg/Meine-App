@@ -10,7 +10,7 @@ GERAETE = [  # Breite, Höhe in CSS-Pixeln, Pixeldichte
     (375, 667, 2), (414, 736, 3), (375, 812, 3), (414, 896, 2), (414, 896, 3), (390, 844, 3),
     (428, 926, 3), (393, 852, 3), (430, 932, 3), (402, 874, 3), (440, 956, 3), (420, 912, 3),
 ]
-FARBEN = {'dunkel': ('#0E0F13', 'dark'), 'hell': ('#F2F2F7', 'light')}  # wie --bg in index.html
+FARBEN = {'dunkel': ('#000000', 'dark'), 'hell': ('#F2F2F7', 'light')}  # wie --bg in index.html
 
 ziel = os.path.join(os.path.dirname(__file__), '..', 'start')
 os.makedirs(ziel, exist_ok=True)

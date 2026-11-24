@@ -9,7 +9,7 @@
 <meta name="apple-mobile-web-app-title" content="Track.">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
-<meta name="theme-color" content="#0E0F13" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
 <link rel="apple-touch-icon" href="icon-180.png">
 <!-- Startbilder fürs iPhone: einfarbig in der Hintergrundfarbe, erzeugt mit tests/startbilder.py -->
 <link rel="apple-touch-startup-image" href="start/dunkel-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait) and (prefers-color-scheme: dark)">
@@ -42,6 +42,7 @@
 :root{
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
+  --sheet:#F2F2F7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
   --ink:#111114;
@@ -66,14 +67,17 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+    --bg:#000000; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
+  /* Blätter liegen eine Stufe über dem schwarzen Grund, ihre Flächen wieder eine darüber (wie in iOS) */
+  :root:not([data-theme="light"]) dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
 }
+:root[data-theme="dark"] dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
 :root[data-theme="dark"]{
-  --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+  --bg:#000000; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
   color-scheme:dark;
 }
 
@@ -162,8 +166,8 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .foot{margin-top:auto;padding-top:8px;color:var(--muted);font-size:13px;text-align:center}
 
-dialog{border:0;padding:0;margin:auto auto var(--kb,0px);width:100%;max-width:480px;max-height:calc(92% - var(--kb,0px));transition:margin-bottom .2s ease;border-radius:24px 24px 0 0;background:var(--bg);color:var(--ink);overflow:auto}
-dialog::backdrop{background:rgba(4,6,10,.6)}
+dialog{border:0;padding:0;margin:auto auto var(--kb,0px);width:100%;max-width:480px;max-height:calc(92% - var(--kb,0px));transition:margin-bottom .2s ease;border-radius:24px 24px 0 0;background:var(--sheet);color:var(--ink);overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.55)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -376,7 +380,6 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 
 /* Trainingsplan und laufendes Training */
 #lsheet{max-height:96%}
-#ls-times{grid-template-columns:1fr 1fr;position:sticky;top:0;z-index:2;background:var(--bg);padding:8px 0;margin:-8px 0}
 #l-items,#p-items{display:flex;flex-direction:column;gap:10px}
 #l-items:empty,#p-items:empty{display:none}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
@@ -539,6 +542,7 @@ u.w{background:var(--c-weight)}
 .rows.one .row{border-radius:0;background:none}
 .rows.one .is-done .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .rows.one .is-done .glyph svg{width:13px;height:13px}
+.rows.one .is-wait .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--mid);color:var(--muted);font-family:var(--round);font-size:12.5px;font-weight:600}
 .rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
@@ -798,7 +802,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v86</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v87</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1071,7 +1075,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="fld">
       <span id="lbl-k-add">Übung hinzufügen</span>
       <div class="stepper">
-        <input id="k-new" name="exercise" type="text" maxlength="40" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
+        <input id="k-new" name="exercise" type="text" maxlength="60" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
         <button type="button" id="k-new-add" aria-label="Übung hinzufügen">+</button>
       </div>
       <div class="chips" id="k-pick" role="group" aria-label="Passende Übungen" hidden></div>
@@ -1094,7 +1098,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div id="x-recap"></div>
     <label class="fld" for="x-name" id="x-name-fld">
       <span>Name</span>
-      <input id="x-name" name="name" type="text" maxlength="40" autocomplete="off">
+      <input id="x-name" name="name" type="text" maxlength="60" autocomplete="off">
     </label>
     <p class="err" id="x-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="x-save">Speichern</button>
@@ -1113,7 +1117,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="lx-tabs" id="l-tabs" role="group" aria-label="Übungen"></div>
     <div id="l-add" hidden>
       <div class="stepper">
-        <input id="l-new" name="exercise" type="text" maxlength="40" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
+        <input id="l-new" name="exercise" type="text" maxlength="60" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
         <button type="button" id="l-new-add" aria-label="Übung hinzufügen">+</button>
       </div>
       <div class="chips" id="l-pick" role="group" aria-label="Passende Übungen" hidden></div>
@@ -1174,7 +1178,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="fld">
       <span id="lbl-p-add">Übung hinzufügen</span>
       <div class="stepper">
-        <input id="p-new" name="exercise" type="text" maxlength="40" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
+        <input id="p-new" name="exercise" type="text" maxlength="60" autocomplete="off" placeholder="Name der Übung" aria-label="Name der Übung">
         <button type="button" id="p-new-add" aria-label="Übung hinzufügen">+</button>
       </div>
       <div class="chips" id="p-pick" role="group" aria-label="Passende Übungen" hidden></div>
@@ -2524,7 +2528,7 @@ $('#t-del').addEventListener('click', () => {
 /* ---------- Training: Kraft ---------- */
 function normK(o) {
   const out = { ex: {}, log: {} };
-  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? Object.assign({ n: String(x.n).slice(0, 40) }, x.z >= 1 && x.z <= 30 ? { z: Math.round(x.z) } : {}) : null; }
+  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? Object.assign({ n: String(x.n).slice(0, 60) }, x.z >= 1 && x.z <= 30 ? { z: Math.round(x.z) } : {}) : null; }
   if (o && o.log && typeof o.log === 'object') for (const d in o.log) {
     const day = o.log[d];
     if (!isKey(d) || !day || typeof day !== 'object') continue;
@@ -2537,7 +2541,7 @@ function normK(o) {
   out.plans = {};
   if (o && o.plans && typeof o.plans === 'object') for (const id in o.plans) {
     const pl = o.plans[id];
-    out.plans[id] = pl && typeof pl === 'object' && pl.n ? { n: String(pl.n).slice(0, 40), items: (Array.isArray(pl.items) ? pl.items : []).filter(it => it && it.id).map(it => ({ id: String(it.id), sets: clamp(Math.round(Number(it.sets)) || 3, 1, 10) })).slice(0, 20) } : null;
+    out.plans[id] = pl && typeof pl === 'object' && pl.n ? Object.assign({ n: String(pl.n).slice(0, 40), items: (Array.isArray(pl.items) ? pl.items : []).filter(it => it && it.id).map(it => ({ id: String(it.id), sets: clamp(Math.round(Number(it.sets)) || 3, 1, 10) })).slice(0, 20) }, pl.o >= 1 && pl.o <= 999 ? { o: Math.round(pl.o) } : {}) : null;
   }
   out.meta = {};
   if (o && o.meta && typeof o.meta === 'object') for (const d in o.meta) { const m = o.meta[d]; if (isKey(d) && m && typeof m === 'object') out.meta[d] = { dur: Math.max(0, Math.round(Number(m.dur) || 0)), plan: m.plan ? String(m.plan) : null }; }
@@ -2665,7 +2669,20 @@ function setsText(sets) {
   return runs.map(g => (g.w ? kgn(g.w) + ' kg × ' : '') + g.r.join(', ') + (g.w ? '' : ' Wdh')).join(' · ');
 }
 
-const kPlans = () => Object.keys(K.plans || {}).filter(id => K.plans[id]).map(id => ({ id, n: K.plans[id].n, items: K.plans[id].items.filter(it => K.ex[it.id]) })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
+/* Pläne in ihrer Reihenfolge: o = Platz (neue Pläne hängen sich hinten an, v87), Pläne von früher ohne Platz stehen nach Namen davor */
+const kPlans = () => Object.keys(K.plans || {}).filter(id => K.plans[id]).map(id => ({ id, n: K.plans[id].n, o: K.plans[id].o || 0, items: K.plans[id].items.filter(it => K.ex[it.id]) })).sort((a, b) => a.o - b.o || a.n.localeCompare(b.n, 'de'));
+/* Runde wie in Alpha Progression: Die Pläne sind in ihrer Reihenfolge dran. Von der letzten Einheit rückwärts gehören die Einheiten zur laufenden Runde, solange der Plan weiter vorn steht
+   als der danach trainierte (… Torso B am 15. | Torso A am 18., Extremitäten am 20. → Torso A und Extremitäten sind erledigt, als Nächstes kommt Torso B).
+   War zuletzt der letzte Plan dran, ist die Runde voll und es beginnt eine neue. done = erledigt in dieser Runde, next = Platz des Plans, der als Nächstes dran ist. */
+function planRunde(plans) {
+  const idx = {}; plans.forEach((p, i) => { idx[p.id] = i; });
+  const ds = Object.keys(K.meta || {}).filter(d => K.meta[d].plan in idx && kDay(d).length).sort(), done = {};
+  if (!ds.length) return { done, next: 0 };
+  const letzter = idx[K.meta[ds[ds.length - 1]].plan];
+  if (letzter === plans.length - 1) return { done, next: 0 };
+  for (let i = ds.length - 1, vor = Infinity; i >= 0; i--) { const k = idx[K.meta[ds[i]].plan]; if (k >= vor) break; done[plans[k].id] = true; vor = k; }
+  return { done, next: letzter + 1 };
+}
 const planName = id => id && K.plans && K.plans[id] ? K.plans[id].n : '';
 function planLast(id) { let last = null; for (const d in (K.meta || {})) if (K.meta[d].plan === id && kDay(d).length && (!last || d > last)) last = d; return last; }
 function liveCardHTML() {
@@ -2727,12 +2744,12 @@ function kraftHTML(curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
   if (s.n) h += kTiles(s) + kNote(s) + kGewHTML(tYM, 'im ' + name);
-  /* Pläne in einer Karte. Was diese Woche (ab Montag) schon dran war, trägt einen grünen Haken statt des blauen Kreises zum Starten. */
-  const wk = keyOf(monOf(new Date())), dran = pl => (planLast(pl.id) || '') >= wk, fertig = plans.filter(dran).length;
-  h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length + ' diese Woche' : '', secAct('data-k="plan"', '', 'Plan anlegen'));
-  h += plans.length ? '<ul class="rows one">' + plans.map(pl => {
-    const last = planLast(pl.id), ok = dran(pl);
-    return '<li class="row ' + (ok ? 'is-done' : 'is-idle') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', diese Woche schon trainiert' : '') + '"><span class="glyph">' + (ok ? CHECK : ICON.play) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
+  /* Pläne in einer Karte, in ihrer Reihenfolge. In der laufenden Runde erledigt: grüner Haken. Als Nächstes dran: der blaue Kreis zum Starten. Die übrigen: ihr Platz als Zahl. Jeder lässt sich antippen und starten. */
+  const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
+  h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length : '', secAct('data-k="plan"', '', 'Plan anlegen'));
+  h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
+    const last = planLast(pl.id), ok = runde.done[pl.id], dran = !ok && i === runde.next;
+    return '<li class="row ' + (ok ? 'is-done' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : dran ? ICON.play : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
       '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
@@ -2943,7 +2960,7 @@ $('#kform').addEventListener('click', e => {
 function kAddNew() {
   const name = $('#k-new').value.trim(); if (!name) return;
   let ex = kExs().find(x => x.n.toLowerCase() === name.toLowerCase());
-  if (!ex) { const id = newId(), p = { ex: {} }; p.ex[id] = { n: name.slice(0, 40) }; kdoc.patch(p); ex = { id }; }
+  if (!ex) { const id = newId(), p = { ex: {} }; p.ex[id] = { n: name.slice(0, 60) }; kdoc.patch(p); ex = { id }; }
   if (!kS.items.some(it => it.id === ex.id)) kS.items.push(kNewItem(ex.id));
   $('#k-new').value = ''; paintK();
 }
@@ -3084,7 +3101,7 @@ $('#xform').addEventListener('submit', e => {
   e.preventDefault();
   const name = $('#x-name').value.trim();
   if (!name) { const x = $('#x-err'); x.textContent = 'Gib der Übung einen Namen.'; x.hidden = false; return; }
-  const p = { ex: {} }; p.ex[xId] = { n: name.slice(0, 40) }; kdoc.patch(p);
+  const p = { ex: {} }; p.ex[xId] = { n: name.slice(0, 60) }; kdoc.patch(p);
   closeX(); renderTraining();
 });
 $('#x-del').addEventListener('click', () => {
@@ -3099,7 +3116,7 @@ let Lw = null, lArm = false, pS = null, pArm = false, lvTick = null, wakeL = nul
 function exIdFor(name) {
   const ex = kExs().find(x => x.n.toLowerCase() === name.toLowerCase());
   if (ex) return ex.id;
-  const id = newId(), q = { ex: {} }; q.ex[id] = { n: name.slice(0, 40) }; kdoc.patch(q);
+  const id = newId(), q = { ex: {} }; q.ex[id] = { n: name.slice(0, 60) }; kdoc.patch(q);
   return id;
 }
 const CHECK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>';
@@ -3373,7 +3390,7 @@ $('#pform').addEventListener('submit', e => {
   const name = $('#p-name').value.trim();
   if (!name) return err('Gib dem Plan einen Namen.');
   if (!pS.items.length) return err('Füge mindestens eine Übung hinzu.');
-  const q = { plans: {} }; q.plans[pS.id || newId()] = { n: name.slice(0, 40), items: pS.items.map(it => ({ id: it.id, sets: it.sets })) };
+  const q = { plans: {} }; q.plans[pS.id || newId()] = Object.assign({ n: name.slice(0, 40), items: pS.items.map(it => ({ id: it.id, sets: it.sets })) }, pS.id ? {} : { o: kPlans().reduce((m, p) => Math.max(m, p.o), 0) + 1 });
   kdoc.patch(q);
   tSub = 'kraft'; closeP(); renderTraining();
 });
@@ -3924,6 +3941,18 @@ async function exportData() {
 }
 const stripNull = o => { if (Array.isArray(o) || !o || typeof o !== 'object') return o; const out = {}; for (const k in o) if (o[k] != null) out[k] = stripNull(o[k]); return out; };
 /* Einlesen ergänzt: vorhandene Einträge bleiben, gleiche Einträge werden überschrieben */
+/* Einlesen von Gym-Daten: Eine Übung oder ein Plan mit einem Namen, den es schon gibt, ist dieselbe Übung und derselbe Plan, auch unter einer anderen Kennung
+   (Übernahme aus einer anderen App, v87). Ihre Einheiten und Pläne hängen sich an das Vorhandene, statt dass der Name zweimal dasteht. */
+function gleicheNamen(kk) {
+  const name = s => String(s).trim().toLowerCase(), ux = {}, up = {};
+  for (const id in kk.ex) if (!K.ex[id]) { const da = kExs().find(e => name(e.n) === name(kk.ex[id].n)); if (da) ux[id] = da.id; }
+  for (const id in kk.plans) if (!(K.plans || {})[id]) { const da = kPlans().find(p => name(p.n) === name(kk.plans[id].n)); if (da) up[id] = da.id; }
+  const um = (o, u) => { for (const id in u) if (id in o) { if (!(u[id] in o)) o[u[id]] = o[id]; delete o[id]; } };
+  um(kk.ex, ux); um(kk.plans, up);
+  for (const d in kk.log) um(kk.log[d], ux);
+  for (const id in kk.plans) kk.plans[id].items.forEach(it => { if (ux[it.id]) it.id = ux[it.id]; });
+  for (const d in kk.meta) if (up[kk.meta[d].plan]) kk.meta[d].plan = up[kk.meta[d].plan];
+}
 function importData(d) {
   if (!d || d.app !== 'takt') throw new Error('format');
   (Array.isArray(d.routines) ? d.routines : []).map(normRoutine).filter(Boolean).forEach(r => { if (!S.routines.some(x => x.id === r.id)) S.routines.push(r); });
@@ -3943,6 +3972,7 @@ function importData(d) {
   if (d.MY && typeof d.MY === 'object') for (const y in d.MY) if (/^\d{4}$/.test(y)) mdoc(y).patch(stripNull(normMY(d.MY[y])));
   tdoc.patch(stripNull(normT(d.T)));
   const kk = stripNull(normK(d.K)); delete kk.live;
+  gleicheNamen(kk);
   kdoc.patch(kk);
   ndoc.patch(stripNull(normN(d.N)));
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */

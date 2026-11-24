@@ -20,8 +20,8 @@ lauf(async () => {
   // Sätze besser: heute 44×10, 44×9, 44×8 gegen 40×10 je Satz beim letzten Mal = alle drei mit mehr Gewicht
   P.enthaelt('3 Sätze besser, Zeit 0:40 h', await gym(), ['3 Sätze besser', '0:40 h']);
   P.ok('„bewegt“ gibt es nicht mehr', !(await gym()).includes('bewegt'));
-  // Pläne: Torso war heute dran (K.meta von heute): grüner Haken statt Kreis zum Starten, in der Überschrift „1 von 1 diese Woche“
-  P.ok('Plan von dieser Woche trägt den Haken, die Überschrift zählt mit', (await page.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(page, '#v-training h2.sec')).includes('1 von 1 diese Woche'), await text(page, '#v-training h2.sec'));
+  // Pläne: Bei nur einem Plan ist jede Runde sofort voll, er ist also immer als Nächstes dran (blauer Kreis, kein Haken, keine Zählung)
+  P.ok('ein einziger Plan: immer dran, kein Haken', (await page.$$('#v-training .rows.one .row.is-idle')).length === 1 && !(await page.$('#v-training .rows.one .row.is-done')) && !(await text(page, '#v-training h2.sec')).includes(' von '), await text(page, '#v-training h2.sec'));
   await page.click('#v-training [data-fold="uebungen"]');
   P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training [data-k="ex"]'), ['Rudern', '+10,0 %']);
   await page.click('#v-training [data-fold="einheiten"]');
@@ -182,7 +182,7 @@ lauf(async () => {
   P.ok('Gym steht vor Cardio und ist gewählt', (await q.$$eval('#v-training .subtabs button', l => l.map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join())) === 'Gym*,Cardio');
   await q.click('#v-training [data-fold="einheiten"]');
   P.enthaelt('Einheit von heute nennt den Rekord', await text(q, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Probe', '1 Rekord']);
-  P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2 diese Woche“', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2 diese Woche'), await text(q, '#v-training h2.sec'));
+  P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2“, „Zweiter“ ist als Nächstes dran', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2') && (await text(q, '#v-training .rows.one .row.is-idle .name')) === 'Zweiter', await text(q, '#v-training h2.sec'));
   P.enthaelt('Körpergewicht im selben Monat: +1,2 kg', await text(q, '#v-training .kw'), ['Körpergewicht', '+1,2 kg']);
   // Blatt der Übung: Die Einheit von heute ist der Rekord, 60 / 53,33 − 1 = +12,5 %
   await q.click('#v-training [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
@@ -190,5 +190,53 @@ lauf(async () => {
   await q.click('#xs-close'); await q.reload(); await q.waitForTimeout(300);
   P.ok('nach neuem Laden: Das Ziel 12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12);
   await g.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler));
+
+  // --- Reihenfolge der Pläne und Runde, Einlesen nach Namen, Übernahme aus Alpha Progression (v87) ---
+  /* Drei Pläne mit Platz 1 bis 3 (nach Namen stünde „Extremitäten“ vorn). Einheiten: vor 9 Tagen Torso B, vor 6 Tagen Torso A, vor 4 Tagen Extremitäten.
+     Rückwärts gelesen: Extremitäten (Platz 2), Torso A (Platz 1), dann Torso B (Platz 3, steht nicht weiter vorn → gehört zur Runde davor).
+     Laufende Runde: Torso A und Extremitäten erledigt, als Nächstes Torso B → „2 von 3“. */
+  const K4 = { ex: { x: { n: 'Rudern' } }, log: {}, meta: {}, live: null,
+    plans: { e: { n: 'Extremitäten', items: [{ id: 'x', sets: 1 }], o: 2 }, b: { n: 'Torso B', items: [{ id: 'x', sets: 1 }], o: 3 }, a: { n: 'Torso A', items: [{ id: 'x', sets: 1 }], o: 1 } } };
+  [[9, 'b'], [6, 'a'], [4, 'e']].forEach(([n, pl]) => { K4.log[tag(n)] = { x: [[50, 10]] }; K4.meta[tag(n)] = { dur: 600, plan: pl }; });
+  const r = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K4 } }), s = r.page;
+  await bereich(s, 'training');
+  const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
+  P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
+  P.ok('schwarzer Grund, Blätter eine Stufe heller', await s.evaluate(() => getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && getComputedStyle(document.querySelector('#lsheet')).backgroundColor === 'rgb(28, 28, 30)'));
+  // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll, eine neue beginnt: nichts erledigt, Torso A als Nächstes, die anderen tragen ihren Platz als Zahl
+  await s.click('#v-training [data-k="start"][aria-label^="Torso B"]'); await s.waitForTimeout(250); await s.click('#l-items .chk'); await s.click('#l-save'); await s.waitForTimeout(200); await s.click('#rs-ok');
+  P.ok('Runde voll: neue Runde, Torso A ist dran, Platz 2 und 3 als Zahl', (await plaene()) === 'Torso A:is-idle: | Extremitäten:is-wait:2 | Torso B:is-wait:3' && !(await text(s, '#v-training h2.sec')).includes(' von '), await plaene());
+  // Neuer Plan: hängt sich hinten an (Platz 4), obwohl „Arme“ nach Namen vorn stünde. Mit vier Plänen ist die Runde wieder offen: Die drei anderen waren dran, „Arme“ kommt als Nächstes.
+  await s.click('#v-training h2.sec [data-k="plan"]'); await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
+  const neuerPlan = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
+  P.ok('neuer Plan steht hinten, trägt Platz 4 und ist als Nächstes dran', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:' && neuerPlan.o === 4, await plaene());
+
+  /* Einlesen: Die Datei führt „RUDERN“ unter der Kennung q1 und einen Plan „Torso A“ unter pp. Beides gibt es schon (x, a): Die Einheit hängt sich an x, der Plan ersetzt a, nichts steht doppelt da.
+     Ein Name mit 50 Zeichen bleibt ganz (bis v86 wurden Namen nach 40 abgeschnitten). */
+  const lang = 'Rudern von unten mit Brustauflage mit Neutralgriff';
+  const dateiK = { ex: { q1: { n: 'RUDERN' }, q2: { n: lang, z: 8 } }, log: { [tag(2)]: { q1: [[55, 9]], q2: [[30, 8]] } }, plans: { pp: { n: 'Torso A', items: [{ id: 'q1', sets: 2 }, { id: 'q2', sets: 3 }], o: 1 } }, meta: { [tag(2)]: { dur: 1200, plan: 'pp' } } };
+  await bereich(s, 'heute'); await s.setInputFiles('#bk-file', { name: 'datei.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, K: dateiK })) }); await s.waitForTimeout(300);
+  const nach = (await gespeichert(s)).K, namen = Object.values(nach.ex).filter(Boolean).map(e => e.n).sort().join(' | ');
+  P.ok('gleicher Name ist dieselbe Übung: zwei Übungen, die Einheit hängt an der vorhandenen', namen === 'RUDERN | ' + lang && !!nach.log[tag(2)].x && !nach.log[tag(2)].q1 && nach.ex.q2.z === 8, namen + ' · ' + JSON.stringify(nach.log[tag(2)]));
+  P.ok('gleicher Name ist derselbe Plan: weiter vier Pläne, „Torso A“ hat jetzt zwei Übungen, die Einheit nennt ihn', Object.values(nach.plans).filter(Boolean).length === 4 && !nach.plans.pp && nach.plans.a.items.map(i => i.id).join() === 'x,q2' && nach.meta[tag(2)].plan === 'a', JSON.stringify(nach.plans.a));
+  await r.browser.close();
+
+  /* Übernahme aus Alpha Progression (tests/alpha.js) mit einem erfundenen Export: zwei Trainings am selben Tag werden eine Einheit (Dauer 1:00 + 0:30 = 90 min),
+     „+15“ ist Zusatzgewicht 15 kg, „+0“ ein Satz ohne Gewicht, „Curls“ gibt es mit zwei Geräten (Name mit Gerät), Sauna und Laufen fehlen, 24 Std. zählt nicht als Dauer,
+     das Ziel 8 Wdh steht an der Übung, aus „Plan X“ werden „Torso A“ und „Torso B“ (zweimal derselbe Name), der Tag nur mit Sauna wird kein Plan. */
+  const fs = require('fs'), os = require('os'), pfad = require('path'), ordner = fs.mkdtempSync(pfad.join(os.tmpdir(), 'alpha-'));
+  fs.writeFileSync(pfad.join(ordner, 'w.csv'), ['"Torso · Tag 3 · Woche 2 · Plan X";"2026-03-02 18:00 Uhr";"30 Min."', '"1. Curls · Kurzhanteln · 10 Wdh"', '#;KG;WDH', '1;12.5;10', '',
+    '"Torso · Tag 1 · Woche 2 · Plan X";"2026-03-02 10:00 Uhr";"1:00 Std."', '"1. Dips · Körpergewicht · 8 Wdh"', '#;KG;WDH', '1;+15;9', '2;+0;7', '"2. Sauna · Körpergewicht · 10 Wdh"', '#;KG;WDH', '1;+16;50',
+    '"3. Laufen · Körpergewicht · 5 cm · 30 Min."', '#;KM;MIN.', '1;5.55;32:44', '', '"Alt · Einzelnes Workout";"2026-02-20 9:00 Uhr";"24 Std."', '"1. Curls · Langhantel · 10 Wdh"', '#;KG;WDH', '1;30;8', ''].join('\n'));
+  fs.writeFileSync(pfad.join(ordner, 'p.csv'), ['"Plan X · 52 Wochen";2026-01-01', '"Tag 1 · Torso"', '"1. Dips · Körpergewicht";"3 Sätze";"8 Wdh"', '"Tag 2 · Sauna"', '"1. Sauna · Körpergewicht";"3 Sätze";"10 Wdh"',
+    '"Tag 3 · Torso"', '"1. Curls · Kurzhanteln";"4 Sätze";"10 Wdh"', ''].join('\n'));
+  require('child_process').execFileSync('node', [pfad.join(__dirname, 'alpha.js'), pfad.join(ordner, 'w.csv'), pfad.join(ordner, 'p.csv'), pfad.join(ordner, 'aus.json'), 'Plan X']);
+  const aus = JSON.parse(fs.readFileSync(pfad.join(ordner, 'aus.json'), 'utf8')).K, an = Object.values(aus.ex).map(e => e.n + (e.z ? ' z' + e.z : '')).sort().join(' | '), dips = Object.keys(aus.ex).find(i => aus.ex[i].n === 'Dips');
+  P.ok('Übernahme: Übungen mit richtigem Namen und Ziel, ohne Sauna und Laufen', an === 'Curls (Kurzhanteln) | Curls (Langhantel) | Dips z8', an);
+  P.ok('Übernahme: ein Tag, eine Einheit mit 90 min; Zusatzgewicht und Satz ohne Gewicht; 24 Std. zählt nicht', Object.keys(aus.log).sort().join() === '2026-02-20,2026-03-02' && aus.meta['2026-03-02'].dur === 5400 && JSON.stringify(aus.log['2026-03-02'][dips]) === '[[15,9],[0,7]]' && aus.meta['2026-02-20'].dur === 0, JSON.stringify(aus.meta));
+  P.ok('Übernahme: Pläne „Torso A“ (Platz 1) und „Torso B“ (Platz 2), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => i.sets).join()).join(' | ') === 'Torso A:1:3 | Torso B:2:4' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
+  const e = await oeffnen(); await e.page.setInputFiles('#bk-file', pfad.join(ordner, 'aus.json')); await e.page.waitForTimeout(300); await bereich(e.page, 'training');
+  P.enthaelt('die Datei lässt sich einlesen: beide Pläne stehen im Gym', await text(e.page, '#v-training .rows.one .name'), ['Torso A', 'Torso B']);
+  await e.browser.close(); ['w.csv', 'p.csv', 'aus.json'].forEach(n => fs.unlinkSync(pfad.join(ordner, n))); fs.rmdirSync(ordner);
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler));
 });
