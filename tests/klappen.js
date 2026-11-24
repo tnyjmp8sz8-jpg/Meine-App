@@ -29,7 +29,8 @@ const flaechen = () => [...document.querySelectorAll('.view:not([hidden]) .sec-a
   const h2 = b.closest('h2'), nach = h2.nextElementSibling;
   let vor = h2.previousElementSibling;
   while (vor && !vor.getBoundingClientRect().height) vor = vor.previousElementSibling;   // verborgene Erklärtexte zählen nicht
-  const erste = nach && document.elementFromPoint(cx, Math.ceil(nach.getBoundingClientRect().top));
+  /* 6 px unter der Oberkante der Liste: Ganz oben läge der Punkt bei runden Ecken (20 px seit v94) neben der Karte */
+  const erste = nach && document.elementFromPoint(cx, Math.ceil(nach.getBoundingClientRect().top) + 6);
   return { name: b.textContent.trim() || b.getAttribute('aria-label'), b: rt - l + 1, h: u - o + 1, mitte: trifft(cx, cy),
     unten: nach ? nach.getBoundingClientRect().top - (u + 1) : 99, oben: vor ? o - vor.getBoundingClientRect().bottom : 99, listeFrei: !nach || (!!erste && nach.contains(erste)) };
 });

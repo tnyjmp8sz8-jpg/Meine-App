@@ -42,8 +42,8 @@
 :root{
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
-  --glass:rgba(255,255,255,.78); --glass-line:rgba(0,0,0,.07); --glass-sel:rgba(0,0,0,.07); --tab-cut:#ECECEE;
-  --sheet:#F2F2F7;
+  --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.7); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+  --sheet:rgba(242,242,247,.84);
   --surface:#FFFFFF;
   --fill:#E9E9EE;
   --ink:#111114;
@@ -68,7 +68,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
-    --bg:#000000; --glass:rgba(44,44,46,.74); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(0,0,0,.45); --tab-cut:#131314; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+    --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(0,0,0,.36); --glass-top:rgba(255,255,255,.12); --tab-cut:#111113; --sheet:rgba(30,30,32,.8); --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
@@ -77,7 +77,7 @@
 }
 :root[data-theme="dark"] dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
 :root[data-theme="dark"]{
-  --bg:#000000; --glass:rgba(44,44,46,.74); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(0,0,0,.45); --tab-cut:#131314; --sheet:#1C1C1E; --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
+  --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(0,0,0,.36); --glass-top:rgba(255,255,255,.12); --tab-cut:#111113; --sheet:rgba(30,30,32,.8); --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
   --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
   color-scheme:dark;
 }
@@ -91,13 +91,14 @@ button:disabled{cursor:default;opacity:.4}
 :focus-visible{outline:2px solid var(--at);outline-offset:2px}
 dialog:focus,dialog:focus-visible{outline:none}
 
-.app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(92px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:22px;min-height:100%}
+.app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(82px + var(--unten));display:flex;flex-direction:column;gap:22px;min-height:100%}
 
 /* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
-.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--bg);border-bottom:1px solid var(--line)}
+.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(to bottom,var(--bg) 58%,transparent);pointer-events:none}
+.top>*{pointer-events:auto}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
 .mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
-.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line)}
+.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top)}
 .add svg{width:20px;height:20px}
 
 .hero{display:flex;flex-direction:column;gap:6px}
@@ -162,8 +163,10 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 .foot{margin-top:auto;padding-top:8px;color:var(--muted);font-size:13px;text-align:center}
 
-dialog{border:0;padding:0;margin:auto auto var(--kb,0px);width:100%;max-width:480px;max-height:calc(92% - var(--kb,0px));transition:margin-bottom .2s ease;border-radius:24px 24px 0 0;background:var(--sheet);color:var(--ink);overflow:auto}
-dialog::backdrop{background:rgba(0,0,0,.55)}
+/* Blätter (v94): Sie schweben wie in iOS 26 mit 8 px Abstand zum Rand, sind rundum gerundet und aus Glas (halb durchsichtig mit Milchglas); dahinter wird die Seite dunkler und unscharf.
+   Mit offener Tastatur (--kb) sitzen sie 8 px über ihr. */
+dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top);color:var(--ink);overflow:auto}
+dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -207,11 +210,11 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .view[hidden],.fld[hidden],.hero[hidden]{display:none}
 .view>.sec{margin:6px 2px -12px}
 /* Leiste unten (v92, sein Wunsch nach einem Bild aus iOS 26: „schwebende Elemente“): eine Kapsel aus Glas, die über dem Inhalt schwebt. Der Inhalt läuft darunter durch
-   und blendet nach unten in den Grund aus (::before), damit unter der Kapsel nichts hervorschaut. Der gewählte Bereich liegt als dunklere Kapsel darin, nicht mehr in Blau.
+   und wird nach unten hin dunkler (::before), bleibt durch das Glas aber zu sehen (v94: durchsichtiger und tiefer; auf iPhones mit Home-Balken sitzt sie 20 px über dem Rand, --unten). Der gewählte Bereich liegt als dunklere Kapsel darin, nicht mehr in Blau.
    Die Leiste steht außerhalb des scrollenden Bereichs: Dort macht der Milchglas-Effekt das Element selbst nicht unscharf (anders als die Kopfzeile, v37). */
-.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px calc(8px + env(safe-area-inset-bottom,0px));pointer-events:none}
-.tabs::before{content:"";position:absolute;inset:-22px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,var(--bg) 62%)}
-.tabs-in{pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(22px) saturate(1.6);backdrop-filter:blur(22px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),0 8px 24px rgba(0,0,0,.3)}
+.tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px var(--unten);pointer-events:none}
+.tabs::before{content:"";position:absolute;inset:-26px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 82%,transparent))}
+.tabs-in{pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 10px 30px rgba(0,0,0,.32)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:999px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
 .tab[aria-current="page"]{background:var(--glass-sel);color:var(--ink);font-weight:600}
@@ -273,8 +276,8 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .seg2 button[aria-pressed="true"]{color:var(--ink)}
 .seg2 button[aria-pressed="true"]::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--sel)}
 /* Monat/Jahr klein rechts neben den Umschaltern eines Bereichs (v80): so steht es in derselben Reihe und kostet keine eigene. Die Tippfläche reicht über das sichtbare Feld hinaus. */
-.seg2.mini{flex:none;grid-template-columns:auto auto;padding:3px;border-radius:11px}
-.seg2.mini button{position:relative;padding:4px 12px;font-size:12.5px;border-radius:8px}
+.seg2.mini{flex:none;grid-template-columns:auto auto;padding:3px;border-radius:999px}
+.seg2.mini button{position:relative;padding:4px 12px;font-size:12.5px;border-radius:999px}
 .seg2.mini button::after{content:"";position:absolute;inset:-9px 0}
 .mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-6px}
 .mnav b{font-family:var(--display);font-size:20px;font-weight:700;letter-spacing:-.01em}
@@ -335,7 +338,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .chip.more svg{width:14px;height:14px}
 
 /* Übersicht, Budgets, Kraft */
-.ovs{background:var(--surface);border-radius:16px;overflow:hidden}
+.ovs{background:var(--surface);border-radius:20px;overflow:hidden}
 .ov{position:relative;display:grid;grid-template-columns:30px minmax(0,1fr) auto 12px;column-gap:10px;row-gap:1px;align-items:center;width:100%;text-align:left;padding:8px 12px;border:0;background:none}
 .ov+.ov::before{content:"";position:absolute;top:0;left:52px;right:0;height:1px;background:var(--line)}
 .ov:active{background:var(--fill)}
@@ -404,7 +407,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 /* Kompakt: kleine Schrift und enge Abstände, viel auf einen Blick. Tippflächen bleiben mindestens 40 px hoch, Eingabefelder mindestens 16 px Schrift (darunter zoomt iOS beim Antippen hinein). */
 body{font-size:14px}
 .app,.view{gap:12px}
-.top{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:6px}
+.top{padding-top:calc(6px + env(safe-area-inset-top,0px));padding-bottom:20px;margin-bottom:-14px}
 .add{width:30px;height:30px;position:relative}
 .add::after{content:"";position:absolute;inset:-7px}
 .add svg{width:14px;height:14px}
@@ -449,7 +452,7 @@ body{font-size:14px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(78px + env(safe-area-inset-bottom,0px));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--sel);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
@@ -548,7 +551,7 @@ u.w{background:var(--c-weight)}
 .trend{margin:0;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
 .trend small{font-size:12px;font-weight:400;color:var(--muted)}
 /* Pläne als eine Karte; ein Plan, der diese Woche schon dran war, trägt einen grünen Haken */
-.rows.one{gap:0;border-radius:16px;background:var(--surface);overflow:hidden}
+.rows.one{gap:0;border-radius:20px;background:var(--surface);overflow:hidden}
 .rows.one .row{border-radius:0;background:none}
 .rows.one .is-done .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .rows.one .is-done .glyph svg{width:13px;height:13px}
@@ -661,18 +664,18 @@ button.lastx:active{background:var(--fill)}
 [aria-expanded="true"] .fold svg{transform:rotate(180deg)}
 
 /* Weicher: rundere Formen, sanfte Übergänge */
-.row,.card,.entries,.empty{border-radius:16px}
+.row,.card,.entries,.empty{border-radius:20px}
 .primary,.ghost,.fig,.stepper button{border-radius:14px}
-.seg2{border-radius:14px;padding:3px}
-.seg2 button{border-radius:11px}
+.seg2{border-radius:999px;padding:3px}
+.seg2 button{border-radius:999px}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:16px}
-.kx,.prow,.tog{border-radius:16px}
+.kx,.prow,.tog{border-radius:20px}
 .lx-tab{border-radius:999px;padding:6px 12px}
 .lt-r .pv,.lt-r.act .n,.lt-r .chk{border-radius:12px}
 .cat .track{height:5px;border-radius:3px}
 .cat .track i{border-radius:3px}
 .mbar{border-radius:4px}
-dialog{border-radius:28px 28px 0 0}
+dialog{border-radius:32px}
 @media (min-width:560px){dialog{border-radius:28px}}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
@@ -726,8 +729,6 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
 .seg2 button[aria-pressed="true"]::before{box-shadow:0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
-.top{border-bottom-color:transparent;transition:border-color .2s ease}
-.top.scrolled{border-bottom-color:var(--line)}
 .tab{font-size:10px;font-weight:500}
 .primary{font-size:14px;font-weight:600;min-height:40px;border-radius:999px}
 .ghost{border-radius:999px}
@@ -817,7 +818,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v93</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v94</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -4237,7 +4238,6 @@ document.addEventListener('pointermove', e => { if (scrubOn && scrubOn.isConnect
 
 /* ---------- Feinschliff ---------- */
 /* Linie unter der Kopfzeile erst, wenn Inhalt darunter durchläuft */
-$('#scroll').addEventListener('scroll', () => { document.querySelector('.top').classList.toggle('scrolled', $('#scroll').scrollTop > 2); }, { passive: true });
 /* Beim Blättern (Pfeil oder Wisch) zählt die große Zahl kurz vom alten zum neuen Wert. Nicht bei „Bewegung reduzieren“. */
 const numOf = el => { const m = el && /^(−?)([\d.]+)(?:,(\d+))?$/.exec(el.textContent.trim()); return m ? { v: (m[1] ? -1 : 1) * Number(m[2].replace(/\./g, '') + '.' + (m[3] || '0')), dec: (m[3] || '').length } : null; };
 document.addEventListener('click', e => {

@@ -35,9 +35,9 @@ lauf(async () => {
   P.ok('beim Blättern läuft die Zahl: unterwegs ein Zwischenwert', vor !== ziel && mitten !== ziel && mitten !== vor, JSON.stringify({ vor, mitten, ziel }));
   P.ok('am Ende steht genau der richtige Wert', (await zahl()) === ziel);
   await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 300; }); await page.waitForTimeout(350);
-  P.ok('Linie unter der Kopfzeile erscheint beim Scrollen', await page.evaluate(() => document.querySelector('.top').classList.contains('scrolled')));
+  // Kopfzeile (v94): keine Linie mehr, sie läuft nach unten weich aus (Verlauf statt Fläche) und lässt Tipps auf den Inhalt darunter durch
+  P.ok('Kopfzeile läuft weich aus und fängt keine Tipps ab', await page.evaluate(() => { const c = getComputedStyle(document.querySelector('.top')); return /gradient/.test(c.backgroundImage) && c.pointerEvents === 'none' && getComputedStyle(document.querySelector('#add')).pointerEvents === 'auto'; }));
   await page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; }); await page.waitForTimeout(350);
-  P.ok('und verschwindet ganz oben wieder', !(await page.evaluate(() => document.querySelector('.top').classList.contains('scrolled'))));
 
   // --- Blatt nach unten wegziehen ---
   await page.click('#v-haushalt [data-m="add"]'); await page.waitForTimeout(400);

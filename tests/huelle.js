@@ -640,19 +640,19 @@ lauf(async () => {
   /* Tastatur in der iPhone-App: 844 hoch, die Tastatur verdeckt unten 336 → das Blatt endet bei 844 − 336 = 508 und ist höchstens 92 % von 844 − 336 = 440 hoch */
   await page.evaluate(() => window.TrackHuelle.neu('notiz')); await page.waitForTimeout(200);
   const unten = () => page.evaluate(() => { const r = document.querySelector('#nsheet').getBoundingClientRect(); return [Math.round(r.bottom), Math.round(r.height)]; });
-  p.ok('ohne Tastatur: Blatt sitzt unten', (await unten())[0] === 844, String(await unten()));
+  p.ok('ohne Tastatur: Blatt schwebt 8 px über dem unteren Rand (v94)', (await unten())[0] === 836, String(await unten()));
   await page.evaluate(() => { window.__vv.height = 844 - 336; window.__vv.dispatchEvent(new Event('resize')); }); await page.waitForTimeout(500);
   let u = await unten();
-  p.ok('mit Tastatur: Blatt rückt über die Tastatur', u[0] === 508 && u[1] <= 441, String(u));
+  p.ok('mit Tastatur: Blatt rückt 8 px über die Tastatur', u[0] === 500 && u[1] <= 441, String(u));
   await page.evaluate(() => { window.__vv.height = 844; window.__vv.dispatchEvent(new Event('resize')); }); await page.waitForTimeout(500);
-  p.ok('Tastatur weg: Blatt sitzt wieder unten', (await unten())[0] === 844, String(await unten()));
+  p.ok('Tastatur weg: Blatt sitzt wieder unten', (await unten())[0] === 836, String(await unten()));
   await page.keyboard.press('Enter'); await page.waitForTimeout(200);
   /* Beim nächsten Mal ist die Höhe bekannt (336): Das Blatt sitzt sofort oben, noch bevor die Tastatur sich meldet. Bleibt sie aus, fällt es nach gut einer Sekunde zurück. */
   p.ok('Blatt zu: nichts bleibt angehoben', await page.evaluate(() => document.documentElement.style.getPropertyValue('--kb') === '0px' && localStorage.getItem('takt.kb') === '336'));
   await page.evaluate(() => window.TrackHuelle.neu('notiz')); await page.waitForTimeout(450);
-  p.ok('zweites Mal: Blatt sitzt sofort über der Tastatur', (await unten())[0] === 508, String(await unten()));
+  p.ok('zweites Mal: Blatt sitzt sofort über der Tastatur', (await unten())[0] === 500, String(await unten()));
   await page.waitForTimeout(1200);
-  p.ok('Tastatur kommt nicht: Blatt fällt zurück', (await unten())[0] === 844, String(await unten()));
+  p.ok('Tastatur kommt nicht: Blatt fällt zurück', (await unten())[0] === 836, String(await unten()));
   await page.keyboard.press('Enter'); await page.waitForTimeout(200);
 
   /* Kategorie aus dem Kurzbefehl bei einer eigenen Kategorie mit „&“ im Namen: Der volle Name trifft sie, ebenso ein Anfang, der über das Zeichen reicht.
