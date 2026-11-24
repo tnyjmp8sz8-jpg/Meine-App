@@ -202,12 +202,20 @@ lauf(async () => {
   await bereich(s, 'training');
   const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
   P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:3' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
-  /* Übungen (v90): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → eigene Klappzeile „Ältere Übungen“ ganz unten.
-     Ihre Zeilen entstehen erst beim Aufklappen. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
-  const kl = async () => [await text(s, '#v-training [data-fold="uebungen"]'), await text(s, '#v-training [data-fold="uebungenAlt"]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
-  const zuerst = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
-  P.ok('Übungen: nur die der letzten vier Wochen, die ältere in „Ältere Übungen“', zuerst === 'Übungen 1 # Ältere Übungen 1 # ' && (await kl()) === 'Übungen 1 # Ältere Übungen 1 # Uralt', zuerst + ' → ' + await kl());
-  await s.click('#v-training [data-fold="uebungenAlt"]');
+  /* Übungen (v90, v97): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → liegt in derselben Liste hinter der letzten Zeile
+     „Ältere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
+     Mit der Liste geht auch ihr älterer Teil wieder zu. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
+  const kl = async () => [await text(s, '#v-training .folds [data-fold]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
+  const zuerst = await kl(); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
+  const offen = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
+  P.ok('zu: nur zwei Klappzeilen, „Übungen“ und „Einheiten“', zuerst === 'Übungen 1 | Einheiten 3 # ', zuerst);
+  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Ältere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Ältere Übungen 1 | Einheiten 3 # Rudern', offen);
+  P.ok('„Ältere Übungen“ offen: die ältere Übung steht darunter', (await kl()) === 'Übungen 1 | Ältere Übungen 1 | Einheiten 3 # Rudern | Uralt', await kl());
+  await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
+  P.ok('„Übungen“ zu und wieder auf: der ältere Teil ist wieder zu', (await kl()) === offen, await kl());
+  await s.click('#v-training [data-fold="uebungen"]');
+  // Kopfzeile (v97): deckend bis 18 px vor ihrem unteren Rand, erst dort läuft sie aus. Bis v96 begann der Verlauf bei 58 %, und beim Scrollen schien die Wochenleiste hinter dem Titel durch (sein Bild vom 24.11.).
+  P.ok('Kopfzeile deckt den Titel ganz, nur der untere Rand läuft aus', await s.evaluate(() => /calc\(100% - 18px\)/.test(getComputedStyle(document.querySelector('.top')).backgroundImage)), await s.evaluate(() => getComputedStyle(document.querySelector('.top')).backgroundImage));
   P.ok('Pläne ohne Play-Zeichen: Ringe ohne Füllung', await s.evaluate(() => [...document.querySelectorAll('#v-training .rows.one .glyph')].every(g => !g.querySelector('path[d^="M5"]') && getComputedStyle(g).backgroundColor === 'rgba(0, 0, 0, 0)')));
   P.ok('schwarzer Grund; Blätter aus Glas: halb durchsichtig mit Milchglas und rundum gerundet (v94)', await s.evaluate(() => { const c = getComputedStyle(document.querySelector('#xsheet')); return getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && /^rgba\(30, 30, 32, 0\.8\)$/.test(c.backgroundColor) && /blur/.test(c.backdropFilter || c.webkitBackdropFilter || '') && parseFloat(c.borderBottomLeftRadius) >= 24; }));
   // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll. Weil in ihr diese Woche trainiert wurde, bleibt sie mit drei Haken bis Montag stehen (v93)

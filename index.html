@@ -96,7 +96,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .app{max-width:480px;margin:0 auto;padding:calc(12px + env(safe-area-inset-top,0px)) 16px calc(82px + var(--unten));display:flex;flex-direction:column;gap:22px;min-height:100%}
 
 /* Kopfzeile: deckend, ohne Weichzeichner. Ein durchscheinender Kopf mit backdrop-filter wurde auf dem iPhone beim Scrollen selbst unscharf. */
-.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(to bottom,var(--bg) 58%,transparent);pointer-events:none}
+.top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:linear-gradient(to bottom,var(--bg) calc(100% - 18px),transparent);pointer-events:none}
 .top>*{pointer-events:auto}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
 .mark .dot{color:var(--accent)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
@@ -682,6 +682,7 @@ button.lastx:active{background:var(--fill)}
 .fold{display:inline-flex;align-items:center;gap:8px}
 .mons{display:flex;flex-direction:column;gap:6px}
 .entries button.mon .l>span{font-weight:600}
+.entries button.mon.alt .l>span{font-weight:500;color:var(--muted)}
 .entries button.mon .fold .up,.entries button.mon .fold .down,.entries .xrow b,.fig b .up,.fig b .down{font-weight:700}
 .fold .ink{color:var(--ink)}
 .fig b span{font:inherit;color:inherit}
@@ -846,7 +847,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v96</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v97</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2796,22 +2797,25 @@ const kUnitRow = d => {
     (rec ? '<span class="r">' + was + '<small class="up">' + rec + (rec === 1 ? ' Rekord' : ' Rekorde') + '</small></span>' : was) + '</button></li>';
 };
 /* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
-/* Übungen in zwei Klappzeilen (v90, sein Wunsch: „nur Übungen der letzten 4 Wochen zeigen“): „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war,
-   alles andere steht in „Ältere Übungen“ ganz unten (auch Übungen ohne Einheit). Gemessen an der jüngsten Einheit und nicht an heute: Nach einer Pause bliebe die Liste sonst leer.
-   Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). Liefert [Übungen, Ältere Übungen]. */
-function kExFolds() {
+/* Übungen in einer Klappzeile: „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war (v90, sein Wunsch: „nur Übungen der letzten 4 Wochen zeigen“).
+   Alles andere (auch Übungen ohne Einheit) liegt seit v97 in derselben Liste hinter ihrer letzten Zeile „Ältere Übungen“, die sich wie ein Monat in der Liste des Gewichts aufklappt:
+   Bis v96 war das eine dritte Klappzeile unter „Einheiten“ (sein Bild vom 24.11.: „finde saubere Lösung dafür“). Gemessen an der jüngsten Einheit und nicht an heute: Nach einer Pause
+   bliebe die Liste sonst leer. Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). */
+function kExFold() {
   const pre = tMode === 'year' ? String(tYear) : tYM, when = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
-  if (!rows.length) return ['', ''];
-  const ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '', jung = rows.filter(o => o.last && o.last.d > ab), alt = rows.filter(o => !(o.last && o.last.d > ab));
+  if (!rows.length) return '';
+  const ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '', jung = ab ? rows.filter(o => o.last && o.last.d > ab) : rows, alt = rows.filter(o => jung.indexOf(o) < 0);
   const zeile = o => {
     const d = exDelta(o.hist, pre);
     return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
       (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
   };
-  const klapp = (key, titel, l) => l.length ? foldHTML(key, titel, '', l.length, fo[key] ? l.map(zeile).join('') : '') : '';
-  return [klapp('uebungen', 'Übungen', jung), klapp('uebungenAlt', 'Ältere Übungen', alt)];
+  if (!fo.uebungen) delete fo.uebungenAlt;   // mit der Liste geht auch ihr älterer Teil wieder zu
+  const altAuf = !!fo.uebungenAlt;
+  return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? jung.map(zeile).join('') + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
+    '<span class="l"><span>Ältere Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
 }
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
@@ -2821,7 +2825,7 @@ function kYearHTML(curYM) {
   h += kTiles(s) + kNote(s) + kGewHTML(y, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFolds().join('') + '</div>';
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFold() + '</div>';
 }
 /* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
 const SKIP = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.8v10.4l8-5.2z"/><path d="M15.2 4.8v10.4"/></svg>';
@@ -2849,8 +2853,7 @@ function kraftHTML(curYM) {
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  const kx = kExFolds();
-  return h + '<div class="folds">' + kx[0] + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + kx[1] + '</div>';
+  return h + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
