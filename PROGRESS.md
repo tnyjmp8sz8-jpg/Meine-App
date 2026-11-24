@@ -35,7 +35,7 @@ Auf seine Frage „ich will den Gym-Teil so verbessern, dass er besser als Apps 
 2. Kraft und Körpergewicht zusammen zeigen (er will zunehmen, 90 → 93 kg): Das kann nur Track., weil beides in einer App liegt.
 3. Rekord im Moment des Satzes (ruhig, grün) und Hinweis, wenn eine Übung seit Wochen steht.
 4. Später, braucht eine neue Installation: Einheit von der Apple Watch von selbst (Dauer, Puls), wie bei den Läufen.
-Ihm gesagt, was ich nicht bauen würde: Übungs-Datenbank mit Videos und Plan-Generator (dort bleibt Alpha Progression besser, für ihn ohne Nutzen). Pausen-Uhr nur, wenn er sie ausdrücklich will (Timer ließ er bei den Routinen ausbauen).
+Seine Antwort: „stop. er muss überall besser werden, bei den funktionen die ich möchte.“ Meine Streichliste (Übungs-Datenbank, Plan-Generator, Pausen-Uhr) gilt damit nicht: Er nennt die Funktionen, ich baue jede davon. Eine Auswahl-Abfrage zum Antippen hat er abgelehnt; seine Liste in eigenen Worten steht aus. Bis dahin nichts bauen.
 
 Ältere Vorschläge:
 - Automatisierungen: wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen.

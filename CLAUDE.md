@@ -143,7 +143,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Weniger ist ihm lieber (20. bis 23.11.): Aufgaben („merke ich mir so und ist zu viel“, v74), Routinen (v75), die Ordner der Notizen und die Notizen unter „Arbeit“ und „Uni“ (v77) ließ er ausbauen. Vorhandenes bleibt nur im Speicher und in der Sicherung (`N.tasks`, `S`, `LY`, `N.folders`, Feld `f` der Notizen; siehe `BEREICHE.md`); einzige Ausnahme sind die Laufband-Läufe, die er löschen ließ (v79). Keine Vorschläge mehr zu Aufgaben, Routinen, Timern, Serien oder Ordnern; vor neuen Funktionen eher fragen, was noch weg kann.
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels. Auch Bewegung bleibt farblos: Ein Zeichen, das beim Antippen blau aufpoppt (Haken beim Abhaken, v83), will er nicht.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
-- Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers).
+- Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers). Sein Maßstab (24.11.): Der Gym-Teil „muss überall besser werden, bei den Funktionen, die ich möchte“. Welche Funktionen das sind, bestimmt er; ich streiche keine von mir aus („dort bleibt Alpha Progression besser“ wollte er nicht hören), sondern frage nach seiner Liste und baue jede davon so, dass sie besser ist.
 
 ## Zusammenarbeit
 - Sprache: Deutsch, einfache Worte, kurz. Der Nutzer ist kein Entwickler, arbeitet am iPhone und schickt Screenshots.
