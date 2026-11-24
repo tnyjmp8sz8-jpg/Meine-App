@@ -30,6 +30,13 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 6. Finanzen: Er fragte am 23.11., was dort geändert werden soll. Antwort: nichts an der App; er benutzt den Bereich bisher nicht. Nach zwei Wochen mit der Apple-Pay-Automation entscheiden, ob er bleibt oder aus der Leiste unten geht (nur auf seinen Wunsch).
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
+Auf seine Frage „ich will den Gym-Teil so verbessern, dass er besser als Apps wie Alpha Progression ist, was dazu machen?“ (24.11.; nur geantwortet, nichts gebaut, seine Wahl steht aus):
+1. Vorgabe je Satz im laufenden Training (Gewicht und Wiederholungen aus dem letzten Mal, ein Tipp bestätigt; erst mehr Wiederholungen, dann mehr Gewicht). Das ist der Kern von Alpha Progression.
+2. Kraft und Körpergewicht zusammen zeigen (er will zunehmen, 90 → 93 kg): Das kann nur Track., weil beides in einer App liegt.
+3. Rekord im Moment des Satzes (ruhig, grün) und Hinweis, wenn eine Übung seit Wochen steht.
+4. Später, braucht eine neue Installation: Einheit von der Apple Watch von selbst (Dauer, Puls), wie bei den Läufen.
+Ihm gesagt, was ich nicht bauen würde: Übungs-Datenbank mit Videos und Plan-Generator (dort bleibt Alpha Progression besser, für ihn ohne Nutzen). Pausen-Uhr nur, wenn er sie ausdrücklich will (Timer ließ er bei den Routinen ausbauen).
+
 Ältere Vorschläge:
 - Automatisierungen: wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen.
 - Oberfläche: Erinnerung „Noch keine Sicherung“ unter die Bereiche setzen; Zielkarte im Gewicht ruhiger; im Vermögen eine Plus-Form für alle Überschriften; großer Titel des Bereichs, der beim Scrollen in die Kopfzeile wandert.
