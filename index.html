@@ -554,6 +554,9 @@ u.w{background:var(--c-weight)}
 .rows.one .is-done .glyph svg{width:13px;height:13px}
 .rows.one .is-wait .glyph,.rows.one .is-idle .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--mid);color:var(--muted);font-family:var(--round);font-size:12.5px;font-weight:600}
 .rows.one .is-idle .glyph{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--at)}
+.rows.one .is-skip .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--mid);color:var(--mid)}
+.rows.one .is-skip .glyph svg{width:13px;height:13px}
+.rows.one .is-skip .name{color:var(--muted)}
 .rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
@@ -814,7 +817,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v92</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v93</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2568,6 +2571,9 @@ function normK(o) {
     const pl = o.plans[id];
     out.plans[id] = pl && typeof pl === 'object' && pl.n ? Object.assign({ n: String(pl.n).slice(0, 40), items: (Array.isArray(pl.items) ? pl.items : []).filter(it => it && it.id).map(it => ({ id: String(it.id), sets: clamp(Math.round(Number(it.sets)) || 3, 1, 10) })).slice(0, 20) }, pl.o >= 1 && pl.o <= 999 ? { o: Math.round(pl.o) } : {}) : null;
   }
+  /* Übersprungene Pläne (v93): aus[Tag][Plan] = 1. Für die Runde zählt ein übersprungener Plan wie einer, der dran war (planRunde). */
+  out.aus = {};
+  if (o && o.aus && typeof o.aus === 'object') for (const d in o.aus) { const a = o.aus[d]; if (!isKey(d) || !a || typeof a !== 'object') continue; for (const id in a) if (a[id]) (out.aus[d] = out.aus[d] || {})[id] = 1; }
   out.meta = {};
   if (o && o.meta && typeof o.meta === 'object') for (const d in o.meta) { const m = o.meta[d]; if (isKey(d) && m && typeof m === 'object') out.meta[d] = Object.assign({ dur: Math.max(0, Math.round(Number(m.dur) || 0)), plan: m.plan ? String(m.plan) : null }, m.n ? { n: String(m.n).slice(0, 40) } : {}); }
   const lv = o && o.live;
@@ -2709,17 +2715,24 @@ function setsText(sets) {
 
 /* Pläne in ihrer Reihenfolge: o = Platz (neue Pläne hängen sich hinten an, v87), Pläne von früher ohne Platz stehen nach Namen davor */
 const kPlans = () => Object.keys(K.plans || {}).filter(id => K.plans[id]).map(id => ({ id, n: K.plans[id].n, o: K.plans[id].o || 0, items: K.plans[id].items.filter(it => K.ex[it.id]) })).sort((a, b) => a.o - b.o || a.n.localeCompare(b.n, 'de'));
-/* Runde wie in Alpha Progression: Die Pläne sind in ihrer Reihenfolge dran. Von der letzten Einheit rückwärts gehören die Einheiten zur laufenden Runde, solange der Plan weiter vorn steht
-   als der danach trainierte (… Torso B am 15. | Torso A am 18., Extremitäten am 20. → Torso A und Extremitäten sind erledigt, als Nächstes kommt Torso B).
-   War zuletzt der letzte Plan dran, ist die Runde voll und es beginnt eine neue. done = erledigt in dieser Runde, next = Platz des Plans, der als Nächstes dran ist. */
+/* Runde wie in Alpha Progression: Die Pläne sind in ihrer Reihenfolge dran. Ereignisse sind Einheiten mit Plan und übersprungene Pläne (K.aus), nach Tag geordnet
+   (am selben Tag nach dem Platz des Plans). Von hinten gelesen gehören sie zur laufenden Runde, solange der Plan weiter vorn steht als der danach
+   (… Torso B am 15. | Torso A am 18., Extremitäten am 20. → Torso A und Extremitäten sind erledigt, als Nächstes kommt Torso B).
+   War zuletzt der letzte Plan dran (trainiert oder übersprungen), ist die Runde voll. Seine Regel dazu (24.11.): Eine neue Runde beginnt „immer montags, wenn alles abgehakt ist,
+   oder wenn ich ausstehende Einheiten skippe und die Woche noch keine Einheit gemacht habe“. Also: Liegt eine trainierte Einheit der vollen Runde in dieser Woche (ab Montag),
+   bleibt die Runde mit ihren Haken bis Montag stehen (voll, next = -1); sonst beginnt sofort die neue. Wer in einer vollen Runde einen Plan startet, beginnt damit die nächste.
+   done = trainiert in dieser Runde, aus = übersprungen, next = Platz des Plans, der als Nächstes dran ist. */
 function planRunde(plans) {
-  const idx = {}; plans.forEach((p, i) => { idx[p.id] = i; });
-  const ds = Object.keys(K.meta || {}).filter(d => K.meta[d].plan in idx && kDay(d).length).sort(), done = {};
-  if (!ds.length) return { done, next: 0 };
-  const letzter = idx[K.meta[ds[ds.length - 1]].plan];
-  if (letzter === plans.length - 1) return { done, next: 0 };
-  for (let i = ds.length - 1, vor = Infinity; i >= 0; i--) { const k = idx[K.meta[ds[i]].plan]; if (k >= vor) break; done[plans[k].id] = true; vor = k; }
-  return { done, next: letzter + 1 };
+  const idx = {}, ev = [], done = {}, aus = {}; plans.forEach((p, i) => { idx[p.id] = i; });
+  for (const d in (K.meta || {})) if (K.meta[d].plan in idx && kDay(d).length) ev.push([d, idx[K.meta[d].plan], 0]);
+  for (const d in (K.aus || {})) for (const id in K.aus[d]) if (K.aus[d][id] && id in idx) ev.push([d, idx[id], 1]);
+  if (!ev.length) return { done, aus, next: 0, voll: false };
+  ev.sort((x, y) => x[0] < y[0] ? -1 : x[0] > y[0] ? 1 : x[1] - y[1] || x[2] - y[2]);
+  const kette = []; for (let i = ev.length - 1, vor = Infinity; i >= 0; i--) { if (ev[i][1] >= vor) break; kette.push(ev[i]); vor = ev[i][1]; }
+  const letzter = ev[ev.length - 1][1], voll = letzter === plans.length - 1, mo = keyOf(monOf(new Date()));
+  if (voll && !kette.some(e => !e[2] && e[0] >= mo)) return { done, aus, next: 0, voll: false };
+  kette.forEach(e => { (e[2] ? aus : done)[plans[e[1]].id] = true; });
+  return { done, aus, next: voll ? -1 : letzter + 1, voll };
 }
 const planName = id => id && K.plans && K.plans[id] ? K.plans[id].n : '';
 function planLast(id) { let last = null; for (const d in (K.meta || {})) if (K.meta[d].plan === id && kDay(d).length && (!last || d > last)) last = d; return last; }
@@ -2778,6 +2791,8 @@ function kYearHTML(curYM) {
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFolds().join('') + '</div>';
 }
+/* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
+const SKIP = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.8v10.4l8-5.2z"/><path d="M15.2 4.8v10.4"/></svg>';
 const kLeer = () => !kDates().length && !kExs().length && !kPlans().length && !K.live;
 function kraftHTML(curYM) {
   const dates = kDates(), plans = kPlans();
@@ -2788,15 +2803,17 @@ function kraftHTML(curYM) {
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
   if (s.n) h += kTiles(s) + kNote(s) + kGewHTML(tYM, 'im ' + name);
-  /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, als Nächstes dran blau mit seinem Platz, die übrigen grau mit ihrem Platz.
+  /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, übersprungen grau mit dem Zeichen dafür, als Nächstes dran blau mit seinem Platz,
+     die übrigen grau mit ihrem Platz. Nur der Plan, der dran ist, trägt rechts den Knopf zum Überspringen (v93): So bleibt die Reihenfolge der Runde eindeutig.
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
   h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length : '', secAct('data-k="plan"', '', 'Plan anlegen'));
   h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
-    const last = planLast(pl.id), ok = runde.done[pl.id], dran = !ok && i === runde.next;
-    return '<li class="row ' + (ok ? 'is-done' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
-      '<span class="meta">' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
-      '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
+    const last = planLast(pl.id), ok = runde.done[pl.id], weg = runde.aus[pl.id], dran = i === runde.next;
+    return '<li class="row ' + (ok ? 'is-done' : weg ? 'is-skip' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : weg ? ', in dieser Runde übersprungen' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : weg ? SKIP : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
+      '<span class="meta">' + (weg ? 'übersprungen' : pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '')) + '</span></span></button>' +
+      '<div class="side">' + (dran ? '<button type="button" class="more" data-k="skip" data-undo data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' in dieser Runde überspringen">' + SKIP + '</button>' : '') +
+      '<button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
@@ -2809,6 +2826,7 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'day') openK(t.dataset.d);
   else if (a === 'ex') openX(t.dataset.id);
   else if (a === 'start') startPlan(t.dataset.id);
+  else if (a === 'skip') { const q = { aus: {} }, d = todayKey(); q.aus[d] = {}; q.aus[d][t.dataset.id] = 1; kdoc.patch(q); renderTraining(); }
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
 });
@@ -3360,6 +3378,7 @@ $('#lform').addEventListener('submit', e => {
   if (!n) { const x = $('#l-err'); x.textContent = 'Hake mindestens einen Satz ab. Wenn du nichts speichern willst, verwirf das Training.'; x.hidden = false; return; }
   const q = { log: {}, meta: {}, live: null };
   q.log[Lw.date] = day; q.meta[Lw.date] = { dur: Math.round((Date.now() - Lw.start) / 1000), plan: Lw.plan };
+  if (Lw.plan && K.aus[Lw.date] && K.aus[Lw.date][Lw.plan]) { q.aus = {}; q.aus[Lw.date] = {}; q.aus[Lw.date][Lw.plan] = null; }   // heute erst übersprungen, dann doch trainiert
   const tagL = Lw.date;
   Lw = null; kdoc.patch(q);
   tSub = 'kraft'; closeL(); liveTick(); openR(tagL);
@@ -4160,7 +4179,7 @@ document.addEventListener('click', e => {
   setTimeout(() => {
     let after = null; try { after = localStorage.getItem(LS); } catch (x) {}
     if (before == null || after === before) return;
-    toastEl.firstElementChild.textContent = b.id === 'l-del' ? 'Training verworfen' : 'Gelöscht';
+    toastEl.firstElementChild.textContent = b.id === 'l-del' ? 'Training verworfen' : b.dataset.k === 'skip' ? 'Übersprungen' : 'Gelöscht';
     /* Ein offenes Blatt sperrt alles außerhalb: Der Hinweis muss dann im Blatt liegen, sonst ließe er sich nicht antippen */
     (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl);
     toastEl.hidden = false;
@@ -4330,7 +4349,7 @@ let hapT = 0;
 function haptik(w) { if (!HUELLE) return; const t = performance.now(); if (t - hapT < 50) return; hapT = t; hPost({ art: 'haptik', w }); }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button'); if (!b) return;
-  if (b.matches('.tk, .chk')) haptik('leicht');
+  if (b.matches('.tk, .chk, [data-k="skip"]')) haptik('leicht');
   else if (b.matches('[data-k="start"]')) haptik('mittel');
   else if (b.matches('[data-fold], .mnav button, .lx-tab, [data-zv]') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
 }, true);

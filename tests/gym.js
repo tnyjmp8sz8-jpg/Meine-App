@@ -20,8 +20,8 @@ lauf(async () => {
   // Sätze besser: heute 44×10, 44×9, 44×8 gegen 40×10 je Satz beim letzten Mal = alle drei mit mehr Gewicht
   P.enthaelt('3 Sätze besser, Zeit 0:40 h', await gym(), ['3 Sätze besser', '0:40 h']);
   P.ok('„bewegt“ gibt es nicht mehr', !(await gym()).includes('bewegt'));
-  // Pläne: Bei nur einem Plan ist jede Runde sofort voll, er ist also immer als Nächstes dran (blauer Kreis, kein Haken, keine Zählung)
-  P.ok('ein einziger Plan: immer dran, kein Haken', (await page.$$('#v-training .rows.one .row.is-idle')).length === 1 && !(await page.$('#v-training .rows.one .row.is-done')) && !(await text(page, '#v-training h2.sec')).includes(' von '), await text(page, '#v-training h2.sec'));
+  // Pläne: Bei nur einem Plan ist die Runde nach einer Einheit voll. Heute trainiert (also diese Woche): Der Haken bleibt bis Montag stehen (v93), „1 von 1“.
+  P.ok('ein einziger Plan, heute trainiert: Haken bis Montag', (await page.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(page, '#v-training h2.sec')).includes('1 von 1'), await text(page, '#v-training h2.sec'));
   await page.click('#v-training [data-fold="uebungen"]');
   P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training [data-k="ex"]'), ['Rudern', '+10,0 %']);
   await page.click('#v-training [data-fold="einheiten"]');
@@ -210,9 +210,9 @@ lauf(async () => {
   await s.click('#v-training [data-fold="uebungenAlt"]');
   P.ok('Pläne ohne Play-Zeichen: Ringe ohne Füllung', await s.evaluate(() => [...document.querySelectorAll('#v-training .rows.one .glyph')].every(g => !g.querySelector('path[d^="M5"]') && getComputedStyle(g).backgroundColor === 'rgba(0, 0, 0, 0)')));
   P.ok('schwarzer Grund, Blätter eine Stufe heller', await s.evaluate(() => getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && getComputedStyle(document.querySelector('#lsheet')).backgroundColor === 'rgb(28, 28, 30)'));
-  // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll, eine neue beginnt: nichts erledigt, Torso A als Nächstes, die anderen tragen ihren Platz als Zahl
+  // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll. Weil in ihr diese Woche trainiert wurde, bleibt sie mit drei Haken bis Montag stehen (v93)
   await s.click('#v-training [data-k="start"][aria-label^="Torso B"]'); await s.waitForTimeout(250); await s.click('#l-items .chk'); await s.click('#l-save'); await s.waitForTimeout(200); await s.click('#rs-ok');
-  P.ok('Runde voll: neue Runde, Torso A ist dran, Platz 2 und 3 als Zahl', (await plaene()) === 'Torso A:is-idle:1 | Extremitäten:is-wait:2 | Torso B:is-wait:3' && !(await text(s, '#v-training h2.sec')).includes(' von '), await plaene());
+  P.ok('Runde voll und diese Woche trainiert: drei Haken bis Montag, „3 von 3“', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:' && (await text(s, '#v-training h2.sec')).includes('3 von 3'), await plaene());
   // Neuer Plan: hängt sich hinten an (Platz 4), obwohl „Arme“ nach Namen vorn stünde. Mit vier Plänen ist die Runde wieder offen: Die drei anderen waren dran, „Arme“ kommt als Nächstes.
   await s.click('#v-training h2.sec [data-k="plan"]'); await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
   const neuerPlan = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
@@ -281,5 +281,42 @@ lauf(async () => {
   await u.reload(); await u.waitForTimeout(300);
   P.ok('zweiter Start: nichts wird noch einmal eingelesen, Gelöschtes bleibt weg', Object.keys((await gespeichert(u)).K.log).length === 303);
   await h6.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler));
+
+  // --- Plan überspringen und Beginn der neuen Runde (v93) ---
+  /* Sein Fall: Torso A und Extremitäten waren letzte Woche dran (vor 9 und 8 Tagen, also sicher vor dem Montag dieser Woche), Torso B ist offen und als Nächstes dran.
+     Nur dieser Plan trägt den Knopf zum Überspringen. Übersprungen ist die Runde voll, und weil diese Woche noch nichts trainiert wurde, beginnt sofort die neue:
+     nichts erledigt, Torso A ist dran. „Rückgängig“ holt den alten Stand zurück. */
+  const K7 = () => ({ ex: { x: { n: 'Rudern' } }, log: {}, meta: {}, live: null,
+    plans: { a: { n: 'Torso A', items: [{ id: 'x', sets: 1 }], o: 1 }, e: { n: 'Extremitäten', items: [{ id: 'x', sets: 1 }], o: 2 }, b: { n: 'Torso B', items: [{ id: 'x', sets: 1 }], o: 3 } } });
+  const mit = (k, liste) => { liste.forEach(([n, pl]) => { k.log[tag(n)] = { x: [[50, 10]] }; k.meta[tag(n)] = { dur: 600, plan: pl }; }); return k; };
+  const o7 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: mit(K7(), [[9, 'a'], [8, 'e']]) } }), v = o7.page;
+  await bereich(v, 'training');
+  const reihe = () => v.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
+  P.ok('letzte Woche zwei von drei: Torso B ist dran und trägt als einziger den Knopf zum Überspringen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
+  await v.click('#v-training [data-k="skip"]'); await v.waitForTimeout(150);
+  P.ok('übersprungen ohne Einheit in dieser Woche: sofort neue Runde, Torso A ist dran', (await reihe()) === 'Torso A:is-idle:Knopf | Extremitäten:is-wait | Torso B:is-wait' && !(await text(v, '#v-training h2.sec')).includes(' von ') && (await text(v, '#toast')).includes('Übersprungen'), await reihe() + ' · ' + await text(v, '#toast'));
+  await v.click('#toast button'); await v.waitForTimeout(150);
+  P.ok('„Rückgängig“: Torso B ist wieder offen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
+  await o7.browser.close();
+  /* Diese Woche trainiert: Torso A heute. Extremitäten überspringen → Torso B ist dran. Auch Torso B überspringen → die Runde ist voll, bleibt aber bis Montag stehen,
+     weil in ihr diese Woche trainiert wurde („1 von 3“, kein Knopf mehr). Gespeichert ist je übersprungenem Plan ein Eintrag unter dem heutigen Tag. */
+  const o8 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: mit(K7(), [[0, 'a']]) } }); const y8 = o8.page;
+  await bereich(y8, 'training');
+  const reihe8 = () => y8.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
+  await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
+  P.ok('diese Woche trainiert, Extremitäten übersprungen: Torso B ist dran', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-idle:Knopf' && (await text(y8, '#v-training .is-skip .meta')) === 'übersprungen', await reihe8());
+  await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
+  const aus8 = (await gespeichert(y8)).K.aus;
+  P.ok('auch Torso B übersprungen: Die Runde bleibt bis Montag stehen, „1 von 3“, kein Knopf', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-skip' && (await text(y8, '#v-training h2.sec')).includes('1 von 3') && JSON.stringify(aus8) === JSON.stringify({ [heute]: { e: 1, b: 1 } }), await reihe8() + ' · ' + JSON.stringify(aus8));
+  // In der vollen Runde einen Plan starten und speichern beginnt die nächste: Torso A heute noch einmal → wieder Torso A erledigt, Extremitäten dran… hier genügt: der übersprungene Plan lässt sich trotzdem starten
+  await y8.click('#v-training [data-k="start"][aria-label^="Extremitäten"]'); await y8.waitForTimeout(250); await y8.click('#l-items .chk'); await y8.click('#l-save'); await y8.waitForTimeout(200); await y8.click('#rs-ok');
+  P.ok('übersprungenen Plan doch trainiert: Der Eintrag „übersprungen“ für ihn ist weg', !(((await gespeichert(y8)).K.aus || {})[heute] || {}).e, JSON.stringify((await gespeichert(y8)).K.aus));
+  await o8.browser.close();
+  /* Montag danach: Dieselbe volle Runde, aber alles liegt vor dieser Woche (Torso A vor 8 Tagen trainiert, die anderen beiden damals übersprungen) → die neue Runde hat begonnen. */
+  const k9 = mit(K7(), [[8, 'a']]); k9.aus = { [tag(8)]: { e: 1, b: 1 } };
+  const o9 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: k9 } }); await bereich(o9.page, 'training');
+  const reihe9 = await o9.page.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '')).join(' | '));
+  P.ok('volle Runde aus der Vorwoche: neue Runde, Torso A ist dran', reihe9 === 'Torso A:is-idle | Extremitäten:is-wait | Torso B:is-wait', reihe9);
+  await o9.browser.close();
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler));
 });
