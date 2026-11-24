@@ -1,6 +1,6 @@
 // Klappzeilen: Verläufe und Stammdaten sind je eine eingeklappte Zeile mit Anzahl, „Hinzufügen“ sitzt als Plus in der Überschrift
 // oder als letzte Zeile der aufgeklappten Liste, Heute zeigt die Kurzfassung. Auf und zu liegt in einem Zustand (fo) mit einem Weg (data-fold).
-const { oeffnen, text, bereich, pruefer, lauf, blaetterZu, tag, monat } = require('./lib');
+const { oeffnen, text, bereich, pruefer, lauf, blaetterZu, zahlWahl, tag, monat } = require('./lib');
 const { beispiel } = require('./daten');
 
 /* Beispieldaten, ergänzt um das, was sonst vom Kalendertag abhinge oder fehlt: ein Lauf und eine Einheit von heute (am Monatsersten gäbe es
@@ -521,7 +521,7 @@ lauf(async () => {
   P.ok('Tipp auf „Arbeit“ öffnet den Planer im Teil Arbeit', (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Arbeit' && (await text(q8, '#n-main .hero')).includes('174,00'));
   // Gym: Satz 1 mit 72,5 × 8 (letztes Mal 70 × 8) → „+2,5“ am Gewicht. Satz 2 mit 60 × 9 (letztes Mal 60 × 7) → „+2“ an den Wiederholungen. Satz 3 gab es letztes Mal nicht → nichts.
   await bereich(q8, 'training'); await q8.click('#v-training .subtabs button:nth-child(2)'); await w8(); await q8.click('#v-training [data-k="start"]'); await q8.waitForTimeout(300);
-  const satz = async (kg, wdh) => { await q8.fill('#l-w', kg); await q8.fill('#l-r', wdh); await q8.click('#l-items .chk'); await w8(); };
+  const satz = async (kg, wdh) => { await zahlWahl(q8, '#l-w', kg); await zahlWahl(q8, '#l-r', wdh); await q8.click('#l-items .chk'); await w8(); };
   await satz('72,5', '8'); await satz('60', '9'); await satz('50', '5');
   const zeilen8 = await q8.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [...z.querySelectorAll('.mehr')].map(m => m.parentElement.textContent.replace(/\s+/g, '')).join('/')));
   P.ok('Gym: „+2,5“ am Gewicht von Satz 1, „+2“ an den Wiederholungen von Satz 2, nichts an Satz 3', zeilen8.join('|') === '72,5+2,5|9+2|', JSON.stringify(zeilen8));

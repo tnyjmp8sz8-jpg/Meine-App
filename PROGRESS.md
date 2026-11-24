@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): live ist v84 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 24.11.2026). `node tests/alle.js` (v84): alle 771 Prüfungen in 16 Reihen stimmen (Ablauf 15, Aufbau 66, Klappzeilen 159, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 44, Finanzen 68, Gym 35, Monat 30, Hülle 169, Apple Watch 24, Haptik und Druck 41, Speichern 8, Aktualisierung 10). Mit gestellter Uhr geprüft: 1.12. und 31.10. (Haptik und Druck).
+- App-Inhalt (`index.html`): live ist v85 unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`, veröffentlicht am 24.11.2026). `node tests/alle.js` (v85): alle 791 Prüfungen in 16 Reihen stimmen (Ablauf 15, Aufbau 66, Klappzeilen 159, Gesten 21, Eingaben 21, Löschen 20, Notizen 40, Arbeit und Uni 44, Finanzen 68, Gym 55, Monat 30, Hülle 169, Apple Watch 24, Haptik und Druck 41, Speichern 8, Aktualisierung 10). Mit gestellter Uhr geprüft (Gym, v85): 1.12., 2.11., 31.10., 28.1.
+- v85 (24.11., sein Auftrag mit vier Bildschirmfotos aus Alpha Progression: „alles anpassen was du meintest. wenn übung steht einen gelben punkt, wenn progression grüner punkt und wenn schlechter wird rot, aber immer gleitender schnitt … bei rekord was dazu denken, so dass es clean aussieht … adaptiere das so“): Gym-Teil umgebaut. Punkt an jeder Übung (grün, gelb, rot; ein schlechter Tag ändert ihn nicht), Vorgabe je Satz mit Ziel-Wiederholungen, Rekord im laufenden Training und an den Einheiten, „Zahl wählen“ statt Tastatur, Spalte 1RM, Pläne in einer Karte mit Haken für diese Woche, Körpergewicht unter den Kennzahlen. Keine neue Installation nötig. Am iPhone noch nicht gesehen: vor allem, ob „Zahl wählen“ sich im Training schnell anfühlt.
 - v84 (24.11., sein Wunsch: „ich will diese blaue haken animation beim ankreuzen von notizen weghaben, finde ich nicht clean; entweder weg oder ersetzen mit was … cleanen apple style“): Beim Abhaken gibt es kein Blau und keinen Haken mehr. Im Kreis erscheint kurz ein grauer Punkt, die Zeile wird blass und gleitet weg (wie in Apples „Erinnerungen“, nur ohne Farbe). Ihm gesagt: Ganz ohne Zeichen geht auch, ein Satz genügt. Keine neue Installation nötig. Am iPhone noch nicht gesehen.
 - v83 (23.11. nachts; er fragte „wie ist das mit den animationen? ist das eingebaut? was noch verbessern?“, auf meine vier Vorschläge dann „mach alles dann alles auf neuen stand“): Notiz abhaken zeigt kurz den Haken, dann schließt sich die Liste; Klappzeilen fahren auf und zu; Balken (Budget, Sparziele, Zielgewicht, Uni-Termine) wachsen beim Öffnen einmal auf ihren Wert; die Markierung der Umschalter (Monat/Jahr, Heute/Woche/Monat, Ausgabe/Einnahme) gleitet. Keine neue Installation nötig. Am iPhone noch nicht gesehen.
 - v82 mit iPhone-App 0.9 (23.11. spätabends, sein Wunsch: „ich will noch beim bezahlen die kategorie der ausgabe schnell auswählen können zb lebensmittel“): Nach einer Zahlung bei einem neuen Händler fragt das iPhone nach der Kategorie (Liste, meistbenutzte oben); die Ausgabe ist da schon gebucht. Bekannte Händler laufen ohne Frage. An seiner Automation muss er nichts ändern (Kategorie bleibt leer), er braucht nur die neue Installation. Am iPhone ungeprüft: ob die Liste nach Apple Pay von selbst aufgeht, auch bei gesperrtem iPhone.
@@ -30,12 +31,11 @@ Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirkl
 6. Finanzen: Er fragte am 23.11., was dort geändert werden soll. Antwort: nichts an der App; er benutzt den Bereich bisher nicht. Nach zwei Wochen mit der Apple-Pay-Automation entscheiden, ob er bleibt oder aus der Leiste unten geht (nur auf seinen Wunsch).
 Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfragen.
 
-Auf seine Frage „ich will den Gym-Teil so verbessern, dass er besser als Apps wie Alpha Progression ist, was dazu machen?“ (24.11.; nur geantwortet, nichts gebaut, seine Wahl steht aus):
-1. Vorgabe je Satz im laufenden Training (Gewicht und Wiederholungen aus dem letzten Mal, ein Tipp bestätigt; erst mehr Wiederholungen, dann mehr Gewicht). Das ist der Kern von Alpha Progression.
-2. Kraft und Körpergewicht zusammen zeigen (er will zunehmen, 90 → 93 kg): Das kann nur Track., weil beides in einer App liegt.
-3. Rekord im Moment des Satzes (ruhig, grün) und Hinweis, wenn eine Übung seit Wochen steht.
-4. Später, braucht eine neue Installation: Einheit von der Apple Watch von selbst (Dauer, Puls), wie bei den Läufen.
-Seine Antwort: „stop. er muss überall besser werden, bei den funktionen die ich möchte.“ Meine Streichliste (Übungs-Datenbank, Plan-Generator, Pausen-Uhr) gilt damit nicht: Er nennt die Funktionen, ich baue jede davon. Eine Auswahl-Abfrage zum Antippen hat er abgelehnt; seine Liste in eigenen Worten steht aus. Bis dahin nichts bauen.
+Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser als Alpha Progression; die Liste bestimmt er). Mit v85 gebaut: Punkt, Vorgabe, Rekord, „Zahl wählen“, Körpergewicht. Noch offen, nur auf Zuruf:
+1. Einheit von der Apple Watch von selbst (Dauer, Puls), wie bei den Läufen: braucht eine neue Installation und eine weitere Automation in Kurzbefehle.
+2. Pausen-Uhr, die sich nach der Pause meldet (heute zählt die Pause nur hoch).
+3. Vorgeschlagen zu v85: Rückblick nach dem Speichern eines Trainings (Dauer, bewegtes Gewicht, Rekorde) als eine ruhige Karte.
+4. Von ihm noch nicht genannt, nicht ungefragt bauen: fertige Übungsliste mit Anleitung, Plan erstellen lassen, Übung tauschen, Aufwärmsätze, Anstrengung je Satz (RIR), Auswertung nach Muskelgruppen.
 
 Ältere Vorschläge:
 - Automatisierungen: wiederkehrende Ausgaben erkennen und als festen Posten vorschlagen.
@@ -62,6 +62,7 @@ Seine Antwort: „stop. er muss überall besser werden, bei den funktionen die i
 - v82 mit iPhone-App 0.9: Kategorie gleich beim Bezahlen wählen (nur bei neuem Händler).
 - v83: Bewegung im Kleinen (Notiz abhaken, Klappzeilen, Balken, Umschalter).
 - v84: Notiz abhaken ohne blauen Haken (grauer Punkt im Kreis, Zeile wird blass).
+- v85: Gym nach seinen Bildern aus Alpha Progression: Punkt je Übung, Vorgabe je Satz, Rekord, „Zahl wählen“, 1RM je Satz, Pläne in einer Karte.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.

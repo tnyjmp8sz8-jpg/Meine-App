@@ -56,7 +56,7 @@
   --mid:#AEAEB2;
   --sel:#E5E5EA;
   --danger:#D70015;
-  --good:#248A3D;
+  --good:#248A3D;--warn:#D9A300;
   --c-weight:#AF52DE;
   --c-money:#F08C00;
   --display:-apple-system,BlinkMacSystemFont,"SF Pro Display","Segoe UI",Roboto,system-ui,sans-serif;
@@ -67,13 +67,13 @@
 @media (prefers-color-scheme:dark){
   :root:not([data-theme="light"]){
     --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
 }
 :root[data-theme="dark"]{
   --bg:#0E0F13; --surface:#1A1C22; --fill:#272A32; --ink:#F5F6F8; --muted:#9296A3; --line:rgba(255,255,255,.08);
-  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+  --accent:#0A84FF; --at:#3D95FF; --accent-soft:#12294B; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6A6E7B; --sel:#383C47; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
   color-scheme:dark;
 }
 
@@ -517,6 +517,46 @@ u.w{background:var(--c-weight)}
 /* Laufendes Training: eine Übung im Fokus */
 #lform{gap:12px}
 #lsheet .sh-head h2{font-size:18px}
+.ls-t{margin:2px 0 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+/* Kopf einer Übung im laufenden Training: Name mit Punkt (Trend), darunter das Ziel und, wenn es einen gibt, der Rekord von heute */
+.lx-k{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.lx h3{display:flex;align-items:center;gap:8px}
+.lx-z{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0;border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted)}
+.lx-z::after{content:"";position:absolute;inset:-9px -12px}
+.lx-z svg{width:12px;height:12px;color:var(--mid)}
+.lx-z:active{opacity:.55}
+.rek-l{margin:0;font-size:12.5px;font-weight:600;color:var(--good)}
+.rk{font-weight:600;color:var(--good)}
+/* Punkt an einer Übung: grün steigt, gelb steht, rot fällt (exTrend) */
+.td{flex:none;display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--warn)}
+.td.up{background:var(--good)}
+.td.down{background:var(--danger)}
+.entries .l .td{margin-right:7px;vertical-align:1px}
+.trend{margin:0;display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600}
+.trend small{font-size:12px;font-weight:400;color:var(--muted)}
+/* Pläne als eine Karte; ein Plan, der diese Woche schon dran war, trägt einen grünen Haken */
+.rows.one{gap:0;border-radius:16px;background:var(--surface);overflow:hidden}
+.rows.one .row{border-radius:0;background:none}
+.rows.one .is-done .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
+.rows.one .is-done .glyph svg{width:13px;height:13px}
+/* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
+#zsheet{overflow:hidden}
+#zsheet[open]{display:flex;flex-direction:column}
+.z-top{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:6px 16px 4px}
+.z-top h2{margin:0;font-size:14px;font-weight:600;color:var(--muted)}
+.z-top .linkbtn{justify-self:start}
+.z-list{flex:1 1 auto;min-height:100px;max-height:300px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 16px}
+.z-list::-webkit-scrollbar{display:none}
+.z-list button{flex:none;width:176px;height:44px;border:0;border-radius:14px;background:var(--surface);color:var(--ink);font-size:17px;font-weight:700}
+.z-list button[aria-pressed="true"]{background:var(--fill);box-shadow:inset 0 0 0 1.5px var(--mid)}
+.z-pad{flex:none;display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 10px max(14px,env(safe-area-inset-bottom))}
+.z-out{grid-column:1/3;display:grid;place-items:center;height:46px;font-size:24px;font-weight:700;color:var(--ink)}
+.z-out.leer{color:var(--mid)}
+.zk{height:46px;border:0;border-radius:14px;background:var(--surface);color:var(--ink);font-size:20px;font-weight:600;display:grid;place-items:center}
+.zk.ok{color:var(--at)}
+.zk.pl{background:none;color:var(--muted)}
+.zk svg{width:22px;height:22px}
+.zk:disabled{visibility:hidden}
 #lsheet .primary{min-height:42px;font-size:14.5px}
 .lx .linkbtn{font-size:13px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
@@ -530,12 +570,14 @@ u.w{background:var(--c-weight)}
 .lx{display:flex;flex-direction:column;gap:10px}
 .lx h3{margin:0;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
 .lt{display:flex;flex-direction:column;gap:3px}
-.lt-h,.lt-r{display:grid;grid-template-columns:36px 1fr 1fr 46px;gap:6px;align-items:center;text-align:center}
+.lt-h,.lt-r{display:grid;grid-template-columns:30px 1fr 1fr 50px 46px;gap:6px;align-items:center;text-align:center}
 .lt-h span{font-size:11.5px;font-weight:600;color:var(--mid)}
 .lt-r{min-height:38px;width:100%;border:0;background:none;padding:0;font:inherit;color:var(--muted);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
 .lt-r.act{color:var(--ink)}
 .lt-r.act .n{background:var(--fill);border-radius:12px;height:40px;display:grid;place-items:center}
-.lt-r input[type="text"]{height:40px;padding:0 6px;text-align:center;font-size:16px;font-weight:700;background:var(--fill);border-color:transparent;border-radius:12px}
+.lt-r .pv{height:40px;min-width:0;padding:0 4px;border:0;font-size:16px;font-weight:700;color:var(--ink);background:var(--fill);border-radius:12px}
+.lt-r .rm{font-size:13px;font-weight:500;color:var(--mid)}
+.lt-r .rm.rek{font-weight:700;color:var(--good)}
 .lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:var(--good);color:#04241A;display:grid;place-items:center}
 .lt-r .chk svg{width:16px;height:16px}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
@@ -556,7 +598,7 @@ u.w{background:var(--c-weight)}
 .lastx .note svg{flex:none;width:12px;height:12px;color:var(--mid)}
 button.lastx{width:100%;border:0;font:inherit;color:inherit;text-align:left}
 button.lastx:active{background:var(--fill)}
-.lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr}
+.lastx .lt-h,.lastx .lt-r{grid-template-columns:36px 1fr 1fr 1fr}
 .lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
 .stepper[hidden]{display:none}
@@ -606,7 +648,7 @@ button.lastx:active{background:var(--fill)}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:16px}
 .kx,.prow,.tog{border-radius:16px}
 .lx-tab{border-radius:999px;padding:6px 12px}
-.lt-r input[type="text"],.lt-r.act .n,.lt-r .chk{border-radius:12px}
+.lt-r .pv,.lt-r.act .n,.lt-r .chk{border-radius:12px}
 .cat .track{height:5px;border-radius:3px}
 .cat .track i{border-radius:3px}
 .mbar{border-radius:4px}
@@ -615,7 +657,7 @@ dialog{border-radius:28px 28px 0 0}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lt-r .chk:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
@@ -714,7 +756,7 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
 .mark{font-size:24px;font-weight:700}
-.hero h1 .num,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r input[type="text"],.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
+.hero h1 .num,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r .pv,.z-list button,.zk,.z-out,.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
 
@@ -755,7 +797,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v84</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v85</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1062,14 +1104,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <dialog tabindex="-1" id="lsheet" aria-labelledby="ls-title">
   <form id="lform" novalidate>
     <div class="sh-head">
-      <h2 id="ls-title">Training</h2>
+      <div><h2 id="ls-title">Training</h2><p class="ls-t"><span id="lv-total">00:00</span><span id="lv-rest"></span></p></div>
       <button type="button" class="x" id="ls-close" aria-label="Schließen, das Training läuft weiter">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
-    </div>
-    <div class="figs" id="ls-times">
-      <div class="fig"><b id="lv-total">00:00</b><span>Gesamt</span></div>
-      <div class="fig"><b id="lv-rest">–</b><span>Pause</span></div>
     </div>
     <div class="lx-tabs" id="l-tabs" role="group" aria-label="Übungen"></div>
     <div id="l-add" hidden>
@@ -1084,6 +1122,20 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <button class="primary" type="submit" id="l-save">Training beenden und speichern</button>
     <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
   </form>
+</dialog>
+
+<dialog tabindex="-1" id="zsheet" aria-labelledby="zs-title">
+  <div class="z-top"><button type="button" class="linkbtn" id="z-x">Abbrechen</button><h2 id="zs-title">Gewicht</h2><span></span></div>
+  <div class="z-list" id="z-list" role="group" aria-label="Werte in der Nähe"></div>
+  <div class="z-pad" id="z-pad">
+    <output class="z-out" id="z-out" aria-live="polite"></output>
+    <button type="button" class="zk ok" id="z-ok" aria-label="Übernehmen"><svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg></button>
+    <button type="button" class="zk" data-z="1">1</button><button type="button" class="zk" data-z="2">2</button><button type="button" class="zk" data-z="3">3</button>
+    <button type="button" class="zk" data-z="4">4</button><button type="button" class="zk" data-z="5">5</button><button type="button" class="zk" data-z="6">6</button>
+    <button type="button" class="zk" data-z="7">7</button><button type="button" class="zk" data-z="8">8</button><button type="button" class="zk" data-z="9">9</button>
+    <button type="button" class="zk pl" data-z="," id="z-komma" aria-label="Komma">,</button><button type="button" class="zk" data-z="0">0</button>
+    <button type="button" class="zk pl" data-z="x" aria-label="Letzte Ziffer löschen"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5h10a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H9l-6-7z"/><path d="M12 9.5l5 5M17 9.5l-5 5"/></svg></button>
+  </div>
 </dialog>
 
 <dialog tabindex="-1" id="vsheet" aria-labelledby="vs-title">
@@ -2467,7 +2519,7 @@ $('#t-del').addEventListener('click', () => {
 /* ---------- Training: Kraft ---------- */
 function normK(o) {
   const out = { ex: {}, log: {} };
-  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? { n: String(x.n).slice(0, 40) } : null; }
+  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? Object.assign({ n: String(x.n).slice(0, 40) }, x.z >= 1 && x.z <= 30 ? { z: Math.round(x.z) } : {}) : null; }
   if (o && o.log && typeof o.log === 'object') for (const d in o.log) {
     const day = o.log[d];
     if (!isKey(d) || !day || typeof day !== 'object') continue;
@@ -2512,6 +2564,48 @@ function scoreDelta(a, b) {
   return d === 0 ? { t: 'gleich', c: '', p: 0 } : { t: (d > 0 ? '+' : '−') + Math.abs(d) + ' Wdh', c: d > 0 ? 'up' : 'down', p };
 }
 const kDelta = (cur, prev) => scoreDelta(kScore(cur), kScore(prev));
+/* Punkt an einer Übung (sein Wunsch, 24.11.: grün steigt, gelb steht, rot fällt, „aber immer gleitend, nicht wenn einmal schlecht“).
+   Verglichen wird der mittlere Wert (Median) der letzten drei Einheiten mit dem der bis zu drei davor: Ein einzelner Ausreißer nach unten oder oben ändert den mittleren Wert nicht,
+   erst zwei von drei Einheiten kippen ihn. Ab 1 % Unterschied gilt es als steigen oder fallen. Unter vier Einheiten gibt es keinen Punkt. p = Anteil (0.03 = +3 %). */
+const med = a => { const q = a.slice().sort((x, y) => x - y), n = q.length; return n % 2 ? q[(n - 1) / 2] : (q[n / 2 - 1] + q[n / 2]) / 2; };
+function exTrend(hist) {
+  if (hist.length < 4) return null;
+  const sc = hist.map(x => kScore(x.sets)), wt = sc[sc.length - 1].w, v = sc.filter(q => q.w === wt).map(q => q.v);
+  if (v.length < 4) return null;
+  const b = med(v.slice(-6, -3)), p = b ? med(v.slice(-3)) / b - 1 : 0;
+  return { c: p >= 0.01 ? 'up' : p <= -0.01 ? 'down' : 'flat', p };
+}
+const TREND = { up: 'steigt', flat: 'steht', down: 'fällt' };
+const dotHTML = t => t ? '<i class="td ' + t.c + '" role="img" aria-label="' + TREND[t.c] + '"></i>' : '';
+/* Rekord: Der Vergleichswert dieser Sätze liegt über dem jeder früheren Einheit derselben Art (mit oder ohne Gewicht). Ohne frühere Einheit gibt es keinen. */
+function recOf(sets, before) {
+  if (!sets.length) return null;
+  const q = kScore(sets); let b = null;
+  before.forEach(x => { const o = kScore(x.sets); if (o.w === q.w && (b == null || o.v > b)) b = o.v; });
+  return b != null && q.v > b + 1e-9 ? q : null;
+}
+const rm1 = (w, n) => w > 0 && n >= 1 ? w * (1 + n / 30) : 0;
+const rmText = v => v ? kgn(Math.round(v * 10) / 10) : '';
+/* Schritt beim Gewicht einer Übung: der kleinste Abstand zwischen zwei Gewichten, die es bei ihr schon gab (Maschine mit 5-kg-Platten: 5), sonst 2,5 kg. Über 5 kg ist es kein Schritt, sondern ein leichterer Satz. */
+function exStep(hist) {
+  const ws = []; hist.forEach(x => x.sets.forEach(q => { if (q[0] > 0 && ws.indexOf(q[0]) < 0) ws.push(q[0]); }));
+  ws.sort((a, b) => a - b);
+  let st = 0; for (let i = 1; i < ws.length; i++) { const d = Math.round((ws[i] - ws[i - 1]) * 100) / 100; if (d >= 0.5 && d <= 5 && (!st || d < st)) st = d; }
+  return st || 2.5;
+}
+const exZiel = id => (K.ex[id] && K.ex[id].z) || 10;
+/* Vorgabe für heute aus den Sätzen vom letzten Mal (z = Ziel-Wiederholungen): unter dem Ziel eine Wiederholung mehr bei gleichem Gewicht.
+   Haben alle Sätze mit diesem Gewicht das Ziel erreicht, kommt ein Schritt Gewicht dazu, mit so vielen Wiederholungen, dass das geschätzte Maximum nicht sinkt
+   (40 kg × 10 = 53,3 → 42,5 kg: (53,3 / 42,5 − 1) × 30 = 7,6 → 7). Ohne Gewicht immer eine Wiederholung mehr. */
+function vorgabe(sets, z, step) {
+  return sets.map(q => {
+    const w = q[0], n = q[1];
+    if (n < z || !w) return [w, n + 1];
+    if (sets.some(o => o[0] === w && o[1] < z)) return [w, n];
+    const nw = Math.round((w + step) * 100) / 100;
+    return [nw, clamp(Math.floor((w * (1 + n / 30) / nw - 1) * 30 + 1e-9), 1, n)];
+  });
+}
 /* Stand einer Übung in einem Zeitraum: bester Vergleichswert der Einheiten, deren Datum mit pre beginnt ('YYYY-MM' oder 'YYYY') */
 function exLevel(hist, pre) {
   let b = null;
@@ -2539,6 +2633,14 @@ function kPeriod(pre) {
 const volText = v => v >= 1000 ? [kg(v / 1000), 't'] : [String(Math.round(v)), 'kg'];
 const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
 const kNote = s => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
+/* Körpergewicht im selben Zeitraum, eine Zeile unter den Kennzahlen (Kraft und Gewicht zusammen sehen): Schnitt der letzten 7 Tage am Ende gegenüber dem Stand davor,
+   im ersten Zeitraum gegenüber dem ersten Eintrag. Ohne Vergleich keine Zeile. */
+function kGewHTML(pre, wann) {
+  let vor = null, erst = null, end = null, n = 0;
+  withTrend(wList()).forEach(e => { const q = e.k.slice(0, pre.length); if (q < pre) vor = e.m; else if (q === pre) { if (!n) erst = e.m; end = e.m; n++; } });
+  const von = vor != null ? vor : n > 1 ? erst : null;
+  return von == null || end == null ? '' : '<p class="note kw">Körpergewicht ' + wann + ': <b>' + signed(Math.round((end - von) * 10) / 10) + ' kg</b></p>';
+}
 const kHero = (label, n, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1><p class="sub">' + sub + '</p></section>';
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
@@ -2574,9 +2676,10 @@ function monthsHTML(items, key, info) {
   }).join('') + '</div>';
 }
 const kUnitRow = d => {
-  const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '';
+  const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) : '', rec = day.filter(x => recOf(x.sets, kHist(x.id).filter(q => q.d < d))).length;
+  const was = '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b>';
   return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
-    '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b></button></li>';
+    (rec ? '<span class="r">' + was + '<small class="up">' + rec + (rec === 1 ? ' Rekord' : ' Rekorde') + '</small></span>' : was) + '</button></li>';
 };
 /* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
 function kExFoldHTML() {
@@ -2586,7 +2689,7 @@ function kExFoldHTML() {
   if (!rows.length) return '';
   return foldHTML('uebungen', 'Übungen', '', rows.length, rows.map(o => {
       const d = exDelta(o.hist, pre);
-      return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
+      return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
         (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
     }).join(''));
 }
@@ -2595,7 +2698,7 @@ function kYearHTML(curYM) {
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
-  h += kTiles(s) + kNote(s);
+  h += kTiles(s) + kNote(s) + kGewHTML(y, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat') + '</div>';
   return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFoldHTML() + '</div>';
@@ -2609,11 +2712,13 @@ function kraftHTML(curYM) {
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
-  if (s.n) h += kTiles(s) + kNote(s);
-  h += secHTML('Pläne', '', secAct('data-k="plan"', '', 'Plan anlegen'));
-  h += plans.length ? '<ul class="rows">' + plans.map(pl => {
-    const last = planLast(pl.id);
-    return '<li class="row is-idle"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten"><span class="glyph">' + ICON.play + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
+  if (s.n) h += kTiles(s) + kNote(s) + kGewHTML(tYM, 'im ' + name);
+  /* Pläne in einer Karte. Was diese Woche (ab Montag) schon dran war, trägt einen grünen Haken statt des blauen Kreises zum Starten. */
+  const wk = keyOf(monOf(new Date())), dran = pl => (planLast(pl.id) || '') >= wk, fertig = plans.filter(dran).length;
+  h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length + ' diese Woche' : '', secAct('data-k="plan"', '', 'Plan anlegen'));
+  h += plans.length ? '<ul class="rows one">' + plans.map(pl => {
+    const last = planLast(pl.id), ok = dran(pl);
+    return '<li class="row ' + (ok ? 'is-done' : 'is-idle') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', diese Woche schon trainiert' : '') + '"><span class="glyph">' + (ok ? CHECK : ICON.play) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
       '<div class="side"><button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
@@ -2890,6 +2995,13 @@ function exFigsHTML(full) {
   return '<div class="figs">' + (i.wt ? fig(kgn(i.top), 'kg', 'Höchstgewicht') + fig(kgn(Math.round(i.best * 10) / 10), 'kg', '1RM geschätzt') : fig(String(i.best), 'Wdh', 'Bestwert') + fig(i.dS ? i.dS.t : '–', '', 'seit Start')) +
     fig(String(full.length), '', full.length === 1 ? 'Einheit' : 'Einheiten') + '</div>';
 }
+/* Trend der Übung als Zeile über den Kennzahlen: Punkt, Wort und Unterschied; wie er entsteht, steht hinter dem „i“ */
+function trendHTML(full) {
+  const t = exTrend(full); if (!t) return '';
+  const pz = Math.abs(t.p) < 0.0005 ? '' : (t.p > 0 ? '+' : '−') + kg(Math.abs(t.p * 100)) + ' %';
+  return '<p class="trend">' + dotHTML(t) + '<span>' + TREND[t.c].charAt(0).toUpperCase() + TREND[t.c].slice(1) + (pz ? ' <small>' + pz + '</small>' : '') + '</span>' + INFO('x-trend') + '</p>' +
+    '<p class="note" id="info-x-trend" hidden>Der Punkt vergleicht den mittleren Wert deiner letzten drei Einheiten mit dem der drei davor. Ein einzelner schlechter Tag ändert ihn nicht. Grün: du steigerst dich. Gelb: die Übung steht. Rot: du wirst schwächer.</p>';
+}
 function exChartHTML(full, all) {
   if (!full.length) return '';
   const i = exInfo(full), pts = (all ? i.same : i.same.slice(-12)).map(q => ({ d: q.d, v: q.s.v }));
@@ -2900,12 +3012,12 @@ function exChartHTML(full, all) {
     seriesSVG(pts, i.wt ? v => kgn(Math.round(v * 10) / 10) : v => String(Math.round(v)), i.wt ? [1, 2.5, 5, 10, 20, 50, 100] : [1, 2, 5, 10, 20, 50], 'Verlauf der Übung', i.wt ? 'kg' : 'Wdh') + '</div>';
 }
 /* Tabelle der Sätze einer Einheit, wie in „Letztes Mal“ */
-const setsTable = sets => '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span></div>' +
-  sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span></div>').join('') + '</div>';
+const setsTable = sets => '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span>' + (sets.some(s => s[0]) ? '1RM' : '') + '</span></div>' +
+  sets.map((s, j) => '<div class="lt-r"><span class="n">' + (j + 1) + '</span><span>' + (s[0] ? kgn(s[0]) : '–') + '</span><span>' + s[1] + '</span><span class="rm">' + rmText(rm1(s[0], s[1])) + '</span></div>').join('') + '</div>';
 const unitLabel = d => { const m = (K.meta || {})[d], pn = m ? planName(m.plan) : ''; return dRow(d) + (pn ? ' · ' + esc(pn) : ''); };
 /* Einheiten von neu nach alt, jede als Karte mit der Veränderung zur Einheit davor */
-const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null })).reverse();
-const exCard = o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>';
+const exRows = full => full.map((x, i) => ({ x, d: i ? kDelta(x.sets, full[i - 1].sets) : null, rec: !!recOf(x.sets, full.slice(0, i)) })).reverse();
+const exCard = o => '<div class="card lastx"><p class="note"><span>' + unitLabel(o.x.d) + '</span>' + (o.d ? '<b class="' + o.d.c + '">' + (o.rec ? 'Rekord · ' : '') + o.d.t + '</b>' : '') + '</p>' + setsTable(o.x.sets) + '</div>';
 /* Recap einer Übung für den gewählten Monat oder das Jahr (xMode, xYM, xYear): Verbesserung, bester Stand, Einheiten; im Monat die Einheiten, im Jahr die Monate */
 function exRecapHTML(full) {
   const curYM = todayKey().slice(0, 7), year = xMode === 'year', pre = year ? String(xYear) : xYM;
@@ -2923,7 +3035,7 @@ function exRecapHTML(full) {
 }
 function paintX() {
   const full = kHist(xId);
-  $('#x-stats').innerHTML = exFigsHTML(full) + exChartHTML(full, xAll);
+  $('#x-stats').innerHTML = trendHTML(full) + exFigsHTML(full) + exChartHTML(full, xAll);
   $('#x-recap').innerHTML = full.length ? exRecapHTML(full) : '';
 }
 /* view = nur ansehen (Tipp auf „Letztes Mal“ im laufenden Training), sonst auch umbenennen und löschen */
@@ -2977,12 +3089,45 @@ function exIdFor(name) {
   return id;
 }
 const CHECK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>';
-/* Sätze für eine Übung im laufenden Training: so viele wie im Plan, vorbelegt mit dem letzten Mal */
+/* Sätze für eine Übung im laufenden Training: so viele wie im Plan, vorbelegt mit der Vorgabe für heute (vorgabe(): das letzte Mal und ein Stück mehr) */
 function liveSets(id, count) {
-  const hist = kHist(id), last = hist[hist.length - 1], base = last ? kSetsIn(last.sets) : [], sets = [];
+  const hist = kHist(id), last = hist[hist.length - 1], base = last ? kSetsIn(vorgabe(last.sets, exZiel(id), exStep(hist))) : [], sets = [];
   for (let j = 0; j < count; j++) { const b = base[j] || base[base.length - 1] || { w: '', r: '' }; sets.push({ w: b.w, r: b.r, done: false }); }
   return sets;
 }
+/* Zahl wählen (nach dem Vorbild seiner Bildschirmfotos aus Alpha Progression, 24.11.): Blatt mit den Werten in der Nähe und eigenen Tasten statt der Tastatur des iPhones.
+   o = { titel, wert (Zahl oder null), einheit, komma (Nachkommastellen erlaubt), liste (Zahlen), dann(zahl) }. Ein Tipp auf einen Wert übernimmt ihn sofort;
+   getippt wird unten, der Haken übernimmt (ohne Eingabe bleibt alles, wie es war). Am Rechner gehen auch die Tasten der Tastatur. */
+const zdlg = $('#zsheet');
+let zO = null, zS = '';
+function paintZ() { const o = $('#z-out'), leer = zS === ''; o.textContent = leer ? (zO.wert != null ? kgn(zO.wert) : '0') : zS; o.classList.toggle('leer', leer); }
+function openZ(o) {
+  zO = o; zS = '';
+  $('#zs-title').textContent = o.titel; $('#z-komma').disabled = !o.komma;
+  const box = $('#z-list');
+  box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + kgn(v) + ' ' + o.einheit + '</button>').join('');
+  paintZ(); openDlg(zdlg);
+  const cur = box.querySelector('[aria-pressed="true"]');
+  box.scrollTop = cur ? cur.offsetTop - box.offsetTop - (box.clientHeight - cur.offsetHeight) / 2 : 0;
+}
+function zDone(v) { const o = zO; closeDlg(zdlg); if (o && v != null && isFinite(v)) o.dann(v); }
+function zTaste(c) {
+  if (!zO) return;
+  if (c === 'x') zS = zS.slice(0, -1);
+  else if (c === ',') { if (zO.komma && zS.indexOf(',') < 0) zS = (zS || '0') + ','; }
+  else if (zS === '0') zS = c;
+  else if (!/,\d\d$/.test(zS) && zS.replace(',', '').length < (zO.komma ? 5 : 3)) zS += c;
+  paintZ();
+}
+$('#z-pad').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b) zTaste(b.dataset.z); });
+$('#z-ok').addEventListener('click', () => zDone(zS === '' ? null : dec(zS)));
+$('#z-list').addEventListener('click', e => { const b = e.target.closest('[data-zv]'); if (b) zDone(+b.dataset.zv); });
+$('#z-x').addEventListener('click', () => closeDlg(zdlg));
+zdlg.addEventListener('click', e => { if (e.target === zdlg) closeDlg(zdlg); });
+zdlg.addEventListener('keydown', e => {
+  if (/^[0-9]$/.test(e.key)) zTaste(e.key); else if (e.key === ',' || e.key === '.') zTaste(','); else if (e.key === 'Backspace') zTaste('x');
+  else if (e.key === 'Enter') { e.preventDefault(); $('#z-ok').click(); }
+});
 function startPlan(id) {
   if (K.live) return openL();
   const pl = K.plans && K.plans[id]; if (!pl) return;
@@ -3000,13 +3145,21 @@ function liveTick() {
   if (a) a.textContent = tot;
   document.querySelectorAll('.lv-card-t').forEach(c => { c.textContent = tot; });
   if (tab) tab.textContent = tot;
-  if (b) b.textContent = src.last ? fmt((now - src.last) / 1000) : '–';   // Pause: läuft seit dem letzten abgehakten Satz einfach hoch
+  if (b) b.textContent = src.last ? ' · Pause ' + fmt((now - src.last) / 1000) : '';   // Pause: läuft seit dem letzten abgehakten Satz einfach hoch
 }
 function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick, 1000); liveTick(); }
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
 function wakeOff() { try { if (wakeL) wakeL.release(); } catch (e) {} wakeL = null; }
 function saveLive() { if (Lw && K.live && JSON.stringify(Lw) !== JSON.stringify(K.live)) kdoc.patch({ live: clone(Lw) }); }
 let lI = 0, lJ = null, lAdd = false, lRm = false;
+const PEN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.8 2.6l2.6 2.6L5.6 13H3v-2.6z"/></svg>';
+/* Werte eines Satzes im laufenden Training als Zahlen [kg, Wdh]; leer oder ungültig zählt als 0 */
+const lNum = s => { const w = dec(s.w), n = Math.round(Number(String(s.r).replace(',', '.'))); return [isFinite(w) && w > 0 ? w : 0, n >= 1 ? n : 0]; };
+/* Rekord im laufenden Training: Die abgehakten Sätze liegen über jeder früheren Einheit (vor heute). q = Vergleichswert, j = der Satz, der ihn bringt. */
+function lRek(it) {
+  const sets = it.sets.filter(s => s.done).map(lNum).filter(q => q[1]), q = recOf(sets, kHist(it.id).filter(x => x.d < Lw.date));
+  return q ? { q, j: it.sets.findIndex(s => { const o = lNum(s); return s.done && Math.abs((q.w ? rm1(o[0], o[1]) : o[1]) - q.v) < 1e-9; }) } : null;
+}
 const undone = it => it.sets.findIndex(s => !s.done);
 function paintLPick() { if (Lw) paintPick('#l-pick', '#l-new', Lw.items.map(it => it.id), 'la'); }
 /* Eine Übung im Fokus: oben wechseln, darunter die Sätze. Der nächste offene Satz ist aktiv, ein Tipp auf eine andere Zeile macht sie aktiv. */
@@ -3024,17 +3177,21 @@ function paintL() {
   if (cur) tabs.scrollLeft = cur.offsetLeft - (tabs.clientWidth - cur.offsetWidth) / 2;
   const it = Lw.items[lI];
   if (!it) { $('#l-items').innerHTML = ''; return; }
-  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1];
-  const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v);
+  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], z = exZiel(it.id);
+  const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v), rek = lRek(it);
   /* Ein abgehakter Satz zeigt in Grün, um wie viel er über demselben Satz vom letzten Mal liegt: mehr Gewicht („+2,5“ am Gewicht), bei gleichem Gewicht mehr Wiederholungen („+1“ an den Wiederholungen) */
-  const mehr = (s, j) => { const l = last && last.sets[j], w = dec(s.w), r = Math.round(Number(String(s.r).replace(',', '.'))), k = isFinite(w) ? w : 0, m = t => '<small class="mehr">+' + t + '</small>';
-    return !s.done || !l || !(r >= 1) ? ['', ''] : k > l[0] ? [m((Math.round((k - l[0]) * 100) / 100).toLocaleString('de-DE')), ''] : k === l[0] && r > l[1] ? ['', m(r - l[1])] : ['', '']; };
-  let h = '<div class="lx"><h3>' + esc(name) + '</h3><div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span></span></div>' + it.sets.map((s, j) => j === act
-    ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' +
-      '<input id="l-w" type="text" inputmode="decimal" autocomplete="off" data-f="w" data-s="' + j + '" value="' + esc(s.w) + '" placeholder="0" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', Gewicht in Kilogramm">' +
-      '<input id="l-r" type="text" inputmode="numeric" autocomplete="off" data-f="r" data-s="' + j + '" value="' + esc(s.r) + '" placeholder="0" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', Wiederholungen">' +
+  const mehr = (s, j) => { const l = last && last.sets[j], q = lNum(s), m = t => '<small class="mehr">+' + t + '</small>';
+    return !s.done || !l || !q[1] ? ['', ''] : q[0] > l[0] ? [m((Math.round((q[0] - l[0]) * 100) / 100).toLocaleString('de-DE')), ''] : q[0] === l[0] && q[1] > l[1] ? ['', m(q[1] - l[1])] : ['', '']; };
+  /* Spalte 1RM: das geschätzte Maximum des Satzes; grün am Satz, der heute der Rekord ist */
+  const rm = (s, j) => { const q = lNum(s); return '<span class="rm' + (rek && rek.j === j ? ' rek' : '') + '">' + rmText(rm1(q[0], q[1])) + '</span>'; };
+  const pv = (s, j, f, was) => '<button type="button" class="pv" id="l-' + f + '" data-la="num" data-f="' + f + '" data-s="' + j + '" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', ' + was + ' ändern">' + val(s[f]) + '</button>';
+  let h = '<div class="lx"><div class="lx-k"><h3>' + dotHTML(exTrend(hist)) + '<span>' + esc(name) + '</span></h3>' +
+    '<button type="button" class="lx-z" data-la="ziel" aria-label="Ziel: ' + z + ' Wiederholungen je Satz, ändern">Ziel ' + z + ' Wdh' + PEN + '</button>' +
+    (rek ? '<p class="rek-l">Neuer Rekord · ' + (rek.q.w ? '1RM ' + rmText(rek.q.v) + ' kg' : rek.q.v + ' Wdh') + '</p>' : '') + '</div>' +
+    '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span>' + (it.sets.some(s => lNum(s)[0] > 0) ? '1RM' : '') + '</span><span></span></div>' + it.sets.map((s, j) => j === act
+    ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' + pv(s, j, 'w', 'Gewicht') + pv(s, j, 'r', 'Wiederholungen') + rm(s, j) +
       '<button type="button" class="chk" data-la="done" data-s="' + j + '" aria-pressed="' + s.done + '" aria-label="Satz ' + (j + 1) + (s.done ? ' ist erledigt, zurücknehmen' : ' erledigt') + '">' + CHECK + '</button></div>'
-    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span><span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
+    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   h += '<div class="links"><button type="button" class="linkbtn" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" class="linkbtn" data-la="rmset">− Satz</button>' : '') +
     '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
   if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets) + '</button>' + exFigsHTML(hist);
@@ -3057,29 +3214,40 @@ function closeL() { closeDlg(ldlg); }
 ldlg.addEventListener('close', () => { saveLive(); wakeOff(); renderTraining(); });
 $('#ls-close').addEventListener('click', closeL);
 ldlg.addEventListener('click', e => { if (e.target === ldlg) closeL(); });
-$('#lform').addEventListener('input', e => {
-  const t = e.target, f = t.dataset ? t.dataset.f : null;
-  if (t.id === 'l-new') return paintLPick();
-  if (f && Lw && Lw.items[lI] && Lw.items[lI].sets[+t.dataset.s]) Lw.items[lI].sets[+t.dataset.s][f] = t.value;
-});
-$('#lform').addEventListener('focusin', e => { const t = e.target; if (t.dataset && t.dataset.f) { try { t.select(); } catch (err) {} } });
-$('#lform').addEventListener('keydown', e => {
-  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.f) { e.preventDefault(); const b = $('#l-items .chk'); if (b) b.click(); }
-});
+$('#l-new').addEventListener('input', paintLPick);
+/* Gewicht oder Wiederholungen eines Satzes wählen. Ein neues Gewicht gilt auch für die offenen Sätze danach, die bisher dasselbe Gewicht hatten (gleiche Sätze bleiben gleich). */
+function lZahl(it, j, f) {
+  const s = it.sets[j], q = lNum(s), neu = () => { const y = ldlg.scrollTop; paintL(); ldlg.scrollTop = y; saveLive(); };
+  if (f === 'r') return openZ({ titel: 'Wdh · Satz ' + (j + 1), wert: q[1] || null, einheit: 'Wdh', komma: false, liste: reihe(1, Math.max(30, q[1] + 5), 1),
+    dann: v => { if (Math.round(v) >= 1) s.r = String(Math.round(v)); neu(); } });
+  const hist = kHist(it.id), st = exStep(hist), von = Math.max(0, Math.round((q[0] - 8 * st) * 100) / 100);
+  openZ({ titel: 'Gewicht · Satz ' + (j + 1), wert: q[0] || null, einheit: 'kg', komma: true, liste: reihe(von, von + 16 * st, st),
+    dann: v => { const alt = s.w, w = v > 0 && v <= 1000 ? kgn(Math.round(v * 100) / 100) : ''; it.sets.forEach((n, k) => { if (k === j || (k > j && !n.done && n.w === alt)) n.w = w; }); neu(); } });
+}
+const reihe = (von, bis, st) => { const a = []; for (let v = von; v <= bis + 1e-9; v += st) a.push(Math.round(v * 100) / 100); return a; };
 $('#lform').addEventListener('click', e => {
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
   if (a === 'hist') { if (it) openX(it.id, true); return; }
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
+  if (a === 'num' && it) { lJ = +t.dataset.s; return lZahl(it, lJ, t.dataset.f); }
+  if (a === 'ziel' && it) return openZ({ titel: 'Ziel je Satz', wert: exZiel(it.id), einheit: 'Wdh', komma: false, liste: reihe(1, 30, 1), dann: v => {
+    /* Neues Ziel: Die offenen Sätze bekommen die Vorgabe, die dazu passt */
+    const p = { ex: {} }; p.ex[it.id] = { z: clamp(Math.round(v), 1, 30) }; kdoc.patch(p);
+    const neu = liveSets(it.id, it.sets.length); it.sets.forEach((s, j) => { if (!s.done) { s.w = neu[j].w; s.r = neu[j].r; } });
+    paintL(); saveLive();
+  } });
   if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; }
   else if (a === 'addx') lAdd = !lAdd;
   else if (a === 'sel') lJ = +t.dataset.s;
   else if (a === 'done' && it) {
     const s = it.sets[+t.dataset.s];
     if (!s.done && !(Math.round(Number(String(s.r).replace(',', '.'))) >= 1)) { const x = $('#l-err'); x.textContent = 'Trag zuerst die Wiederholungen für diesen Satz ein.'; x.hidden = false; return; }
+    const vorher = !!lRek(it);
     s.done = !s.done; lJ = null;
     if (s.done) {
+      if (!vorher && lRek(it)) setTimeout(() => haptik('erfolg'), 120);   // Rekord: nach dem leichten Impuls fürs Abhaken ein zweiter, deutlicher
       Lw.last = Date.now();
       it.sets.forEach(n => { if (!n.done) { if (n.w === '') n.w = s.w; if (n.r === '') n.r = s.r; } });   // leere Folgesätze übernehmen die Werte
       if (undone(it) < 0) { const n = Lw.items.length; for (let k = 1; k < n; k++) { const q = (lI + k) % n; if (undone(Lw.items[q]) >= 0) { lI = q; break; } } }
@@ -3964,7 +4132,7 @@ const HUELLE = (() => { try { return window.webkit.messageHandlers.track || null
 let hInfo = {}, hTimer = 0, hFaelligAlt = null;
 function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
 /* Haptik (iPhone-App ab 0.8, ältere überlesen die Nachricht): Die App sagt, was passiert ist, das iPhone gibt den passenden Impuls.
-   „wahl“ = Bereich, Umschalter, Klappzeile, Monat, Punkt im Graphen · „leicht“ = abhaken · „mittel“ = gelöscht, Training gestartet · „erfolg“ = gespeichert · „fehler“ = Eingabe passt nicht.
+   „wahl“ = Bereich, Umschalter, Klappzeile, Monat, Punkt im Graphen, Wert im Blatt „Zahl wählen“ · „leicht“ = abhaken · „mittel“ = gelöscht, Training gestartet · „erfolg“ = gespeichert, Rekord im laufenden Training · „fehler“ = Eingabe passt nicht.
    Sparsam wie in iOS: Ein Blatt öffnen oder schließen gibt keinen Impuls, und zwei Impulse kurz hintereinander werden zu einem. */
 let hapT = 0;
 function haptik(w) { if (!HUELLE) return; const t = performance.now(); if (t - hapT < 50) return; hapT = t; hPost({ art: 'haptik', w }); }
@@ -3972,7 +4140,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button'); if (!b) return;
   if (b.matches('.tk, .chk')) haptik('leicht');
   else if (b.matches('[data-k="start"]')) haptik('mittel');
-  else if (b.matches('[data-fold], .mnav button, .lx-tab') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
+  else if (b.matches('[data-fold], .mnav button, .lx-tab, [data-zv]') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
 }, true);
 /* Nach dem Absenden eines Blatts: Fährt es weg, ist gespeichert; steht eine Fehlermeldung da, passt die Eingabe nicht */
 document.addEventListener('submit', e => {

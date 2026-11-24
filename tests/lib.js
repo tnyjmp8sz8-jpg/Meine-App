@@ -33,6 +33,8 @@ const text = (page, sel) => page.evaluate(q => [...document.querySelectorAll(q)]
 const bereich = (page, name) => page.click('.tab[data-view="' + name + '"]');
 const gespeichert = page => page.evaluate(() => JSON.parse(localStorage.getItem('takt.v1') || '{}'));
 const blaetterZu = page => page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+/* Zahl im Blatt „Zahl wählen“ (Gewicht, Wiederholungen, Ziel im laufenden Training): Knopf antippen, Ziffern über die Tastatur des Rechners, Enter übernimmt */
+async function zahlWahl(page, sel, wert) { await page.click(sel); await page.keyboard.type(String(wert)); await page.keyboard.press('Enter'); await page.waitForTimeout(80); }
 const nachOben = page => page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; });
 const nachUnten = page => page.evaluate(() => { const s = document.querySelector('#scroll'); s.scrollTop = s.scrollHeight; });
 
@@ -63,4 +65,4 @@ function pruefer(name) {
 /* Fängt Abbrüche ab (z. B. Knopf nicht gefunden), damit der Test eine lesbare Meldung liefert */
 function lauf(fn) { fn().catch(e => { console.log('  ABBRUCH ' + String(e.message).split('\n')[0]); process.exit(1); }); }
 
-module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, nachOben, nachUnten, wischen, pruefer, lauf };
+module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, zahlWahl, nachOben, nachUnten, wischen, pruefer, lauf };
