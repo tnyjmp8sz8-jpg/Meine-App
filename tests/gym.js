@@ -191,7 +191,7 @@ lauf(async () => {
   P.ok('nach neuem Laden: Das Ziel 12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12);
   await g.browser.close();
 
-  // --- Reihenfolge der Pläne und Runde, Einlesen nach Namen, Übernahme aus Alpha Progression (v87) ---
+  // --- Reihenfolge der Pläne und Runde, Einlesen nach Namen (v87), Übernahme aus Alpha Progression (v88) ---
   /* Drei Pläne mit Platz 1 bis 3 (nach Namen stünde „Extremitäten“ vorn). Einheiten: vor 9 Tagen Torso B, vor 6 Tagen Torso A, vor 4 Tagen Extremitäten.
      Rückwärts gelesen: Extremitäten (Platz 2), Torso A (Platz 1), dann Torso B (Platz 3, steht nicht weiter vorn → gehört zur Runde davor).
      Laufende Runde: Torso A und Extremitäten erledigt, als Nächstes Torso B → „2 von 3“. */
@@ -221,22 +221,25 @@ lauf(async () => {
   P.ok('gleicher Name ist derselbe Plan: weiter vier Pläne, „Torso A“ hat jetzt zwei Übungen, die Einheit nennt ihn', Object.values(nach.plans).filter(Boolean).length === 4 && !nach.plans.pp && nach.plans.a.items.map(i => i.id).join() === 'x,q2' && nach.meta[tag(2)].plan === 'a', JSON.stringify(nach.plans.a));
   await r.browser.close();
 
-  /* Übernahme aus Alpha Progression (tests/alpha.js) mit einem erfundenen Export: zwei Trainings am selben Tag werden eine Einheit (Dauer 1:00 + 0:30 = 90 min),
-     „+15“ ist Zusatzgewicht 15 kg, „+0“ ein Satz ohne Gewicht, „Curls“ gibt es mit zwei Geräten (Name mit Gerät), Sauna und Laufen fehlen, 24 Std. zählt nicht als Dauer,
-     das Ziel 8 Wdh steht an der Übung, aus „Plan X“ werden „Torso A“ und „Torso B“ (zweimal derselbe Name), der Tag nur mit Sauna wird kein Plan. */
-  const fs = require('fs'), os = require('os'), pfad = require('path'), ordner = fs.mkdtempSync(pfad.join(os.tmpdir(), 'alpha-'));
-  fs.writeFileSync(pfad.join(ordner, 'w.csv'), ['"Torso · Tag 3 · Woche 2 · Plan X";"2026-03-02 18:00 Uhr";"30 Min."', '"1. Curls · Kurzhanteln · 10 Wdh"', '#;KG;WDH', '1;12.5;10', '',
+  /* Übernahme aus Alpha Progression (v88): „Sicherung einlesen“ nimmt die Datei „Workouts“ aus dessen Export, hier ein erfundener.
+     Zwei Trainings am selben Tag werden eine Einheit (Dauer 0:30 + 1:00 = 90 min), „+15“ ist Zusatzgewicht 15 kg, „+0“ ein Satz ohne Gewicht, „Curls“ gibt es mit zwei Geräten (Name mit Gerät),
+     Sauna und Laufen fehlen, 24 Std. zählt nicht als Dauer, das Ziel 8 Wdh steht an der Übung. Der Plan des jüngsten Trainings ist „Plan X“: Tag 1 und Tag 3 heißen beide „Torso“
+     und werden „Torso A“ (Dips, 2 Sätze) und „Torso B“ (Curls, 1 Satz). Die Datei mit den Plänen wird erkannt und abgewiesen. */
+  const csv = ['"Torso · Tag 3 · Woche 2 · Plan X";"2026-03-02 18:00 Uhr";"30 Min."', '"1. Curls · Kurzhanteln · 10 Wdh"', '#;KG;WDH', '1;12.5;10', '',
     '"Torso · Tag 1 · Woche 2 · Plan X";"2026-03-02 10:00 Uhr";"1:00 Std."', '"1. Dips · Körpergewicht · 8 Wdh"', '#;KG;WDH', '1;+15;9', '2;+0;7', '"2. Sauna · Körpergewicht · 10 Wdh"', '#;KG;WDH', '1;+16;50',
-    '"3. Laufen · Körpergewicht · 5 cm · 30 Min."', '#;KM;MIN.', '1;5.55;32:44', '', '"Alt · Einzelnes Workout";"2026-02-20 9:00 Uhr";"24 Std."', '"1. Curls · Langhantel · 10 Wdh"', '#;KG;WDH', '1;30;8', ''].join('\n'));
-  fs.writeFileSync(pfad.join(ordner, 'p.csv'), ['"Plan X · 52 Wochen";2026-01-01', '"Tag 1 · Torso"', '"1. Dips · Körpergewicht";"3 Sätze";"8 Wdh"', '"Tag 2 · Sauna"', '"1. Sauna · Körpergewicht";"3 Sätze";"10 Wdh"',
-    '"Tag 3 · Torso"', '"1. Curls · Kurzhanteln";"4 Sätze";"10 Wdh"', ''].join('\n'));
-  require('child_process').execFileSync('node', [pfad.join(__dirname, 'alpha.js'), pfad.join(ordner, 'w.csv'), pfad.join(ordner, 'p.csv'), pfad.join(ordner, 'aus.json'), 'Plan X']);
-  const aus = JSON.parse(fs.readFileSync(pfad.join(ordner, 'aus.json'), 'utf8')).K, an = Object.values(aus.ex).map(e => e.n + (e.z ? ' z' + e.z : '')).sort().join(' | '), dips = Object.keys(aus.ex).find(i => aus.ex[i].n === 'Dips');
+    '"3. Laufen · Körpergewicht · 5 cm · 30 Min."', '#;KM;MIN.', '1;5.55;32:44', '', '"Alt · Einzelnes Workout";"2026-02-20 9:00 Uhr";"24 Std."', '"1. Curls · Langhantel · 10 Wdh"', '#;KG;WDH', '1;30;8', ''].join('\n');
+  const e = await oeffnen(), wahl = (name, inhalt) => e.page.setInputFiles('#bk-file', { name, mimeType: 'text/csv', buffer: Buffer.from(inhalt) });
+  await e.page.click('#v-heute [data-fold="sicherung"]');
+  await wahl('Plaene.csv', '"Plan X · 52 Wochen";2026-01-01\n"Tag 1 · Torso"\n"1. Dips · Körpergewicht";"3 Sätze";"8 Wdh"\n'); await e.page.waitForTimeout(200);
+  P.ok('Datei mit den Plänen: Hinweis auf die Datei „Workouts“, nichts eingelesen', (await text(e.page, '#bk-msg')).includes('„Workouts“') && !Object.keys(((await gespeichert(e.page)).K || {}).log || {}).length, await text(e.page, '#bk-msg'));
+  await wahl('Workouts.csv', csv); await e.page.waitForTimeout(300);
+  const aus = (await gespeichert(e.page)).K, an = Object.values(aus.ex).map(x => x.n + (x.z ? ' z' + x.z : '')).sort().join(' | '), dips = Object.keys(aus.ex).find(i => aus.ex[i].n === 'Dips');
+  P.ok('Übernahme: Meldung nennt Einheiten und Pläne', (await text(e.page, '#bk-msg')) === '2 Einheiten aus Alpha Progression übernommen, dazu die Pläne Torso A, Torso B. Du findest alles unter Training → Gym.', await text(e.page, '#bk-msg'));
   P.ok('Übernahme: Übungen mit richtigem Namen und Ziel, ohne Sauna und Laufen', an === 'Curls (Kurzhanteln) | Curls (Langhantel) | Dips z8', an);
   P.ok('Übernahme: ein Tag, eine Einheit mit 90 min; Zusatzgewicht und Satz ohne Gewicht; 24 Std. zählt nicht', Object.keys(aus.log).sort().join() === '2026-02-20,2026-03-02' && aus.meta['2026-03-02'].dur === 5400 && JSON.stringify(aus.log['2026-03-02'][dips]) === '[[15,9],[0,7]]' && aus.meta['2026-02-20'].dur === 0, JSON.stringify(aus.meta));
-  P.ok('Übernahme: Pläne „Torso A“ (Platz 1) und „Torso B“ (Platz 2), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => i.sets).join()).join(' | ') === 'Torso A:1:3 | Torso B:2:4' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
-  const e = await oeffnen(); await e.page.setInputFiles('#bk-file', pfad.join(ordner, 'aus.json')); await e.page.waitForTimeout(300); await bereich(e.page, 'training');
-  P.enthaelt('die Datei lässt sich einlesen: beide Pläne stehen im Gym', await text(e.page, '#v-training .rows.one .name'), ['Torso A', 'Torso B']);
-  await e.browser.close(); ['w.csv', 'p.csv', 'aus.json'].forEach(n => fs.unlinkSync(pfad.join(ordner, n))); fs.rmdirSync(ordner);
+  P.ok('Übernahme: Pläne „Torso A“ (Platz 1, Dips 2 Sätze) und „Torso B“ (Platz 2, Curls 1 Satz), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => aus.ex[i.id].n + ' ' + i.sets).join()).join(' | ') === 'Torso A:1:Dips 2 | Torso B:2:Curls (Kurzhanteln) 1' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
+  await bereich(e.page, 'training');
+  P.enthaelt('beide Pläne stehen im Gym', await text(e.page, '#v-training .rows.one .name'), ['Torso A', 'Torso B']);
+  await e.browser.close();
   await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler));
 });

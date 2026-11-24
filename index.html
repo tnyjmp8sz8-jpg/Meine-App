@@ -802,7 +802,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v87</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v88</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1196,7 +1196,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   <div class="cs-day" id="cs-day"></div>
 </dialog>
 
-<input type="file" id="bk-file" accept="application/json,.json" hidden>
+<input type="file" id="bk-file" accept="application/json,.json,.csv,text/csv,text/comma-separated-values" hidden>
 
 <script>
 (() => {
@@ -3981,12 +3981,76 @@ function importData(d) {
   healBal();
   saveLocal(); render();
 }
+/* Übernahme aus Alpha Progression (v88): „Sicherung einlesen“ nimmt auch dessen Export „Workouts“ (CSV) und macht daraus Einheiten, Übungen und Pläne.
+   Warum in der App und nicht als fertige Datei: Die Datei aus dem Chat kam bei ihm nicht an (24.11.), die CSV hat er selbst auf dem iPhone.
+   Übernommen wird jede Übung mit Tabelle „KG; WDH“, je Tag eine Einheit (zwei Trainings am selben Tag werden eine), die Dauer (1 Minute bis 3 Stunden, sonst lief die Uhr falsch)
+   und das Ziel an Wiederholungen. Nicht übernommen: Läufe und Sprints (Tabellen in km oder m), „Sauna“ und „Rest“.
+   Namen: „Curls · Langhantel“ heißt „Curls (Langhantel)“, wenn es die Übung mit mehreren Geräten gibt, sonst nur „Beinpresse“. „+15“ ist Zusatzgewicht, „+0“ ein Satz ohne Gewicht.
+   Pläne: Der Plan des jüngsten Trainings ist der aktuelle; je „Tag n“ wird sein jüngstes Training zum Plan (Übungen und Zahl der Sätze), in der Reihenfolge der Tage.
+   Zweimal derselbe Name bekommt A und B („Torso A“, „Torso B“). Tage mit „Sauna“ im Namen werden kein Plan (sein Wunsch: nur Torso A, Extremitäten, Torso B). */
+const istAlpha = t => /^"[^"\n]*";"\d{4}-\d\d-\d\d \d+:\d\d Uhr"/.test(t);
+function alphaK(text) {
+  const OHNE = ['Sauna', 'Rest', 'Laufen', 'Sprinten', 'Fahrrad'], zeilen = text.split(/\r?\n/).map(l => l.trim());
+  const felder = l => l.split('";"').map(x => x.replace(/^"|"$/g, '')), kopf = l => { const m = /^"\d+\. (.*)"$/.exec(l); return m ? m[1].split(' · ') : null; };
+  const geraete = {}; zeilen.forEach(l => { const k = kopf(l); if (k) (geraete[k[0]] = geraete[k[0]] || {})[k[1] || ''] = 1; });
+  const ex = {}, ids = {}, ziele = {}, alle = [];   // alle = Trainings, das jüngste zuerst (so steht es in der Datei)
+  const idVon = k => { const n = (Object.keys(geraete[k[0]]).length > 1 && k[1] ? k[0] + ' (' + k[1] + ')' : k[0]).slice(0, 60); if (!ids[n]) { ids[n] = 'ap' + (Object.keys(ids).length + 1); ex[ids[n]] = { n }; } return ids[n]; };
+  const dauer = t => { let m = /^(\d+):(\d+) Std\.$/.exec(t); if (m) return (+m[1] * 60 + +m[2]) * 60; m = /^(\d+) Min\.$/.exec(t); if (m) return +m[1] * 60; m = /^(\d+) Std\.$/.exec(t); return m ? +m[1] * 3600 : 0; };
+  let tr = null, ue = null, zaehlt = false;
+  zeilen.forEach(l => {
+    if (!l) return;
+    const f = felder(l), d = /^(\d{4}-\d\d-\d\d) /.exec(f[1] || '');
+    if (d) {   // Kopf eines Trainings: „Name · Tag n · Woche m · Plan“; Datum; Dauer
+      const teile = f[0].split(' · '), tag = teile.find(x => /^Tag \d+$/.test(x)), sek = dauer(f[2] || '');
+      alle.push(tr = { d: d[1], n: teile[0].trim(), tag: tag ? +tag.slice(4) : 0, plan: tag ? teile[teile.length - 1] : '', dur: sek >= 60 && sek <= 3 * 3600 ? sek : 0, ue: [] }); ue = null;
+      return;
+    }
+    const k = kopf(l);
+    if (k) {   // Kopf einer Übung: „1. Name · Gerät · 10 Wdh“
+      ue = null; zaehlt = false;
+      if (tr && OHNE.indexOf(k[0]) < 0) { tr.ue.push(ue = { id: idVon(k), sets: [] }); const z = k.map(x => /^(\d+) Wdh$/.exec(x)).find(Boolean); if (z && !(ue.id in ziele)) ziele[ue.id] = +z[1]; }
+      return;
+    }
+    if (l[0] === '#') { zaehlt = l === '#;KG;WDH'; return; }
+    const s = /^\d+;\+?(-?[\d.]*);(\d+)$/.exec(l);
+    if (!s || !ue || !zaehlt) return;
+    const w = Math.round((parseFloat(s[1]) || 0) * 100) / 100, n = +s[2];
+    if (w >= 0 && w <= 1000 && n >= 1 && n <= 1000) ue.sets.push([w, n]);
+  });
+  /* Pläne aus dem jüngsten Training je Tag des aktuellen Plans */
+  const jetzt = (alle.find(t => t.tag) || {}).plan, tage = {}, plans = {}, tagPlan = {};
+  alle.forEach(t => { if (t.tag && t.plan === jetzt && !tage[t.tag] && !/Sauna/.test(t.n) && t.ue.some(u => u.sets.length)) tage[t.tag] = t; });
+  const reihe = Object.keys(tage).map(Number).sort((a, b) => a - b), oft = {}, lauf = {};
+  reihe.forEach(g => { oft[tage[g].n] = (oft[tage[g].n] || 0) + 1; });
+  reihe.forEach((g, i) => {
+    const t = tage[g], nr = lauf[t.n] = (lauf[t.n] || 0) + 1;
+    plans[tagPlan[g] = 'app' + (i + 1)] = { n: (oft[t.n] > 1 ? t.n + ' ' + 'ABCDEFGH'.charAt(nr - 1) : t.n).slice(0, 40), items: t.ue.filter(u => u.sets.length).map(u => ({ id: u.id, sets: Math.min(10, u.sets.length) })), o: i + 1 };
+  });
+  /* Einheiten: je Tag eine */
+  const log = {}, meta = {};
+  alle.forEach(t => {
+    t.ue.forEach(u => { if (u.sets.length) { const day = log[t.d] = log[t.d] || {}; day[u.id] = (day[u.id] || []).concat(u.sets).slice(0, 20); } });
+    if (!log[t.d]) return;
+    const m = meta[t.d] = meta[t.d] || { dur: 0, plan: null };
+    m.dur += t.dur; if (t.plan === jetzt && tagPlan[t.tag]) m.plan = tagPlan[t.tag];
+  });
+  for (const id in ziele) if (ziele[id] !== 10 && ziele[id] >= 1 && ziele[id] <= 30) ex[id].z = ziele[id];
+  return { ex, log, plans, meta };
+}
 $('#bk-file').addEventListener('change', e => {
   const f = e.target.files && e.target.files[0]; e.target.value = '';
   if (!f) return;
   const rd = new FileReader();
   rd.onload = () => {
-    try { const d = JSON.parse(String(rd.result)); importData(d); setBk('Sicherung eingelesen' + (d.exported ? ', Stand ' + DF_LONG.format(new Date(d.exported)) : '') + '. Vorhandene Einträge bleiben erhalten.'); }
+    const t = String(rd.result).replace(/^\uFEFF/, '');
+    if (istAlpha(t)) {
+      const k = alphaK(t), n = Object.keys(k.log).length, p = Object.keys(k.plans).map(id => k.plans[id].n);
+      if (!n) return setBk('In dieser Datei aus Alpha Progression steht kein Training mit Gewicht und Wiederholungen.');
+      importData({ app: 'takt', K: k });
+      return setBk(n + (n === 1 ? ' Einheit' : ' Einheiten') + ' aus Alpha Progression übernommen' + (p.length ? ', dazu ' + (p.length === 1 ? 'der Plan ' : 'die Pläne ') + p.join(', ') : '') + '. Du findest alles unter Training → Gym.');
+    }
+    if (/^"[^"\n]*";\d{4}-\d\d-\d\d\s/.test(t)) return setBk('Das ist die Datei mit den Plänen. Wähle die Datei mit „Workouts“ im Namen: Darin stehen deine Einheiten und dein aktueller Plan.');
+    try { const d = JSON.parse(t); importData(d); setBk('Sicherung eingelesen' + (d.exported ? ', Stand ' + DF_LONG.format(new Date(d.exported)) : '') + '. Vorhandene Einträge bleiben erhalten.'); }
     catch (err) { setBk('Diese Datei ist keine Sicherung dieser App.'); }
   };
   rd.onerror = () => setBk('Die Datei konnte nicht gelesen werden.');
