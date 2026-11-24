@@ -209,7 +209,7 @@ lauf(async () => {
   P.ok('Übungen: nur die der letzten vier Wochen, die ältere in „Ältere Übungen“', zuerst === 'Übungen 1 # Ältere Übungen 1 # ' && (await kl()) === 'Übungen 1 # Ältere Übungen 1 # Uralt', zuerst + ' → ' + await kl());
   await s.click('#v-training [data-fold="uebungenAlt"]');
   P.ok('Pläne ohne Play-Zeichen: Ringe ohne Füllung', await s.evaluate(() => [...document.querySelectorAll('#v-training .rows.one .glyph')].every(g => !g.querySelector('path[d^="M5"]') && getComputedStyle(g).backgroundColor === 'rgba(0, 0, 0, 0)')));
-  P.ok('schwarzer Grund; Blätter aus Glas: halb durchsichtig mit Milchglas und rundum gerundet (v94)', await s.evaluate(() => { const c = getComputedStyle(document.querySelector('#lsheet')); return getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && /^rgba\(30, 30, 32, 0\.8\)$/.test(c.backgroundColor) && /blur/.test(c.backdropFilter || c.webkitBackdropFilter || '') && parseFloat(c.borderBottomLeftRadius) >= 24; }));
+  P.ok('schwarzer Grund; Blätter aus Glas: halb durchsichtig mit Milchglas und rundum gerundet (v94)', await s.evaluate(() => { const c = getComputedStyle(document.querySelector('#xsheet')); return getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)' && /^rgba\(30, 30, 32, 0\.8\)$/.test(c.backgroundColor) && /blur/.test(c.backdropFilter || c.webkitBackdropFilter || '') && parseFloat(c.borderBottomLeftRadius) >= 24; }));
   // Torso B heute trainiert: Der letzte Plan der Reihe war dran → die Runde ist voll. Weil in ihr diese Woche trainiert wurde, bleibt sie mit drei Haken bis Montag stehen (v93)
   await s.click('#v-training [data-k="start"][aria-label^="Torso B"]'); await s.waitForTimeout(250); await s.click('#l-items .chk'); await s.click('#l-save'); await s.waitForTimeout(200); await s.click('#rs-ok');
   P.ok('Runde voll und diese Woche trainiert: drei Haken bis Montag, „3 von 3“', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:' && (await text(s, '#v-training h2.sec')).includes('3 von 3'), await plaene());
@@ -318,5 +318,38 @@ lauf(async () => {
   const reihe9 = await o9.page.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '')).join(' | '));
   P.ok('volle Runde aus der Vorwoche: neue Runde, Torso A ist dran', reihe9 === 'Torso A:is-idle | Extremitäten:is-wait | Torso B:is-wait', reihe9);
   await o9.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler));
+  /* Laufendes Training im Vollbild (v96, sein Wunsch: „ganzer Bildschirm … will Fokus darauf“). Ein Plan mit einer Übung und drei Sätzen, ohne frühere Einheit:
+     Das Blatt deckt den ganzen Bildschirm (390 × 844), schwarz, ohne Rundung und ohne Milchglas; die Knöpfe zum Beenden stehen unten am Bildschirm.
+     „+ Satz“, „− Satz“ und „Übung entfernen“ stehen erst nach einem Tipp auf „…“ da. Schließen lässt das Training weiterlaufen; nach einem Neuladen steht es von selbst wieder im Vollbild da,
+     außer die Adresse verlangt eine Schnelleingabe (?neu=notiz). */
+  const o10 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: { ex: { a: { n: 'Rudern' } }, log: {}, meta: {}, live: null, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }], o: 1 } } } } }), f = o10.page;
+  await bereich(f, 'training'); await f.click('#v-training [data-k="start"]'); await f.waitForTimeout(250);
+  const voll = () => f.evaluate(() => { const d = document.querySelector('#lsheet'), r = d.getBoundingClientRect(), c = getComputedStyle(d);
+    return [d.open, Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height), c.backgroundColor, parseFloat(c.borderTopLeftRadius), /blur/.test(c.backdropFilter || '')].join(' '); });
+  P.ok('Training starten öffnet das Vollbild: ganzer Bildschirm, schwarz, ohne Rundung und Milchglas', (await voll()) === 'true 0 0 390 844 rgb(0, 0, 0) 0 false', await voll());
+  const unten = await f.evaluate(() => Math.round(document.querySelector('#l-del').getBoundingClientRect().bottom));
+  P.ok('„Beenden“ und „Verwerfen“ stehen unten am Bildschirm', unten > 844 - 40 && unten <= 844 && await f.isVisible('#l-save'), String(unten));
+  P.ok('Flächen im Vollbild wie in der App (#2C2C2E), nicht eine Stufe heller wie in Blättern', (await f.evaluate(() => getComputedStyle(document.querySelector('#l-w')).backgroundColor)) === 'rgb(44, 44, 46)');
+  const saetzeF = () => f.$$eval('#l-items .lx > .lt > .lt-r', l => l.length);
+  P.ok('ohne Tipp auf „…“: keine Zeile mit „+ Satz“', !(await f.$('#l-items [data-la="addset"]')) && (await saetzeF()) === 3);
+  await f.click('#l-items [data-la="menu"]');
+  P.enthaelt('Tipp auf „…“ zeigt die drei Aktionen', await text(f, '#l-items .lx-akt button'), ['+ Satz', '− Satz', 'Übung entfernen']);
+  await f.click('#l-items [data-la="addset"]');
+  P.ok('„+ Satz“: vier Sätze, die Aktionen bleiben offen', (await saetzeF()) === 4 && !!(await f.$('#l-items [data-la="rmset"]')));
+  await f.click('#l-items [data-la="rmset"]'); await f.click('#l-items [data-la="rm"]');
+  P.ok('„− Satz“: wieder drei; „Übung entfernen“ fragt erst nach', (await saetzeF()) === 3 && (await text(f, '#l-items [data-la="rm"]')) === 'Wirklich entfernen?');
+  await f.click('#l-items [data-la="menu"]');
+  P.ok('zweiter Tipp auf „…“ schließt die Aktionen, die Übung bleibt', !(await f.$('#l-items .lx-akt')) && (await saetzeF()) === 3);
+  const breit = await f.evaluate(() => { const d = document.querySelector('#lsheet'); return d.scrollWidth <= d.clientWidth; });
+  await f.setViewportSize({ width: 320, height: 568 });
+  P.ok('nichts ragt seitlich hinaus (390 und 320 px)', breit && await f.evaluate(() => { const d = document.querySelector('#lsheet'); return d.scrollWidth <= d.clientWidth && d.getBoundingClientRect().width === 320; }));
+  await f.setViewportSize({ width: 390, height: 844 });
+  await f.click('#ls-close'); await f.waitForTimeout(100);
+  P.ok('Schließen: Das Training läuft weiter, die Karte steht im Bereich', !(await f.evaluate(() => document.querySelector('#lsheet').open)) && !!(await gespeichert(f)).K.live && !!(await f.$('#v-training [data-k="live"]')));
+  await f.goto(f.url().split('#')[0]); await f.waitForTimeout(300);
+  P.ok('App neu geladen, während ein Training läuft: Sie öffnet von selbst im Vollbild auf dem Training', (await voll()) === 'true 0 0 390 844 rgb(0, 0, 0) 0 false' && await f.isVisible('#l-w'), await voll());
+  await f.goto(f.url().split('#')[0].split('?')[0] + '?neu=notiz'); await f.waitForTimeout(300);
+  P.ok('mit Schnelleingabe in der Adresse bleibt das Vollbild zu, das Training läuft weiter', !(await f.evaluate(() => document.querySelector('#lsheet').open)) && !!(await gespeichert(f)).K.live);
+  await o10.browser.close();
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler));
 });

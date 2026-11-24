@@ -74,8 +74,10 @@
   }
   /* Blätter liegen eine Stufe über dem schwarzen Grund, ihre Flächen wieder eine darüber (wie in iOS) */
   :root:not([data-theme="light"]) dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
+  :root:not([data-theme="light"]) #lsheet{--surface:#1C1C1E;--fill:#2C2C2E;--sel:#3A3A3C}   /* Vollbild auf schwarzem Grund: Flächen wie in der App */
 }
 :root[data-theme="dark"] dialog{--surface:#2C2C2E;--fill:#3A3A3C;--sel:#48484A}
+:root[data-theme="dark"] #lsheet{--surface:#1C1C1E;--fill:#2C2C2E;--sel:#3A3A3C}
 :root[data-theme="dark"]{
   --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(0,0,0,.36); --glass-top:rgba(255,255,255,.12); --tab-cut:#111113; --sheet:rgba(30,30,32,.8); --surface:#1C1C1E; --fill:#2C2C2E; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.09);
   --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --sel:#3A3A3C; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
@@ -396,7 +398,6 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .entries b.down{color:var(--danger)}
 
 /* Trainingsplan und laufendes Training */
-#lsheet{max-height:96%}
 #l-items,#p-items{display:flex;flex-direction:column;gap:10px}
 #l-items:empty,#p-items:empty{display:none}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
@@ -533,13 +534,31 @@ u.w{background:var(--c-weight)}
 .cs-day .note{margin:0}
 .cs-day .entries .l small{white-space:pre-line;line-height:1.45;margin-top:2px}
 
-/* Laufendes Training: eine Übung im Fokus */
-#lform{gap:12px}
-#lsheet .sh-head h2{font-size:18px}
+/* Laufendes Training: eine Übung im Fokus, im Vollbild (v96, sein Wunsch nach einem Bild aus Alpha Progression: „ganzer Bildschirm … will Fokus darauf“).
+   Kein schwebendes Blatt: schwarzer Grund ohne Glas, Flächen wie in der App. Der Griff ist ein eigenes Element im Formular, damit das Blatt selbst keine eigene Fläche hat
+   (ein Tipp auf das Blatt selbst schließt es, wie bei jedem Blatt der Tipp daneben). Die Knöpfe zum Beenden stehen unten am Bildschirm (.l-fuss). */
+#lsheet{width:100%;max-width:480px;height:calc(100% - var(--kb,0px));max-height:none;margin:0 auto var(--kb,0px);border-radius:0;background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
+#lsheet::before{display:none}
+#lsheet::backdrop{-webkit-backdrop-filter:none;backdrop-filter:none}
+#lform{gap:14px;min-height:100%;padding:calc(8px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
+.l-grab{flex:none;align-self:center;width:36px;height:5px;border-radius:3px;background:var(--fill)}
+#lsheet .sh-head h2{font-size:15px}
+.l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
+#l-del{border:0;background:none;text-align:center;font-size:13px}
 .ls-t{margin:2px 0 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 /* Kopf einer Übung im laufenden Training: Name mit Punkt (Trend), darunter das Ziel und, wenn es einen gibt, der Rekord von heute */
 .lx-k{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
-.lx h3{display:flex;align-items:center;gap:8px}
+.lx-n{align-self:stretch;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.lx h3{display:flex;align-items:center;gap:9px;min-width:0}
+/* „…“ neben dem Namen: + Satz, − Satz und Übung entfernen stehen erst nach einem Tipp da (wie in seinem Bild), unter der Satz-Tabelle bleibt Ruhe */
+.lx-m{flex:none;position:relative;width:46px;height:32px;border:0;border-radius:999px;background:var(--surface);color:var(--at);display:grid;place-items:center}
+.lx-m::after{content:"";position:absolute;inset:-6px -4px}
+.lx-m svg{width:18px;height:5px}
+.lx-m[aria-expanded="true"]{background:var(--fill)}
+.lx-akt{display:flex;flex-wrap:wrap;gap:6px}
+.lx-akt button{position:relative;min-height:34px;padding:0 14px;border:0;border-radius:999px;background:var(--surface);font-size:13px;font-weight:600;color:var(--ink)}
+.lx-akt button::after{content:"";position:absolute;inset:-4px 0}
+.lx-akt .danger{margin-left:auto;color:var(--danger)}
 .lx-z{position:relative;display:inline-flex;align-items:center;gap:5px;min-height:22px;padding:0;border:0;background:none;font-size:12.5px;font-weight:600;color:var(--muted)}
 .lx-z::after{content:"";position:absolute;inset:-9px -12px}
 .lx-z svg{width:12px;height:12px;color:var(--mid)}
@@ -582,8 +601,7 @@ u.w{background:var(--c-weight)}
 .zk.pl{background:none;color:var(--muted)}
 .zk svg{width:22px;height:22px}
 .zk:disabled{visibility:hidden}
-#lsheet .primary{min-height:42px;font-size:14.5px}
-.lx .linkbtn{font-size:13px}
+#lsheet .primary{min-height:44px;font-size:14.5px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
 .lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:32px}
@@ -594,7 +612,7 @@ u.w{background:var(--c-weight)}
 #l-add{display:flex;flex-direction:column;gap:8px}
 #l-add[hidden]{display:none}
 .lx{display:flex;flex-direction:column;gap:10px}
-.lx h3{margin:0;font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
+.lx h3{margin:0;font-family:var(--display);font-size:22px;font-weight:700;letter-spacing:-.02em;line-height:1.15;color:var(--at);overflow-wrap:anywhere}
 .lt{display:flex;flex-direction:column;gap:3px}
 .lt-h,.lt-r{display:grid;grid-template-columns:30px 1fr 1fr 50px 46px;gap:6px;align-items:center;text-align:center}
 .lt-h span{font-size:11.5px;font-weight:600;color:var(--mid)}
@@ -610,14 +628,21 @@ u.w{background:var(--c-weight)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
 .lt-r .st svg{width:14px;height:14px}
 .lt-r .mehr{margin-left:6px;font-size:12px;font-weight:600;color:var(--good)}
+/* Im Vollbild ist Platz: Die Sätze der Übung sind größer und besser zu treffen als die Tabelle „Letztes Mal“ darunter */
+.lx>.lt{gap:6px}
+.lx>.lt>.lt-h,.lx>.lt>.lt-r{grid-template-columns:36px 1fr 1fr 54px 54px;gap:8px}
+.lx>.lt>.lt-r{min-height:46px;font-size:17px}
+.lx>.lt>.lt-r.act .n,.lx>.lt>.lt-r .pv,.lx>.lt>.lt-r .chk{height:46px;border-radius:14px}
+.lx>.lt>.lt-r .pv{font-size:18px}
+.lx>.lt>.lt-r .chk{width:54px}
+.lx>.lt>.lt-r .chk svg{width:18px;height:18px}
+.lx>.lt>.lt-r .rm{font-size:14px}
 /* Soll der Termine im Teil „Uni“: schmaler Balken unter der großen Zahl */
 .soll{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:-4px}
 .soll i{display:block;height:100%;border-radius:2px;background:var(--accent)}
 /* Wechsel des Bereichs: Die neue Ansicht blendet kurz ein */
 @keyframes ein{from{opacity:0}to{opacity:1}}
 .view.ein{animation:ein .18s ease}
-.linkbtn.danger{color:var(--danger)}
-.linkbtn.quiet{color:var(--muted);font-weight:500}
 .lastx{gap:0;padding:10px 12px 8px}
 .lastx .note{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lastx .note b{flex:none;font-weight:600}
@@ -683,7 +708,7 @@ dialog{border-radius:32px}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
@@ -785,9 +810,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 
 /* Blätter mit Griff wie in iOS */
 dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-radius:3px;background:var(--fill);margin:8px auto 0}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:10px}
+#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:10px}
 .cs-top{padding-top:6px}
-@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
+@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
   .view.ein,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
@@ -821,7 +846,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v95</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v96</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1127,10 +1152,11 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 <dialog tabindex="-1" id="lsheet" aria-labelledby="ls-title">
   <form id="lform" novalidate>
+    <i class="l-grab" aria-hidden="true"></i>
     <div class="sh-head">
       <div><h2 id="ls-title">Training</h2><p class="ls-t"><span id="lv-total">00:00</span><span id="lv-rest"></span></p></div>
       <button type="button" class="x" id="ls-close" aria-label="Schließen, das Training läuft weiter">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
       </button>
     </div>
     <div class="lx-tabs" id="l-tabs" role="group" aria-label="Übungen"></div>
@@ -1142,9 +1168,11 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <div class="chips" id="l-pick" role="group" aria-label="Passende Übungen" hidden></div>
     </div>
     <div id="l-items"></div>
-    <p class="err" id="l-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="l-save">Training beenden und speichern</button>
-    <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
+    <div class="l-fuss">
+      <p class="err" id="l-err" role="alert" hidden></p>
+      <button class="primary" type="submit" id="l-save">Training beenden und speichern</button>
+      <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
+    </div>
   </form>
 </dialog>
 
@@ -3250,7 +3278,8 @@ function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
 function wakeOff() { try { if (wakeL) wakeL.release(); } catch (e) {} wakeL = null; }
 function saveLive() { if (Lw && K.live && JSON.stringify(Lw) !== JSON.stringify(K.live)) kdoc.patch({ live: clone(Lw) }); }
-let lI = 0, lJ = null, lAdd = false, lRm = false;
+let lI = 0, lJ = null, lAdd = false, lRm = false, lMenu = false;
+const DOTS = '<svg viewBox="0 0 18 5" fill="currentColor" aria-hidden="true"><circle cx="2.5" cy="2.5" r="2"/><circle cx="9" cy="2.5" r="2"/><circle cx="15.5" cy="2.5" r="2"/></svg>';
 const PEN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.8 2.6l2.6 2.6L5.6 13H3v-2.6z"/></svg>';
 /* Werte eines Satzes im laufenden Training als Zahlen [kg, Wdh]; leer oder ungültig zählt als 0 */
 const lNum = s => { const w = dec(s.w), n = Math.round(Number(String(s.r).replace(',', '.'))); return [isFinite(w) && w > 0 ? w : 0, n >= 1 ? n : 0]; };
@@ -3284,22 +3313,23 @@ function paintL() {
   /* Spalte 1RM: das geschätzte Maximum des Satzes; grün am Satz, der heute der Rekord ist */
   const bwL = exBw(it.id, Lw.date), rm = (s, j) => { const q = lNum(s); return '<span class="rm' + (rek && rek.j === j ? ' rek' : '') + '">' + rmText(rm1(q[0] + bwL, q[1])) + '</span>'; };
   const pv = (s, j, f, was) => '<button type="button" class="pv" id="l-' + f + '" data-la="num" data-f="' + f + '" data-s="' + j + '" aria-label="' + esc(name) + ', Satz ' + (j + 1) + ', ' + was + ' ändern">' + val(s[f]) + '</button>';
-  let h = '<div class="lx"><div class="lx-k"><h3>' + dotHTML(exTrend(hist)) + '<span>' + esc(name) + '</span></h3>' +
+  let h = '<div class="lx"><div class="lx-k"><div class="lx-n"><h3>' + dotHTML(exTrend(hist)) + '<span>' + esc(name) + '</span></h3>' +
+    '<button type="button" class="lx-m" data-la="menu" aria-expanded="' + lMenu + '" aria-label="Sätze und Übung ändern">' + DOTS + '</button></div>' +
     '<button type="button" class="lx-z" data-la="ziel" aria-label="Ziel: ' + z + ' Wiederholungen je Satz, ändern">Ziel ' + z + ' Wdh' + PEN + '</button>' +
     (rek ? '<p class="rek-l">Neuer Rekord · ' + (rek.q.w ? '1RM ' + rmText(rek.q.v) + ' kg' : rek.q.v + ' Wdh') + '</p>' : '') + '</div>' +
+    (lMenu ? '<div class="lx-akt"><button type="button" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" data-la="rmset">− Satz</button>' : '') +
+      '<button type="button" class="danger" data-la="rm">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>' : '') +
     '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span>' + (it.sets.some(s => lNum(s)[0] + bwL > 0) ? '1RM' : '') + '</span><span></span></div>' + it.sets.map((s, j) => j === act
     ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' + pv(s, j, 'w', 'Gewicht') + pv(s, j, 'r', 'Wiederholungen') + rm(s, j) +
       '<button type="button" class="chk" data-la="done" data-s="' + j + '" aria-pressed="' + s.done + '" aria-label="Satz ' + (j + 1) + (s.done ? ' ist erledigt, zurücknehmen' : ' erledigt') + '">' + CHECK + '</button></div>'
     : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
-  h += '<div class="links"><button type="button" class="linkbtn" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" class="linkbtn" data-la="rmset">− Satz</button>' : '') +
-    '<button type="button" class="linkbtn ' + (lRm ? 'danger' : 'quiet') + '" data-la="rm" style="margin-left:auto">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>';
   if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets, last.bw) + '</button>' + exFigsHTML(hist);
   else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte.</p>';
   $('#l-items').innerHTML = h + '</div>';
 }
 function openL() {
   if (!K.live) return;
-  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false;
+  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lMenu = false;
   const open = Lw.items.findIndex(it => undone(it) >= 0);
   lI = open >= 0 ? open : 0;
   $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
@@ -3337,14 +3367,15 @@ $('#lform').addEventListener('click', e => {
     const neu = liveSets(it.id, it.sets.length); it.sets.forEach((s, j) => { if (!s.done) { s.w = neu[j].w; s.r = neu[j].r; } });
     paintL(); saveLive();
   } });
-  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; }
+  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lMenu = false; }
+  else if (a === 'menu') lMenu = !lMenu;
   else if (a === 'addx') lAdd = !lAdd;
   else if (a === 'sel') lJ = +t.dataset.s;
   else if (a === 'done' && it) {
     const s = it.sets[+t.dataset.s];
     if (!s.done && !(Math.round(Number(String(s.r).replace(',', '.'))) >= 1)) { const x = $('#l-err'); x.textContent = 'Trag zuerst die Wiederholungen für diesen Satz ein.'; x.hidden = false; return; }
     const vorher = !!lRek(it);
-    s.done = !s.done; lJ = null;
+    s.done = !s.done; lJ = null; lMenu = false;
     if (s.done) {
       if (!vorher && lRek(it)) setTimeout(() => haptik('erfolg'), 120);   // Rekord: nach dem leichten Impuls fürs Abhaken ein zweiter, deutlicher
       Lw.last = Date.now();
@@ -3352,8 +3383,8 @@ $('#lform').addEventListener('click', e => {
       if (undone(it) < 0) { const n = Lw.items.length; for (let k = 1; k < n; k++) { const q = (lI + k) % n; if (undone(Lw.items[q]) >= 0) { lI = q; break; } } }
     }
   }
-  else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, 3) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; $('#l-new').value = ''; }
-  else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; } else lRm = true; }
+  else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, 3) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; lMenu = false; $('#l-new').value = ''; }
+  else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; lMenu = false; } else lRm = true; }
   else if (a === 'addset' && it) { const s = it.sets, l = s[s.length - 1]; s.push({ w: l.w, r: l.r, done: false }); }
   else if (a === 'rmset' && it) { if (it.sets.length > 1) it.sets.pop(); lJ = null; }
   const y = ldlg.scrollTop;
@@ -3366,7 +3397,7 @@ function lAddNew() {
   const id = exIdFor(name);
   let i = Lw.items.findIndex(it => it.id === id);
   if (i < 0) { Lw.items.push({ id, sets: liveSets(id, 3) }); i = Lw.items.length - 1; }
-  lI = i; lJ = null; lAdd = false;
+  lI = i; lJ = null; lAdd = false; lMenu = false;
   $('#l-new').value = ''; paintL(); saveLive();
 }
 $('#l-new-add').addEventListener('click', lAddNew);
@@ -4354,7 +4385,7 @@ document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button'); if (!b) return;
   if (b.matches('.tk, .chk, [data-k="skip"]')) haptik('leicht');
   else if (b.matches('[data-k="start"]')) haptik('mittel');
-  else if (b.matches('[data-fold], .mnav button, .lx-tab, [data-zv]') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
+  else if (b.matches('[data-fold], .mnav button, .lx-tab, .lx-m, [data-zv]') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
 }, true);
 /* Nach dem Absenden eines Blatts: Fährt es weg, ist gespeichert; steht eine Fehlermeldung da, passt die Eingabe nicht */
 document.addEventListener('submit', e => {
@@ -4596,7 +4627,8 @@ if (HUELLE) window.TrackHuelle = {
   sichern() { sJetzt(); },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },
-  neu(was) { if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
+  /* Das laufende Training im Vollbild weicht einer Schnelleingabe (es läuft weiter); jedes andere offene Blatt bleibt, wie es ist */
+  neu(was) { if (ldlg.open && document.querySelectorAll('dialog[open]').length === 1) ldlg.close(); if (!document.querySelector('dialog[open]')) { show('heute'); quickOpen(String(was)); } }
 };
 /* Wird die Seite neu geladen (die iPhone-App zeigt so eine neue Fassung), geht Offenes vorher hinaus: Der Merker „offen“ überlebt das Neuladen nicht. */
 if (HUELLE) window.addEventListener('pagehide', sJetzt);
@@ -4628,6 +4660,8 @@ render();
    Der Zusatz kommt danach aus der Adresse, damit ein Neuladen das Blatt nicht noch einmal öffnet. */
 const neu = new URLSearchParams(location.search).get('neu');
 if (neu) { try { history.replaceState(null, '', location.pathname); } catch (e) {} show('heute'); quickOpen(neu); }
+/* Läuft ein Training, öffnet die App gleich im Vollbild darauf (v96: Hat iOS die App im Gym neu geladen, steht er wieder da, wo er war) */
+else if (K.live) { show('training'); tSub = 'kraft'; renderTraining(); openL(); }
 try { if (navigator.storage && navigator.storage.persist) navigator.storage.persist(); } catch (e) {}
 if (HUELLE) { hPost({ art: 'bereit' }); hSoon(); }
 /* Neue Version: Beim Öffnen wird nach einem neuen Service Worker gesucht. Sobald er übernimmt, lädt die App einmal neu, aber nie, solange ein Blatt offen ist. */
