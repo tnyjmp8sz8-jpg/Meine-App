@@ -549,7 +549,7 @@ lauf(async () => {
   /* Im Browser ohne Hülle: nichts davon ist da */
   let o = await oeffnen({ daten });
   p.ok('ohne Hülle: keine Schnittstelle', await o.page.evaluate(() => window.TrackHuelle === undefined));
-  await bereich(o.page, 'training');
+  await bereich(o.page, 'training'); await o.page.click('#v-training .subtabs [data-v="cardio"]');
   p.ok('ohne Hülle: kein Health-Knopf, keine Zeile zur App', await o.page.evaluate(() => !document.querySelector('[data-t="health"]') && document.querySelector('#h-line').hidden));
   p.ok('ohne Hülle: Blätter bleiben, wie sie sind (kein --kb)', await o.page.evaluate(() => document.documentElement.style.getPropertyValue('--kb') === ''));
   p.ok('ohne Hülle: keine Fehler', !o.fehler.length, o.fehler.join(' | '));
@@ -596,7 +596,7 @@ lauf(async () => {
   p.ok('Health: zweites Mal kommt nichts doppelt', n === 0);
 
   /* Löschen: Der Lauf aus Health kommt nicht wieder */
-  await bereich(page, 'training');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');
   if (!(await page.$('#v-training [data-fold="laeufe"]'))) await page.click('#v-training .mnav button:first-child');   // am Monatsersten liegen alle Läufe im Vormonat
   await page.click('#v-training [data-fold="laeufe"]');   // Läufe aufklappen
   const zeile = page.locator('[data-t="edit"]').first(); await zeile.click(); await page.waitForTimeout(150);
@@ -698,7 +698,7 @@ lauf(async () => {
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();
   await page.evaluate(t => window.TrackHuelle.info({ app: '0.2', ablauf: t, health: 'kann' }), ablauf);
   p.enthaelt('Fußzeile nennt App und Ablauf', await text(page, '#h-line'), ['iPhone-App 0.2', 'gültig bis 24. November']);
-  await bereich(page, 'training');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');
   p.ok('Health freigegeben: Knopf im Cardio-Bereich', await page.locator('[data-t="health"]').count() === 1);
   await page.click('[data-t="health"]');
   p.ok('Tipp auf den Knopf bittet die Hülle um Health', (await post(page)).some(x => x.art === 'health'));

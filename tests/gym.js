@@ -15,9 +15,11 @@ lauf(async () => {
   const { browser, page, fehler } = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K } });
   const gym = () => text(page, '#v-training .mnav b, #v-training .hero h1, #v-training .figs .fig');
 
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]');
   P.enthaelt('laufender Monat: 1 Einheit, Verbesserung +10,0 %', await gym(), ['1 Einheit', '+10,0 %']);
-  P.enthaelt('bewegtes Gewicht 44 × 27 = 1.188 kg, Zeit 0:40 h', await gym(), ['1,2', '0:40 h']);
+  // Sätze besser: heute 44×10, 44×9, 44×8 gegen 40×10 je Satz beim letzten Mal = alle drei mit mehr Gewicht
+  P.enthaelt('3 Sätze besser, Zeit 0:40 h', await gym(), ['3 Sätze besser', '0:40 h']);
+  P.ok('„bewegt“ gibt es nicht mehr', !(await gym()).includes('bewegt'));
   // Pläne: Torso war heute dran (K.meta von heute): grüner Haken statt Kreis zum Starten, in der Überschrift „1 von 1 diese Woche“
   P.ok('Plan von dieser Woche trägt den Haken, die Überschrift zählt mit', (await page.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(page, '#v-training h2.sec')).includes('1 von 1 diese Woche'), await text(page, '#v-training h2.sec'));
   await page.click('#v-training [data-fold="uebungen"]');
@@ -27,6 +29,8 @@ lauf(async () => {
 
   await nachOben(page); await page.click('#v-training .mnav button:first-child');
   P.enthaelt('Vormonat: 5 Einheiten, +14,3 % (erster Monat: gegenüber der ersten Einheit)', await gym(), ['5 Einheiten', '+14,3 %']);
+  // Sätze besser im Vormonat: 5. erste Einheit (kein Vergleich), 10. mehr Gewicht (3), 15. mehr Gewicht (3), 20. mehr Wiederholungen (3), 25. gleich (0) = 9
+  P.enthaelt('Vormonat: 9 Sätze besser', await gym(), ['9 Sätze besser']);
   P.ok('Einheiten des Vormonats: fünf', (await page.$$('#v-training [data-k="day"]')).length === 5);
 
   // --- Einheit verschieben oder löschen: Dauer und Plan gehen mit ---
@@ -72,7 +76,7 @@ lauf(async () => {
   P.ok('Tipp auf „Letztes Mal“ öffnet die Übung nur zum Ansehen', (await text(page, '#xs-title')) === 'Rudern' && !(await page.isVisible('#x-name')));
   await page.click('#xs-close');
   P.ok('Training bleibt dahinter offen', await page.evaluate(() => document.querySelector('#lsheet').open));
-  await zahlWahl(page, '#l-w', '45'); await page.click('.lt-r .chk'); await page.click('#l-save'); await page.waitForTimeout(200);
+  await zahlWahl(page, '#l-w', '45'); await page.click('.lt-r .chk'); await page.click('#l-save'); await page.waitForTimeout(200); await page.click('#rs-ok');
   const d = await gespeichert(page);
   P.ok('Training gespeichert: ein Satz mit 45 kg', !d.K.live && d.K.log[heute].a.length === 1 && d.K.log[heute].a[0][0] === 45, JSON.stringify(d.K.log[heute]));
 
@@ -127,7 +131,7 @@ lauf(async () => {
   K3.log[tag(5)].v = [[40, 10], [40, 10], [40, 10]]; K3.log[tag(5)].u = [[55, 5], [50, 7], [50, 6]];
   // Körpergewicht: am 10. des Vormonats 90,0 kg, heute 91,2 kg (mehr als 6 Tage Abstand, der Schnitt von heute ist also 91,2) → im laufenden Monat +1,2 kg
   const g = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K3, W: { entries: { [vm + '-10']: 90, [heute]: 91.2 } } } }), q = g.page;
-  await bereich(q, 'training'); await q.click('#v-training .subtabs button:nth-child(2)'); await q.click('#v-training [data-fold="uebungen"]');
+  await bereich(q, 'training'); await q.click('#v-training .subtabs [data-v="kraft"]'); await q.click('#v-training [data-fold="uebungen"]');
   const punkte = await q.$$eval('#v-training [data-k="ex"]', l => l.map(b => b.querySelector('.l > span').textContent + ':' + ((b.querySelector('.td') || {}).className || 'ohne')).sort().join(' '));
   P.ok('Punkte in der Übungsliste: fällt rot, steht gelb (trotz einer schlechten Einheit), steigt grün, unter vier Einheiten keiner', punkte === 'Fällt:td down Neu:ohne Steht:td flat Steigt:td up Stufen:ohne Voll:ohne', punkte);
   const farbe = await q.evaluate(() => { const f = c => getComputedStyle(document.querySelector('#v-training .td' + c)).backgroundColor; return [f('.up'), f('.flat'), f('.down')]; });
@@ -168,6 +172,14 @@ lauf(async () => {
   await q.click('#l-items .lt-r[data-s="0"]'); await q.click('#l-items .chk'); await q.waitForTimeout(80);
   P.ok('Satz zurückgenommen: kein Rekord mehr', (await rek()) === '|', await rek());
   await q.click('#l-items .chk'); await q.click('#l-save'); await q.waitForTimeout(200);
+  // Rückblick: ein Satz gespeichert (45×10), besser als Satz 1 vom letzten Mal (40×10) und ein Rekord; unter einer Minute gibt es keine Kachel „Dauer“
+  const rb = [await q.evaluate(() => document.querySelector('#rsheet').open && !document.querySelector('#lsheet').open), await text(q, '#rs-title'), await text(q, '#rs-body .fig'), await text(q, '#rs-body [data-rs]')];
+  P.ok('nach dem Speichern: Rückblick mit „1 von 1 Satz besser“, „1 Rekord“ und der Übung', rb[0] === true && rb[1] === 'Probe' && rb[2] === '1von 1 Satz besser | 1 Rekord' && rb[3] === 'Voll 45 kg × 10 1 besser Rekord', JSON.stringify(rb));
+  await q.click('#rs-body [data-rs]'); await q.waitForTimeout(150);
+  P.ok('Tipp auf die Übung im Rückblick zeigt ihren Verlauf', (await text(q, '#xs-title')) === 'Voll' && !(await q.isVisible('#x-name')));
+  await q.click('#xs-close'); await q.click('#rs-ok'); await q.waitForTimeout(100);
+  P.ok('„Fertig“ schließt den Rückblick', !(await q.evaluate(() => document.querySelector('#rsheet').open)));
+  P.ok('Gym steht vor Cardio und ist gewählt', (await q.$$eval('#v-training .subtabs button', l => l.map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join())) === 'Gym*,Cardio');
   await q.click('#v-training [data-fold="einheiten"]');
   P.enthaelt('Einheit von heute nennt den Rekord', await text(q, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Probe', '1 Rekord']);
   P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2 diese Woche“', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2 diese Woche'), await text(q, '#v-training h2.sec'));

@@ -539,6 +539,7 @@ u.w{background:var(--c-weight)}
 .rows.one .row{border-radius:0;background:none}
 .rows.one .is-done .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .rows.one .is-done .glyph svg{width:13px;height:13px}
+.rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
 #zsheet[open]{display:flex;flex-direction:column}
@@ -797,7 +798,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v85</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v86</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1124,6 +1125,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
+<dialog tabindex="-1" id="rsheet" aria-labelledby="rs-title">
+  <div class="rs" id="rs-body"></div>
+</dialog>
+
 <dialog tabindex="-1" id="zsheet" aria-labelledby="zs-title">
   <div class="z-top"><button type="button" class="linkbtn" id="z-x">Abbrechen</button><h2 id="zs-title">Gewicht</h2><span></span></div>
   <div class="z-list" id="z-list" role="group" aria-label="Werte in der Nähe"></div>
@@ -1234,7 +1239,7 @@ let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Met
 let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
 let N = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } };   // Planer: Notizen, Arbeit, Uni; Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
-let tSub = 'cardio', hMode = 'day', hWeek = '', hMonth = '';
+let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -2438,7 +2443,7 @@ function renderTraining() {
   const el = $('#v-training'), curYM = todayKey().slice(0, 7);
   if (!isYM(tYM)) tYM = curYM;
   if (!tYear) tYear = +curYM.slice(0, 4);
-  const subs = '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['cardio', 'Cardio'], ['kraft', 'Gym']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
+  const subs = '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['kraft', 'Gym'], ['cardio', 'Cardio']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
   if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + (kLeer() ? '' : segT()) + '</div>' + kraftHTML(curYM); return; }
   const all = tRuns();
   if (!all.length) {
@@ -2621,17 +2626,26 @@ function exDelta(hist, pre) {
   const end = exLevel(hist, inP[inP.length - 1].d.slice(0, 7));
   return before ? scoreDelta(end, exLevel(hist, before.d.slice(0, 7))) : inP.length > 1 ? scoreDelta(end, kScore(inP[0].sets)) : null;
 }
-/* Gym gesamt in einem Monat oder Jahr: Einheiten, bewegtes Gewicht, Zeit und die Verbesserung = Schnitt der Verbesserungen aller Übungen (exDelta) */
+/* Sätze, die besser waren als derselbe Satz beim letzten Mal dieser Übung: mehr Gewicht, oder bei gleichem Gewicht mehr Wiederholungen. n = besser, von = Sätze mit Vergleich.
+   Sein Wunsch (24.11.) statt des bewegten Gewichts: „lieber Anzahl Sätze, in denen ich besser war“. */
+function setsBesser(sets, prev) {
+  let n = 0, von = 0;
+  if (prev) sets.forEach((q, j) => { const l = prev[j]; if (l) { von++; if (q[0] > l[0] || (q[0] === l[0] && q[1] > l[1])) n++; } });
+  return { n, von };
+}
+/* Gym gesamt in einem Monat oder Jahr: Einheiten, bessere Sätze (bes von cmp), Zeit und die Verbesserung = Schnitt der Verbesserungen aller Übungen (exDelta) */
 function kPeriod(pre) {
   const ds = kDates().filter(d => d.slice(0, pre.length) === pre), ps = [];
-  let vol = 0, dur = 0;
-  ds.forEach(d => { kDay(d).forEach(x => x.sets.forEach(s => { vol += s[0] * s[1]; })); const m = (K.meta || {})[d]; if (m) dur += m.dur || 0; });
-  if (ds.length) kExs().forEach(x => { const dl = exDelta(kHist(x.id), pre); if (dl) ps.push(dl.p); });
+  let bes = 0, cmp = 0, dur = 0;
+  ds.forEach(d => { const m = (K.meta || {})[d]; if (m) dur += m.dur || 0; });
+  if (ds.length) kExs().forEach(x => {
+    const h = kHist(x.id), dl = exDelta(h, pre); if (dl) ps.push(dl.p);
+    h.forEach((e, i) => { if (i && e.d.slice(0, pre.length) === pre) { const b = setsBesser(e.sets, h[i - 1].sets); bes += b.n; cmp += b.von; } });
+  });
   const pp = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
-  return { n: ds.length, vol, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
+  return { n: ds.length, bes, cmp, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
-const volText = v => v >= 1000 ? [kg(v / 1000), 't'] : [String(Math.round(v)), 'kg'];
-const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(volText(s.vol)[0], volText(s.vol)[1], 'bewegt') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(s.cmp ? String(s.bes) : '–', '', s.bes === 1 ? 'Satz besser' : 'Sätze besser') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
 const kNote = s => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: dein bestes geschätztes Maximum am Ende gegenüber dem Stand davor, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '.</p>' : '';
 /* Körpergewicht im selben Zeitraum, eine Zeile unter den Kennzahlen (Kraft und Gewicht zusammen sehen): Schnitt der letzten 7 Tage am Ende gegenüber dem Stand davor,
    im ersten Zeitraum gegenüber dem ersten Eintrag. Ohne Vergleich keine Zeile. */
@@ -3283,8 +3297,30 @@ $('#lform').addEventListener('submit', e => {
   if (!n) { const x = $('#l-err'); x.textContent = 'Hake mindestens einen Satz ab. Wenn du nichts speichern willst, verwirf das Training.'; x.hidden = false; return; }
   const q = { log: {}, meta: {}, live: null };
   q.log[Lw.date] = day; q.meta[Lw.date] = { dur: Math.round((Date.now() - Lw.start) / 1000), plan: Lw.plan };
+  const tagL = Lw.date;
   Lw = null; kdoc.patch(q);
-  tSub = 'kraft'; closeL(); liveTick();
+  tSub = 'kraft'; closeL(); liveTick(); openR(tagL);
+});
+/* Rückblick nach „Training beenden“ (sein „ja“ auf meinen Vorschlag, 24.11.): Dauer, bessere Sätze, Rekorde, darunter jede Übung mit ihren Sätzen. Ein Tipp auf eine Übung zeigt ihren Verlauf. */
+const rdlg = $('#rsheet');
+function openR(d) {
+  const day = kDay(d), m = (K.meta || {})[d]; if (!day.length) return;
+  let bes = 0, von = 0, rec = 0;
+  const rows = day.map(x => {
+    const h = kHist(x.id).filter(q => q.d < d), b = setsBesser(x.sets, h.length ? h[h.length - 1].sets : null), r = !!recOf(x.sets, h);
+    bes += b.n; von += b.von; if (r) rec++;
+    return '<li><button type="button" class="two" data-rs="' + esc(x.id) + '" aria-label="Verlauf von ' + esc(K.ex[x.id].n) + ' öffnen"><span class="l"><span>' + esc(K.ex[x.id].n) + '</span><small>' + setsText(x.sets) + '</small></span>' +
+      (b.n || r ? '<span class="r">' + (b.n ? '<b class="up">' + b.n + ' besser</b>' : '') + (r ? '<small class="up">Rekord</small>' : '') + '</span>' : '') + '</button></li>';
+  }).join('');
+  $('#rs-body').innerHTML = '<div class="sh-head"><div><h2 id="rs-title">' + esc((m && planName(m.plan)) || 'Training') + '</h2><p class="ls-t">' + dRow(d) + ' · gespeichert</p></div></div>' +
+    '<div class="figs">' + fig(m && m.dur >= 60 ? String(Math.round(m.dur / 60)) : '–', 'min', 'Dauer') + fig(von ? String(bes) : '–', 'von ' + von, bes === 1 ? 'Satz besser' : 'Sätze besser') + fig(rec ? String(rec) : '–', '', rec === 1 ? 'Rekord' : 'Rekorde') + '</div>' +
+    '<ul class="entries">' + rows + '</ul><button type="button" class="primary" id="rs-ok">Fertig</button>';
+  openDlg(rdlg);
+  rdlg.scrollTop = 0;
+}
+rdlg.addEventListener('click', e => {
+  const t = e.target.closest('[data-rs]');
+  if (t) openX(t.dataset.rs, true); else if (e.target === rdlg || e.target.closest('#rs-ok')) closeDlg(rdlg);
 });
 $('#l-del').addEventListener('click', () => {
   if (!lArm) { lArm = true; $('#l-del').textContent = 'Wirklich verwerfen? Noch einmal tippen.'; return; }

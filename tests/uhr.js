@@ -37,7 +37,7 @@ lauf(async () => {
   p.ok('ohne Puls nachgeliefert: Strecke 5750 m (zwei Werte), Puls bleibt 152', r && r.m === 5750 && r.hr === 152, JSON.stringify(r));
 
   /* 4. Von Hand geändert (Anzeige des Laufbands: 6,00 km): Danach bessert nichts mehr nach. */
-  await bereich(page, 'training');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');
   await page.click('#v-training [data-fold="laeufe"]');
   await page.click('#v-training [data-t="edit"][data-id="' + r.id + '"]');
   await page.fill('#t-km', '6,00'); await page.click('#t-save'); await page.waitForTimeout(150);

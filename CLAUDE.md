@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v85)
+# Track. – Projektwissen (App-Stand v86)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -22,7 +22,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
   - Planer (im Code `routinen`), Umschalter oben: „Notizen“ (schnelle Aufnahme in Sekunden: nur Text in einer einzigen Liste, jede mit Kreis, Abhaken löscht), „Arbeit“ (Arbeitszeiten, Verdienst je Monat), „Uni“ (Termine der Zahnmedizin mit Punkten je Fach). Ausgebaut auf seinen Wunsch: Aufgaben (v74), Routinen mit Timer und Serien (v75, die erste Funktion der App), Ordner der Notizen und die Notizen unter „Arbeit“ und „Uni“ (v77); Gespeichertes bleibt jeweils erhalten.
   - Gewicht: Einträge, 7-Tage-Schnitt, Graph, Ziel mit Prognose.
   - Finanzen: „Vermögen“ (Konten, monatlicher Stand, Plus/Minus, Sparziele) und „Budget“ (Einnahmen, Fixkosten, flexible Ausgaben, Budgets je Kategorie, Sparquote).
-  - Training: „Cardio“ (Läufe, Pace, Effizienz) und „Gym“ (Pläne, laufendes Training, Übungen, Recap für Monat und Jahr).
+  - Training: „Gym“ (Pläne, laufendes Training mit Vorgabe und Rückblick, Übungen, Recap für Monat und Jahr) und „Cardio“ (Läufe, Pace, Effizienz). Gym steht seit v86 vorn und ist der erste Blick (sein Wunsch, 24.11.).
 
 ## Tech-Stack
 - Reines HTML, CSS und JavaScript in einer Datei. Kein Build, keine Abhängigkeiten, kein Server, kein Konto.
@@ -145,6 +145,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Ruhig: keine Töne, keine Ränder, keine Großbuchstaben-Labels. Auch Bewegung bleibt farblos: Ein Zeichen, das beim Antippen blau aufpoppt (Haken beim Abhaken, v83), will er nicht.
 - Im Zweifel die schlichtere Lösung, lieber etwas weglassen.
 - Vorbild fürs Gym: Alpha Progression (Screenshots des Nutzers, zuletzt 24.11.: Plan-Übersicht, laufendes Training, Auswahl von kg und Wdh: „finde das sehr clean, adaptiere das so“). Übernommen in v85: Pläne in einer Karte mit Haken für „diese Woche schon dran“, Satz-Tabelle mit 1RM, „Zahl wählen“ statt Tastatur, Zeiten klein im Kopf. Nicht übernommen: seine Übungsbilder (gehören Alpha Progression) und 10RM (die App rechnet 1RM).
+- Im Gym zählt für ihn, ob er besser war, nicht die Masse (24.11.: „bewegtes Gewicht interessiert mich nicht, lieber Anzahl Sätze, in denen ich besser war (mehr Gewicht oder höhere Wdh-Zahl)“): Seit v86 steht „Sätze besser“ statt „bewegt“ (`setsBesser()`), auch im Rückblick nach dem Training. Keine Tonnen, kein Volumen mehr vorschlagen.
 - Ein schlechter Tag ist kein Trend (24.11.: „immer gleitender Schnitt, nicht wenn einmal schlecht“): Bewertungen (Punkt an der Übung) rechnen über mehrere Einheiten, nie aus einer einzelnen. Sein Maßstab (24.11.): Der Gym-Teil „muss überall besser werden, bei den Funktionen, die ich möchte“. Welche Funktionen das sind, bestimmt er; ich streiche keine von mir aus („dort bleibt Alpha Progression besser“ wollte er nicht hören), sondern frage nach seiner Liste und baue jede davon so, dass sie besser ist.
 
 ## Zusammenarbeit
@@ -166,7 +167,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v85` → `takt-v86`), `<span class="ver">v85</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v86` → `takt-v87`), `<span class="ver">v86</span>` in der Fußzeile und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Alles Neue wird ohne Nachfrage direkt nach `main` veröffentlicht, sobald es fertig und getestet ist (sein Wunsch, 22.11.2026: „immer alles neues direkt veröffentlichen“; er kann es jederzeit zurücknehmen). Auch reine Änderungen an den Projektdateien gehen nach `main`: Eine neue Sitzung beginnt dort. Ausnahme bleibt, was er „erstmal nur merken“ nennt.
 - Standardzweig bei GitHub ist `main` (seit 19.11.2026): Eine neue Sitzung beginnt dort. Trotzdem zu Beginn jeder Sitzung prüfen, dass der Arbeitsordner auf dem Stand von `main` ist (`git fetch origin main`, Überschrift dieser Datei vergleichen); wenn nicht, zuerst `main` holen und nichts auf dem alten Stand bauen. Warum: Einmal begann eine Sitzung auf einem alten Zweig und meldete v63 statt v73.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.

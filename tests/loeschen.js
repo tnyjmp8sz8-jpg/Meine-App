@@ -37,7 +37,7 @@ lauf(async () => {
   P.ok('das Blatt ist danach zu', !(await page.evaluate(() => document.querySelector('#vsheet').open)));
 
   // --- Training verwerfen und zurückholen ---
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await page.click('#v-training .row .go'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await page.click('#v-training .row .go'); await kurz();
   await page.click('#l-del'); await page.click('#l-del'); await kurz();
   P.ok('Training verworfen: Hinweis nennt es', (await hinweis()) === 'Training verworfen Rückgängig', await hinweis());
   await page.click('#toast button'); await kurz();

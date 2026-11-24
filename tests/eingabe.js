@@ -71,6 +71,7 @@ lauf(async () => {
   await kurz();
   P.ok('Budget, Knopf „Ausgabe“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="add"]')) === 'm-amt');
   P.ok('Budget, Knopf „Einnahme“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="income"]')) === 'm-amt');
+  await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');   // seit v86 öffnet das Training mit Gym
   P.ok('Lauf eintragen: Strecke hat sofort den Fokus', (await sofort('#v-training [data-t="add"]', 'training')) === 't-km');
   P.ok('Planer, Plus oben: Der Text der neuen Notiz hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'n-text');
   await page.keyboard.press('Escape'); await kurz();

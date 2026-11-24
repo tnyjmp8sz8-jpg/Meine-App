@@ -80,9 +80,9 @@ lauf(async () => {
   const tx = Object.values(d.MY[jahr].tx), monate = l => new Set(l.filter(imJahr).map(k => k.slice(0, 7))).size;
 
   // --- Teil 1: jede Klappzeile ist zu, geht auf und wieder zu; die Zahl rechts stimmt ---
-  /* Gezeichnet sind nach dem Start mindestens: Sicherung (Heute), Einträge (Gewicht), Umbuchungen (Vermögen), Läufe (Cardio) */
+  /* Gezeichnet sind nach dem Start mindestens: Sicherung (Heute), Einträge (Gewicht), Umbuchungen (Vermögen), Übungen (Gym: seit v86 der erste Teil im Training) */
   const start = await page.$$eval('[data-fold]', l => l.map(b => b.dataset.fold + (b.getAttribute('aria-expanded') === 'true' ? ' offen' : '')));
-  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['sicherung', 'eintraege', 'umbuchungen', 'laeufe'].every(k => start.includes(k)) && !start.some(k => k.includes('offen')), start.join(', '));
+  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['sicherung', 'eintraege', 'umbuchungen', 'uebungen'].every(k => start.includes(k)) && !start.some(k => k.includes('offen')), start.join(', '));
 
   /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind. */
   await bereich(page, 'gewicht');
@@ -121,7 +121,7 @@ lauf(async () => {
 
   /* Cardio: die Läufe der Beispieldaten im laufenden Monat (am 18.: vor 1, 4, 8, 12, 17 Tagen) und der von heute → 6. Im Jahr: so viele Monate, wie Läufe haben. */
   const laeufe = Object.values(d.T.runs).map(r => r.d);
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz();
   await klappe('Cardio „Läufe“', 'laeufe', laeufe.filter(imMonat).length);
   await zeit('training', 'year');
   await klappe('Cardio im Jahr „Monate“', 'cardioMonate', monate(laeufe));
@@ -129,7 +129,7 @@ lauf(async () => {
 
   /* Gym: vier Übungen (Bankdrücken, Kniebeuge, Klimmzüge, Schulterdrücken); Einheiten des laufenden Monats (am 18.: vor 2, 6, 10, 14 Tagen und heute → 5). */
   const einheiten = Object.keys(d.K.log);
-  await page.click('#v-training .subtabs button:nth-child(2)'); await kurz();
+  await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   await klappe('Gym „Übungen“', 'uebungen', 4);
   await klappe('Gym „Einheiten“', 'einheiten', einheiten.filter(imMonat).length);
   await zeit('training', 'year');
@@ -157,7 +157,7 @@ lauf(async () => {
   await bereich(page, 'gewicht'); await bereich(page, 'haushalt'); await kurz();
   P.ok('Budget: nach dem Wechsel in einen anderen Bereich und zurück ist „Fixkosten“ zu', (await stand('fixkosten')).auf === false && (await z('[data-fold][aria-expanded="true"]')) === 0, JSON.stringify(await stand('fixkosten')));
 
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await kurz(); await tipp('uebungen');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz(); await tipp('uebungen');
   const ueb = async () => { const s = await stand('uebungen'); return !!s && s.auf && s.zeilen === 4; };
   await page.click('#v-training .mnav button:first-child'); await kurz();
   P.ok('Gym: „Übungen“ bleibt beim Blättern zum Vormonat offen', await ueb() && (await text(page, '#v-training .mnav b')).indexOf(MON[+monat(1).slice(5) - 1]) === 0);
@@ -166,7 +166,7 @@ lauf(async () => {
   const xAuf = await page.isVisible('#xsheet[open]');
   await page.click('#xs-close'); await kurz();
   P.ok('Gym: … und nach dem Blatt der Übung', xAuf && await ueb());
-  await page.click('#v-training .subtabs button:nth-child(1)'); await kurz(); await page.click('#v-training .subtabs button:nth-child(2)'); await kurz();
+  await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz(); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   P.ok('Gym: … und nach dem Wechsel zu Cardio und zurück (derselbe Bereich)', await ueb());
   await bereich(page, 'heute'); await bereich(page, 'training'); await kurz();
   P.ok('Gym: nach dem Wechsel in einen anderen Bereich und zurück ist „Übungen“ zu', (await stand('uebungen')).auf === false);
@@ -204,7 +204,7 @@ lauf(async () => {
   await sub('verm');
   await blatt('„+ Umbuchung“ steht in der Überschrift „Konten“ und öffnet das Blatt „Umbuchung“', '.sec-a[data-m="newtr"]', '#msheet', '#ms-title', 'Umbuchung', 'Konten');
   await blatt('das Plus bei „Sparziele“ öffnet das Blatt „Sparziel“', '.sec-a[data-m="newgoal"]', '#vsheet', '#vs-title', 'Sparziel', 'Sparziele');
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   await blatt('das Plus bei „Pläne“ öffnet das Blatt „Neuer Plan“', '.sec-a[data-k="plan"]', '#psheet', '#ps-title', 'Neuer Plan', 'Pläne');
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
@@ -220,7 +220,7 @@ lauf(async () => {
     await bereich(p, 'heute'); await tippTest(p, 'Heute', 'Alle 7', b);
     await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await tippTest(p, 'Vermögen', 'Umbuchung, Sparziel anlegen', b);
     await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await tippTest(p, 'Budget', 'Budget', b);
-    await bereich(p, 'training'); await p.click('#v-training .subtabs button:nth-child(2)'); await k(); await tippTest(p, 'Gym', 'Plan anlegen', b);
+    await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Plan anlegen', b);
 
     if (breite === 320) {
       /* Jede Ansicht einmal mit allem aufgeklappt (min = so viele Klappzeilen müssen dort mindestens offen sein, damit die Prüfung nicht ins Leere läuft) */
@@ -236,9 +236,9 @@ lauf(async () => {
       await p.click('#v-haushalt [data-m="mode"][data-v="year"]'); await k(); await passt('Vermögen im Jahr', 1);
       await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await passt('Budget im Jahr', 2);
       await p.click('#v-haushalt [data-m="mode"][data-v="month"]'); await k(); await passt('Budget', 3);
-      await bereich(p, 'training'); await p.click('#v-training .subtabs button:nth-child(1)'); await k(); await passt('Cardio', 1);
+      await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="cardio"]'); await k(); await passt('Cardio', 1);
       await p.click('#v-training [data-t="mode"][data-v="year"]'); await k(); await passt('Cardio im Jahr', 1);
-      await p.click('#v-training .subtabs button:nth-child(2)'); await k(); await passt('Gym im Jahr', 2);
+      await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await passt('Gym im Jahr', 2);
       await p.click('#v-training [data-t="mode"][data-v="month"]'); await k(); await passt('Gym', 2);
     }
     await o.browser.close(); o.fehler.forEach(f => P.ok(f + b, false));
@@ -306,7 +306,7 @@ lauf(async () => {
   await page.click('#v-gewicht [data-info="w-leg"]');
   P.ok('Gewicht: … auch beim Zuklappen eines Monats; ein Tipp auf das „i“ verbirgt sie dann', nachMonat && !(await page.isVisible('#info-w-leg')) && !(await infoAuf('w-leg')));
   await page.click('#v-gewicht [data-info="w-leg"]');
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz();
   /* Cardio „Letzter Lauf“ ist seit v66 eine Klappzeile unter dem Graphen. Zu: Tag, Art, Strecke und Zeit, rechts der Vergleich der Effizienz (v67). Aufgeklappt: Pace, Effizienz, Puls und womit verglichen wird.
      Lauf von heute: 5000 m in 1500 s mit Puls 150 → „5,0 km in 25:00“, 5:00 /km, Effizienz 5000 / (25 × 150) = 1,333. Der Lauf davor ist der von gestern: 5000 m in 1620 s
      mit Puls 152 → 5:24 /km, Effizienz 5000 / (27 × 152) = 1,218. Pace 24 s pro km schneller, Effizienz 1,333 / 1,218 = 1,094 → +9,4 %. */
@@ -322,12 +322,12 @@ lauf(async () => {
   const llAuf = (await text(page, '#v-training .kvs')).replace(/\s+/g, ' ');
   P.ok('Cardio „Letzter Lauf“: aufgeklappt stehen Pace, Effizienz und Puls mit Vergleich, darunter womit verglichen wird', ['Pace', '5:00', '24 s pro km schneller', 'Effizienz', 'Puls', 'Vergleich mit dem Lauf davor (Gestern).'].every(t => llAuf.includes(t)) && (await stand('letzterLauf')).auf, llAuf);
   await tipp('letzterLauf');
-  await page.click('#v-training .subtabs button:nth-child(2)'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
+  await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
   await bleibt('Gym „Übungen“', 'k-imp', 'uebungen');
   /* Der Wechsel des Bereichs stellt den ersten Blick her: Klappzeilen zu, Erklärungen verborgen (die im Gewicht stand noch offen) */
   await bereich(page, 'gewicht'); await kurz();
   P.ok('Gewicht: nach dem Wechsel des Bereichs ist die Erklärung wieder verborgen und „Einträge“ zu', !(await page.isVisible('#info-w-leg')) && (await page.getAttribute('#v-gewicht [data-info="w-leg"]', 'aria-expanded')) === 'false' && !(await stand('eintraege')).auf);
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz();
   /* Läufe: Nur die Veränderung trägt Farbe, „Effizienz 1,33“ davor bleibt in der Farbe der Nebentexte.
      Lauf von heute: 5000 m in 1500 s mit Puls 150 → 5000 / (25 × 150) = 1,333 m pro Herzschlag; gestern 5000 m in 1620 s mit Puls 152 → 5000 / (27 × 152) = 1,218.
      1,333 / 1,218 = 1,094 → +9,4 %, besser, also grün. */
@@ -385,7 +385,7 @@ lauf(async () => {
   /* Gym ohne Plan: Der Satz unter „Pläne“ sitzt wie eine Liste 6 px unter der Überschrift, die Klappzeilen folgen mit 12 px. */
   const ohnePlan = daten(); ohnePlan.K.plans = {};
   ({ browser, page, fehler } = await oeffnen({ daten: ohnePlan }));
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); await kurz();
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   uk = await unterKopf('Pläne');
   P.ok('Gym ohne Plan: der Satz unter „Pläne“ hat 6 px Abstand zur Überschrift und 12 px zu den Klappzeilen', uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12 && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
@@ -448,7 +448,7 @@ lauf(async () => {
     const c = leer(), M = monat(0);
     c.T = { hk: {}, runs: { a: { d: M + '-10', m: 5000, s: 1500, hr: 150, k: 'out' }, b: { d: monat(1) + '-10', m: 5000, s: sek, hr: puls, k: 'out' } } };
     ({ browser, page, fehler } = await oeffnen({ daten: c, breite: 320, uhr: new Date(+M.slice(0, 4), +M.slice(5) - 1, 15, 12) }));
-    await bereich(page, 'training'); await kurz();
+    await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz();
     const kachel = await page.evaluate(() => {
       const v = document.querySelector('#v-training'), f = [...v.querySelectorAll('.fig')].find(e => e.textContent.includes('Effizienz')), d = f.querySelector('b .up, b .down');
       return { text: f.textContent, delta: d ? d.textContent : '', gruen: !!f.querySelector('b .up'), satz: v.textContent.includes('Effizienz im Schnitt'), passt: f.querySelector('b').scrollWidth <= f.clientWidth, seite: document.querySelector('#scroll').scrollWidth <= document.querySelector('#scroll').clientWidth };
@@ -461,7 +461,7 @@ lauf(async () => {
     const c = leer(), M = monat(0);
     c.T = { hk: {}, runs: { a: { d: M + '-10', m: 5000, s: 1620, hr: null, k: 'out' }, b: { d: M + '-12', m: 5000, s: 1500, hr: null, k: 'out' } } };
     ({ browser, page, fehler } = await oeffnen({ daten: c, uhr: new Date(+M.slice(0, 4), +M.slice(5) - 1, 15, 12) }));
-    await bereich(page, 'training'); await kurz();
+    await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz();
     const ohne = (await text(page, '#v-training [data-fold="letzterLauf"]')).replace(/\s+/g, ' ');
     P.ok('Cardio „Letzter Lauf“ ohne Puls: rechts steht der Vergleich der Pace', ohne.includes('24 s schneller') && !ohne.includes('Effizienz'), ohne);
   }
@@ -469,7 +469,7 @@ lauf(async () => {
 
   // --- Cardio: Die Karte mit dem Verlauf gibt es erst, wenn es einen Graphen gibt (v76; vorher stand bei einem einzigen Lauf eine leere Karte mit zwei Knöpfen da) ---
   const lf = (i, hr) => ({ d: tag(i), m: 5000, s: 1500 + i * 60, hr, k: 'out' }), nurLaeufe = runs => ({ S: { routines: [], running: null }, LY: {}, T: { runs } });
-  const karte = async runs => { const o = await oeffnen({ daten: nurLaeufe(runs) }); await bereich(o.page, 'training');
+  const karte = async runs => { const o = await oeffnen({ daten: nurLaeufe(runs) }); await bereich(o.page, 'training'); await o.page.click('#v-training .subtabs [data-v="cardio"]');
     const r = await o.page.evaluate(() => { const k = document.querySelector('#v-training .card.chart'), v = document.querySelector('#v-training'); return { karte: !!k, graph: !!(k && k.querySelector('svg')), knoepfe: k ? k.querySelectorAll('[data-t="metric"]').length : 0, satz: v.innerText.includes('Ab zwei Läufen'), letzter: !!v.querySelector('[data-fold="letzterLauf"]'), laeufe: !!v.querySelector('[data-fold="laeufe"]') }; });
     fehler.push(...o.fehler); await o.browser.close(); return r; };
   const einer = await karte({ a: lf(0, 143) });
@@ -520,7 +520,7 @@ lauf(async () => {
   await bereich(q8, 'heute'); await q8.click('#v-heute .ov[data-teil="work"]'); await w8();
   P.ok('Tipp auf „Arbeit“ öffnet den Planer im Teil Arbeit', (await text(q8, '#r-subs [aria-pressed="true"]')) === 'Arbeit' && (await text(q8, '#n-main .hero')).includes('174,00'));
   // Gym: Satz 1 mit 72,5 × 8 (letztes Mal 70 × 8) → „+2,5“ am Gewicht. Satz 2 mit 60 × 9 (letztes Mal 60 × 7) → „+2“ an den Wiederholungen. Satz 3 gab es letztes Mal nicht → nichts.
-  await bereich(q8, 'training'); await q8.click('#v-training .subtabs button:nth-child(2)'); await w8(); await q8.click('#v-training [data-k="start"]'); await q8.waitForTimeout(300);
+  await bereich(q8, 'training'); await q8.click('#v-training .subtabs [data-v="kraft"]'); await w8(); await q8.click('#v-training [data-k="start"]'); await q8.waitForTimeout(300);
   const satz = async (kg, wdh) => { await zahlWahl(q8, '#l-w', kg); await zahlWahl(q8, '#l-r', wdh); await q8.click('#l-items .chk'); await w8(); };
   await satz('72,5', '8'); await satz('60', '9'); await satz('50', '5');
   const zeilen8 = await q8.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [...z.querySelectorAll('.mehr')].map(m => m.parentElement.textContent.replace(/\s+/g, '')).join('/')));

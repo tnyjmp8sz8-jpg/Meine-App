@@ -28,13 +28,13 @@ lauf(async () => {
   P.ok('Einnahme 50 € gespeichert', txAlle(d).some(t => t.a === 5000 && t.k === 'in' && t.d === heute));
   P.ok('genau zwei neue Buchungen', txAlle(d).length === vorher + 2, 'vorher ' + vorher + ', jetzt ' + txAlle(d).length);
 
-  await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await page.click('#add');
+  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await page.click('#add');
   await page.fill('#t-km', '5,2'); await page.fill('#t-min', '28'); await page.fill('#t-sec', '30'); await page.click('#t-save'); await page.waitForTimeout(150);
   P.ok('Lauf 5,2 km in 28:30 gespeichert', Object.values((await gespeichert(page)).T.runs).some(r => r && r.m === 5200 && r.s === 1710 && r.d === heute));
 
-  await page.click('#v-training .subtabs button:nth-child(2)'); await page.click('#v-training .row:has-text("Beine") .go'); await page.waitForTimeout(250);
+  await page.click('#v-training .subtabs [data-v="kraft"]'); await page.click('#v-training .row:has-text("Beine") .go'); await page.waitForTimeout(250);
   P.ok('Training läuft', !!(await gespeichert(page)).K.live);
-  await page.click('.lt-r .chk'); await page.click('#l-save'); await page.waitForTimeout(200);
+  await page.click('.lt-r .chk'); await page.click('#l-save'); await page.waitForTimeout(200); await page.click('#rs-ok');
   d = await gespeichert(page);
   P.ok('Training gespeichert: ein Satz Kniebeuge, nichts läuft mehr', !d.K.live && d.K.log[heute] && d.K.log[heute].e2 && d.K.log[heute].e2.length === 1, JSON.stringify(d.K.log[heute]));
 
@@ -50,7 +50,7 @@ lauf(async () => {
   await b.page.reload(); await b.page.waitForTimeout(400);   // oeffnen() spielt die Daten nach dem Laden ein: Erst dieser Start liest sie
   const nachStart = (await gespeichert(b.page)).T.runs, da = Object.keys(nachStart).filter(i => nachStart[i]);
   P.ok('Start: Laufband-Läufe sind aus dem Speicher gelöscht, der Lauf draußen bleibt (ohne Felder für Art und Steigung)', da.join() === 'a3' && !('k' in nachStart.a3) && !('inc' in nachStart.a3) && nachStart.a3.m === 5000, JSON.stringify(nachStart));
-  await bereich(b.page, 'training'); await b.page.click('#v-training .subtabs button:nth-child(1)'); await b.page.waitForTimeout(150);
+  await bereich(b.page, 'training'); await b.page.click('#v-training .subtabs [data-v="cardio"]'); await b.page.waitForTimeout(150);
   const seite = await b.page.evaluate(() => document.querySelector('#v-training').innerText.replace(/\s+/g, ' '));
   P.ok('Cardio: ein Lauf, 5,0 km; kein Filter „Outdoor / Laufband / Alle“, kein Wort „Laufband“', seite.includes('1 Lauf') && seite.includes('5,0') && !(await b.page.$('#v-training [data-t="kind"]')) && !seite.includes('Laufband') && !seite.includes('Outdoor'), seite.slice(0, 300));
   await b.page.click('#add');

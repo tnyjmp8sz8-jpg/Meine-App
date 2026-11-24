@@ -1,4 +1,4 @@
-const C = 'takt-v85';
+const C = 'takt-v86';
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(C).then(c => c.addAll(['./', 'index.html', 'manifest.webmanifest', 'icon-180.png', 'icon-192.png', 'icon-512.png'])).then(() => self.skipWaiting()));
 });

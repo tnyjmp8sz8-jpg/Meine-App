@@ -84,7 +84,7 @@ lauf(async () => {
   await soll('Notiz abhaken: nur „leicht“', 'leicht');
 
   // Gym: Plan starten und Satz abhaken
-  await bereich(page, 'training'); await hap();
+  await bereich(page, 'training'); await page.click('#v-training [data-t="sub"][data-v="cardio"]'); await hap();   // Gym ist seit v86 schon gewählt: erst zu Cardio, dann zurück
   await page.click('#v-training [data-t="sub"][data-v="kraft"]');
   await soll('Umschalter „Gym“: „wahl“', 'wahl');
   // Pläne stehen in der Monatsansicht: zurück von „Jahr“ auf „Monat“

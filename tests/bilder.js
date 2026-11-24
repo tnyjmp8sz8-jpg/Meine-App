@@ -30,7 +30,7 @@ lauf(async () => {
       await versuch('budget', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); });
       await versuch('blatt-ausgabe', async () => { await page.click('#v-haushalt [data-m="add"]'); });
       await versuch('blatt-stand', async () => { await page.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await page.click('#add'); });
-      await versuch('gym', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(2)'); });
+      await versuch('gym', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); });
       await versuch('gym-jahr', async () => { await page.click('#v-training [data-t="mode"][data-v="year"]'); });
       await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training [data-fold="uebungen"]'); await page.click('#v-training [data-k="ex"]'); });
       await versuch('training-laeuft', async () => { await page.click('#v-training .row .go'); });
@@ -42,7 +42,7 @@ lauf(async () => {
       // Aufgeklappte Listen: Die Klappzeile steht oben im Bild, darunter ihre Zeilen
       await versuch('heute-sicherung', async () => { await bereich(page, 'heute'); await auf('sicherung'); });
       await versuch('budget-ausgaben', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await auf('ausgaben'); });
-      await versuch('cardio-laeufe', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs button:nth-child(1)'); await auf('laeufe'); });
+      await versuch('cardio-laeufe', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await auf('laeufe'); });
     }
     await browser.close();
     alle.push(...fehler.map(f => vor + f));
