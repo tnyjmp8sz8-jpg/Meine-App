@@ -61,7 +61,7 @@ lauf(async () => {
     const v = document.querySelector('.view:not([hidden])'), b = v.querySelector('[data-fold="' + k + '"]'); if (!b) return null;
     const ul = b.closest('ul'), kasten = ul.nextElementSibling, nach = kasten && kasten.classList.contains('nach') ? kasten.firstElementChild : kasten, auf = b.getAttribute('aria-expanded') === 'true';   // seit v83 liegt der Inhalt unter der Liste in einem Kasten (.nach)
     const drunter = !nach ? 0 : nach.classList.contains('mons') ? nach.querySelectorAll('[data-w="edit"]').length : nach.classList.contains('card') ? nach.querySelectorAll('.cat').length : 0;
-    return { auf, rechts: b.querySelector('.fold').textContent.trim(), zeilen: [...ul.children].slice(1).filter(li => !li.querySelector('.act')).length + drunter,
+    return { auf, rechts: b.querySelector('.fold').textContent.trim(), zeilen: [...ul.children].slice(1).filter(li => !li.querySelector('.act') && !li.classList.contains('grp')).length + drunter,   // Überschriften der Gruppen (Übungen im Gym, v99) sind keine Zeilen
       aktionen: [...ul.querySelectorAll('.act')].map(a => a.textContent.trim()), letzte: ul.lastElementChild.textContent.trim() };
   }, key);
   /* Eine Klappzeile: beim ersten Blick zu, ein Tipp klappt auf (Zahl rechts = Zahl der Zeilen, soll = von Hand gerechnet), ein zweiter klappt zu.

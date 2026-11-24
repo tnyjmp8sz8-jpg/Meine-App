@@ -683,6 +683,9 @@ button.lastx:active{background:var(--fill)}
 .mons{display:flex;flex-direction:column;gap:6px}
 .entries button.mon .l>span{font-weight:600}
 .entries button.mon.alt .l>span{font-weight:500;color:var(--muted)}
+/* Überschrift einer Gruppe in einer Liste (Übungen im Gym nach Muskelgruppe): klein und grau, ohne Linie zur ersten Zeile darunter */
+.entries .grp{padding:11px 14px 3px;font-size:12px;font-weight:600;color:var(--muted)}
+.entries .grp+li{border-top:0}
 .entries button.mon .fold .up,.entries button.mon .fold .down,.entries .xrow b,.fig b .up,.fig b .down{font-weight:700}
 .fold .ink{color:var(--ink)}
 .fig b span{font:inherit;color:inherit}
@@ -847,7 +850,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v98</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v99</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1145,6 +1148,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Name</span>
       <input id="x-name" name="name" type="text" maxlength="60" autocomplete="off">
     </label>
+    <div class="fld" id="x-grp-fld">
+      <span id="lbl-x-grp">Gruppe</span>
+      <div class="chips" id="x-grp" role="group" aria-labelledby="lbl-x-grp"></div>
+    </div>
     <p class="err" id="x-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="x-save">Speichern</button>
     <button type="button" class="ghost danger" id="x-del">Übung löschen</button>
@@ -2587,9 +2594,20 @@ $('#t-del').addEventListener('click', () => {
 });
 
 /* ---------- Training: Kraft ---------- */
+/* Muskelgruppen der Übungen (v99, sein Wunsch: „in Übungen nur die Übungen aktuell aus meinem Plan und unterteilt in Rücken, Brust, Arme, Beine“).
+   Die Gruppe steht an der Übung (K.ex[id].g) und lässt sich im Blatt der Übung wählen; ohne Angabe rät exGruppe() sie aus dem Namen, damit er nichts von Hand einsortieren muss.
+   Reihenfolge der Prüfung: zuerst, was in keine der vier Gruppen gehört (Bauch, Schulter, Nacken; „Beinheben“ ist Bauch), dann Beine, dann Rücken vor Brust („Rudern mit Brustauflage“,
+   „Butterfly Reverse“), dann Arme. Dips zählen zu den Armen: In seinem Plan stehen sie am Tag „Extremitäten“. */
+const GRUPPEN = [['ruecken', 'Rücken'], ['brust', 'Brust'], ['arme', 'Arme'], ['beine', 'Beine']];
+function exGruppe(x) {
+  if (x.g) return x.g;
+  const n = x.n.toLowerCase();
+  return /bauch|crunch|beinheben|neck|nacken|schulter|seitheben/.test(n) ? '' : /bein|knie|waden|ausfallschritt|kreuzheben|abdukt|addukt/.test(n) ? 'beine' : /rudern|latzug|klimmz|pull|reverse/.test(n) ? 'ruecken'
+    : /curl|trizeps|bizeps|stirnpress|dips/.test(n) ? 'arme' : /bank|brust|butterfly|liegest/.test(n) ? 'brust' : '';
+}
 function normK(o) {
   const out = { ex: {}, log: {} };
-  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? Object.assign({ n: String(x.n).slice(0, 60) }, x.z >= 1 && x.z <= 30 ? { z: Math.round(x.z) } : {}, x.bw ? { bw: 1 } : {}) : null; }
+  if (o && o.ex && typeof o.ex === 'object') for (const id in o.ex) { const x = o.ex[id]; out.ex[id] = x && typeof x === 'object' && x.n ? Object.assign({ n: String(x.n).slice(0, 60) }, x.z >= 1 && x.z <= 30 ? { z: Math.round(x.z) } : {}, x.bw ? { bw: 1 } : {}, GRUPPEN.some(q => q[0] === x.g) ? { g: x.g } : {}) : null; }
   if (o && o.log && typeof o.log === 'object') for (const d in o.log) {
     const day = o.log[d];
     if (!isKey(d) || !day || typeof day !== 'object') continue;
@@ -2797,16 +2815,19 @@ const kUnitRow = d => {
     (rec ? '<span class="r">' + was + '<small class="up">' + rec + (rec === 1 ? ' Rekord' : ' Rekorde') + '</small></span>' : was) + '</button></li>';
 };
 /* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
-/* Übungen in einer Klappzeile: „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war (v90, sein Wunsch: „nur Übungen der letzten 4 Wochen zeigen“).
-   Alles andere (auch Übungen ohne Einheit) liegt seit v97 in derselben Liste hinter ihrer letzten Zeile „Ältere Übungen“, die sich wie ein Monat in der Liste des Gewichts aufklappt:
-   Bis v96 war das eine dritte Klappzeile unter „Einheiten“ (sein Bild vom 24.11.: „finde saubere Lösung dafür“). Gemessen an der jüngsten Einheit und nicht an heute: Nach einer Pause
-   bliebe die Liste sonst leer. Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). */
+/* Übungen in einer Klappzeile. Seit v99 (sein Wunsch) zeigt „Übungen“ nur, was in einem seiner Pläne steht, in der Reihenfolge der Pläne und unterteilt nach Muskelgruppe
+   (GRUPPEN; Übungen ohne Gruppe am Ende unter „Sonstige“, ohne jede Gruppe gibt es keine Überschriften). Alles andere liegt in derselben Liste hinter ihrer letzten Zeile
+   „Weitere Übungen“, die sich wie ein Monat in der Liste des Gewichts aufklappt (v97; bis v96 eine dritte Klappzeile unter „Einheiten“).
+   Ohne Plan gilt die Regel aus v90: „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war (gemessen an ihr und nicht an heute: Nach einer Pause bliebe die Liste
+   sonst leer), der Rest heißt „Ältere Übungen“. Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). */
 function kExFold() {
   const pre = tMode === 'year' ? String(tYear) : tYM, when = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
   if (!rows.length) return '';
-  const ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '', jung = ab ? rows.filter(o => o.last && o.last.d > ab) : rows, alt = rows.filter(o => jung.indexOf(o) < 0);
+  const platz = {}; kPlans().forEach(pl => pl.items.forEach(it => { if (!(it.id in platz)) platz[it.id] = Object.keys(platz).length; }));
+  const plan = Object.keys(platz).length > 0, ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '';
+  const jung = plan ? rows.filter(o => o.x.id in platz).sort((a, b) => platz[a.x.id] - platz[b.x.id]) : ab ? rows.filter(o => o.last && o.last.d > ab) : rows, alt = rows.filter(o => jung.indexOf(o) < 0);
   const zeile = o => {
     const d = exDelta(o.hist, pre);
     return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
@@ -2814,8 +2835,9 @@ function kExFold() {
   };
   if (!fo.uebungen) delete fo.uebungenAlt;   // mit der Liste geht auch ihr älterer Teil wieder zu
   const altAuf = !!fo.uebungenAlt;
-  return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? jung.map(zeile).join('') + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
-    '<span class="l"><span>Ältere Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
+  const nach = () => { const mit = jung.some(o => exGruppe(K.ex[o.x.id])); return GRUPPEN.concat([['', 'Sonstige']]).map(g => { const l = jung.filter(o => exGruppe(K.ex[o.x.id]) === g[0]); return l.length ? (mit ? '<li class="grp">' + g[1] + '</li>' : '') + l.map(zeile).join('') : ''; }).join(''); };
+  return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
+    '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
 }
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
@@ -3007,7 +3029,7 @@ function sugHTML(used, q, attr) {
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
-let kS = null, xId = null, xArm = false, xAll = false, xMode = 'month', xYM = '', xYear = 0;
+let kS = null, xId = null, xArm = false, xAll = false, xG = '', xMode = 'month', xYM = '', xYear = 0;
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
 const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
@@ -3179,7 +3201,8 @@ function openX(id, view) {
   xYear = !view && tYear && has(String(tYear)) ? tYear : +lastYM.slice(0, 4);
   $('#xs-title').textContent = ex.n;
   $('#x-name').value = ex.n; $('#x-err').hidden = true; $('#x-del').textContent = 'Übung löschen';
-  $('#x-name-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
+  $('#x-name-fld').hidden = $('#x-grp-fld').hidden = $('#x-save').hidden = $('#x-del').hidden = !!view;
+  xG = exGruppe(ex); paintXG();
   paintX();
   openDlg(xdlg);
   xdlg.scrollTop = 0;
@@ -3193,6 +3216,9 @@ $('#x-recap').addEventListener('click', e => {
   else { xMode = t.dataset.xr; if (xMode === 'year') xYear = +xYM.slice(0, 4); }
   paintX();
 });
+/* Gruppe der Übung: vorgewählt ist die gespeicherte, sonst die aus dem Namen geratene; gespeichert wird sie mit „Speichern“ */
+function paintXG() { $('#x-grp').innerHTML = GRUPPEN.map(g => '<button type="button" class="chip" data-g="' + g[0] + '" aria-pressed="' + (g[0] === xG) + '">' + g[1] + '</button>').join(''); }
+$('#x-grp').addEventListener('click', e => { const b = e.target.closest('[data-g]'); if (b) { xG = b.dataset.g; paintXG(); } });
 function closeX() { closeDlg(xdlg); }
 $('#xs-close').addEventListener('click', closeX);
 xdlg.addEventListener('click', e => { if (e.target === xdlg) closeX(); });
@@ -3200,7 +3226,7 @@ $('#xform').addEventListener('submit', e => {
   e.preventDefault();
   const name = $('#x-name').value.trim();
   if (!name) { const x = $('#x-err'); x.textContent = 'Gib der Übung einen Namen.'; x.hidden = false; return; }
-  const p = { ex: {} }; p.ex[xId] = { n: name.slice(0, 60) }; kdoc.patch(p);
+  const p = { ex: {} }; p.ex[xId] = Object.assign({ n: name.slice(0, 60) }, xG ? { g: xG } : {}); kdoc.patch(p);
   closeX(); renderTraining();
 });
 $('#x-del').addEventListener('click', () => {

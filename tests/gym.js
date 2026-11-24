@@ -132,6 +132,7 @@ lauf(async () => {
   // Körpergewicht: am 10. des Vormonats 90,0 kg, heute 91,2 kg (mehr als 6 Tage Abstand, der Schnitt von heute ist also 91,2) → im laufenden Monat +1,2 kg
   const g = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K3, W: { entries: { [vm + '-10']: 90, [heute]: 91.2 } } } }), q = g.page;
   await bereich(q, 'training'); await q.click('#v-training .subtabs [data-v="kraft"]'); await q.click('#v-training [data-fold="uebungen"]');
+  await q.click('#v-training [data-fold="uebungenAlt"]');   // seit v99 stehen oben nur die Übungen aus den Plänen (Voll, Stufen, Steht), die übrigen hinter „Weitere Übungen“
   const punkte = await q.$$eval('#v-training [data-k="ex"]', l => l.map(b => b.querySelector('.l > span').textContent + ':' + ((b.querySelector('.td') || {}).className || 'ohne')).sort().join(' '));
   P.ok('Punkte in der Übungsliste: fällt rot, steht gelb (trotz einer schlechten Einheit), steigt grün, unter vier Einheiten keiner', punkte === 'Fällt:td down Neu:ohne Steht:td flat Steigt:td up Stufen:ohne Voll:ohne', punkte);
   const farbe = await q.evaluate(() => { const f = c => getComputedStyle(document.querySelector('#v-training .td' + c)).backgroundColor; return [f('.up'), f('.flat'), f('.down')]; });
@@ -203,14 +204,14 @@ lauf(async () => {
   const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
   P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:3' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
   /* Übungen (v90, v97): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → liegt in derselben Liste hinter der letzten Zeile
-     „Ältere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
+     „Weitere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“; seit v99 steht oben, was in einem Plan steht: „Rudern“, und „Uralt“ steht in keinem). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
      Mit der Liste geht auch ihr älterer Teil wieder zu. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
   const kl = async () => [await text(s, '#v-training .folds [data-fold]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
   const zuerst = await kl(); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   const offen = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
   P.ok('zu: nur zwei Klappzeilen, „Übungen“ und „Einheiten“', zuerst === 'Übungen 1 | Einheiten 3 # ', zuerst);
-  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Ältere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Ältere Übungen 1 | Einheiten 3 # Rudern', offen);
-  P.ok('„Ältere Übungen“ offen: die ältere Übung steht darunter', (await kl()) === 'Übungen 1 | Ältere Übungen 1 | Einheiten 3 # Rudern | Uralt', await kl());
+  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Weitere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Weitere Übungen 1 | Einheiten 3 # Rudern', offen);
+  P.ok('„Weitere Übungen“ offen: die Übung ohne Plan steht darunter', (await kl()) === 'Übungen 1 | Weitere Übungen 1 | Einheiten 3 # Rudern | Uralt', await kl());
   await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   P.ok('„Übungen“ zu und wieder auf: der ältere Teil ist wieder zu', (await kl()) === offen, await kl());
   await s.click('#v-training [data-fold="uebungen"]');
@@ -267,7 +268,7 @@ lauf(async () => {
   const K5 = { ex: { d: { n: 'Dips', bw: 1 }, k: { n: 'Klimmzüge', bw: 1 } }, log: { [tag(10)]: { d: [[10, 11]], k: [[10, 9]] }, [heute]: { d: [[15, 11]], k: [[0, 12]] } },
     plans: { p: { n: 'Körper', items: [{ id: 'd', sets: 1 }], o: 1 } }, meta: { [heute]: { dur: 0, plan: null, n: 'Pull A' } }, live: null };
   const b5 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K5, W: { entries: { [tag(30)]: 90 } } } }), t = b5.page;
-  await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]');
+  await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]'); await t.click('#v-training [data-fold="uebungenAlt"]');   // Klimmzüge stehen in keinem Plan: seit v99 hinter „Weitere Übungen“
   P.enthaelt('Einheit ohne Plan zeigt ihren Namen', await text(t, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Pull A', '1 Rekord']);
   const blattVon = async name => { await t.click('#v-training [data-k="ex"]:has-text("' + name + '")'); await t.waitForTimeout(150); const x = [await text(t, '#x-stats .fig'), await text(t, '#x-recap .lastx:first-child .note'), await text(t, '#x-recap .lastx:first-child .lt-r')].join(' # '); await t.click('#xs-close'); return x; };
   const dipsK = await blattVon('Dips'), klimm = await blattVon('Klimmzüge');
@@ -359,5 +360,24 @@ lauf(async () => {
   await f.goto(f.url().split('#')[0].split('?')[0] + '?neu=notiz'); await f.waitForTimeout(300);
   P.ok('mit Schnelleingabe in der Adresse bleibt das Vollbild zu, das Training läuft weiter', !(await f.evaluate(() => document.querySelector('#lsheet').open)) && !!(await gespeichert(f)).K.live);
   await o10.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler));
+  /* Übungen nach Muskelgruppe (v99, sein Wunsch: „nur die Übungen aktuell aus meinem Plan und unterteilt in Rücken, Brust, Arme, Beine“).
+     Plan 1: Bankdrücken, Latzug, Seitheben, Beinpresse. Plan 2: Curls, Rudern mit Brustauflage, Dips, Latzug (steht nur einmal). „Kniebeuge“ steht in keinem Plan.
+     Platz in den Plänen: Bankdrücken 0, Latzug 1, Seitheben 2, Beinpresse 3, Curls 4, Rudern 5, Dips 6. Gruppen aus dem Namen: Latzug und Rudern → Rücken („Brustauflage“ macht
+     daraus keine Brust), Bankdrücken → Brust, Curls → Arme, Beinpresse → Beine, Seitheben → keine der vier (Sonstige). Dips wären Arme, tragen aber gespeichert „brust“: Das Gespeicherte gilt.
+     Also: Rücken: Latzug, Rudern · Brust: Bankdrücken, Dips · Arme: Curls · Beine: Beinpresse · Sonstige: Seitheben; rechts steht 7, dahinter „Weitere Übungen 1“.
+     Curls im Blatt auf „Brust“ gestellt: Brust wird Bankdrücken (0), Curls (4), Dips (6), die Überschrift „Arme“ entfällt. Eine unbekannte Gruppe in den Daten („quatsch“) wird beim Laden verworfen. */
+  const o11 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: { log: { [tag(3)]: { a: [[60, 10]] } }, meta: {}, live: null,
+    ex: { a: { n: 'Latzug' }, b: { n: 'Bankdrücken' }, c: { n: 'Curls' }, d: { n: 'Beinpresse' }, e: { n: 'Rudern mit Brustauflage' }, f: { n: 'Seitheben' }, g: { n: 'Dips', g: 'brust' }, h: { n: 'Kniebeuge', g: 'quatsch' } },
+    plans: { p: { n: 'Eins', o: 1, items: [{ id: 'b', sets: 3 }, { id: 'a', sets: 3 }, { id: 'f', sets: 3 }, { id: 'd', sets: 3 }] }, q: { n: 'Zwei', o: 2, items: [{ id: 'c', sets: 3 }, { id: 'e', sets: 3 }, { id: 'g', sets: 3 }, { id: 'a', sets: 3 }] } } } } }), gp = o11.page;
+  await bereich(gp, 'training'); await gp.click('#v-training [data-fold="uebungen"]'); await gp.waitForTimeout(100);
+  const gListe = () => gp.evaluate(() => [...document.querySelector('#v-training [data-fold="uebungen"]').closest('ul').children].slice(1).map(li => li.classList.contains('grp') ? '[' + li.textContent + ']' : li.querySelector('[data-fold]') ? li.textContent.trim() : li.querySelector('.l > span').textContent).join(' '));
+  P.ok('Übungen: nur die aus den Plänen, in der Reihenfolge der Pläne, unterteilt nach Gruppe; der Rest hinter „Weitere Übungen“', (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Dips [Arme] Curls [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1' && (await text(gp, '#v-training [data-fold="uebungen"]')) === 'Übungen 7', await gListe());
+  await gp.click('#v-training [data-k="ex"]:has-text("Curls")'); await gp.waitForTimeout(150);
+  P.ok('Blatt der Übung: Gruppe aus dem Namen vorgewählt (Arme)', (await text(gp, '#x-grp [aria-pressed="true"]')) === 'Arme' && (await text(gp, '#x-grp .chip')) === 'Rücken | Brust | Arme | Beine');
+  await gp.click('#x-grp [data-g="brust"]'); await gp.click('#x-save'); await gp.waitForTimeout(150);
+  const gex = (await gespeichert(gp)).K.ex;
+  P.ok('Gruppe gewählt und gespeichert: Curls stehen unter Brust, „Arme“ entfällt', gex.c.g === 'brust' && (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Curls Dips [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1', await gListe());
+  P.ok('gespeicherte Gruppe bleibt beim Laden, eine unbekannte wird verworfen', gex.g.g === 'brust' && !gex.h.g, JSON.stringify(gex));
+  await o11.browser.close();
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler));
 });
