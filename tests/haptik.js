@@ -149,12 +149,14 @@ lauf(async () => {
   await page.mouse.move(5, 5); await page.mouse.up(); await page.waitForTimeout(250);
   P.ok('Notiz gedrückt: Zeile dunkler; Kreis gedrückt: Zeile bleibt', nText !== nRuhig && nKreis === nRuhig, nRuhig + ' · Text ' + nText + ' · Kreis ' + nKreis);
   // --- Bewegung im Kleinen (v83) ---
-  // Notiz abhaken: sofort gelöscht (2 − 1 = 1 Notiz im Speicher) und „Rückgängig“ da; die Zeile zeigt noch den Haken und ist 0,5 s später weg
+  // Notiz abhaken: sofort gelöscht (2 − 1 = 1 Notiz im Speicher) und „Rückgängig“ da; die Zeile zeigt noch den gefüllten Kreis (seit v84 grau und rund, kein blauer Haken: Der Kreis selbst bleibt leer, der Punkt darin ist so breit wie hoch) und ist 0,5 s später weg
   const notizen = async () => Object.values((await gespeichert(page)).N.notes).filter(Boolean).length;
   await page.click('#v-routinen .nrow .tk'); await page.waitForTimeout(60);
   const ab = await page.evaluate(() => { const z = document.querySelectorAll('#v-routinen .nrow'), w = document.querySelector('#v-routinen .nrow.weg'), i = w && w.querySelector('.tk i');
-    return { zeilen: z.length, weg: !!w, haken: !!i && getComputedStyle(i, '::after').content !== 'none', hinweis: !document.querySelector('#toast').hidden }; });
-  P.ok('abgehakt, gleich danach: gelöscht, Zeile steht noch mit Haken da, „Rückgängig“ ist zu sehen', (await notizen()) === 1 && ab.zeilen === 2 && ab.weg && ab.haken && ab.hinweis, JSON.stringify(ab) + ' · ' + await notizen());
+    const c = i && getComputedStyle(i, '::after'), blau = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+    const probe = document.createElement('i'); probe.style.color = blau; document.body.appendChild(probe); const blauRGB = getComputedStyle(probe).color; probe.remove();
+    return { zeilen: z.length, weg: !!w, punkt: !!c && c.content !== 'none' && c.width === c.height && c.borderLeftWidth === '0px', ohneBlau: !!c && c.backgroundColor !== blauRGB && getComputedStyle(i).backgroundColor !== blauRGB && getComputedStyle(i).borderColor !== blauRGB, hinweis: !document.querySelector('#toast').hidden }; });
+  P.ok('abgehakt, gleich danach: gelöscht, Zeile steht noch da, im Kreis ein grauer Punkt (kein Haken, kein Blau), „Rückgängig“ ist zu sehen', (await notizen()) === 1 && ab.zeilen === 2 && ab.weg && ab.punkt && ab.ohneBlau && ab.hinweis, JSON.stringify(ab) + ' · ' + await notizen());
   await page.waitForTimeout(500);
   P.ok('0,5 s später: nur noch eine Zeile', await page.evaluate(() => document.querySelectorAll('#v-routinen .nrow').length === 1 && !document.querySelector('.nrow.weg')));
   // Klappzeile: auf = sofort gezeichnet, die Liste wächst über ihre Höhe; zu = erst schrumpfen, dann zeichnen
