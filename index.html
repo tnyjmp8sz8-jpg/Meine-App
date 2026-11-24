@@ -176,7 +176,11 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);ba
 .fld{display:flex;flex-direction:column;gap:6px}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0}
-input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+/* Eingabefelder (v95, mein Vorschlag, sein „überall nachziehen“): fast Kapseln und ohne blauen Rahmen. Beim Tippen zeigt wie in iOS die blaue Einfügemarke, wo man ist;
+   das Feld bekommt nur eine feine graue Kante. Markierter Text ist zart blau hinterlegt statt kräftig. */
+input:focus-visible,.n-text:focus-visible{outline:none;box-shadow:inset 0 0 0 1.5px var(--mid)}
+input,textarea{caret-color:var(--accent)}
+::selection{background:color-mix(in srgb,var(--accent) 34%,transparent)}
 /* iPhone: Datumsfelder sind sonst breiter als ihr Platz, dann ragt das Feld rechts hinaus und das Blatt lässt sich seitlich wischen */
 input[type="date"],input[type="month"],input[type="time"]{-webkit-appearance:none;appearance:none;display:block;max-width:100%;min-height:46px}
 input::-webkit-date-and-time-value{text-align:left;margin:0;min-width:0}
@@ -467,8 +471,7 @@ body{font-size:14px}
 
 .nrow .l{min-width:0}
 .ntxt{white-space:pre-line;overflow-wrap:anywhere;display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:4;overflow:hidden}
-.n-text{font:inherit;font-size:16px;line-height:1.45;color:var(--ink);background:var(--surface);border:0;border-radius:16px;padding:12px 14px;width:100%;min-height:72px;resize:none;overflow:hidden}
-.n-text:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.n-text{font:inherit;font-size:16px;line-height:1.45;color:var(--ink);background:var(--surface);border:0;border-radius:20px;padding:12px 14px;width:100%;min-height:72px;resize:none;overflow:hidden}
 .n-text::placeholder{color:var(--muted)}
 .cats{gap:9px}
 .cat,button.cat{font-size:13.5px}
@@ -631,7 +634,6 @@ button.lastx:active{background:var(--fill)}
 .vrow{display:grid;grid-template-columns:minmax(0,1fr) 116px auto 36px;gap:8px;align-items:center}
 .vrow input[type="text"]{text-align:right;padding:9px 12px;font-family:var(--round);font-weight:600}
 .vrow input.vname{text-align:left;padding:9px 0;background:none;border-radius:8px;font-family:var(--body);font-weight:500}
-.vrow input.vname:focus-visible{outline-offset:2px}
 .vrow em{font-style:normal;color:var(--muted);font-size:13px}
 .vrows .err{margin:-2px 0 4px}
 .rows .goal .streak b{font-size:19px}
@@ -665,10 +667,11 @@ button.lastx:active{background:var(--fill)}
 
 /* Weicher: rundere Formen, sanfte Übergänge */
 .row,.card,.entries,.empty{border-radius:20px}
-.primary,.ghost,.fig,.stepper button{border-radius:14px}
+.primary,.ghost,.fig{border-radius:14px}
+.stepper button{border-radius:50%}
 .seg2{border-radius:999px;padding:3px}
 .seg2 button{border-radius:999px}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:16px}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-radius:22px}
 .kx,.prow,.tog{border-radius:20px}
 .lx-tab{border-radius:999px;padding:6px 12px}
 .lt-r .pv,.lt-r.act .n,.lt-r .chk{border-radius:12px}
@@ -818,7 +821,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v94</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v95</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
