@@ -531,7 +531,7 @@ u.w{background:var(--c-weight)}
 .cs-day{flex:none;max-height:42%;overflow-y:auto;border-top:1px solid var(--line);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:8px}
 .cs-day h3{margin:0;font-size:15px;font-weight:700}
 .cs-day .note{margin:0}
-.cs-day .entries .l small{white-space:pre-line;line-height:1.45;margin-top:2px}
+.cs-day .entries .l small{line-height:1.45;margin-top:2px}
 
 /* Laufendes Training: eine Übung im Fokus, im Vollbild (v96, sein Wunsch nach einem Bild aus Alpha Progression: „ganzer Bildschirm … will Fokus darauf“).
    Kein schwebendes Blatt und kein Glas. Der Grund ist --hoch (v98: dunkel #1C1C1E statt Schwarz, sein Hinweis auf Alpha Progression: Die Seite ist schwarz, was sich darüber öffnet, „edel grau“),
@@ -850,7 +850,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v99</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät.<span class="ver">v100</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -2808,10 +2808,11 @@ function monthsHTML(items, key, info) {
     return '<ul class="entries"><li><button type="button" class="two mon" data-fold="' + k + '" aria-expanded="' + on + '"><span class="l"><span>' + MONTHS[+g.ym.slice(5) - 1] + ' ' + g.ym.slice(0, 4) + '</span><small>' + x.s + '</small></span><b class="dim fold">' + x.r + CHEV_D + '</b></button></li>' + (on ? g.h.join('') : '') + '</ul>';
   }).join('') + '</div>';
 }
+/* Zeile einer Einheit: Tag, darunter nur der Name des Plans (v100, sein „da steht viel zu viel Text, einfach nur Name des Plans dahin“; bis v99 standen dort alle Übungen). Die Übungen zeigt ein Tipp. */
 const kUnitRow = d => {
   const day = kDay(d), m = (K.meta || {})[d], pn = m ? planName(m.plan) || m.n || '' : '', rec = day.filter(x => recOf(x.sets, kHist(x.id).filter(q => q.d < d), exBw(x.id, d))).length;
   const was = '<b>' + (m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen')) + '</b>';
-  return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + (pn ? ' · ' + esc(pn) : '') + '</span><small>' + day.map(x => esc(K.ex[x.id].n)).join(', ') + '</small></span>' +
+  return '<li><button type="button" class="two" data-k="day" data-d="' + d + '" aria-label="Einheit vom ' + dRow(d) + ' ändern"><span class="l"><span>' + dRow(d) + '</span>' + (pn ? '<small>' + esc(pn) + '</small>' : '') + '</span>' +
     (rec ? '<span class="r">' + was + '<small class="up">' + rec + (rec === 1 ? ' Rekord' : ' Rekorde') + '</small></span>' : was) + '</button></li>';
 };
 /* Übungen: eingeklappt, ein Tipp klappt die Liste auf. Rechts steht die Verbesserung im gewählten Monat oder Jahr. */
@@ -2961,13 +2962,13 @@ function calDayHTML() {
   const btn = (attrs, title, sub, right) => '<li><button type="button" class="two" ' + attrs + '><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (right ? '<b>' + right + '</b>' : '') + '</button></li>';
   const row = (title, sub, right, cls) => '<li><div class="xrow"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (right ? '<b class="' + (cls || '') + '">' + right + '</b>' : '') + '</div></li>';
   const add = (v, label) => '<button type="button" class="linkbtn" data-c="add" data-v="' + v + '">+ ' + label + '</button>';
-  const gymOf = () => { const day = kDay(k), m = (K.meta || {})[k]; return day.length ? { day, name: (m && planName(m.plan)) || 'Training', dur: m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen') } : null; };
+  const gymOf = () => { const day = kDay(k), m = (K.meta || {})[k]; return day.length ? { day, name: (m && (planName(m.plan) || m.n)) || 'Training', dur: m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen') } : null; };
   const runsOf = () => tRuns().filter(r => r.d === k);
   const txOf = () => txIn(k.slice(0, 7)).filter(x => x.t.d === k);
   if (cMode === 'gym') {
     const s = gymOf();
     if (!s) return h + note(K.live && K.live.date === k ? 'Dein Training läuft gerade.' : 'Kein Training an diesem Tag.');
-    return h + '<ul class="entries">' + btn('data-c="day" aria-label="Einheit ansehen und ändern"', esc(s.name), s.day.map(x => esc(K.ex[x.id].n) + ' · ' + setsText(x.sets)).join('\n'), s.dur) + '</ul>';
+    return h + '<ul class="entries">' + btn('data-c="day" aria-label="Einheit ansehen und ändern"', esc(s.name), '', s.dur) + '</ul>';
   }
   if (cMode === 'cardio') {
     const rs = runsOf();

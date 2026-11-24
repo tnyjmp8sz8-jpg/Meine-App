@@ -26,6 +26,9 @@ lauf(async () => {
   P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training [data-k="ex"]'), ['Rudern', '+10,0 %']);
   await page.click('#v-training [data-fold="einheiten"]');
   P.ok('Einheiten klappen auf: eine in diesem Monat', (await page.$$('#v-training [data-k="day"]')).length === 1);
+  // Zeile einer Einheit (v100, sein „viel zu viel Text, einfach nur Name des Plans dahin“): Tag, darunter nur der Plan, rechts die Dauer; die Übungen stehen nicht mehr da
+  const zeileH = await page.$eval('#v-training [data-k="day"]', b => [(b.querySelector('.l small') || {}).textContent || '', b.textContent.includes('Rudern')].join(' | '));
+  P.ok('Zeile einer Einheit: unter dem Tag nur der Name des Plans, keine Übungen', zeileH === 'Torso | false', zeileH);
 
   await nachOben(page); await page.click('#v-training .mnav button:first-child');
   P.enthaelt('Vormonat: 5 Einheiten, +14,3 % (erster Monat: gegenüber der ersten Einheit)', await gym(), ['5 Einheiten', '+14,3 %']);
