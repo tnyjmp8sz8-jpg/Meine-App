@@ -166,8 +166,9 @@ dialog:focus,dialog:focus-visible{outline:none}
 .chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:500;min-height:40px}
 .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-line);font-weight:600}
 
-/* Hauptknopf (v102): kein flaches Blau mehr, sondern ein leichter Verlauf mit Licht von oben und einem weichen Schein in seiner Farbe darunter */
-.primary{border:0;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,#fff),var(--accent) 52%,var(--accent-deep));color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 0 0 .5px rgba(255,255,255,.14),0 10px 24px -12px var(--accent)}
+/* Hauptknopf (v102): kein flaches Blau, sondern ein leichter Verlauf mit Licht von oben und einer feinen dunkleren Kante unten.
+   Seit v104 ohne Schein nach außen (sein Bild vom 25.11.: „mag die Buttons vom Look, aber nicht, dass es nach unten so abstrahlt“): alle Schatten liegen innen. */
+.primary{border:0;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,#fff),var(--accent) 52%,var(--accent-deep));color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 0 0 .5px rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.16)}
 .ghost{border:1px solid var(--line);border-radius:14px;background:var(--fill);font-weight:500;font-size:15px;padding:12px 16px;min-height:46px;text-align:left}
 .h-btn{display:block;width:100%;margin-top:14px;text-align:center}
 .ghost.danger{color:var(--danger);text-align:center}
@@ -663,7 +664,7 @@ u.w{background:var(--c-weight)}
 .lt-r .pv{height:40px;min-width:0;padding:0 4px;border:0;font-size:16px;font-weight:700;color:var(--ink);background:var(--fill);border-radius:12px}
 .lt-r .rm{font-size:13px;font-weight:500;color:var(--mid)}
 .lt-r .rm.rek{font-weight:700;color:var(--good)}
-.lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:linear-gradient(180deg,color-mix(in srgb,var(--good) 82%,#fff),var(--good) 60%);color:#04241A;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 8px 20px -12px var(--good)}
+.lt-r .chk{width:46px;height:40px;border-radius:12px;border:0;background:linear-gradient(180deg,color-mix(in srgb,var(--good) 82%,#fff),var(--good) 60%);color:#04241A;display:grid;place-items:center;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),inset 0 -1px 0 rgba(0,0,0,.14)}
 .lt-r .chk svg{width:16px;height:16px}
 .lt-r.act.done .chk{background:transparent;box-shadow:inset 0 0 0 1.5px var(--good);color:var(--good)}
 .lt-r .st{display:grid;place-items:center;color:var(--good)}
@@ -903,7 +904,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v103</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v104</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
