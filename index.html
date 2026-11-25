@@ -84,12 +84,12 @@
        (1) eine feine Linie rundum wie damals (0,68 px = zwei Bildpunkte am iPhone; knapp über zwei Dritteln, weil WebKit in 1/64 px rechnet und abrundet), 5,5 % Weiß;
        (2) darüber das weiche Licht aus v123, oben stärker als unten: je Seite eine schmale Schicht (Weichzeichnung 3,5 px) und eine breite (11 px). Ihr Loch ist weiter aufgeweitet (−6 und −14 px),
            als die Weichzeichnung reicht: So kommt vom Licht an den Seiten nichts an (dort steht nur die Linie) und es läuft in der Rundung von selbst aus.
-       Gemessen in dreifacher Schärfe von der Kante nach innen: oben 65, 63, 49, 46, 43, 40, 36, 35, 32, 30 … 17; unten 49, 48, 34, 32, 31, 29 … ; Seite 30, 30, 17.
+       Gemessen in dreifacher Schärfe von der Kante nach innen (seit v125 das Licht eine Stufe dunkler, mal 0,78; die Linie blieb): oben 58, 55, 42, 39, 36, 35, 32, 30 … 17; unten 45, 44, 30, 28, 27, 26 … ; Seite 30, 30, 17.
        Zwei Stufen: --rand-a (voll) tragen Leiste, Blätter, Hinweis, runde Knöpfe oben und Karten, auch in Blättern (wie in der Fassung, die ihm gefiel); --rand-s (leise, rund 60 %) tragen Bedienteile
        (Chips, Umschalter, Nebenknöpfe, Eingabefelder, Linsen). --rand ist die Stufe, die Karten nehmen.
        Nachmessen: Chromium (tests/lib.js, schaerfe 3) und WebKit (tests/webkit.py, derselbe Kern wie Safari). */
-    --rand-a:inset 0 0 0 .68px rgba(255,255,255,.055),inset 0 6.8px 3.5px -6px rgba(255,255,255,.17),inset 0 16.5px 11px -14px rgba(255,255,255,.1),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.09),inset 0 -16.5px 11px -14px rgba(255,255,255,.06);
-    --rand-s:inset 0 0 0 .68px rgba(255,255,255,.045),inset 0 6.8px 3.5px -6px rgba(255,255,255,.1),inset 0 16.5px 11px -14px rgba(255,255,255,.06),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.05),inset 0 -16.5px 11px -14px rgba(255,255,255,.035);
+    --rand-a:inset 0 0 0 .68px rgba(255,255,255,.055),inset 0 6.8px 3.5px -6px rgba(255,255,255,.13),inset 0 16.5px 11px -14px rgba(255,255,255,.08),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.07),inset 0 -16.5px 11px -14px rgba(255,255,255,.045);
+    --rand-s:inset 0 0 0 .68px rgba(255,255,255,.045),inset 0 6.8px 3.5px -6px rgba(255,255,255,.08),inset 0 16.5px 11px -14px rgba(255,255,255,.045),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.04),inset 0 -16.5px 11px -14px rgba(255,255,255,.027);
     --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
@@ -130,6 +130,8 @@ dialog:focus,dialog:focus-visible{outline:none}
 .add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:var(--rand)}
 .add svg{width:20px;height:20px}
 .add[hidden]{display:none}
+#gear{margin-left:auto}
+#add{margin-left:10px}
 
 .hero{display:flex;flex-direction:column;gap:6px}
 .date{margin:0;color:var(--muted);font-size:15px;font-weight:500}
@@ -263,7 +265,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
 .tab[aria-current="page"]{color:var(--ink);font-weight:600}
 /* Der gewählte Bereich (v102): eine helle Linse aus Glas, die beim Wechsel zum neuen Bereich gleitet und ganz leicht nachfedert (--i = Platz des Bereichs, setzt show()).
    Sie liegt hinter den Knöpfen (z-index -1 im eigenen Stapel der Leiste). Bis v101 eine dunklere Kapsel, die sprang. */
-.tabs-in::before{content:"";position:absolute;z-index:-1;top:5px;bottom:5px;left:5px;width:calc((100% - 18px) / 5);border-radius:999px;background:var(--glass-sel);box-shadow:var(--rand-s);transform:translateX(calc(var(--i,0) * (100% + 2px)));transition:transform .36s cubic-bezier(.3,1.3,.45,1)}
+.tabs-in::before{content:"";position:absolute;z-index:-1;top:5px;bottom:5px;left:5px;width:calc((100% - 8px - var(--n,5) * 2px) / var(--n,5));border-radius:999px;background:var(--glass-sel);box-shadow:var(--rand-s);transform:translateX(calc(var(--i,0) * (100% + 2px)));transition:transform .36s cubic-bezier(.3,1.3,.45,1)}
 /* Aktiver Bereich: Flächen (.f) gefüllt, Details (.k, .d) in der Farbe der Leiste ausgespart, reine Linien (.b) kräftiger */
 .tab .d{display:none}
 .tab[aria-current="page"] .f{fill:currentColor}
@@ -317,7 +319,11 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .goal.is-idle .glyph{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--at)}
 
 /* Finanzen (im Code „haushalt“) */
-.tabs-in{grid-template-columns:repeat(5,1fr)}
+.tabs-in{grid-template-columns:repeat(var(--n,5),1fr);max-width:min(452px,calc(var(--n,5) * 96px + 10px))}   /* --n = Zahl der eingeschalteten Bereiche (leiste()); mit weniger Bereichen wird die Kapsel schmaler, statt die Knöpfe zu strecken */
+.tab[hidden]{display:none}
+body.solo .tabs{display:none}
+body.solo .app{padding-bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .chips[hidden]{display:none}
 .seg2{display:grid;grid-template-columns:1fr 1fr;gap:4px;padding:4px;border-radius:14px;background:var(--surface);border:1px solid var(--line)}
 .seg2.three{grid-template-columns:repeat(3,1fr)}
@@ -685,6 +691,7 @@ u.w{background:var(--c-weight)}
 /* Einstellungen (v106): hinter dem Zahnrad auf Heute. Sicherung und Version stehen nur hier, nicht mehr auf jeder Seite. */
 .es{display:flex;flex-direction:column;gap:14px;padding:10px 16px 22px}
 .es-body{display:flex;flex-direction:column;gap:10px}
+#es-rest{display:contents}   /* der Teil, der sich nach den Bereichen richtet: zählt für die Abstände nicht als eigener Kasten */
 .es-body .sec{margin:4px 2px -2px}
 .es .foot{margin-top:4px}
 .es-start{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
@@ -696,6 +703,7 @@ u.w{background:var(--c-weight)}
 .sch .sw::after{content:"";position:absolute;top:2px;left:2px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.28);transition:transform .22s cubic-bezier(.2,.8,.2,1)}
 .sch[aria-checked="true"] .sw{background:var(--good)}
 .sch[aria-checked="true"] .sw::after{transform:translateX(18px)}
+.sch:disabled .sw{opacity:.45}   /* der letzte eingeschaltete Bereich: gesperrt */
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
 #zsheet[open]{display:flex;flex-direction:column}
@@ -1325,7 +1333,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v124</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v125</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1448,14 +1456,28 @@ let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // K
 let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
 /* Einstellungen der App (v110, sein „übernimm alle Einstellungen-Änderungen“ zu meiner Liste): start = Bereich, mit dem die App öffnet (fehlt = Heute),
    aus = Zeilen der Übersicht auf Heute, die er nicht sehen will ({ gewicht: 1, … }). Was nur das Training betrifft, steht in K (emp, res). */
-let E = { aus: {} };
+let E = { aus: {}, weg: {} };
 const OV = [['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', 'Training'], ['arbeit', 'Arbeit'], ['uni', 'Uni']];
+/* Bereiche zum Abschalten (v125, sein Wunsch: „selbst wählen, welche Bereiche unten überhaupt angezeigt werden … theoretisch zu einer Gym-App (auch ohne Cardio) alleine machen“).
+   weg = abgeschaltete Bereiche ({ gewicht: 1, … }); Gym (kraft) und Cardio zählen einzeln, „Training“ steht in der Leiste, solange eines von beiden an ist.
+   Ein abgeschalteter Bereich fehlt in der Leiste, in der Wahl des Starts und auf Heute (Zeile, Schnell-Knopf, Woche, Monat, Kalender); seine Daten bleiben und werden weiter gesichert.
+   Einer bleibt immer an: Sind alle abgewählt (nur aus einer fremden Datei möglich), gilt die Angabe nicht. */
+const BER = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['kraft', 'Gym'], ['cardio', 'Cardio']];
 function normE(o) {
-  const out = { aus: {} };
-  if (o && typeof o === 'object') { if (o.start !== 'heute' && VIEWS.indexOf(o.start) >= 0) out.start = o.start; OV.forEach(q => { if (o.aus && o.aus[q[0]]) out.aus[q[0]] = 1; }); }
+  const out = { aus: {}, weg: {} };
+  if (o && typeof o === 'object') {
+    if (o.start !== 'heute' && VIEWS.indexOf(o.start) >= 0) out.start = o.start;
+    OV.forEach(q => { if (o.aus && o.aus[q[0]]) out.aus[q[0]] = 1; });
+    BER.forEach(q => { if (o.weg && o.weg[q[0]]) out.weg[q[0]] = 1; });
+    if (Object.keys(out.weg).length >= BER.length) out.weg = {};
+  }
   return out;
 }
 function setE(p) { E = normE(Object.assign({}, E, p)); saveLocal(); }
+const istAn = k => !E.weg[k];                                                  // Bereich (oder Gym, Cardio) ist eingeschaltet
+const anV = v => v === 'training' ? istAn('kraft') || istAn('cardio') : istAn(v);        // dasselbe für einen Bereich der Leiste
+const erster = () => VIEWS.find(anV);                                           // der erste eingeschaltete Bereich: Dort steht das Zahnrad, wenn Heute aus ist
+const tName = () => !istAn('cardio') ? 'Gym' : !istAn('kraft') ? 'Cardio' : 'Training';   // Name des Trainings in Leiste, Titel und Einstellungen
 
 const LS = 'takt.v1';
 function loadLocal() {
@@ -2673,7 +2695,8 @@ function renderTraining() {
   const el = $('#v-training'), curYM = todayKey().slice(0, 7);
   if (!isYM(tYM)) tYM = curYM;
   if (!tYear) tYear = +curYM.slice(0, 4);
-  const subs = '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['kraft', 'Gym'], ['cardio', 'Cardio']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
+  if (!istAn(tSub)) tSub = tSub === 'kraft' ? 'cardio' : 'kraft';
+  const subs = !istAn('kraft') || !istAn('cardio') ? '' : '<div class="subtabs" role="group" aria-label="Trainingsart">' + [['kraft', 'Gym'], ['cardio', 'Cardio']].map(s => '<button type="button" data-t="sub" data-v="' + s[0] + '" aria-pressed="' + (tSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>';
   if (tSub === 'kraft') { el.innerHTML = '<div class="card-head">' + subs + (kLeer() ? '' : segT()) + '</div>' + kraftHTML(curYM); return; }
   const all = tRuns();
   if (!all.length) {
@@ -3116,15 +3139,16 @@ let cSel = '', cMode = 'all';
 /* Punkte pro Tag als Buchstabenfolge: g = Training, b = eingetragen, w = gewogen (nur in der Übersicht auf Heute, in der Farbe des Bereichs Gewicht) */
 function calMarks(mode) {
   const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
-  if (mode === 'gym' || mode === 'all') kDates().forEach(d => { gym[d] = 1; });
-  if (mode === 'cardio' || mode === 'all') for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
+  const alle = mode === 'all';   // auf Heute: nur eingeschaltete Bereiche
+  if (mode === 'gym' || alle && istAn('kraft')) kDates().forEach(d => { gym[d] = 1; });
+  if (mode === 'cardio' || alle && istAn('cardio')) for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out') tx[t.d] = 1; }
   return k => {
     if (mode === 'gym') return gym[k] ? 'g' : liveD === k ? 'b' : '';
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
-    return (typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '');
+    return (istAn('gewicht') && typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '');
   };
 }
 const dotsHTML = m => '<i>' + m.split('').map(c => '<u class="' + c + '"></u>').join('') + '</i>';
@@ -3205,10 +3229,10 @@ function calDayHTML() {
   }
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
-  const s = gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
-  runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
-  if (typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
-  const out = txOf().filter(x => x.t.k === 'out');
+  const s = istAn('kraft') && gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
+  if (istAn('cardio')) runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
+  if (istAn('gewicht') && typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
+  const out = istAn('haushalt') ? txOf().filter(x => x.t.k === 'out') : [];
   if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
   return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.'));
 }
@@ -3667,7 +3691,7 @@ function paintRest(src, now) {
 }
 function liveTick() {
   const L = K.live, tab = $('#tab-t');
-  if (!L) { if (lvTick) { clearInterval(lvTick); lvTick = null; } if (tab) tab.textContent = 'Training'; return; }
+  if (!L) { if (lvTick) { clearInterval(lvTick); lvTick = null; } if (tab) tab.textContent = tName(); return; }
   const now = Date.now(), tot = fmt((now - L.start) / 1000), src = ldlg.open && Lw ? Lw : L;
   const a = $('#lv-total');
   if (a) a.textContent = tot;
@@ -4080,7 +4104,7 @@ function notesHTML() {
 }
 /* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
 function homeNotesHTML() {
-  const list = notesNew(); if (!list.length) return '';
+  const list = istAn('routinen') ? notesNew() : []; if (!list.length) return '';
   return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>';
 }
 /* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
@@ -4224,9 +4248,9 @@ const kvRow = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label
 const monOf = d => addDays(d, -wd(d));
 const PLUS = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M1.5 7h11M7 1.5v11"/></svg>';
 function weekCtx() {
-  const runs = tRuns(); let firstTx = null;
-  for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && (!firstTx || t.d < firstTx)) firstTx = t.d; }
-  return { wl: withTrend(wList()), runs, kd: kDates(), firstRun: runs.length ? runs[0].d : null, firstTx };
+  const runs = istAn('cardio') ? tRuns() : []; let firstTx = null;
+  if (istAn('haushalt')) for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out' && (!firstTx || t.d < firstTx)) firstTx = t.d; }
+  return { wl: istAn('gewicht') ? withTrend(wList()) : [], runs, kd: istAn('kraft') ? kDates() : [], firstRun: runs.length ? runs[0].d : null, firstTx };
 }
 /* Kennzahlen einer Woche (Montag bis Sonntag), mk = Datum des Montags */
 function weekStats(mk, c) {
@@ -4313,10 +4337,10 @@ function monthRowsHTML(ym, c) {
     const df = p.wEnd != null ? w.wEnd - p.wEnd : null;
     rows += kvRow('Gewicht', kg(w.wEnd), 'kg im Schnitt', df != null ? signed(df) + ' kg' : '', df != null && W.goal != null && Math.abs(df) >= 0.05 ? (Math.sign(W.goal - p.wEnd) === Math.sign(df) ? 'up' : 'down') : '');
   }
-  const ve = wealthDelta(ym);
+  const ve = istAn('haushalt') && wealthDelta(ym);
   if (ve) rows += kvRow('Vermögen', minus(ve.end) + eur0(ve.end), '€', ve.d != null ? eurS(ve.d) : '', ve.d != null ? dir(Math.round(ve.d / 100)) : '');
   /* Sparquote erst, wenn der Monat vorbei ist: Vorher fehlen Einnahmen oder Ausgaben, und die Zahl sagt nichts */
-  if (!isCur && hasMoney()) {
+  if (!isCur && istAn('haushalt') && hasMoney()) {
     const s = mSum(ym), ps = mSum(prevYM);
     if (s.inc > 0) {
       const q = Math.round(s.bal / s.inc * 100), df = ps.inc > 0 ? q - Math.round(ps.bal / ps.inc * 100) : null;
@@ -4433,7 +4457,10 @@ function homeWerte() {
   }
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
   let tv = '', ts = '';
-  if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
+  /* Ist nur Gym oder nur Cardio eingeschaltet, zeigt die Zeile nur diesen Teil */
+  if (!istAn('cardio')) { if (kdAll.length) { tv = kn + (kn === 1 ? ' Einheit' : ' Einheiten'); ts = 'im ' + mName; } }
+  else if (!istAn('kraft')) { if (runsAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' im ' + mName; } }
+  else if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
   return { wv, ws, mv, ms, mc, tv, ts };
 }
 function renderHome() {
@@ -4442,8 +4469,8 @@ function renderHome() {
   if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
   let h = seg + weekStripHTML('all');
-  h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe']]
-    .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
+  const quick = [['notiz', 'Notiz', 'routinen'], ['gewicht', 'Gewicht', 'gewicht'], ['ausgabe', 'Ausgabe', 'haushalt']].filter(q => istAn(q[2]));   // nur für eingeschaltete Bereiche
+  if (quick.length) h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + quick.map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
   if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
@@ -4455,8 +4482,8 @@ function renderHome() {
   /* Arbeit: Verdienst im laufenden Monat. Uni: Punkte gesamt und wie viele der Termine geschafft sind. */
   const wk = workList(), wc = wk.filter(x => x.d.slice(0, 7) === curYM), un = uniList(), pkt = un.reduce((n, x) => n + x.p, 0), wTage = new Set(wc.map(x => x.d)).size;
   const av = wk.length ? eur(wc.reduce((n, x) => n + workPay(x), 0)) : '', as = wc.length ? stdT(wc.reduce((n, x) => n + workMin(x), 0)) + ' an ' + wTage + (wTage === 1 ? ' Tag' : ' Tagen') + ' im ' + mName : 'Im ' + mName + ' noch nichts eingetragen';
-  const zeig = k => !E.aus[k];   // in den Einstellungen abgewählte Zeilen fehlen
-  const ovs = (wv && zeig('gewicht') ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv && zeig('haushalt') ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv && zeig('training') ? ovCard('training', 'Training', tv, ts) : '') +
+  const zeig = k => !E.aus[k] && anV(k === 'arbeit' || k === 'uni' ? 'routinen' : k);   // in den Einstellungen abgewählte Zeilen fehlen, ebenso die abgeschalteter Bereiche
+  const ovs = (wv && zeig('gewicht') ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv && zeig('haushalt') ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv && zeig('training') ? ovCard('training', tName(), tv, ts) : '') +
     (av && zeig('arbeit') ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '') + (un.length && zeig('uni') ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '');
   if (ovs) h += '<div class="ovs">' + ovs + '</div>';
   el.innerHTML = h;
@@ -4471,22 +4498,41 @@ function paintE() {
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
     (au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '') +
-    secHTML('Start') + '<div class="card es-start"><p class="note">Die App öffnet mit</p><div class="chips" role="group" aria-label="Start-Bereich">' +
-      [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', 'Training']].map(q => '<button type="button" class="chip" data-h="start" data-v="' + q[0] + '" aria-pressed="' + ((E.start || 'heute') === q[0]) + '">' + q[1] + '</button>').join('') + '</div></div>' +
-    secHTML('Auf Heute zeigen') + '<ul class="entries">' + OV.map(q => '<li>' + schalter('ov', q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' +
-    secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
+    secHTML('Bereiche' + INFO('ber')) + '<ul class="entries" id="es-ber">' + BER.map(q => '<li>' + schalter('ber', q[1], istAn(q[0]), q[0]) + '</li>').join('') + '</ul>' +
+    '<p class="note" id="info-ber" hidden>Was aus ist, verschwindet aus der Leiste unten und von Heute. Die Daten bleiben gespeichert und sind wieder da, sobald du den Bereich einschaltest. Ist Heute aus, steht das Zahnrad im ersten Bereich.</p>' +
+    '<div id="es-rest">' + einstRestHTML() + '</div>';
+  berEinzig();
+}
+/* Der letzte eingeschaltete Bereich lässt sich nicht abschalten: Sein Schalter ist gesperrt, bis ein zweiter an ist. */
+function berEinzig() { const b = [...document.querySelectorAll('#es-ber .sch')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
+/* Was sich nach den Bereichen richtet, wird nach jedem Schalter dort neu gezeichnet: Start (nur eingeschaltete Bereiche, ohne Wahl bei einem einzigen),
+   „Auf Heute zeigen“ (nur mit Heute und nur Zeilen eingeschalteter Bereiche), „Training“ (nur mit Gym). */
+function einstRestHTML() {
+  const vs = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', tName()]].filter(q => anV(q[0])), st = anV(E.start || 'heute') ? E.start || 'heute' : erster();
+  const ov = istAn('heute') ? OV.filter(q => anV(q[0] === 'arbeit' || q[0] === 'uni' ? 'routinen' : q[0])) : [];
+  return (vs.length < 2 ? '' : secHTML('Start') + '<div class="card es-start"><p class="note">Die App öffnet mit</p><div class="chips" role="group" aria-label="Start-Bereich">' +
+      vs.map(q => '<button type="button" class="chip" data-h="start" data-v="' + q[0] + '" aria-pressed="' + (st === q[0]) + '">' + q[1] + '</button>').join('') + '</div></div>') +
+    (ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', q[0] === 'training' ? tName() : q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' : '') +
+    (!istAn('kraft') ? '' : secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
       '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
-    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
+    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>');
 }
 const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
 /* Schalter und Wahl in den Einstellungen. Der Schalter wird an Ort und Stelle umgelegt (kein neues Zeichnen: So gleitet er).
    emp: Empfehlung im Training; läuft gerade ein Training, verschwinden Zeile und Bereich sofort, vorbelegt wird ab der nächsten Übung anders. res: die Frage nach der Reserve.
-   ov: eine Zeile der Übersicht auf Heute. start: der Bereich, mit dem die App öffnet. */
+   ov: eine Zeile der Übersicht auf Heute. start: der Bereich, mit dem die App öffnet.
+   ber: ein Bereich an oder aus; Leiste und Ansichten richten sich sofort danach, und ist der offene Bereich jetzt aus, steht dahinter der erste eingeschaltete. */
 function einstAct(t) {
   const a = t.dataset.h, v = t.dataset.v, an = t.getAttribute('aria-checked') !== 'true';
   if (a === 'emp') { kdoc.patch({ emp: an ? null : 0 }); $('#es-res').hidden = !an; }
   else if (a === 'res') kdoc.patch({ res: an ? null : 0 });
+  else if (a === 'ber') {
+    const weg = Object.assign({}, E.weg); if (an) delete weg[v]; else weg[v] = 1;
+    if (Object.keys(weg).length >= BER.length) return;
+    setE({ weg }); t.setAttribute('aria-checked', an); berEinzig(); $('#es-rest').innerHTML = einstRestHTML(); bereiche();
+    return;
+  }
   else if (a === 'ov') { const aus = Object.assign({}, E.aus); if (an) delete aus[v]; else aus[v] = 1; setE({ aus }); renderHome(); }
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else return bkAct(a);
@@ -4576,7 +4622,7 @@ function importData(d) {
   const ex = Date.parse(d.exported);
   try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
   healBal();
-  saveLocal(); render();
+  saveLocal(); bereiche();
 }
 /* Übernahme aus Alpha Progression (v88): „Sicherung einlesen“ nimmt auch dessen Export „Workouts“ (CSV) und macht daraus Einheiten, Übungen und Pläne.
    Warum in der App und nicht als fertige Datei: Die Datei aus dem Chat kam bei ihm nicht an (24.11.), die CSV hat er selbst auf dem iPhone.
@@ -4670,10 +4716,10 @@ function titelKlein() { const k = $('#scroll').scrollTop > 24; if (k === topEl.c
 $('#scroll').addEventListener('scroll', titelKlein, { passive: true });
 function paintTop() {
   const add = $('#add');
-  $('#mark').textContent = TITEL[view] || 'Track';
+  $('#mark').textContent = view === 'training' ? tName() : TITEL[view] || 'Track';
   if (topEl.classList.contains('klein')) titelMitte();
   add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
-  add.hidden = view === 'heute'; $('#gear').hidden = view !== 'heute';   // auf Heute steht statt des Plus das Zahnrad (v106)
+  add.hidden = view === 'heute'; $('#gear').hidden = view !== (istAn('heute') ? 'heute' : erster());   // auf Heute steht statt des Plus das Zahnrad (v106); ist Heute aus, steht es im ersten Bereich links neben dem Plus
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-info]'), p = b && document.getElementById('info-' + b.dataset.info); if (!p) return;
@@ -4687,11 +4733,23 @@ function foldsShut() { for (const k in fo) delete fo[k]; }
 /* Frisch geöffnet: Für 0,7 s wachsen die Balken der Ansicht auf ihren Wert (CSS: .view.neu). Danach ist die Klasse weg, damit späteres Neuzeichnen nichts noch einmal wachsen lässt. */
 let neuT = 0;
 function frisch(el) { clearTimeout(neuT); document.querySelectorAll('.view.neu').forEach(v => v.classList.remove('neu')); void el.offsetWidth; el.classList.add('neu'); neuT = setTimeout(() => el.classList.remove('neu'), 700); }
+/* Leiste unten nach den eingeschalteten Bereichen (v125): abgeschaltete fehlen, --n ist ihre Zahl (Breite der Kapsel und der Linse).
+   Mit einem einzigen Bereich gibt es keine Leiste (body.solo): Eine Leiste mit einem Knopf führt nirgends hin. */
+function leiste() {
+  const tabs = [...document.querySelectorAll('.tab')];
+  tabs.forEach(b => { b.hidden = !anV(b.dataset.view); });
+  const n = tabs.filter(b => !b.hidden).length;
+  $('.tabs-in').style.setProperty('--n', n);
+  document.body.classList.toggle('solo', n < 2);
+  if (!K.live) $('#tab-t').textContent = tName();
+}
+/* Nach einer Änderung an den Bereichen: Leiste richten, alles neu zeichnen, und steht man in einem abgeschalteten Bereich, zum ersten eingeschalteten wechseln. */
+function bereiche() { leiste(); render(); if (anV(view)) show(view); else show(erster(), true); }
 function show(v, user) {
   const was = view;
-  view = VIEWS.indexOf(v) >= 0 ? v : 'heute';
+  view = VIEWS.indexOf(v) >= 0 && anV(v) ? v : erster();
   document.body.dataset.v = view;   // Kennfarbe des Bereichs für das Licht hinter der Seite
-  $('.tabs-in').style.setProperty('--i', [...document.querySelectorAll('.tab')].findIndex(b => b.dataset.view === view));   // die Linse in der Leiste gleitet dorthin
+  $('.tabs-in').style.setProperty('--i', [...document.querySelectorAll('.tab:not([hidden])')].findIndex(b => b.dataset.view === view));   // die Linse in der Leiste gleitet dorthin
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
@@ -5217,6 +5275,7 @@ loadLocal();
 if (tBand) saveLocal();   // Läufe vom Laufband wurden beim Laden verworfen: gleich speichern, damit sie auch im Speicher gelöscht sind
 healBal();
 cleanCats();
+leiste();
 show(location.hash.slice(1) || E.start);   // ohne Zusatz in der Adresse: der gewählte Start-Bereich, sonst Heute
 render();
 /* Kurzbefehl: Die Adresse mit ?neu=ausgabe (oder notiz, gewicht) öffnet die App gleich mit diesem Blatt.

@@ -609,8 +609,8 @@ lauf(async () => {
   await einstellungen(ei);
   const es16 = await ei.evaluate(() => ({ titel: [...document.querySelectorAll('#es-body h2.sec')].map(h => h.textContent).join(' | '), ov: [...document.querySelectorAll('#es-body [data-h="ov"]')].map(b => b.textContent + ':' + b.getAttribute('aria-checked')).join(' | '),
     start: [...document.querySelectorAll('#es-body [data-h="start"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '), res: !document.querySelector('#es-res').hidden }));
-  P.ok('Einstellungen: Sicherung, Start, Auf Heute zeigen, Training; alle fünf Zeilen an, Start ist Heute, „Nach der Reserve fragen“ ist da',
-    es16.titel === 'Sicherung | Start | Auf Heute zeigen | Training' && es16.ov === 'Gewicht:true | Finanzen:true | Training:true | Arbeit:true | Uni:true' && es16.start === 'Heute* Planer Gewicht Finanzen Training' && es16.res, JSON.stringify(es16));
+  P.ok('Einstellungen: Sicherung, Bereiche, Start, Auf Heute zeigen, Training; alle fünf Zeilen an, Start ist Heute, „Nach der Reserve fragen“ ist da',
+    es16.titel === 'Sicherung | Bereiche | Start | Auf Heute zeigen | Training' && es16.ov === 'Gewicht:true | Finanzen:true | Training:true | Arbeit:true | Uni:true' && es16.start === 'Heute* Planer Gewicht Finanzen Training' && es16.res, JSON.stringify(es16));
   await ei.click('#esheet [data-h="ov"][data-v="gewicht"]');
   P.ok('Gewicht abgewählt: Schalter aus, gespeichert (E.aus.gewicht), die Zeile fehlt auf Heute', (await sw('[data-h="ov"][data-v="gewicht"]')) === 'false' && (await gespeichert(ei)).E.aus.gewicht === 1 && await ei.evaluate(() => !(document.querySelector('#v-heute .ovs') || { textContent: '' }).textContent.includes('Gewicht')));
   await ei.click('#esheet [data-h="ov"][data-v="gewicht"]');
