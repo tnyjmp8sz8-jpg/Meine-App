@@ -1080,6 +1080,26 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </form>
 </dialog>
 
+<dialog tabindex="-1" id="asheet" aria-labelledby="as-title">
+  <form id="aform" novalidate>
+    <div class="sh-head">
+      <h2 id="as-title">Abrechnung</h2>
+      <button type="button" class="x" id="as-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="card last" id="a-soll" style="padding-top:2px"></div>
+    <label class="fld" for="a-got">
+      <span>Auf dem Konto angekommen in €</span>
+      <input id="a-got" type="text" inputmode="decimal" maxlength="10" autocomplete="off" placeholder="0,00">
+    </label>
+    <p class="note" id="a-calc" hidden></p>
+    <p class="err" id="a-err" role="alert" hidden></p>
+    <button class="primary" type="submit" id="a-save">Speichern</button>
+    <button type="button" class="ghost danger" id="a-del" hidden>Eintrag löschen</button>
+  </form>
+</dialog>
+
 <dialog tabindex="-1" id="usheet" aria-labelledby="us-title">
   <form id="uform" novalidate>
     <div class="sh-head">
@@ -1338,7 +1358,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v128</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v129</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1469,7 +1489,7 @@ let mMode = 'month', mYM = '', mYear = 0, mNow = '';   // mNow: der laufende Mon
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
 let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
-let N = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } };   // Planer: Notizen, Arbeit, Uni; Aufbau siehe normN()
+let N = { folders: {}, tasks: {}, notes: {}, work: { e: {}, got: {} }, uni: { e: {} } };   // Planer: Notizen, Arbeit, Uni; Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
 /* Einstellungen der App (v110, sein „übernimm alle Einstellungen-Änderungen“ zu meiner Liste): start = Bereich, mit dem die App öffnet (fehlt = Heute),
@@ -4038,7 +4058,7 @@ $('#p-del').addEventListener('click', () => {
          work, uni: siehe unten }
    Notizen sind für die schnelle Aufnahme: nur Text, jede mit einem Kreis davor, Abhaken löscht sie. */
 function normN(o) {
-  const out = { folders: {}, tasks: {}, notes: {}, work: { e: {} }, uni: { e: {} } }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+  const out = { folders: {}, tasks: {}, notes: {}, work: { e: {}, got: {} }, uni: { e: {} } }, str = (v, n) => String(v == null ? '' : v).slice(0, n), num = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
   const fo = o && o.folders, ta = o && o.tasks, no = o && o.notes;
   if (fo && typeof fo === 'object') for (const id in fo) out.folders[id] = fo[id] && typeof fo[id] === 'object' && fo[id].n ? { n: str(fo[id].n, 24) } : null;
   if (ta && typeof ta === 'object') for (const id in ta) {
@@ -4059,6 +4079,9 @@ function normN(o) {
   const wo = o && o.work, un = o && o.uni, min = v => typeof v === 'number' && isFinite(v) && v >= 0 && v < 1440 ? Math.round(v) : -1;
   if (wo && typeof wo === 'object') {
     if (okCents(wo.rate)) out.work.rate = Math.round(wo.rate);
+    /* Abrechnung (v129): rv = sein Anteil an der Rentenversicherung in Hundertstel Prozent (930 = 9,3 %; fehlt = 9,3 %), got = je Monat, was auf dem Konto ankam (Cent, 0 erlaubt) */
+    if (typeof wo.rv === 'number' && wo.rv >= 0 && wo.rv <= 10000) out.work.rv = Math.round(wo.rv);
+    if (wo.got && typeof wo.got === 'object') for (const m in wo.got) { const g = wo.got[m]; out.work.got[m] = isYM(m) && typeof g === 'number' && isFinite(g) && g >= 0 && g <= 1e9 ? Math.round(g) : null; }
     if (wo.e && typeof wo.e === 'object') for (const id in wo.e) {
       const x = wo.e[id];
       out.work.e[id] = x && typeof x === 'object' && isKey(x.d) && min(x.a) >= 0 && min(x.b) >= 0 && okCents(x.r) ? { d: x.d, a: min(x.a), b: min(x.b), p: Math.min(1439, Math.round(num(x.p))), r: Math.round(x.r) } : null;
@@ -4075,7 +4098,7 @@ const ndoc = patchDoc(() => N, v => { N = normN(v); });
 /* Fächer der Zahnmedizin, in denen der Nutzer Punkte sammelt */
 const FACH = [['kons', 'Kons'], ['paro', 'Paro'], ['proth', 'Prothetik']];
 const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
-let rSub = 'note', nQuery = '';   // gewählter Teil des Planers, Suchtext der Notizen
+let rSub = 'note', nQuery = '', arbMode = 'zeit', arbJahr = 0;   // gewählter Teil des Planers, Suchtext der Notizen, Ansicht (zeit, jahr) und Jahr im Teil Arbeit
 const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
 /* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
 const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
@@ -4102,18 +4125,53 @@ function noteListHTML() {
    Arbeit: Arbeitszeiten mit Verdienst, je Monat eine Klappzeile. Uni: behandelte Termine mit Fach und Punkten, je Fach eine Klappzeile. */
 const workList = () => Object.keys(N.work.e).filter(id => N.work.e[id]).map(id => Object.assign({ id }, N.work.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : y.a - x.a);
 const uniList = () => Object.keys(N.uni.e).filter(id => N.uni.e[id]).map(id => Object.assign({ id }, N.uni.e[id])).sort((x, y) => x.d < y.d ? 1 : x.d > y.d ? -1 : x.id < y.id ? 1 : -1);
-/* Bezahlte Minuten: Ende minus Beginn (über Mitternacht plus ein Tag) minus Pause. Verdienst in Cent, je Eintrag gerundet. */
+/* Bezahlte Minuten: Ende minus Beginn (über Mitternacht plus ein Tag) minus Pause. Verdienst in Cent, je Eintrag gerundet.
+   Summen (Monat, Jahr) rechnet workSum aus den Minuten und rundet erst am Ende (v129): 14 Std zu 25 € sind 350,00 €, je Tag gerundet wären es 350,01 €. */
 const workMin = x => Math.max(0, (x.b - x.a + 1440) % 1440 - x.p);
 const workPay = x => Math.round(workMin(x) * x.r / 60);
+const workSum = l => Math.round(l.reduce((s, x) => s + workMin(x) * x.r / 60, 0));
+/* Abrechnung (v129, sein Wort: „Gesamtverdienst pro Jahr … minus Rentenversicherung, was effektiv auf dem Konto landen sollte, und ich trage ein, was gelandet ist, du berechnest dann Bilanz“):
+   Soll = Verdienst des Monats minus sein Anteil an der Rentenversicherung (rvSatz, Vorgabe 9,3 %, je Monat auf Cent gerundet); Bilanz = angekommen minus Soll. Steuern rechnet die App nicht. */
+const rvSatz = () => N.work.rv == null ? 930 : N.work.rv;
+const rvAb = c => Math.round(c * rvSatz() / 10000);
+const rvT = () => kgn(rvSatz() / 100) + ' %';
+const eurV = c => (c > 0 ? '+' : c < 0 ? '−' : '') + eur(c);
+const workMon = m => workList().filter(x => x.d.slice(0, 7) === m);
 const stdT = m => (m / 60).toLocaleString('de-DE', { maximumFractionDigits: 2 }) + ' Std';
 const uhrT = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
 const pktT = p => (p / 100).toLocaleString('de-DE', { maximumFractionDigits: 2 });
+const wMins = l => l.reduce((s, x) => s + workMin(x), 0);
+const wTage = l => { const n = new Set(l.map(x => x.d)).size; return n + (n === 1 ? ' Tag' : ' Tage'); };
+/* Jahr im Teil „Arbeit“ (v129): Verdienst des Jahres, darunter Soll aufs Konto, Erhalten und Bilanz (die zwei erst, wenn etwas eingetragen ist; die Bilanz zählt nur Monate mit Eintrag),
+   dann je Monat eine Zeile (Soll, rechts was ankam und der Unterschied; ein Tipp öffnet das Blatt „Abrechnung“) und der Satz der Rentenversicherung (Tipp: Zahl wählen). */
+function workJahrHTML(list) {
+  const curY = +todayKey().slice(0, 4);
+  if (!arbJahr || arbJahr > curY) arbJahr = Math.min(curY, +list[0].d.slice(0, 4));
+  const l = list.filter(x => +x.d.slice(0, 4) === arbJahr), by = {};
+  l.forEach(x => { const m = x.d.slice(0, 7); (by[m] = by[m] || []).push(x); });
+  const ms = Object.keys(by).sort().reverse(), brutto = m => workSum(by[m]), soll = m => brutto(m) - rvAb(brutto(m)), got = m => N.work.got[m], da = ms.filter(m => got(m) != null);
+  const sB = ms.reduce((s, m) => s + brutto(m), 0), sS = ms.reduce((s, m) => s + soll(m), 0), sG = da.reduce((s, m) => s + got(m), 0), bil = da.reduce((s, m) => s + got(m) - soll(m), 0), z = c => eur(c).replace(' €', '');
+  let h = navHTML(String(arbJahr), arbJahr < curY, 'Ein Jahr') + '<section class="hero w-hero"><p class="date">Verdienst ' + arbJahr + '</p><h1><span class="num">' + z(sB) + '</span><span class="unit">€</span></h1><p class="sub">' +
+    (l.length ? stdT(wMins(l)) + ' an ' + wTage(l).replace('Tage', 'Tagen') : 'In diesem Jahr nichts eingetragen') + '</p></section>';
+  if (!ms.length) return h;
+  h += '<div class="card last" style="padding-top:2px">' + kvRow('Soll aufs Konto', z(sS), '€', 'nach ' + rvT() + ' Rentenversicherung') +
+    (da.length ? kvRow('Erhalten', z(sG), '€', da.length + ' von ' + ms.length + (ms.length === 1 ? ' Monat' : ' Monaten')) +
+      kvRow('Bilanz', (bil > 0 ? '+' : bil < 0 ? '−' : '') + z(bil), '€', bil === 0 ? 'passt genau' : bil < 0 ? 'zu wenig angekommen' : 'mehr als erwartet', bil < 0 ? 'down' : bil > 0 ? 'up' : '') : '') + '</div>';
+  h += secHTML('Abrechnung' + INFO('rv')) + '<p class="note" id="info-rv" hidden>Vom Verdienst geht dein Anteil an der Rentenversicherung ab, der Rest sollte auf dem Konto ankommen. Üblich sind 9,3 %, im Minijob 3,6 %; bei wenig Verdienst kann es weniger sein. Steuern rechnet die App nicht. Weicht die Bilanz jeden Monat gleich ab, passe den Satz unten an deine Abrechnung an.</p>' +
+    '<ul class="entries">' + ms.map(m => { const d = got(m) != null ? got(m) - soll(m) : 0, name = MONTHS[+m.slice(5) - 1];
+      return '<li><button type="button" class="two" data-n="abr" data-id="' + m + '" aria-label="Abrechnung ' + name + '"><span class="l"><span>' + name + '</span><small>Soll ' + eur(soll(m)) + '</small></span>' +
+        (got(m) != null ? '<span class="r"><b>' + eur(got(m)) + '</b><small' + (d < 0 ? ' class="down"' : d > 0 ? ' class="up"' : '') + '>' + (d === 0 ? 'passt' : eurV(d)) + '</small></span>' : '<b class="dim">offen</b>') + '</button></li>'; }).join('') + '</ul>' +
+    '<ul class="entries"><li><button type="button" class="two" data-n="rv" aria-label="Satz der Rentenversicherung ändern"><span class="l"><span>Rentenversicherung</span></span><b>' + rvT() + '</b></button></li></ul>';
+  return h;
+}
 function workHTML() {
   const list = workList(), cur = todayKey().slice(0, 7), by = {};
   list.forEach(x => { const m = x.d.slice(0, 7); (by[m] = by[m] || []).push(x); });
-  const pay = l => l.reduce((s, x) => s + workPay(x), 0), mins = l => l.reduce((s, x) => s + workMin(x), 0), c = by[cur] || [];
-  const tage = l => { const n = new Set(l.map(x => x.d)).size; return n + (n === 1 ? ' Tag' : ' Tage'); };
-  let h = '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
+  const pay = workSum, mins = wMins, tage = wTage, c = by[cur] || [];
+  /* Umschalter „Zeiten | Jahr“ (v129, sein „Reiter im Arbeits-Tab“): erst, wenn etwas eingetragen ist */
+  const seg = list.length ? '<div class="seg2" role="group" aria-label="Ansicht">' + [['zeit', 'Zeiten'], ['jahr', 'Jahr']].map(q => '<button type="button" data-n="wmode" data-v="' + q[0] + '" aria-pressed="' + (arbMode === q[0]) + '">' + q[1] + '</button>').join('') + '</div>' : '';
+  if (seg && arbMode === 'jahr') return seg + workJahrHTML(list);
+  let h = seg + '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
     (c.length ? stdT(mins(c)) + ' an ' + tage(c).replace('Tage', 'Tagen') : list.length ? 'In diesem Monat noch nichts eingetragen' : 'Noch keine Arbeitszeit eingetragen') + '</p></section>' +
     '<button type="button" class="primary" data-n="newwork">Arbeitszeit eintragen</button>';
   const row = x => '<li><button type="button" class="two" data-n="work" data-id="' + esc(x.id) + '" aria-label="Arbeitszeit ändern"><span class="l"><span>' + dRow(x.d) + '</span><small>' + uhrT(x.a) + '–' + uhrT(x.b) + (x.p ? ' · ' + x.p + ' min Pause' : '') + ' · ' + stdT(workMin(x)) + '</small></span><b>' + eur(workPay(x)) + '</b></button></li>';
@@ -4156,13 +4214,16 @@ function nAct(e) {
   else if (a === 'newnote') openN(null);
   else if (a === 'newwork') openB(null);
   else if (a === 'work') openB(id);
+  else if (a === 'wmode') { arbMode = b.dataset.v; $('#scroll').scrollTop = 0; renderPlaner(); }
+  else if (a === 'abr') openA(id);
+  else if (a === 'rv') openZ({ titel: 'Rentenversicherung', wert: rvSatz() / 100, einheit: '%', komma: true, liste: [0, 3.6, 9.3], dann: v => { if (v >= 0 && v <= 100) { ndoc.patch({ work: { rv: Math.round(v * 100) } }); renderPlaner(); } } });
   else if (a === 'newuni') openU(null);
   else if (a === 'uni') openU(id);
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); raus(b.closest('.nrow'), render); } }
   else if (a === 'allnotes') { rSub = 'note'; show('routinen', true); renderPlaner(); }
   return true;
 }
-$('#n-main').addEventListener('click', nAct);
+$('#n-main').addEventListener('click', e => { const nav = e.target.closest('.mnav [data-m]'); if (nav) { arbJahr += nav.dataset.m === 'prev' ? -1 : 1; renderPlaner(); } else nAct(e); });   // die Pfeile gibt es im Planer nur im Jahr der Arbeit
 $('#n-main').addEventListener('input', e => { if (e.target.id === 'n-q') { nQuery = e.target.value; $('#n-list').innerHTML = noteListHTML(); } });
 $('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-r="sub"]'); if (b) { rSub = b.dataset.v; $('#scroll').scrollTop = 0; renderPlaner(); } });
 
@@ -4207,6 +4268,27 @@ $('#bform').addEventListener('submit', e => {
   const p = { work: { e: {} } }; if (!bE.id) p.work.rate = x.r; p.work.e[bE.id || newId()] = x;
   ndoc.patch(p); closeB(); render();
 });
+/* Blatt „Abrechnung“ eines Monats: oben die Rechnung (Verdienst, Rentenversicherung, Soll), darunter das eine Feld für das, was ankam; die Bilanz rechnet beim Tippen mit. */
+const adlg = $('#asheet'); let aM = '';
+const aRead = () => { const s = $('#a-got').value.trim(); return s === '' ? NaN : parseEur(s); };
+function aCalc() { const g = aRead(), c = $('#a-calc'), b = workSum(workMon(aM)), d = g - (b - rvAb(b)); c.hidden = !isFinite(g); if (!c.hidden) { c.textContent = 'Bilanz: ' + (d === 0 ? 'passt genau' : eurV(d)); c.className = 'note' + (d < 0 ? ' down' : d > 0 ? ' up' : ''); } }
+function openA(m) {
+  aM = m; const b = workSum(workMon(m)), ab = rvAb(b), g = N.work.got[m], z = c => eur(c).replace(' €', '');
+  $('#as-title').textContent = 'Abrechnung ' + MONTHS[+m.slice(5) - 1];
+  $('#a-soll').innerHTML = kvRow('Verdienst', z(b), '€') + kvRow('Rentenversicherung', '−' + z(ab), '€', rvT()) + kvRow('Soll aufs Konto', z(b - ab), '€');
+  $('#a-got').value = g != null ? z(g) : ''; $('#a-got').placeholder = z(b - ab);
+  $('#a-err').hidden = true; $('#a-del').hidden = g == null;
+  aCalc(); openDlg(adlg); fokus($('#a-got'));
+}
+$('#as-close').addEventListener('click', () => closeDlg(adlg));
+adlg.addEventListener('click', e => { if (e.target === adlg) closeDlg(adlg); });
+$('#aform').addEventListener('input', aCalc);
+$('#aform').addEventListener('submit', e => {
+  e.preventDefault();
+  const g = aRead(); if (!isFinite(g)) { const m = $('#a-err'); m.textContent = 'Trag ein, was angekommen ist, z. B. 362,80.'; m.hidden = false; return; }
+  const p = { work: { got: {} } }; p.work.got[aM] = g; ndoc.patch(p); closeDlg(adlg); render();
+});
+$('#a-del').addEventListener('click', () => { const p = { work: { got: {} } }; p.work.got[aM] = null; ndoc.patch(p); closeDlg(adlg); render(); });
 $('#b-del').addEventListener('click', () => { if (bE.id) { const p = { work: { e: {} } }; p.work.e[bE.id] = null; ndoc.patch(p); } closeB(); render(); });
 
 /* Blatt „Termin“ der Uni (v72): Fach, Punkte, was gemacht wurde, Tag. Das Fach steht wie beim letzten Termin da. Ohne Punkte zählt der Termin mit 0. */
@@ -4526,7 +4608,7 @@ function renderHome() {
   /* Übersicht: nur Bereiche, in denen etwas eingetragen ist. Ein leerer Bereich stünde sonst jeden Tag als Zeile ohne Inhalt da („Tippe, um zu starten“); er bleibt über die Leiste unten erreichbar. */
   /* Arbeit: Verdienst im laufenden Monat. Uni: Punkte gesamt und wie viele der Termine geschafft sind. */
   const wk = workList(), wc = wk.filter(x => x.d.slice(0, 7) === curYM), un = uniList(), pkt = un.reduce((n, x) => n + x.p, 0), wTage = new Set(wc.map(x => x.d)).size;
-  const av = wk.length ? eur(wc.reduce((n, x) => n + workPay(x), 0)) : '', as = wc.length ? stdT(wc.reduce((n, x) => n + workMin(x), 0)) + ' an ' + wTage + (wTage === 1 ? ' Tag' : ' Tagen') + ' im ' + mName : 'Im ' + mName + ' noch nichts eingetragen';
+  const av = wk.length ? eur(workSum(wc)) : '', as = wc.length ? stdT(wc.reduce((n, x) => n + workMin(x), 0)) + ' an ' + wTage + (wTage === 1 ? ' Tag' : ' Tagen') + ' im ' + mName : 'Im ' + mName + ' noch nichts eingetragen';
   const zeig = k => !E.aus[k] && anV(k === 'arbeit' || k === 'uni' ? 'routinen' : k);   // in den Einstellungen abgewählte Zeilen fehlen, ebenso die abgeschalteter Bereiche
   const ovs = (wv && zeig('gewicht') ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv && zeig('haushalt') ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv && zeig('training') ? ovCard('training', tName(), tv, ts) : '') +
     (av && zeig('arbeit') ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '') + (un.length && zeig('uni') ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '');

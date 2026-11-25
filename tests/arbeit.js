@@ -121,6 +121,7 @@ lauf(async () => {
   P.ok('leere App, Notizen: „Noch keine Notiz“', (await text(l.page, '#n-main')).includes('Noch keine Notiz') && !(await l.page.$('#n-main .chips')));
   await l.page.click('#r-subs [data-r="sub"][data-v="work"]'); await l.page.waitForTimeout(150);
   P.enthaelt('leere App, Arbeit: 0,00 € und Hinweis', await text(l.page, '#n-main .hero'), ['0,00', 'Noch keine Arbeitszeit eingetragen']);
+  P.ok('leere App: kein Umschalter „Zeiten | Jahr“, solange nichts eingetragen ist', !(await l.page.$('#n-main .seg2')));
   await l.page.click('#n-main [data-n="newwork"]'); await l.page.waitForTimeout(150);
   /* Erster Eintrag ohne gemerkten Lohn (v128): 25,00 € stehen da, 12:00 bis 14:30 → „2,5 Std · 62,50 €“; kein Feld hat den Fokus (keine Tastatur, ein Tipp auf „Speichern“ genügt) */
   const erst = await l.page.evaluate(() => ['b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|') + ' · ' + document.querySelector('#b-calc').textContent + ' · ' + document.activeElement.tagName);
@@ -144,5 +145,57 @@ lauf(async () => {
   P.ok('Einlesen: gleicher Tag mit gleichen Zeiten ist derselbe Eintrag (der vorhandene bleibt), der neue Tag kommt dazu, zweimal Einlesen verdoppelt nichts', zahl(we) === 2 && we.x.r === 1500 && !we.y && we.z.r === 2000, JSON.stringify(we));
   await g.browser.close();
 
-  await P.ende(browser, fehler.concat(l.fehler, g.fehler));
+  /* Jahr und Abrechnung (v129). Uhr: 15.11.2026. Lohn 25 €, keine Pause.
+     Oktober: 10:00–14:00 (240 min) und 10:00–12:31 (151 min) = 391 min × 25 / 60 = 162,9167 → 162,92 €.
+     November: 151 + 328 + 144 + 217 = 840 min = 14 Std → 350,00 € (je Tag gerundet wären es 62,92 + 136,67 + 60,00 + 90,42 = 350,01 €).
+     Dezember 2025: 10:00–12:00 mit 20 € = 40,00 €.
+     Jahr 2026: 512,92 €, 1231 min = 20,52 Std an 6 Tagen. Rentenversicherung 9,3 %: Oktober 15,15 → Soll 147,77; November 32,55 → Soll 317,45; zusammen 465,22 €. */
+  const eJ = { o1: { d: '2026-10-05', a: 600, b: 840, p: 0, r: 2500 }, o2: { d: '2026-10-12', a: 600, b: 751, p: 0, r: 2500 }, n1: { d: '2026-11-03', a: 1040, b: 1191, p: 0, r: 2500 }, n2: { d: '2026-11-05', a: 897, b: 1225, p: 0, r: 2500 },
+    n3: { d: '2026-11-10', a: 1040, b: 1184, p: 0, r: 2500 }, n4: { d: '2026-11-12', a: 884, b: 1101, p: 0, r: 2500 }, alt: { d: '2025-12-10', a: 600, b: 720, p: 0, r: 2000 } };
+  const j = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, tasks: {}, notes: {}, work: { rate: 2500, e: eJ }, uni: { e: {} } } } }), jp = j.page, w = () => jp.waitForTimeout(120);
+  P.ok('Heute: Zeile Arbeit zeigt 350,00 € (Summe aus den Minuten, nicht je Tag gerundet)', (await text(jp, '#v-heute .ov[data-teil="work"] .v')) === '350,00 €', await text(jp, '#v-heute .ov[data-teil="work"] .v'));
+  await bereich(jp, 'routinen'); await jp.click('#r-subs [data-r="sub"][data-v="work"]'); await w();
+  P.ok('Arbeit: Umschalter „Zeiten | Jahr“, Zeiten gewählt, Verdienst im November 350,00', (await text(jp, '#n-main .seg2 button')) === 'Zeiten | Jahr' && (await jp.getAttribute('#n-main [data-n="wmode"][data-v="zeit"]', 'aria-pressed')) === 'true' && (await text(jp, '#n-main .hero .num')) === '350,00', await text(jp, '#n-main .hero'));
+  await jp.click('#n-main [data-n="wmode"][data-v="jahr"]'); await w();
+  const jahr = async () => ({ nav: await text(jp, '#n-main .mnav b'), vor: await jp.evaluate(() => !document.querySelector('#n-main .mnav [data-m="next"]').disabled), hero: await text(jp, '#n-main .hero'), kv: await text(jp, '#n-main .card .kv'), zeilen: await text(jp, '#n-main [data-n="abr"]'), rv: await text(jp, '#n-main [data-n="rv"]') });
+  let J = await jahr();
+  P.ok('Jahr 2026: Verdienst 512,92 €, 20,52 Std an 6 Tagen; kein Jahr danach', J.nav === '2026' && !J.vor && J.hero === 'Verdienst 2026 512,92 € 20,52 Std an 6 Tagen', JSON.stringify(J));
+  P.ok('ohne Eintrag: nur „Soll aufs Konto 465,22 €“, beide Monate „offen“, Rentenversicherung 9,3 %', J.kv === 'Soll aufs Konto 465,22€ nach 9,3 % Rentenversicherung' && J.zeilen === 'November Soll 317,45 € offen | Oktober Soll 147,77 € offen' && J.rv === 'Rentenversicherung 9,3 %', JSON.stringify(J));
+  P.ok('Erklärung hinter dem „i“', await jp.evaluate(() => { const p = document.querySelector('#info-rv'); return p.hidden && !!document.querySelector('#n-main [data-info="rv"]'); }));
+  // November: angekommen 317,00 € → 317,00 − 317,45 = −0,45 €
+  await jp.click('#n-main [data-n="abr"][data-id="2026-11"]'); await w();
+  const blatt = await jp.evaluate(() => ({ titel: document.querySelector('#as-title').textContent, kv: [...document.querySelectorAll('#a-soll .kv')].map(k => k.innerText.replace(/\s+/g, ' ').trim()).join(' | '), feld: document.querySelector('#a-got').value, vor: document.querySelector('#a-got').placeholder, fokus: document.activeElement.id, del: document.querySelector('#a-del').hidden }));
+  P.ok('Blatt „Abrechnung November“: Verdienst 350,00, Rentenversicherung −32,55 (9,3 %), Soll 317,45; Feld leer mit Fokus, Soll als Vorschlag, kein Löschen',
+    blatt.titel === 'Abrechnung November' && blatt.kv === 'Verdienst 350,00€ | Rentenversicherung −32,55€ 9,3 % | Soll aufs Konto 317,45€' && blatt.feld === '' && blatt.vor === '317,45' && blatt.fokus === 'a-got' && blatt.del, JSON.stringify(blatt));
+  await jp.click('#a-save'); await w();
+  P.ok('leer speichern: Meldung, nichts gespeichert', (await text(jp, '#a-err')).includes('Trag ein, was angekommen ist') && ((await gespeichert(jp)).N.work.got || {})['2026-11'] == null);
+  await jp.fill('#a-got', '317');
+  P.ok('beim Tippen: „Bilanz: −0,45 €“ in Rot', (await text(jp, '#a-calc')) === 'Bilanz: −0,45 €' && await jp.evaluate(() => document.querySelector('#a-calc').classList.contains('down')), await text(jp, '#a-calc'));
+  await jp.click('#a-save'); await w(); J = await jahr();
+  P.ok('gespeichert (31700 Cent): Zeile zeigt 317,00 € und −0,45 € in Rot; oben Erhalten 317,00 € (1 von 2 Monaten), Bilanz −0,45 € „zu wenig angekommen“',
+    (await gespeichert(jp)).N.work.got['2026-11'] === 31700 && J.zeilen === 'November Soll 317,45 € 317,00 € −0,45 € | Oktober Soll 147,77 € offen' && J.kv === 'Soll aufs Konto 465,22€ nach 9,3 % Rentenversicherung | Erhalten 317,00€ 1 von 2 Monaten | Bilanz −0,45€ zu wenig angekommen' &&
+    await jp.evaluate(() => document.querySelector('#n-main [data-n="abr"][data-id="2026-11"] .r small').classList.contains('down') && document.querySelector('#n-main .card .delta.down').textContent === 'zu wenig angekommen'), JSON.stringify(J));
+  // Oktober: angekommen 150,00 € → +2,23 €; zusammen 467,00 €, Bilanz −0,45 + 2,23 = +1,78 €
+  await jp.click('#n-main [data-n="abr"][data-id="2026-10"]'); await w(); await jp.fill('#a-got', '150,00'); await jp.click('#a-save'); await w(); J = await jahr();
+  P.ok('Oktober 150,00 €: +2,23 € in Grün; Erhalten 467,00 € (2 von 2 Monaten), Bilanz +1,78 € „mehr als erwartet“', J.zeilen === 'November Soll 317,45 € 317,00 € −0,45 € | Oktober Soll 147,77 € 150,00 € +2,23 €' && J.kv.endsWith('Erhalten 467,00€ 2 von 2 Monaten | Bilanz +1,78€ mehr als erwartet'), JSON.stringify(J));
+  /* Satz 3,6 %: Oktober 162,92 × 0,036 = 5,87 → Soll 157,05; November 12,60 → Soll 337,40; zusammen 494,45 €. Bilanz (150 − 157,05) + (317 − 337,40) = −27,45 € */
+  await jp.click('#n-main [data-n="rv"]'); await w();
+  P.ok('Rentenversicherung: „Zahl wählen“ mit 0, 3,6 und 9,3 %, 9,3 % markiert', (await text(jp, '#z-list button')) === '0 % | 3,6 % | 9,3 %' && (await text(jp, '#z-list [aria-pressed="true"]')) === '9,3 %', await text(jp, '#z-list button'));
+  await jp.click('#z-list [data-zv="3.6"]'); await w(); J = await jahr();
+  P.ok('3,6 % gewählt und gespeichert (360): Soll 494,45 €, Bilanz −27,45 €', (await gespeichert(jp)).N.work.rv === 360 && J.rv === 'Rentenversicherung 3,6 %' && J.kv === 'Soll aufs Konto 494,45€ nach 3,6 % Rentenversicherung | Erhalten 467,00€ 2 von 2 Monaten | Bilanz −27,45€ zu wenig angekommen', JSON.stringify(J));
+  // Eintrag löschen: November ist wieder offen
+  await jp.click('#n-main [data-n="abr"][data-id="2026-11"]'); await w();
+  P.ok('Blatt mit Eintrag: Feld zeigt 317,00, Löschen ist da', (await jp.inputValue('#a-got')) === '317,00' && await jp.evaluate(() => !document.querySelector('#a-del').hidden));
+  await jp.click('#a-del'); await w(); J = await jahr();
+  P.ok('gelöscht: November wieder „offen“, Erhalten 150,00 € (1 von 2 Monaten)', J.zeilen.startsWith('November Soll 337,40 € offen') && J.kv.includes('Erhalten 150,00€ 1 von 2 Monaten') && !(await gespeichert(jp)).N.work.got['2026-11'], JSON.stringify(J));
+  // Jahr zurück: 2025 mit 40,00 €; Soll 40,00 − 1,44 = 38,56 €
+  await jp.click('#n-main .mnav [data-m="prev"]'); await w(); J = await jahr();
+  P.ok('Jahr zurück: 2025 mit 40,00 €, Dezember Soll 38,56 €, der Pfeil nach vorn geht', J.nav === '2025' && J.vor && J.hero === 'Verdienst 2025 40,00 € 2 Std an 1 Tagen'.replace('1 Tagen', '1 Tag') && J.zeilen === 'Dezember Soll 38,56 € offen', JSON.stringify(J));
+  await jp.setViewportSize({ width: 320, height: 700 }); await jp.click('#n-main .mnav [data-m="next"]'); await w();
+  P.ok('320 px: im Jahr ragt nichts hinaus', !(await jp.evaluate(() => { const s = document.querySelector('#scroll'); return s.scrollWidth > s.clientWidth || [...document.querySelectorAll('#n-main *')].some(e => e.offsetParent && e.getBoundingClientRect().right > innerWidth + 0.5); })));
+  await jp.reload(); await jp.waitForTimeout(300);
+  P.ok('nach dem Neuladen bleiben Satz und Eintrag (rv 360, Oktober 15000)', (await gespeichert(jp)).N.work.rv === 360 && (await gespeichert(jp)).N.work.got['2026-10'] === 15000);
+  await j.browser.close();
+
+  await P.ende(browser, fehler.concat(l.fehler, g.fehler, j.fehler));
 });
