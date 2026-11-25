@@ -86,13 +86,16 @@
        v119 (sein Bild mit v118: „immer noch zu viel … bei Apple geht es kaum um die Kante, es läuft schon vorher aus … clean, nicht überfordernd“):
        (1) Das Licht läuft vor der Ecke aus. Am Dock gemessen: 125 am geraden Rand, in der Rundung sofort schwächer (um 100, dann rund 60, 50, 40), an der Seite fast nichts. Bis v118 blieb der Streifen bei uns um die
            ganze Ecke hell und wurde nur dünner: Jede Fläche sah umrandet aus. Jetzt hat jede Schicht ein aufgeweitetes Loch (negativer vierter Wert, Versatz = Dicke + Aufweitung): Am geraden Rand bleibt die Dicke gleich,
-           in der Rundung endet die Schicht früh. Die hellste (0,333 px, Aufweitung 20) endet nach rund 10 bis 15 Grad, die zweite (0,667 px, 8) nach rund 20 bis 27, die dritte (1 px, 1,5) nach rund 55.
+           in der Rundung endet die Schicht früh. Die hellste (0,333 px, Aufweitung 20) endet nach rund 10 bis 15 Grad, die zweite (0,667 px, 8) nach rund 20 bis 27, die dritte (1 px, 2) nach rund 50.
+           Die Versätze sind keine glatten Drittel: oben knapp über dem ganzen Bildpunkt (20,344 statt 20,333), unten knapp darunter (20,327). WebKit rechnet in 1/64 px und rundet ab: Mit glatten Dritteln
+           war der Streifen dort oben einen Bildpunkt zu dünn und mit halben Punkten (2,5 px, Aufweitung 1,5) oben 4 und unten 2 Bildpunkte dick (v119, gefunden mit WebKitGTK 2.52, demselben Kern wie Safari).
+           So ergibt jede Art zu runden dieselbe Dicke. Aufweitungen nur in ganzen px.
        (2) Zwei Stufen statt einer: --rand-a (volles Licht wie das Dock) tragen nur Leiste, Blätter, Hinweis, runde Knöpfe oben und die Karten der Seite. --rand-s (leise, am Rand 66 statt 125 von 255) tragen
            Bedienteile (Chips, Umschalter, Nebenknöpfe, Eingabefelder, Linsen) und alles in einem Blatt (dialog setzt --rand auf die leise Stufe, dort auch ohne --glanz): kein Glas auf Glas, wie Apple es vorgibt.
        --rand ist die Stufe, die Karten nehmen: auf der Seite die volle, in Blättern die leise.
-       Nachgemessen im Test-Browser in dreifacher Schärfe an Leiste und Karte: 125, 94, 67, 38, 34, 32, 29, 27, 26, 24 wie bei Apple; an seinem iPhone (v118) 126, 95, 68, 38, 34, 31, 29. */
-    --rand-a:inset 0 20.333px 0 -20px rgba(255,255,255,.189),inset 0 8.667px 0 -8px rgba(255,255,255,.14),inset 0 2.5px 0 -1.5px rgba(255,255,255,.134),inset 0 2.333px 0 -1px rgba(255,255,255,.015),inset 0 -20.333px 0 -20px rgba(255,255,255,.189),inset 0 -8.667px 0 -8px rgba(255,255,255,.14),inset 0 -2.5px 0 -1.5px rgba(255,255,255,.134),inset 0 -2.333px 0 -1px rgba(255,255,255,.015);
-    --rand-s:inset 0 20.333px 0 -20px rgba(255,255,255,.09),inset 0 8.667px 0 -8px rgba(255,255,255,.07),inset 0 2.5px 0 -1.5px rgba(255,255,255,.06),inset 0 -20.333px 0 -20px rgba(255,255,255,.09),inset 0 -8.667px 0 -8px rgba(255,255,255,.07),inset 0 -2.5px 0 -1.5px rgba(255,255,255,.06);
+       Nachgemessen in dreifacher Schärfe an Leiste, Kachel und Karte, oben wie unten: Chromium 125, 94, 67, 38, 34, 32, 29, 27; WebKit 126, 95, 68, 38, 34, 32, 29, 27; Apple 125, 94, 67, 38, 34, 32, 29, 27. */
+    --rand-a:inset 0 20.344px 0 -20px rgba(255,255,255,.189),inset 0 8.672px 0 -8px rgba(255,255,255,.14),inset 0 3px 0 -2px rgba(255,255,255,.134),inset 0 2.344px 0 -1px rgba(255,255,255,.015),inset 0 -20.327px 0 -20px rgba(255,255,255,.189),inset 0 -8.655px 0 -8px rgba(255,255,255,.14),inset 0 -3px 0 -2px rgba(255,255,255,.134),inset 0 -2.327px 0 -1px rgba(255,255,255,.015);
+    --rand-s:inset 0 20.344px 0 -20px rgba(255,255,255,.09),inset 0 8.672px 0 -8px rgba(255,255,255,.07),inset 0 3px 0 -2px rgba(255,255,255,.06),inset 0 -20.327px 0 -20px rgba(255,255,255,.09),inset 0 -8.655px 0 -8px rgba(255,255,255,.07),inset 0 -3px 0 -2px rgba(255,255,255,.06);
     --glanz-s:rgba(255,255,255,.09),rgba(255,255,255,.071) 1.5px,rgba(255,255,255,.042) 2.5px,rgba(255,255,255,.025) 3.5px,rgba(255,255,255,.017) 4.5px,rgba(255,255,255,.008) 5.5px,rgba(255,255,255,0) 7.5px;
     --glanz:linear-gradient(to bottom,var(--glanz-s)),linear-gradient(to top,var(--glanz-s));
     --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
@@ -217,7 +220,7 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);ba
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0;box-shadow:var(--rand-s)}
 /* Eingabefelder (v95, mein Vorschlag, sein „überall nachziehen“): fast Kapseln und ohne blauen Rahmen. Beim Tippen zeigt wie in iOS die blaue Einfügemarke, wo man ist;
    das Feld bekommt nur eine feine graue Kante. Markierter Text ist zart blau hinterlegt statt kräftig. */
-input:focus-visible,.n-text:focus-visible{outline:none;box-shadow:inset 0 0 0 1.5px var(--mid)}
+input:focus-visible,.n-text:focus-visible{outline:none;box-shadow:inset 0 0 0 1px var(--mid)}
 input,textarea{caret-color:var(--accent)}
 ::selection{background:color-mix(in srgb,var(--accent) 34%,transparent)}
 /* iPhone: Datumsfelder sind sonst breiter als ihr Platz, dann ragt das Feld rechts hinaus und das Blatt lässt sich seitlich wischen */
@@ -1323,7 +1326,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v119</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v120</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
