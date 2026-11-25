@@ -726,5 +726,55 @@ lauf(async () => {
   const log18 = (await gespeichert(ds)).K.log[heute];
   P.ok('gespeichert: Latzug mit vier Sätzen samt Dropsatz, Bank und Curls je zwei', JSON.stringify(log18.a) === '[[90,11],[80,10],[80,9],[60,9]]' && log18.b.length === 2 && log18.c.length === 2 && !log18.d, JSON.stringify(log18));
   await o18.browser.close();
-  await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+
+  // --- v115: Übung hinzufügen nach Gruppen, Training nachträglich ändern (mit Dauer), weiter trainieren nach dem Beenden ---
+  /* Übungen: Latzug (Rücken), Bankdrücken (Brust), Curls (Arme), Beinpresse (Beine), Seitheben (keine Gruppe → Sonstige). Plan „Probe“: Latzug 3 Sätze, Bankdrücken 2.
+     Letztes Mal (vor 3 Tagen): Latzug 90×10, 90×9; Bankdrücken 40×10. */
+  const K19 = { ex: { a: { n: 'Latzug' }, b: { n: 'Bankdrücken' }, c: { n: 'Curls' }, d: { n: 'Beinpresse' }, e: { n: 'Seitheben' } }, log: { [tag(3)]: { a: [[90, 10], [90, 9]], b: [[40, 10]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'a', sets: 3 }, { id: 'b', sets: 2 }], o: 1 } }, meta: {}, live: null };
+  const o19 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K19 } }), nb = o19.page;
+  await bereich(nb, 'training'); await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(200);
+  const wahl19 = box => nb.evaluate(q => { const b = document.querySelector(q); return b.hidden ? '' : [...b.querySelectorAll('.pk-g .chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' ') + ' # ' + [...b.querySelectorAll(':scope > .chip')].map(c => c.textContent).join(' | '); }, box);
+  P.ok('Plan, Übung hinzufügen: Gruppen mit freien Übungen stehen gleich da (Arme, Beine, Sonstige), noch keine Übung', (await wahl19('#p-pick')) === 'Arme Beine Sonstige # ', await wahl19('#p-pick'));
+  await nb.click('#p-pick [data-pg="arme"]');
+  P.ok('Tipp auf „Arme“: seine Übungen der Gruppe', (await wahl19('#p-pick')) === 'Arme* Beine Sonstige # Curls', await wahl19('#p-pick'));
+  await nb.click('#p-pick [data-pa="pick"]');
+  P.ok('gewählt: Curls steht im Plan, die Gruppe ohne freie Übung verschwindet', (await text(nb, '#p-items .prow b')) === 'Latzug | Bankdrücken | Curls' && (await wahl19('#p-pick')) === 'Beine Sonstige # ', (await text(nb, '#p-items .prow b')) + ' # ' + (await wahl19('#p-pick')));
+  await nb.fill('#p-new', 'sei');
+  P.ok('beim Tippen wie bisher: passende Übungen statt der Gruppen', (await wahl19('#p-pick')) === ' # Seitheben', await wahl19('#p-pick'));
+  await nb.click('#ps-close'); await nb.waitForTimeout(200);
+  await nb.click('#v-training [data-k="start"]'); await nb.waitForTimeout(300);
+  await nb.click('#l-tabs .addx');
+  P.ok('im Training: dieselbe Wahl nach Gruppen', (await wahl19('#l-pick')) === 'Arme Beine Sonstige # ', await wahl19('#l-pick'));
+  await nb.click('#l-tabs .lx-tab:has-text("Latzug")');
+  /* Ein Satz (90×11), beenden. Im Rückblick stehen „Ändern“ und „Weiter trainieren“. Weiter: Der Satz ist abgehakt, die zwei fehlenden Sätze stehen offen dahinter (mit seinen Werten),
+     Bankdrücken wie geplant (40×11, 40×11); die gespeicherte Einheit bleibt, bis er wieder beendet. */
+  const reihen19 = () => nb.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×') + (z.classList.contains('done') ? '✓' : '')).join(' '));
+  await nb.click('.lt-r.act .chk'); await nb.click('#l-save'); await nb.waitForTimeout(250);
+  P.ok('Rückblick: „Ändern“ und „Weiter trainieren“ neben „Fertig“', (await text(nb, '#rsheet .rs-akt button')) === 'Ändern | Weiter trainieren', await text(nb, '#rsheet .rs-akt button'));
+  await nb.click('#rs-weiter'); await nb.waitForTimeout(350);
+  const w19 = await gespeichert(nb), jetzt19 = Date.now();
+  P.ok('weiter trainieren: wieder im Vollbild, der Satz ist abgehakt, die fehlenden stehen offen', await nb.evaluate(() => document.querySelector('#lsheet').open) && (await reihen19()) === '90×11✓ 90×11 90×11', await reihen19());
+  P.ok('… als fortgesetzt gemerkt (re), mit Plan, die Uhr läuft weiter; die gespeicherte Einheit bleibt solange', w19.K.live.re === 1 && w19.K.live.plan === 'p' && w19.K.live.start <= jetzt19 && JSON.stringify(w19.K.log[heute]) === '{"a":[[90,11]]}' && (await text(nb, '#l-del')) === 'Änderungen verwerfen', JSON.stringify(w19.K.log[heute]) + ' ' + (await text(nb, '#l-del')));
+  await nb.click('#l-tabs .lx-tab:has-text("Bankdrücken")');
+  P.ok('… die noch nicht trainierte Übung des Plans steht mit ihrer Empfehlung da', (await reihen19()) === '40×11 40×11', await reihen19());
+  await nb.click('#l-tabs .lx-tab:has-text("Latzug")'); await nb.click('.lt-r.act .chk'); await nb.click('#l-save'); await nb.waitForTimeout(250);
+  P.ok('wieder beendet: Die Einheit trägt jetzt zwei Sätze', JSON.stringify((await gespeichert(nb)).K.log[heute]) === '{"a":[[90,11],[90,11]]}', JSON.stringify((await gespeichert(nb)).K.log[heute]));
+  /* Ändern: Blatt „Einheit ändern“ mit Dauer. 45 Minuten → 2700 s, der Plan bleibt an der Einheit; ein Satz auf 9 Wiederholungen. */
+  await nb.click('#rs-edit'); await nb.waitForTimeout(300);
+  P.ok('„Ändern“ öffnet „Einheit ändern“ mit dem Feld für die Dauer', (await text(nb, '#ks-title')) === 'Einheit ändern' && await nb.evaluate(() => document.querySelector('#ksheet').open && !!document.querySelector('#k-dur')));
+  await nb.fill('#k-dur', '45'); await nb.fill('#k-r-0-1', '9'); await nb.click('#k-save'); await nb.waitForTimeout(250);
+  const e19 = (await gespeichert(nb)).K;
+  P.ok('gespeichert: Dauer 45 min (2700 s), der Plan bleibt, der zweite Satz hat 9 Wiederholungen', e19.meta[heute].dur === 2700 && e19.meta[heute].plan === 'p' && JSON.stringify(e19.log[heute]) === '{"a":[[90,11],[90,9]]}', JSON.stringify(e19.meta[heute]) + ' ' + JSON.stringify(e19.log[heute]));
+  /* Aus „Einheit ändern“ weiter trainieren und dann verwerfen: Die Einheit bleibt, wie sie war; die Uhr stand bei 45 Minuten. */
+  await nb.click('#v-training [data-fold="einheiten"]'); await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  P.ok('Dauer steht im Feld, „Weiter trainieren“ ist da', (await nb.inputValue('#k-dur')) === '45' && await nb.evaluate(() => !document.querySelector('#k-weiter').hidden));
+  await nb.click('#k-weiter'); await nb.waitForTimeout(350);
+  const st19 = (await gespeichert(nb)).K.live.start;
+  P.ok('weiter aus „Einheit ändern“: Die Uhr steht bei rund 45 Minuten', Math.abs(Date.now() - st19 - 2700000) < 5000, String(Date.now() - st19));
+  await nb.click('#l-del'); await nb.click('#l-del'); await nb.waitForTimeout(200);
+  const v19 = (await gespeichert(nb)).K;
+  P.ok('„Änderungen verwerfen“: kein laufendes Training mehr, die Einheit ist unverändert', !v19.live && JSON.stringify(v19.log[heute]) === '{"a":[[90,11],[90,9]]}' && v19.meta[heute].dur === 2700, JSON.stringify(v19.log[heute]));
+  await o19.browser.close();
+  await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });

@@ -169,6 +169,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .empty .primary,.empty .ghost,.empty .duo{align-self:stretch}
 .empty .chips{justify-content:center;margin-top:4px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
+.pk-g{display:flex;flex-wrap:wrap;gap:6px;flex-basis:100%}
 .chip{border:1px solid var(--line);background:transparent;border-radius:999px;padding:9px 14px;font-size:14px;font-weight:500;min-height:40px}
 .chip[aria-pressed="true"]{background:var(--accent-soft);color:var(--ink);border-color:var(--accent-line);font-weight:600}
 
@@ -659,6 +660,9 @@ u.w{background:var(--c-weight)}
 .rows.one .is-skip .glyph svg{width:13px;height:13px}
 .rows.one .is-skip .name{color:var(--muted)}
 .rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
+.rs-akt{display:flex;gap:8px}
+.rs-akt .ghost{flex:1;min-width:0}
+.rs-akt .ghost,#k-weiter{text-align:center;justify-content:center}
 /* Einstellungen (v106): hinter dem Zahnrad auf Heute. Sicherung und Version stehen nur hier, nicht mehr auf jeder Seite. */
 .es{display:flex;flex-direction:column;gap:14px;padding:10px 16px 22px}
 .es-body{display:flex;flex-direction:column;gap:10px}
@@ -1214,6 +1218,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Datum</span>
       <input id="k-date" name="date" type="date">
     </label>
+    <label class="fld" for="k-dur">
+      <span>Dauer in Minuten</span>
+      <input id="k-dur" name="dur" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="–">
+    </label>
     <p class="note" id="k-uhr" hidden></p>
     <div id="k-items"></div>
     <div class="fld">
@@ -1226,6 +1234,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </div>
     <p class="err" id="k-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="k-save">Speichern</button>
+    <button type="button" class="ghost" id="k-weiter" hidden>Weiter trainieren</button>
     <button type="button" class="ghost danger" id="k-del" hidden>Einheit löschen</button>
   </form>
 </dialog>
@@ -1292,7 +1301,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v114</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v115</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2756,10 +2765,10 @@ function normK(o) {
   if (o && o.emp === 0) out.emp = 0;
   if (o && o.res === 0) out.res = 0;
   const lv = o && o.live;
-  out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? {
+  out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? Object.assign(lv.re ? { re: 1 } : {}, {
     plan: lv.plan ? String(lv.plan) : null, start: lv.start, last: Number.isFinite(lv.last) ? lv.last : null, date: lv.date,
     items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => Object.assign(it.dr ? { dr: 1 } : {}, it.su ? { su: 1 } : {}, { id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
-  } : null;
+  }) : null;
   return out;
 }
 const kdoc = patchDoc(() => K, v => { K = normK(v); });
@@ -3204,23 +3213,35 @@ cdlg.addEventListener('click', e => {
   else if (a === 'add') { if (v === 'run') openT(null, cSel); else if (v === 'w') openW('entry', cSel); else openM('tx', null, null, cSel); }
 });
 
-/* Vorschläge erst beim Tippen: vorhandene Übungen, die zum Text passen */
+/* Übung hinzufügen (v115, sein Wunsch: „schlage direkt vor aus den Kategorien wählbar: Rücken, Brust usw. mit meinen Übungen, die gespeichert sind, oder eben neu erstellen“):
+   Ohne Text stehen die Gruppen da (nur die, in denen es noch eine freie Übung gibt; Übungen ohne Gruppe unter „Sonstige“); ein Tipp auf eine Gruppe zeigt ihre Übungen, ein zweiter klappt sie zu.
+   Beim Tippen wie bisher: vorhandene Übungen, die zum Text passen. Neu anlegen bleibt das Feld mit dem Plus. pickG = offene Gruppe, gilt für alle drei Blätter (Plan, Training, Einheit). */
+let pickG = '';
 function sugHTML(used, q, attr) {
   q = String(q || '').trim().toLowerCase();
-  if (!q) return '';
-  return kExs().filter(x => used.indexOf(x.id) < 0 && x.n.toLowerCase().indexOf(q) >= 0).slice(0, 6)
-    .map(x => '<button type="button" class="chip" data-' + attr + '="pick" data-id="' + esc(x.id) + '">' + esc(x.n) + '</button>').join('');
+  const frei = kExs().filter(x => used.indexOf(x.id) < 0), gruppe = x => exGruppe(K.ex[x.id]) || 'sonst';
+  const chip = x => '<button type="button" class="chip" data-' + attr + '="pick" data-id="' + esc(x.id) + '">' + esc(x.n) + '</button>';
+  if (q) return frei.filter(x => x.n.toLowerCase().indexOf(q) >= 0).slice(0, 6).map(chip).join('');
+  const gr = GRUPPEN.concat([['sonst', 'Sonstige']]).filter(g => frei.some(x => gruppe(x) === g[0]));
+  if (!gr.length) return '';
+  return '<span class="pk-g">' + gr.map(g => '<button type="button" class="chip" data-pg="' + g[0] + '" aria-pressed="' + (pickG === g[0]) + '">' + g[1] + '</button>').join('') + '</span>' +
+    frei.filter(x => gruppe(x) === pickG).map(chip).join('');
 }
 function paintPick(box, input, used, attr) { const h = sugHTML(used, $(input).value, attr); $(box).innerHTML = h; $(box).hidden = !h; }
 
+document.addEventListener('click', e => {
+  const g = e.target.closest('[data-pg]'), box = g && g.closest('.chips'); if (!box) return;
+  pickG = pickG === g.dataset.pg ? '' : g.dataset.pg;
+  ({ 'p-pick': paintPPick, 'l-pick': paintLPick, 'k-pick': paintKPick })[box.id]();
+});
 const kdlg = $('#ksheet'), xdlg = $('#xsheet');
 let kS = null, xId = null, xArm = false, xAll = false, xG = '', xMode = 'month', xYM = '', xYear = 0;
 const XSVG = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>';
-const kSetsIn = sets => sets.map(s => ({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }));
+const kSetsIn = sets => sets.map(s => Object.assign({ w: s[0] ? kgn(s[0]) : '', r: String(s[1]) }, s[2] != null ? { x: s[2] } : {}));   // x = Reserve, bleibt beim Ändern am Satz
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
 function kNewItem(id) {
   const hist = kHist(id).filter(x => x.d < kS.date), last = hist[hist.length - 1];
-  return { id, sets: last ? kSetsIn(last.sets) : [{ w: '', r: '' }, { w: '', r: '' }, { w: '', r: '' }] };
+  return { id, sets: last ? last.sets.map(q => ({ w: q[0] ? kgn(q[0]) : '', r: String(q[1]) })) : [{ w: '', r: '' }, { w: '', r: '' }, { w: '', r: '' }] };
 }
 function paintK() {
   $('#k-items').innerHTML = kS.items.map((it, i) => {
@@ -3245,7 +3266,9 @@ function paintKUhr() {
 function paintKPick() { paintPick('#k-pick', '#k-new', kS.items.map(it => it.id), 'ka'); }
 function openK(date) {
   const tk = todayKey(), d = date && kDay(date).length ? date : !date && kDay(tk).length ? tk : null;
-  kS = { orig: d, date: d || tk, items: d ? kDay(d).map(x => ({ id: x.id, sets: kSetsIn(x.sets) })) : [] };
+  const dur = d && (K.meta || {})[d] ? (K.meta[d].dur || 0) : 0;
+  kS = { orig: d, date: d || tk, items: d ? kDay(d).map(x => ({ id: x.id, sets: kSetsIn(x.sets) })) : [], dur: dur >= 30 ? String(Math.round(dur / 60)) : '' }; pickG = '';
+  $('#k-dur').value = kS.dur; $('#k-weiter').hidden = !(d === tk && !K.live);
   $('#ks-title').textContent = d ? 'Einheit ändern' : 'Einheit eintragen';
   $('#k-date').max = tk; $('#k-date').value = kS.date;
   $('#k-new').value = ''; $('#k-err').hidden = true; $('#k-del').hidden = !d;
@@ -3288,10 +3311,13 @@ $('#kform').addEventListener('submit', e => {
   if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
   const day = {}; let n = 0;
   kS.items.forEach(it => {
-    const sets = it.sets.map(s => { const w = dec(s.w); return [isFinite(w) ? Math.round(w * 100) / 100 : 0, Math.round(Number(String(s.r).replace(',', '.')))]; }).filter(s => s[0] >= 0 && s[0] <= 1000 && s[1] >= 1 && s[1] <= 1000);
+    const sets = it.sets.map(s => { const w = dec(s.w); return [isFinite(w) ? Math.round(w * 100) / 100 : 0, Math.round(Number(String(s.r).replace(',', '.')))].concat(s.x != null ? [s.x] : []); }).filter(s => s[0] >= 0 && s[0] <= 1000 && s[1] >= 1 && s[1] <= 1000);
     if (sets.length) { day[it.id] = sets; n++; }
   });
   if (!n) return err('Trag bei mindestens einer Übung die Wiederholungen ein.');
+  /* Dauer (v115): nur wenn er sie geändert hat, sonst bliebe aus 47:20 eine glatte 47 */
+  const dt = $('#k-dur').value.trim(), dmin = dt === '' ? 0 : Math.round(Number(dt.replace(',', '.')));
+  if (dt !== kS.dur && !(dmin >= 0 && dmin <= 1440)) return err('Die Dauer ist eine Zahl in Minuten.');
   const p = { log: {} }; p.log[d] = day;
   if (kS.orig) {
     const old = K.log[kS.orig] || {};
@@ -3301,9 +3327,11 @@ $('#kform').addEventListener('submit', e => {
       p.meta = {}; p.meta[kS.orig] = null; if (!kDay(d).length) p.meta[d] = (K.meta || {})[kS.orig] || null;
     } else for (const id in old) if (!(id in day)) p.log[d][id] = null;
   }
+  if (dt !== kS.dur) { p.meta = p.meta || {}; const m = d in p.meta ? p.meta[d] : (K.meta || {})[d]; p.meta[d] = Object.assign({ plan: null }, m || {}, { dur: dmin * 60 }); }
   kdoc.patch(p);
   tSub = 'kraft'; closeK(); renderTraining();
 });
+$('#k-weiter').addEventListener('click', () => { const d = kS && kS.orig; closeK(); lWieder(d); });
 $('#k-del').addEventListener('click', () => {
   if (kS && kS.orig) { const old = K.log[kS.orig] || {}, p = { log: {}, meta: {} }; p.log[kS.orig] = {}; for (const id in old) p.log[kS.orig][id] = null; p.meta[kS.orig] = null; kdoc.patch(p); }
   closeK(); renderTraining();
@@ -3473,7 +3501,7 @@ function lGruppe(i) {
    Einen Satz, an dem er die Wiederholungen selbst geändert hat, lässt die App stehen; die Zeile „Empfehlung“ zeigt trotzdem, was sie raten würde. */
 function lAnpassen(it, j) {
   const sj = it.sets[j], a = lNum(sj); if (!a[1]) return;
-  const von = exVon(it.id), bis = exBis(it.id), bw = exBw(it.id, Lw.date), hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], st = exStep(hist, it.id), ab = exAbfall(hist), fuehrt = !it.sets.slice(0, j).some(q => q.w === it.sets[j].w);
+  const von = exVon(it.id), bis = exBis(it.id), bw = exBw(it.id, Lw.date), hist = lHist(it.id), last = hist[hist.length - 1], st = exStep(hist, it.id), ab = exAbfall(hist), fuehrt = !it.sets.slice(0, j).some(q => q.w === it.sets[j].w);
   /* ae = geschafft, dazu die Reserve ab der zweiten (wdhEff): 10 mit 3 in Reserve zählt wie 12 */
   const res = sj.x || 0, ae = wdhEff([a[0], a[1], res]), plan = sj.er != null && sj.ew === sj.w ? +sj.er : 0, rm = rm1(a[0] + bw, ae), ohne = !a[0] && !bw;
   it.sets.forEach((s, k) => {
@@ -3556,6 +3584,23 @@ zdlg.addEventListener('keydown', e => {
   if (/^[0-9]$/.test(e.key)) zTaste(e.key); else if (e.key === ',' || e.key === '.') zTaste(','); else if (e.key === 'Backspace') zTaste('x');
   else if (e.key === 'Enter') { e.preventDefault(); $('#z-ok').click(); }
 });
+/* Weiter trainieren (v115, sein Wunsch: „Option, Training wieder zu starten, wenn aus Versehen beendet“): Aus der gespeicherten Einheit von heute wird wieder ein laufendes Training.
+   Die erledigten Sätze sind abgehakt, die Uhr läuft dort weiter, wo sie stand (Start = jetzt minus Dauer); fehlen Sätze oder Übungen des Plans, stehen sie offen dahinter.
+   Die gespeicherte Einheit bleibt, bis er wieder beendet (dann ersetzt das Training sie); „Änderungen verwerfen“ lässt sie, wie sie war. re = 1 merkt das am laufenden Training. */
+function lWieder(d) {
+  if (K.live) return openL();
+  const day = kDay(d); if (d !== todayKey() || !day.length) return;
+  const m = (K.meta || {})[d] || {}, pl = m.plan && K.plans ? K.plans[m.plan] : null, plan = pl ? pl.items.filter(it => K.ex[it.id]) : [];
+  const fertig = x => ({ id: x.id, sets: x.sets.map(q => Object.assign({ w: q[0] ? kgn(q[0]) : '', r: String(q[1]), done: true }, q[2] != null ? { x: q[2] } : {})) });
+  const items = plan.map((it, i) => { const x = day.find(o => o.id === it.id), li = x ? fertig(x) : { id: it.id, sets: liveSets(it.id, it.sets, it.dr) };
+    if (x) { const l = li.sets[li.sets.length - 1]; while (li.sets.length < it.sets) li.sets.push({ w: l.w, r: l.r, done: false }); }
+    return Object.assign(li, it.dr && it.sets > 1 ? { dr: 1 } : {}, it.su && i < plan.length - 1 ? { su: 1 } : {}); })
+    .concat(day.filter(x => !plan.some(it => it.id === x.id)).map(fertig));
+  kdoc.patch({ live: { re: 1, plan: pl ? m.plan : null, start: Date.now() - (m.dur || 0) * 1000, last: null, date: d, items } });
+  renderTraining(); ensureLiveTick(); openL();
+}
+/* Verlauf einer Übung für das laufende Training: bis zum Tag des Trainings; beim Weitertrainieren ohne die Einheit von heute, die gerade fortgesetzt wird */
+const lHist = id => kHist(id).filter(x => Lw.re ? x.d < Lw.date : x.d <= Lw.date);
 function startPlan(id) {
   if (K.live) return openL();
   const pl = K.plans && K.plans[id]; if (!pl) return;
@@ -3615,7 +3660,7 @@ function paintL() {
   if (cur) tabs.scrollLeft = cur.offsetLeft - (tabs.clientWidth - cur.offsetWidth) / 2;
   const it = Lw.items[lI];
   if (!it) { $('#l-items').innerHTML = ''; return; }
-  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], an = empAn(), zv = exVon(it.id), zb = exBis(it.id);
+  const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = lHist(it.id), last = hist[hist.length - 1], an = empAn(), zv = exVon(it.id), zb = exBis(it.id);
   const gr = lGruppe(lI), nr = j => it.dr && it.sets.length > 1 && j === it.sets.length - 1 ? '<i class="dz" title="Dropsatz">' + (j + 1) + '</i>' : j + 1;
   const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v), rek = lRek(it);
   /* Ein abgehakter Satz zeigt in Grün, um wie viel er über demselben Satz vom letzten Mal liegt: mehr Gewicht („+2,5“ am Gewicht), bei gleichem Gewicht mehr Wiederholungen („+1“ an den Wiederholungen) */
@@ -3649,7 +3694,7 @@ function openL() {
   Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lMenu = false; lR = lVor = null;
   const open = Lw.items.findIndex(it => undone(it) >= 0);
   lI = open >= 0 ? open : 0;
-  $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
+  $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = Lw.re ? 'Änderungen verwerfen' : 'Training verwerfen'; pickG = '';
   paintL();
   openDlg(ldlg);
   ldlg.scrollTop = 0;
@@ -3743,6 +3788,7 @@ $('#lform').addEventListener('submit', e => {
     const sets = it.sets.filter(s => s.done).map(s => { const w = dec(s.w); return [isFinite(w) ? Math.round(w * 100) / 100 : 0, Math.round(Number(String(s.r).replace(',', '.')))].concat(s.x != null ? [s.x] : []); }).filter(s => s[0] >= 0 && s[0] <= 1000 && s[1] >= 1 && s[1] <= 1000);
     if (sets.length) { day[it.id] = sets; n++; }
   });
+  if (Lw.re) { const old = K.log[Lw.date] || {}; for (const id in old) if (!(id in day)) day[id] = null; }   // weitertrainiert: Was nicht mehr dabei ist, geht aus der Einheit
   if (!n) { const x = $('#l-err'); x.textContent = 'Hake mindestens einen Satz ab. Wenn du nichts speichern willst, verwirf das Training.'; x.hidden = false; return; }
   const q = { log: {}, meta: {}, live: null };
   q.log[Lw.date] = day; q.meta[Lw.date] = { dur: Math.round((Date.now() - Lw.start) / 1000), plan: Lw.plan };
@@ -3753,6 +3799,7 @@ $('#lform').addEventListener('submit', e => {
 });
 /* Rückblick nach „Training beenden“ (sein „ja“ auf meinen Vorschlag, 24.11.): Dauer, bessere Sätze, Rekorde, darunter jede Übung mit ihren Sätzen. Ein Tipp auf eine Übung zeigt ihren Verlauf. */
 const rdlg = $('#rsheet');
+let rTag = '';
 function openR(d) {
   const day = kDay(d), m = (K.meta || {})[d]; if (!day.length) return;
   let bes = 0, von = 0, rec = 0;
@@ -3764,13 +3811,17 @@ function openR(d) {
   }).join('');
   $('#rs-body').innerHTML = '<div class="sh-head"><div><h2 id="rs-title">' + esc((m && planName(m.plan)) || 'Training') + '</h2><p class="ls-t">' + dRow(d) + ' · gespeichert</p></div></div>' +
     '<div class="figs">' + fig(m && m.dur >= 60 ? String(Math.round(m.dur / 60)) : '–', 'min', 'Dauer') + fig(von ? String(bes) : '–', 'von ' + von, bes === 1 ? 'Satz besser' : 'Sätze besser') + fig(rec ? String(rec) : '–', '', rec === 1 ? 'Rekord' : 'Rekorde') + '</div>' +
-    '<ul class="entries">' + rows + '</ul><button type="button" class="primary" id="rs-ok">Fertig</button>';
+    '<ul class="entries">' + rows + '</ul><button type="button" class="primary" id="rs-ok">Fertig</button>' +
+    '<div class="rs-akt"><button type="button" class="ghost" id="rs-edit">Ändern</button>' + (d === todayKey() && !K.live ? '<button type="button" class="ghost" id="rs-weiter">Weiter trainieren</button>' : '') + '</div>';
+  rTag = d;
   openDlg(rdlg);
   rdlg.scrollTop = 0;
 }
 rdlg.addEventListener('click', e => {
   const t = e.target.closest('[data-rs]');
   if (t) openX(t.dataset.rs, true); else if (e.target === rdlg || e.target.closest('#rs-ok')) closeDlg(rdlg);
+  else if (e.target.closest('#rs-edit')) { closeDlg(rdlg); openK(rTag); }
+  else if (e.target.closest('#rs-weiter')) { closeDlg(rdlg); lWieder(rTag); }
 });
 $('#l-del').addEventListener('click', () => {
   if (!lArm) { lArm = true; $('#l-del').textContent = 'Wirklich verwerfen? Noch einmal tippen.'; return; }
@@ -3816,7 +3867,7 @@ $('#p-items').addEventListener('pointerup', pZugEnde);
 $('#p-items').addEventListener('pointercancel', pZugEnde);
 function openP(id) {
   const pl = id && K.plans ? K.plans[id] : null;
-  pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => Object.assign({}, it)) : [] }; pArm = false; pMenu = -1;
+  pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => Object.assign({}, it)) : [] }; pArm = false; pMenu = -1; pickG = '';
   $('#ps-title').textContent = pl ? 'Plan bearbeiten' : 'Neuer Plan';
   $('#p-name').value = pl ? pl.n : ''; $('#p-new').value = ''; $('#p-err').hidden = true;
   $('#p-del').hidden = !pl; $('#p-del').textContent = 'Plan löschen';
