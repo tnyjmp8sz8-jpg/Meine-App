@@ -56,18 +56,20 @@ lauf(async () => {
         karte: ka.backgroundColor, kante: ka.boxShadow !== 'none', zeile: !document.querySelector('.app .foot') && !!document.querySelector('#esheet .foot .ver') }; });
     P.ok('Licht hinter der Seite in der Farbe des Bereichs, die Kopfzeile zeichnet dasselbe und deckt; Karten aus Glas mit feiner Kante; die Version steht seit v106 in den Einstellungen, nicht mehr unter jeder Seite' + b,
       glas.v === 'training' && glas.licht && glas.gleich && glas.deckt === 'rgb(0, 0, 0)' && glas.maske && glas.karte.indexOf('rgba(255, 255, 255, 0.08') === 0 && glas.kante && glas.zeile, JSON.stringify(glas));
-    /* Edler statt flach (v102): Der Hauptknopf trägt einen Verlauf mit Licht von oben, seit v104 ohne Schein nach außen (alle Schatten innen, sein Wunsch); Liniengraphen haben unter der Linie dieselbe Linie noch einmal breit und blass (Schein ohne CSS-Filter);
+    /* Edler statt flach (v102): Der Hauptknopf trägt einen Verlauf mit Licht von oben, von v104 bis v113 ohne Schein nach außen, seit v114 mit einem kleinen Schein rundum ohne Versatz (sein Wort: der alte Schein „sah cooler aus, war mir aber zu extrem und unsymmetrisch“); der grüne Haken bleibt ohne; Liniengraphen haben unter der Linie dieselbe Linie noch einmal breit und blass (Schein ohne CSS-Filter);
        Balken laufen nach unten aus (Verlauf #g-bar). Geprüft im Cardio-Teil, der Knopf, Liniengraph und im Jahr Balken zeigt. */
     await page.click('#v-training .subtabs [data-v="cardio"]');
     const edel = await page.evaluate(() => { const k = getComputedStyle(document.querySelector('#v-training .primary')), v = document.querySelector('#v-training');
-      const innen = s => s !== 'none' && s.split(/,(?![^(]*\))/).every(t => /inset/.test(t)), chk = document.createElement('div');
+      const teile = s => s === 'none' ? [] : s.split(/,(?![^(]*\))/), innen = s => s !== 'none' && teile(s).every(t => /inset/.test(t)), chk = document.createElement('div');
+      /* Schein rundum (v114): Schatten nach außen haben keinen Versatz (0 px, 0 px) und höchstens 16 px Weichzeichnung */
+      const rundum = s => { const a = teile(s).filter(t => !/inset/.test(t)); return a.length > 0 && a.every(t => { const m = /(-?[\d.]+)px (-?[\d.]+)px ([\d.]+)px/.exec(t.replace(/(rgba?|color)\([^)]*\)/g, '')); return m && +m[1] === 0 && +m[2] === 0 && +m[3] <= 16; }); };
       chk.className = 'lt-r'; chk.innerHTML = '<button class="chk"></button>'; document.body.appendChild(chk); const gruen = innen(getComputedStyle(chk.firstChild).boxShadow); chk.remove();
-      return { knopf: /linear-gradient/.test(k.backgroundImage) && innen(k.boxShadow) && gruen, schein: v.querySelectorAll('.g-glow').length, linien: v.querySelectorAll('.g-trend').length,
+      return { knopf: /linear-gradient/.test(k.backgroundImage) && rundum(k.boxShadow) && gruen, schein: v.querySelectorAll('.g-glow').length, linien: v.querySelectorAll('.g-trend').length,
         gleich: [...v.querySelectorAll('.g-glow')].every(g => g.nextElementSibling && g.nextElementSibling.classList.contains('g-trend') && g.getAttribute('d') === g.nextElementSibling.getAttribute('d')) }; });
     await page.click('#v-training [data-t="mode"][data-v="year"]');
     edel.balken = await page.evaluate(() => { const r = document.querySelector('#v-training rect.g-pos'); return r ? getComputedStyle(r).fill : ''; });
     await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training .subtabs [data-v="kraft"]');
-    P.ok('Hauptknopf und grüner Haken mit Verlauf, ohne Schein nach außen; Linie mit Schein darunter, Balken mit Verlauf' + b, edel.knopf && edel.linien >= 1 && edel.schein === edel.linien && edel.gleich && (edel.balken === '' || /g-bar/.test(edel.balken))   /* am Jahresanfang gibt es noch keinen Balken */, JSON.stringify(edel));
+    P.ok('Hauptknopf mit Verlauf und kleinem Schein rundum (ohne Versatz), grüner Haken ohne Schein; Linie mit Schein darunter, Balken mit Verlauf' + b, edel.knopf && edel.linien >= 1 && edel.schein === edel.linien && edel.gleich && (edel.balken === '' || /g-bar/.test(edel.balken))   /* am Jahresanfang gibt es noch keinen Balken */, JSON.stringify(edel));
     /* Wochenleiste (v103): „heute“ liegt in einer kleinen Linse aus Glas (Fläche und feine Kante), die anderen Tage nicht */
     const linse = await page.evaluate(() => [...document.querySelectorAll('#v-training .wk .wd')].map(w => { const c = getComputedStyle(w); return (w.classList.contains('now') ? 'H' : 'x') + (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.boxShadow !== 'none' ? '1' : '0'); }).join(' '));
     P.ok('Wochenleiste: nur „heute“ trägt die Linse' + b, (linse.match(/H1/g) || []).length === 1 && !/x1|H0/.test(linse), linse);

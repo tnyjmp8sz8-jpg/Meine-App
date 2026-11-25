@@ -494,10 +494,11 @@ lauf(async () => {
   // --- Empfehlung je Satz (v107): Bereich 8–12 ohne Angabe, Vorgabe nach doppelter Progression, Anpassung nach jedem abgehakten Satz, Schalter in den Einstellungen ---
   /* Schritt beim Gewicht ist überall 2,5 kg (kein kleinerer Abstand in den Daten). Vorgabe aus dem letzten Mal (vor 3 Tagen), Bereich 8–12:
      Latzug: 90×12, 90×10, 90×8, 65×6; davor (vor 6 Tagen) 90×11, 90×10, 90×8, 65×6.
-       Seit v111 steigt jeder Satz für sich: Satz 1 war oben (12) → 92,5 kg; 1RM 90 × 1,4 = 126 → (126 / 92,5 − 1) × 30 = 10,9 → 10. Satz 2 und 3 je eine mehr (11, 9).
+       Seit v114 führt der erste Satz den Block mit demselben Gewicht: Er war oben (12) → alle drei auf 92,5 kg, je Satz so viele Wiederholungen, dass sein Maximum bleibt:
+       126 → (126 / 92,5 − 1) × 30 = 10,9 → 10; 90 × (1 + 10/30) = 120 → 8,9 → 8; 90 × (1 + 8/30) = 114 → 6,97 → 6.
        65 kg: derselbe Satz zweimal in Folge unter 8 → 62,5 kg; 1RM 65 × (1 + 6/30) = 78 → (78 / 62,5 − 1) × 30 = 7,4 → 7, mindestens 8 → 62,5×8.
      Bank: 40×10, 40×10, 40×10 (nur eine Einheit) → 40×11 je Satz.
-     Curls: 20×12, 20×12 → alle oben: 22,5 kg; 1RM 20 × 1,4 = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7, mindestens 8 → 22,5×8. */
+     Curls: 20×12, 20×12 → der erste oben: 22,5 kg; 1RM 20 × 1,4 = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7; der führende Satz mindestens 8 → 22,5×8, der zweite 22,5×7. */
   const K14 = { ex: { l: { n: 'Latzug' }, b: { n: 'Bank' }, c: { n: 'Curls' } }, log: { [tag(6)]: { l: [[90, 11], [90, 10], [90, 8], [65, 6]] }, [tag(3)]: { l: [[90, 12], [90, 10], [90, 8], [65, 6]], b: [[40, 10], [40, 10], [40, 10]], c: [[20, 12], [20, 12]] } },
     plans: { p: { n: 'Probe', items: [{ id: 'l', sets: 4 }, { id: 'b', sets: 3 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
   const o14 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K14 } }), em = o14.page;
@@ -505,16 +506,16 @@ lauf(async () => {
   const reihen14 = () => em.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
   const emp = async () => (await em.$('#l-emp')) ? text(em, '#l-emp') : '';
   P.ok('Bereich ohne Angabe: „Ziel 8–12 Wdh“', (await text(em, '#l-items [data-la="ziel"]')) === 'Ziel 8–12 Wdh', await text(em, '#l-items [data-la="ziel"]'));
-  P.ok('Vorgabe Latzug: der Satz am oberen Ende steigt für sich (92,5×10), die anderen je eine mehr; 65 kg lag zweimal unter 8 → 62,5×8', (await reihen14()) === '92,5×10 90×11 90×9 62,5×8', await reihen14());
+  P.ok('Vorgabe Latzug: erster Satz oben → der Block steigt auf 92,5 kg (10, 8, 6); 65 kg lag zweimal unter 8 → 62,5×8', (await reihen14()) === '92,5×10 92,5×8 92,5×6 62,5×8', await reihen14());
   P.ok('Zeile „Empfehlung“ nennt Satz 1 mit Grund', (await emp()) === 'Empfehlung 92,5 kg × 10 · +2,5 kg', await emp());
-  /* Satz 1 wie empfohlen: Die Sätze danach haben ein anderes Gewicht und bleiben. */
+  /* Satz 1 wie empfohlen (10): Erwartung Satz 2 = 10 − (12 − 10) = 8, Satz 3 = 10 − (12 − 8) = 6: Die Empfehlungen bleiben. */
   await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
-  P.ok('Satz 1 wie empfohlen: Die Empfehlungen danach bleiben', (await reihen14()) === '92,5×10 90×11 90×9 62,5×8' && (await emp()) === 'Empfehlung 90 kg × 11 · eine Wdh mehr', (await reihen14()) + ' # ' + (await emp()));
-  /* Satz 2 nur 9 statt 11 (im Bereich, aber dahinter): Erwartung Satz 3 = 9 − (10 − 8) = 7, mindestens das untere Ende 8, höchstens die alte Empfehlung 9 → 90×8. Der Satz mit 62,5 kg gehört nicht dazu. */
-  await zahlWahl(em, '#l-r', '9'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
-  P.ok('Satz 2 hinter der Empfehlung: Satz 3 wird auf 90×8 angepasst, der leichtere Satz bleibt', (await reihen14()) === '92,5×10 90×9 90×8 62,5×8' && (await emp()) === 'Empfehlung 90 kg × 8 · nach Satz 2 angepasst', (await reihen14()) + ' # ' + (await emp()));
+  P.ok('Satz 1 wie empfohlen: Die Empfehlungen danach bleiben', (await reihen14()) === '92,5×10 92,5×8 92,5×6 62,5×8' && (await emp()) === 'Empfehlung 92,5 kg × 8 · +2,5 kg', (await reihen14()) + ' # ' + (await emp()));
+  /* Satz 2 nur 7 statt 8 (dahinter): Erwartung Satz 3 = 7 − (10 − 8) = 5, höchstens die alte Empfehlung 6 → 92,5×5. Spätere Sätze dürfen unter 8 liegen; der Satz mit 62,5 kg gehört nicht dazu. */
+  await zahlWahl(em, '#l-r', '7'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('Satz 2 hinter der Empfehlung: Satz 3 wird auf 92,5×5 angepasst, der leichtere Satz bleibt', (await reihen14()) === '92,5×10 92,5×7 92,5×5 62,5×8' && (await emp()) === 'Empfehlung 92,5 kg × 5 · nach Satz 2 angepasst', (await reihen14()) + ' # ' + (await emp()));
   const lv14 = (await gespeichert(em)).K.live.items[0].sets[2];
-  P.ok('die Empfehlung steht am Satz und ist gespeichert (ew, er, eg)', lv14.ew === '90' && lv14.er === '8' && lv14.eg === 'nach Satz 2 angepasst' && lv14.w === '90' && lv14.r === '8', JSON.stringify(lv14));
+  P.ok('die Empfehlung steht am Satz und ist gespeichert (ew, er, eg)', lv14.ew === '92,5' && lv14.er === '5' && lv14.eg === 'nach Satz 2 angepasst' && lv14.w === '92,5' && lv14.r === '5', JSON.stringify(lv14));
   /* Bank: Vorgabe 40×11 je Satz. Satz 1 nur 6 (unter dem Bereich): 1RM 40 × 1,2 = 48; Ermüdung letztes Mal 0 → 37,5 kg: (48 / 37,5 − 1) × 30 = 8,4 → 8 → 37,5×8 für beide Sätze danach. */
   await em.click('#l-tabs .lx-tab:has-text("Bank")');
   P.ok('Vorgabe Bank: je Satz eine Wiederholung mehr', (await reihen14()) === '40×11 40×11 40×11', await reihen14());
@@ -526,7 +527,7 @@ lauf(async () => {
   await em.click('.lt-r[data-s="1"]'); await zahlWahl(em, '#l-r', '14'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
   P.ok('deutlich über dem Bereich: Empfehlung mit mehr Gewicht (40 kg × 11); der von Hand geänderte Satz bleibt, wie er ist', (await reihen14()) === '40×6 37,5×14 37,5×5' && (await emp()) === 'Empfehlung 40 kg × 11 · mehr Gewicht, du lagst über 12', (await reihen14()) + ' # ' + (await emp()));
   await em.click('#l-tabs .lx-tab:has-text("Curls")');
-  P.ok('Vorgabe Curls, alle Sätze oben: ein Schritt mehr Gewicht, mindestens das untere Ende (22,5×8)', (await reihen14()) === '22,5×8 22,5×8' && (await emp()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen14()) + ' # ' + (await emp()));
+  P.ok('Vorgabe Curls, erster Satz oben: ein Schritt mehr Gewicht, der führende Satz mindestens das untere Ende (22,5×8), der zweite 22,5×7', (await reihen14()) === '22,5×8 22,5×7' && (await emp()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen14()) + ' # ' + (await emp()));
   /* Schalter in den Einstellungen: aus → K.emp = 0; ein neu gestartetes Training zeigt die Werte vom letzten Mal, ohne Zeile „Empfehlung“ und ohne Bereich. Wieder an → der Merker ist weg. */
   await em.click('#l-del'); await em.click('#l-del'); await em.waitForTimeout(150);
   await einstellungen(em);
@@ -547,7 +548,7 @@ lauf(async () => {
   // --- Reserve je Satz (v108): „Wie viele wären noch gegangen?“ nach dem Abhaken; 0 und 1 ändern nichts, ab 2 zählt jede weitere wie eine geschaffte Wiederholung ---
   /* Letztes Mal (vor 3 Tagen), Bereich 8–12, Schritt 2,5 kg:
      Presse: 40×9 mit 3 in Reserve, 40×9, 40×8 → Satz 1 zählt wie 9 + (3 − 1) = 11: Ziel 11 („2 Wdh mehr“), Satz 2 und 3 je eine mehr (10, 9).
-     Curls:  20×10 mit 3 in Reserve, 20×11 mit 2 → beide zählen wie 12 → oben: 22,5 kg; 1RM 20 × (1 + 12/30) = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7, mindestens 8 → 22,5×8. */
+     Curls:  20×10 mit 3 in Reserve, 20×11 mit 2 → beide zählen wie 12 → der erste ist oben: 22,5 kg; 1RM 20 × (1 + 12/30) = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7; der führende mindestens 8 → 22,5×8, der zweite 22,5×7. */
   const K15 = { ex: { p: { n: 'Presse' }, c: { n: 'Curls' } }, log: { [tag(3)]: { p: [[40, 9, 3], [40, 9], [40, 8]], c: [[20, 10, 3], [20, 11, 2]] } },
     plans: { p: { n: 'Probe', items: [{ id: 'p', sets: 3 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
   const o15 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K15 } }), rs = o15.page;
@@ -572,14 +573,14 @@ lauf(async () => {
   await rs.click('#l-res [data-v="0"]'); await rs.waitForTimeout(60);
   P.ok('0 in Reserve ändert die Empfehlung nicht, steht aber am Satz (x = 0)', (await reihen15()) === '40×11 40×11 40×10' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 0, (await reihen15()) + ' ' + JSON.stringify((await gespeichert(rs)).K.live.items[0].sets[0]));
   /* Curls: Vorgabe 22,5×8. Satz 1 nur 7: unter dem Bereich → 20 kg; 1RM 22,5 × (1 + 7/30) = 27,75 → (27,75 / 20 − 1) × 30 = 11,6 → 11.
-     Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt, Satz 2 steht wieder bei 22,5×8.
+     Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt; Satz 1 zählt wie 8, Satz 2 steigt von 7 auf 8 (Ermüdung letztes Mal 0).
      v111 (sein Bild vom 25.11.): Bei einer anderen Übung steht die Frage zur vorigen nicht mehr da. */
   await rs.click('#l-tabs .lx-tab:has-text("Curls")');
-  P.ok('andere Übung geöffnet: Die Frage zur vorigen Übung ist weg', (await frage()) === '' && (await reihen15()) === '22,5×8 22,5×8', (await frage()) + ' # ' + (await reihen15()));
+  P.ok('andere Übung geöffnet: Die Frage zur vorigen Übung ist weg', (await frage()) === '' && (await reihen15()) === '22,5×8 22,5×7', (await frage()) + ' # ' + (await reihen15()));
   await zahlWahl(rs, '#l-r', '7'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
   P.ok('unter dem Bereich ohne Angabe: weniger Gewicht (20×11)', (await reihen15()) === '22,5×7 20×11' && (await frage()).startsWith('Satz 1: '), (await reihen15()) + ' # ' + (await frage()));
   await rs.click('#l-res [data-v="2"]'); await rs.waitForTimeout(60);
-  P.ok('mit 2 in Reserve hätte es gereicht: Das Gewicht bleibt (22,5×8)', (await reihen15()) === '22,5×7 22,5×8' && (await emp15()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen15()) + ' # ' + (await emp15()));
+  P.ok('mit 2 in Reserve hätte es gereicht: Das Gewicht bleibt (22,5×8)', (await reihen15()) === '22,5×7 22,5×8' && (await emp15()) === 'Empfehlung 22,5 kg × 8 · mehr, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
   /* Haken zurücknehmen: Die Angabe und die Frage sind weg */
   await rs.click('.lt-r[data-s="0"]'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
   P.ok('Haken zurückgenommen: keine Frage mehr, die Reserve ist vom Satz weg', (await frage()) === '' && (await gespeichert(rs)).K.live.items[1].sets[0].x == null, await frage());
@@ -598,7 +599,7 @@ lauf(async () => {
 
   // --- Einstellungen (v110): Schritt je Übung, Frage nach der Reserve abschaltbar, Übersicht auf Heute, Start-Bereich ---
   /* Rudern: vor 6 Tagen 45×5, vor 3 Tagen 40×12 dreimal. Geraten wird der Schritt aus den bisherigen Gewichten: 45 − 40 = 5 kg.
-     Alle Sätze oben (12) → 45 kg; 1RM 40 × 1,4 = 56 → (56 / 45 − 1) × 30 = 7,3 → 7, mindestens 8 → 45×8.
+     Erster Satz oben (12) → 45 kg; 1RM 40 × 1,4 = 56 → (56 / 45 − 1) × 30 = 7,3 → 7; der führende Satz mindestens 8 → 45×8, die anderen 45×7.
      Mit festem Schritt 2,5 kg: 42,5 kg → (56 / 42,5 − 1) × 30 = 9,5 → 9 → 42,5×9. */
   const K16 = { ex: { r: { n: 'Rudern' } }, log: { [tag(6)]: { r: [[45, 5]] }, [tag(3)]: { r: [[40, 12], [40, 12], [40, 12]] } }, plans: { p: { n: 'Probe', items: [{ id: 'r', sets: 3 }], o: 1 } }, meta: {}, live: null };
   const o16 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K16, W: { entries: { [heute]: 80 } } } }), ei = o16.page;
@@ -624,7 +625,7 @@ lauf(async () => {
   await einstellungen(ei); await ei.click('#esheet [data-h="start"][data-v="heute"]');
   P.ok('zurück auf Heute: Der Merker ist weg', (await gespeichert(ei)).E.start == null);
   await ei.click('#es-close'); await bereich(ei, 'training'); await ei.click('#v-training [data-k="start"]'); await ei.waitForTimeout(300);
-  P.ok('Schritt geraten aus den Gewichten (5 kg): alle Sätze oben → 45×8', (await reihen16()) === '45×8 45×8 45×8' && (await text(ei, '#l-items [data-la="schritt"]')) === 'Schritt 5 kg', (await reihen16()) + ' ' + (await text(ei, '#l-items [data-la="schritt"]')));
+  P.ok('Schritt geraten aus den Gewichten (5 kg): erster Satz oben → 45×8, 45×7, 45×7', (await reihen16()) === '45×8 45×7 45×7' && (await text(ei, '#l-items [data-la="schritt"]')) === 'Schritt 5 kg', (await reihen16()) + ' ' + (await text(ei, '#l-items [data-la="schritt"]')));
   await ei.click('#l-items [data-la="schritt"]'); await ei.waitForTimeout(80);
   const sl = await ei.evaluate(() => ({ liste: [...document.querySelectorAll('#z-list button')].map(b => b.textContent).join(' | '), wahl: (document.querySelector('#z-list [aria-pressed="true"]') || {}).textContent }));
   P.ok('Schritt wählen: sieben Schritte, 5 kg markiert', sl.liste === '0,5 kg | 1 kg | 1,25 kg | 2 kg | 2,5 kg | 5 kg | 10 kg' && sl.wahl === '5 kg', JSON.stringify(sl));
@@ -646,18 +647,33 @@ lauf(async () => {
   await o16.browser.close();
 
   // --- v111, sein Fall aus dem Bild vom 25.11.: 40×12, 40×10, 40×8 (er geht nah an die Grenze, von Satz zu Satz werden es weniger) ---
-  /* Bereich 8–12, Schritt 2,5 kg (nur ein Gewicht in den Daten). Jeder Satz für sich:
-     Satz 1 war oben → 42,5 kg; 1RM 40 × 1,4 = 56 → (56 / 42,5 − 1) × 30 = 9,5 → 9. Satz 2: 11, Satz 3: 9. Bis v110 hieß es „40 × 12 halten, bis alle Sätze 12 schaffen“.
-     Zweiter Fall „Hinten“: 30×11, 30×12 → der zweite Satz ist oben, der erste nicht: Er hält (sonst wäre er schwerer als der Satz davor), der erste bekommt eine mehr. */
-  const K17 = { ex: { b: { n: 'Brustpresse' }, h: { n: 'Hinten' } }, log: { [tag(3)]: { b: [[40, 12], [40, 10], [40, 8]], h: [[30, 11], [30, 12]] } }, plans: { p: { n: 'Probe', items: [{ id: 'b', sets: 3 }, { id: 'h', sets: 2 }], o: 1 } }, meta: {}, live: null };
+  /* Bereich 8–12, Schritt 2,5 kg (nur ein Gewicht in den Daten). Seit v114 so, wie er es macht („12 10 8 gemacht und dann erhöht“): Der erste Satz war oben → alle Sätze auf 42,5 kg,
+     je Satz so viele Wiederholungen, dass sein Maximum bleibt: 56 → (56 / 42,5 − 1) × 30 = 9,5 → 9; 40 × (1 + 10/30) = 53,33 → 7,6 → 7; 40 × (1 + 8/30) = 50,67 → 5,8 → 5.
+     Bis v110 hieß es „40 × 12 halten, bis alle Sätze 12 schaffen“, von v111 bis v113 „42,5×9, 40×11, 40×9“.
+     Zweiter Fall „Hinten“: 30×11, 30×12 → der führende Satz bekommt eine mehr (12); der zweite bleibt bei 12 („wie letztes Mal“): Erwartung 12 − 0 (sein Abfall hier: 0), höchstens das obere Ende.
+     Dritter Fall „Lernen“: zwei Einheiten 40×11, 40×9, 40×7 (vor 6 Tagen 40×10, 40×8, 40×6): Sein Abfall ist 2 je Satz. Führender Satz 12; danach 12 − 2 = 10 und 12 − 4 = 8,
+     jeweils höchstens eine mehr als letztes Mal → 40×12, 40×10, 40×8. (Mit „je Satz eine mehr“ wäre es dasselbe; der Unterschied zeigt sich bei „Halten“:)
+     Vierter Fall „Halten“: vor 3 Tagen 40×11, 40×10, 40×8, vor 6 Tagen 40×12, 40×10, 40×8 → Abfall: Unterschiede 2, 2, 1, 2 → 2. Führender Satz 12; Satz 2: 12 − 2 = 10 = wie letztes Mal (nicht 11);
+     Satz 3: 12 − 4 = 8 = wie letztes Mal. Das ist sein Satz vom 25.11.: „meistens schaffe ich nach 12 Wdh 10, nicht 11“. */
+  const K17 = { ex: { b: { n: 'Brustpresse' }, h: { n: 'Hinten' }, l: { n: 'Lernen' }, t: { n: 'Halten' } }, log: { [tag(6)]: { l: [[40, 10], [40, 8], [40, 6]], t: [[40, 12], [40, 10], [40, 8]] }, [tag(3)]: { b: [[40, 12], [40, 10], [40, 8]], h: [[30, 11], [30, 12]], l: [[40, 11], [40, 9], [40, 7]], t: [[40, 11], [40, 10], [40, 8]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'b', sets: 3 }, { id: 'h', sets: 2 }, { id: 'l', sets: 3 }, { id: 't', sets: 3 }], o: 1 } }, meta: {}, live: null };
   const o17 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K17 } }), sf = o17.page;
   await bereich(sf, 'training'); await sf.click('#v-training [data-k="start"]'); await sf.waitForTimeout(300);
   const reihen17 = () => sf.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
-  P.ok('12, 10, 8: der erste Satz steigt auf 42,5×9, die anderen bekommen eine Wiederholung mehr', (await reihen17()) === '42,5×9 40×11 40×9' && (await text(sf, '#l-emp')) === 'Empfehlung 42,5 kg × 9 · +2,5 kg', (await reihen17()) + ' # ' + (await text(sf, '#l-emp')));
+  P.ok('12, 10, 8: erhöhen, alle Sätze auf 42,5 kg (9, 7, 5)', (await reihen17()) === '42,5×9 42,5×7 42,5×5' && (await text(sf, '#l-emp')) === 'Empfehlung 42,5 kg × 9 · +2,5 kg', (await reihen17()) + ' # ' + (await text(sf, '#l-emp')));
   await sf.click('#l-tabs .lx-tab:has-text("Hinten")');
-  P.ok('nur der hintere Satz oben: er hält, der erste bekommt eine mehr', (await reihen17()) === '30×12 30×12', await reihen17());
+  P.ok('nur der hintere Satz oben: Der führende bekommt eine mehr, der hintere bleibt', (await reihen17()) === '30×12 30×12', await reihen17());
   await sf.click('.lt-r[data-s="1"]'); await sf.waitForTimeout(60);
-  P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(sf, '#l-emp')) === 'Empfehlung 30 kg × 12 · halten, bis die Sätze davor 12 schaffen', await text(sf, '#l-emp'));
+  P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(sf, '#l-emp')) === 'Empfehlung 30 kg × 12 · wie letztes Mal', await text(sf, '#l-emp'));
+  await sf.click('#l-tabs .lx-tab:has-text("Lernen")');
+  P.ok('gelernter Abfall 2: 11, 9, 7 → 12, 10, 8', (await reihen17()) === '40×12 40×10 40×8', await reihen17());
+  await sf.click('#l-tabs .lx-tab:has-text("Halten")');
+  P.ok('sein Fall: 11, 10, 8 → 12, 10, 8 (nach 12 kommen 10, nicht 11)', (await reihen17()) === '40×12 40×10 40×8', await reihen17());
+  await sf.click('.lt-r[data-s="1"]'); await sf.waitForTimeout(60);
+  P.ok('… der zweite Satz heißt „wie letztes Mal“', (await text(sf, '#l-emp')) === 'Empfehlung 40 kg × 10 · wie letztes Mal', await text(sf, '#l-emp'));
+  /* Im Training: erster Satz nur 11 statt 12 → Erwartung Satz 2 = 11 − (11 − 10) = 10 (so war es letztes Mal zwischen diesen Sätzen), Satz 3 = 11 − 3 = 8: Es bleibt bei 10 und 8. */
+  await sf.click('.lt-r[data-s="0"]'); await zahlWahl(sf, '#l-r', '11'); await sf.click('.lt-r.act .chk'); await sf.waitForTimeout(60);
+  P.ok('im Training nur 11 im ersten Satz: Die Sätze danach bleiben bei 10 und 8', (await reihen17()) === '40×11 40×10 40×8', await reihen17());
   await sf.click('#l-del'); await sf.click('#l-del'); await sf.waitForTimeout(150);
   await o17.browser.close();
 
@@ -673,10 +689,10 @@ lauf(async () => {
   const akt18 = () => ds.$$eval('#p-items .p-akt button', l => l.map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' | '));
   P.ok('Plan-Blatt: Rudern trägt schon „Dropsatz“ unter dem Namen', (await zeilen18()) === 'Latzug | Bank | Curls | Rudern [Dropsatz]', await zeilen18());
   await ds.click('#p-items .prow[data-i="0"] [data-pa="menu"]');
-  P.ok('„…“ an der Übung: Dropsatz, Supersatz (mit der nächsten), Entfernen', (await akt18()) === 'Dropsatz | Supersatz ↓ | Entfernen', await akt18());
+  P.ok('„…“ an der Übung: Dropsatz, Supersatz (mit der nächsten), Entfernen', (await akt18()) === 'Dropsatz | Supersatz | Entfernen', await akt18());
   await ds.click('#p-items [data-pa="dr"]');
   await ds.click('#p-items .prow[data-i="1"] [data-pa="menu"]'); await ds.click('#p-items [data-pa="su"]');
-  P.ok('eingestellt: Latzug mit Dropsatz, Bank im Supersatz mit Curls', (await zeilen18()) === 'Latzug [Dropsatz] | Bank [Supersatz mit Curls] | Curls | Rudern [Dropsatz]' && (await akt18()) === 'Dropsatz | Supersatz ↓* | Entfernen', (await zeilen18()) + ' # ' + (await akt18()));
+  P.ok('eingestellt: Latzug mit Dropsatz, Bank im Supersatz mit Curls', (await zeilen18()) === 'Latzug [Dropsatz] | Bank [Supersatz mit Curls] | Curls | Rudern [Dropsatz]' && (await akt18()) === 'Dropsatz | Supersatz* | Entfernen', (await zeilen18()) + ' # ' + (await akt18()));
   await ds.click('#p-items .prow[data-i="3"] [data-pa="menu"]');
   P.ok('letzte Übung: kein Supersatz zur Wahl; „Entfernen“ liegt hier', (await akt18()) === 'Dropsatz* | Entfernen', await akt18());
   await ds.click('#p-save'); await ds.waitForTimeout(150);
@@ -684,10 +700,10 @@ lauf(async () => {
   P.ok('gespeichert am Plan: dr und su', plan18 === '[{"id":"a","sets":4,"dr":1},{"id":"b","sets":2,"su":1},{"id":"c","sets":2},{"id":"d","sets":3,"dr":1}]', plan18);
   await ds.click('#v-training [data-k="start"]'); await ds.waitForTimeout(300);
   const reihen18 = () => ds.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
-  const nummern18 = () => ds.$$eval('#l-items .lx > .lt .lt-r .n', l => l.map(n => n.textContent).join(' '));
+  const nummern18 = () => ds.$$eval('#l-items .lx > .lt .lt-r .n', l => l.map(n => n.textContent + (n.querySelector('.dz') ? '°' : '')).join(' '));   // ° = rote Zahl im roten Ring (Dropsatz, v114; bis v113 ein „D“)
   const offen18 = () => ds.evaluate(() => document.querySelector('#l-tabs .lx-tab[aria-pressed="true"]').textContent);
   const frage18 = async () => !!(await ds.$('#l-res'));
-  P.ok('Dropsatz ohne eigene Werte: ein Viertel leichter als der Satz davor (67,5×9), in der Spalte „#“ steht D', (await reihen18()) === '90×11 90×10 90×9 67,5×9' && (await nummern18()) === '1 2 3 D', (await reihen18()) + ' # ' + (await nummern18()));
+  P.ok('Dropsatz ohne eigene Werte: ein Viertel leichter als der Satz davor (67,5×9), seine Nummer steht rot im Ring', (await reihen18()) === '90×11 90×10 90×9 67,5×9' && (await nummern18()) === '1 2 3 4°', (await reihen18()) + ' # ' + (await nummern18()));
   await ds.click('.lt-r[data-s="3"]');
   P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(ds, '#l-emp')) === 'Empfehlung 67,5 kg × 9 · Dropsatz: ein Viertel leichter, ohne Pause', await text(ds, '#l-emp'));
   await ds.click('.lt-r[data-s="0"]'); await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
@@ -700,12 +716,12 @@ lauf(async () => {
   await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
   P.ok('Dropsatz abgehakt: keine Frage nach der Reserve, gleich weiter zur nächsten Übung', (await offen18()) === 'Bank' && !(await frage18()), await offen18());
   /* Supersatz Bank + Curls: Nach jedem Satz wechselt die Ansicht zur anderen Übung, ohne Frage; sind beide fertig, geht es zur nächsten offenen Übung (Rudern). */
-  const su18 = await ds.evaluate(() => ({ hinweis: (document.querySelector('#l-items .lx-su') || {}).textContent, plus: document.querySelectorAll('#l-tabs .lx-plus').length, nach: (document.querySelector('#l-tabs .lx-plus').previousElementSibling || {}).textContent }));
-  P.ok('Supersatz: Hinweis unter dem Namen, ein „+“ zwischen den beiden Reitern', su18.hinweis === 'Supersatz mit Curls' && su18.plus === 1 && su18.nach === 'Bank', JSON.stringify(su18));
+  const su18 = await ds.evaluate(() => ({ hinweis: (document.querySelector('#l-items .lx-su') || {}).textContent, plus: document.querySelectorAll('#l-tabs .lx-plus .kette').length, nach: (document.querySelector('#l-tabs .lx-plus').previousElementSibling || {}).textContent }));
+  P.ok('Supersatz: Hinweis unter dem Namen, eine Kette zwischen den beiden Reitern', su18.hinweis === 'Supersatz mit Curls' && su18.plus === 1 && su18.nach === 'Bank', JSON.stringify(su18));
   const folge = [];
   for (let k = 0; k < 4; k++) { await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60); folge.push((await offen18()) + ((await frage18()) ? '?' : '')); }
   P.ok('Supersatz: Bank 1 → Curls 1 → Bank 2 → Curls 2 → Rudern, ohne Frage dazwischen', folge.join(' ') === 'Curls Bank Curls Rudern', folge.join(' '));
-  P.ok('Dropsatz mit eigenen Werten steigt wie jeder Satz für sich (35×10)', (await reihen18()) === '50×11 50×10 35×10' && (await nummern18()) === '1 2 D', (await reihen18()) + ' # ' + (await nummern18()));
+  P.ok('Dropsatz mit eigenen Werten steigt wie jeder Satz für sich (35×10)', (await reihen18()) === '50×11 50×10 35×10' && (await nummern18()) === '1 2 3°', (await reihen18()) + ' # ' + (await nummern18()));
   await ds.click('#l-save'); await ds.waitForTimeout(250); await ds.click('#rs-ok');
   const log18 = (await gespeichert(ds)).K.log[heute];
   P.ok('gespeichert: Latzug mit vier Sätzen samt Dropsatz, Bank und Curls je zwei', JSON.stringify(log18.a) === '[[90,11],[80,10],[80,9],[60,9]]' && log18.b.length === 2 && log18.c.length === 2 && !log18.d, JSON.stringify(log18));

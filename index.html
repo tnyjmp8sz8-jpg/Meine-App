@@ -42,7 +42,7 @@
 :root{
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
-  --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.85); --glass-bot:rgba(255,255,255,.4); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+  --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.9); --glass-bot:rgba(255,255,255,.55); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
   --sheet:rgba(242,242,247,.84);
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -60,7 +60,7 @@
   /* Glas (v102): --edge und --edge-top sind die feine Kante und das Licht von oben an jeder Fläche, --cut und --schild deckende Farben für Stellen, an denen nichts durchscheinen darf
      (Ring um den Punkt im Graphen, Schild beim Ablesen). Seit v113 nach seinem Bild vom Dock in iOS 26 („passe alle Glas- und transparenten Teile in dem Stil von Apple an“):
      Das schwebende Glas (Leiste, Blätter, Hinweis, runde Knöpfe oben) ist dunkler und trägt oben einen hellen Lichtbogen (--glass-top), unten einen schwächeren (--glass-bot), rundum eine feine Linie;
-     die Flächen auf der Seite tragen dasselbe leiser (--edge-top, --edge-bot). Alles als Schatten nach innen: Sie folgen der Rundung und scrollen in Blättern nicht mit. --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
+     die Flächen auf der Seite tragen dasselbe leiser (--edge-top, --edge-bot). v114 (sein Blick: „oben und unten hellerer Bogen und an der Seite dunkler“): die Linie rundum fast weg, der untere Bogen heller. Alles als Schatten nach innen: Sie folgen der Rundung und scrollen in Blättern nicht mit. --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
   --edge:rgba(0,0,0,.05); --edge-top:rgba(255,255,255,.9); --edge-bot:rgba(0,0,0,.03); --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
   --danger:#D70015;
   --good:#248A3D;--warn:#D9A300;
@@ -73,15 +73,15 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#000000; --glass:rgba(30,30,33,.56); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(255,255,255,.11); --glass-top:rgba(255,255,255,.36); --glass-bot:rgba(255,255,255,.13); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
+    --bg:#000000; --glass:rgba(28,28,31,.58); --glass-line:rgba(255,255,255,.055); --glass-sel:rgba(255,255,255,.11); --glass-top:rgba(255,255,255,.42); --glass-bot:rgba(255,255,255,.26); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
     /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
     --surface:rgba(255,255,255,.085); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
-    --edge:rgba(255,255,255,.055); --edge-top:rgba(255,255,255,.13); --edge-bot:rgba(255,255,255,.035); --cut:#161618; --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
+    --edge:rgba(255,255,255,.04); --edge-top:rgba(255,255,255,.14); --edge-bot:rgba(255,255,255,.07); --cut:#161618; --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
-  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.09);--edge-top:rgba(255,255,255,.16);--edge-bot:rgba(255,255,255,.05);--cut:#2B2B2E;--schild:#48484A}
+  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.06);--edge-top:rgba(255,255,255,.17);--edge-bot:rgba(255,255,255,.09);--cut:#2B2B2E;--schild:#48484A}
 }
 
 *{box-sizing:border-box}
@@ -174,7 +174,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 /* Hauptknopf (v102): kein flaches Blau, sondern ein leichter Verlauf mit Licht von oben und einer feinen dunkleren Kante unten.
    Seit v104 ohne Schein nach außen (sein Bild vom 25.11.: „mag die Buttons vom Look, aber nicht, dass es nach unten so abstrahlt“): alle Schatten liegen innen. */
-.primary{border:0;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,#fff),var(--accent) 52%,var(--accent-deep));color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.34),inset 0 0 0 .5px rgba(255,255,255,.14),inset 0 -1px 0 rgba(0,0,0,.16)}
+.primary{border:0;border-radius:14px;background:linear-gradient(180deg,color-mix(in srgb,var(--accent) 84%,#fff),var(--accent) 52%,var(--accent-deep));color:var(--on-accent);font-weight:600;font-size:16px;padding:14px 18px;min-height:50px;box-shadow:inset 0 1px 0 rgba(255,255,255,.42),inset 0 -1px 0 rgba(255,255,255,.16),inset 0 0 0 .5px rgba(255,255,255,.1),0 0 0 .5px color-mix(in srgb,var(--accent) 60%,transparent),0 0 14px -1px color-mix(in srgb,var(--accent) 42%,transparent)}
 .ghost{border:1px solid var(--line);border-radius:14px;background:var(--fill);font-weight:500;font-size:15px;padding:12px 16px;min-height:46px;text-align:left}
 .h-btn{display:block;width:100%;margin-top:14px;text-align:center}
 .ghost.danger{color:var(--danger);text-align:center}
@@ -439,6 +439,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .prow{flex-wrap:wrap}
 .prow b small{display:block;margin-top:1px;font-size:12px;font-weight:500;color:var(--muted)}
 .p-akt{flex-basis:100%;padding:2px 0 4px}
+.p-akt button{display:inline-flex;align-items:center;gap:5px}
 .lx-akt button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
 .x.sm svg[viewBox="0 0 18 5"]{width:15px;height:auto;color:var(--at)}
 /* Griff zum Umsortieren (v106) und die Zeile, die gerade gezogen wird: Sie hebt sich leicht ab, die anderen weichen weich aus */
@@ -632,8 +633,11 @@ u.w{background:var(--c-weight)}
 .lx-z:active{opacity:.55}
 .rek-l{margin:0;font-size:12.5px;font-weight:600;color:var(--good)}
 .lx-su{margin:0;font-size:12.5px;font-weight:600;color:var(--muted)}
-.lx-plus{flex:none;align-self:center;margin:0 -3px;font-size:14px;font-weight:600;color:var(--mid)}
-.lt-r abbr{text-decoration:none}
+.lx-plus{flex:none;align-self:center;display:grid;margin:0 -4px;color:var(--muted)}
+.lt-r .dz{display:inline-grid;place-items:center;width:21px;height:21px;border-radius:50%;box-shadow:inset 0 0 0 1.5px var(--danger);color:var(--danger);font-size:11.5px;font-weight:700;font-style:normal;line-height:1}
+.kette{width:13px;height:13px;flex:none}
+.lx-su{display:flex;align-items:center;gap:5px}
+.prow b small .kette{vertical-align:-2px;margin-right:3px;width:12px;height:12px}
 .lx-e{margin:2px 2px 0;font-size:12.5px;color:var(--muted)}
 .lx-e b{font-weight:600;color:var(--ink);margin-right:4px}
 .rk{font-weight:600;color:var(--good)}
@@ -1288,7 +1292,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v113</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v114</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2834,33 +2838,46 @@ const schrittText = st => st.toLocaleString('de-DE') + ' kg';
    Am Satz steht sie als drittes Feld [Gewicht, Wiederholungen, Reserve]. 0 und 1 gelten als hart genug; ab 2 zählt jede weitere wie eine geschaffte Wiederholung:
    10 Wdh mit 3 in Reserve rechnen wie 12. Ohne Angabe ändert sich nichts. */
 const wdhEff = q => q[1] + Math.max(0, (q[2] || 0) - 1);
-/* Vorgabe für heute aus den Sätzen vom letzten Mal, je Satz [Gewicht, Wiederholungen, Grund]. von–bis = Bereich, davor = Sätze der Einheit vor der letzten, bw = Körpergewicht, das mitbewegt wird.
-   Seit v111 steigt jeder Satz für sich (seine Frage zum Bild vom 25.11.: „ist 12 bis 12 in jedem Satz besser als erhöhen bei 12 10 8?“). Wer nah an die Grenze geht, schafft von Satz zu Satz weniger;
-   bis v110 wartete das Gewicht, bis alle Sätze oben waren, und das kommt bei 12, 10, 8 nie, ohne den ersten Satz zu schonen. Jetzt:
-   1. Ein Satz am oberen Ende bekommt einen Schritt mehr Gewicht, mit so vielen Wiederholungen, dass das geschätzte Maximum nicht sinkt, mindestens das untere Ende
-      (40 kg × 12 = 56 → 42,5 kg: (56 / 42,5 − 1) × 30 = 9,5 → 9). Dips +15 kg × 12 bei 90 kg: 105 × 1,4 = 147 → +17,5 kg: (147 / 107,5 − 1) × 30 = 11,02 → 11.
-      Von vorn nach hinten: Ein späterer Satz steigt nur, wenn die Sätze davor mit demselben Gewicht auch steigen (sonst wäre er schwerer als der Satz vor ihm); bis dahin hält er.
-   2. Lag derselbe Satz zweimal in Folge mit demselben Gewicht unter dem Bereich, geht ein Schritt Gewicht weg (ein schlechter Tag allein ändert nichts: seine Regel vom 24.11.).
-   3. Sonst bleibt das Gewicht und es kommt eine Wiederholung dazu.
-   So wird aus 40×12, 40×10, 40×8 → 42,5×9, 40×11, 40×9: Das Gewicht fällt im Training von Satz zu Satz, jeder Satz bleibt im Bereich und nah an der Grenze.
+/* Abfall von Satz zu Satz, aus seinem Verhalten gelernt (v114, sein Wort vom 25.11.: „lerne aus meinem Verhalten … meistens schaffe ich nach 12 Wdh 10, nicht 11 wie du vorschlägst“):
+   der mittlere Unterschied zwischen zwei aufeinanderfolgenden Sätzen mit demselben Gewicht in den letzten sechs Einheiten der Übung (bei gerader Anzahl der kleinere der beiden mittleren).
+   12, 10, 8 → Unterschiede 2 und 2 → 2. Ohne Daten 2 (sein Muster; bei Sätzen nah an der Grenze und üblichen Pausen sind zwei bis drei Wiederholungen normal), höchstens 4. */
+function exAbfall(hist) {
+  const d = [];
+  hist.slice(-6).forEach(x => x.sets.forEach((q, j) => { const v = x.sets[j - 1]; if (v && v[0] === q[0]) d.push(Math.max(0, v[1] - q[1])); }));
+  if (!d.length) return 2;
+  d.sort((p, q) => p - q);
+  return Math.min(4, d[Math.floor((d.length - 1) / 2)]);
+}
+/* Vorgabe für heute aus den Sätzen vom letzten Mal, je Satz [Gewicht, Wiederholungen, Grund]. von–bis = Bereich, davor = Sätze der Einheit vor der letzten, bw = Körpergewicht, das mitbewegt wird,
+   abfall = exAbfall(). Seit v114 so, wie er trainiert und wie es die meisten Studien halten (gleiches Gewicht über die Sätze, nah an die Grenze, die Wiederholungen fallen von Satz zu Satz):
+   Aufeinanderfolgende Sätze mit demselben Gewicht bilden einen Block; der erste Satz führt.
+   1. Führender Satz am oberen Ende → der ganze Block bekommt einen Schritt mehr Gewicht. Wiederholungen je Satz so, dass sein geschätztes Maximum nicht sinkt; der führende mindestens das untere Ende.
+      40×12, 40×10, 40×8 → 42,5 kg: 56 → 9,5 → 9; 53,33 → 7,6 → 7; 50,67 → 5,8 → 5. Die späteren Sätze dürfen unter dem Bereich liegen: Der Bereich gilt für den führenden Satz.
+      Dips +15 kg × 12 bei 90 kg: 105 × 1,4 = 147 → +17,5 kg: (147 / 107,5 − 1) × 30 = 11,02 → 11.
+   2. Führender Satz zweimal in Folge mit demselben Gewicht unter dem Bereich → der Block bekommt einen Schritt weniger (ein schlechter Tag allein ändert nichts: seine Regel vom 24.11.).
+   3. Sonst bleibt das Gewicht: Der führende Satz bekommt eine Wiederholung mehr. Die Sätze danach richten sich nach dem, was nach diesem Ziel zu erwarten ist (Ziel minus Abfall je Satz),
+      mindestens wie letztes Mal, höchstens eine mehr: 11, 10, 8 → 12, 10, 8 (nach 12 kommen bei ihm 10, nicht 11); 11, 8, 6 → 12, 9, 7.
+   Von v111 bis v113 stieg jeder Satz für sich (42,5×9, 40×11, 40×9), bis v110 wartete das Gewicht auf 12, 12, 12; beides entsprach nicht dem, wie er trainiert.
    Ganz ohne Gewicht (und ohne Körpergewicht) immer eine Wiederholung mehr.
    Mit Reserve (wdhEff): 20 kg × 10 mit 3 in Reserve zählt wie 12 → oben angekommen, mehr Gewicht; 40 kg × 9 mit 3 in Reserve → Ziel 11 statt 10.
    „Unter dem Bereich“ heißt mit Reserve: Auch mit dem, was noch gegangen wäre, hätte es nicht für das untere Ende gereicht. */
-function vorgabe(sets, von, bis, step, bw, davor) {
-  bw = bw || 0;
-  const unter = q => q[1] + (q[2] || 0) < von, oben = q => wdhEff(q) >= bis;
-  return sets.map((q, j) => {
-    const w = q[0], n = q[1], rm = rm1(w + bw, wdhEff(q));
-    if (!w && !bw) return [0, n + 1, 'eine Wdh mehr'];
-    if (oben(q)) {
-      if (!sets.every((o, k) => k >= j || o[0] !== w || oben(o))) return [w, n, 'halten, bis die Sätze davor ' + bis + ' schaffen'];
-      const nw = Math.round((w + step) * 100) / 100; return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '+' + schrittText(step)];
+function vorgabe(sets, von, bis, step, bw, davor, abfall) {
+  bw = bw || 0; if (abfall == null) abfall = 2;
+  const unter = q => q[1] + (q[2] || 0) < von, out = [];
+  for (let i = 0, e; i < sets.length; i = e + 1) {
+    e = i; while (e + 1 < sets.length && sets[e + 1][0] === sets[i][0]) e++;
+    const f = sets[i], w = f[0], alt = davor && davor[i], block = sets.slice(i, e + 1), mehr = Math.round((w + step) * 100) / 100, weniger = Math.round((w - step) * 100) / 100;
+    const mit = (nw, grund) => block.forEach((q, k) => out.push([nw, clamp(wdhBei(rm1(w + bw, wdhEff(q)), nw + bw), k ? 1 : von, bis), grund]));
+    if (!w && !bw) block.forEach(q => out.push([0, q[1] + 1, 'eine Wdh mehr']));
+    else if (wdhEff(f) >= bis) mit(mehr, '+' + schrittText(step));
+    else if (unter(f) && alt && alt[0] === w && unter(alt) && weniger + bw > 0 && weniger >= 0) mit(weniger, '−' + schrittText(step) + ', zurück in ' + von + '–' + bis);
+    else {
+      const z0 = Math.min(bis, Math.max(f[1] + 1, wdhEff(f)));
+      block.forEach((q, k) => { const n = q[1], z = k ? Math.min(bis, Math.max(clamp(z0 - k * abfall, n, n + 1), wdhEff(q))) : z0;
+        out.push([w, z, z - n > 1 ? z - n + ' Wdh mehr, du hattest Reserve' : z > n ? 'eine Wdh mehr' : 'wie letztes Mal']); });
     }
-    const alt = davor && davor[j], nw = Math.round((w - step) * 100) / 100;
-    if (unter(q) && alt && alt[0] === w && unter(alt) && nw + bw > 0 && nw >= 0) return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '−' + schrittText(step) + ', zurück in ' + von + '–' + bis];
-    const ziel = Math.min(bis, Math.max(n + 1, wdhEff(q)));
-    return [w, ziel, ziel - n > 1 ? ziel - n + ' Wdh mehr, du hattest Reserve' : 'eine Wdh mehr'];
-  });
+  }
+  return out;
 }
 /* Stand einer Übung in einem Zeitraum: bester Vergleichswert der Einheiten, deren Datum mit pre beginnt ('YYYY-MM' oder 'YYYY') */
 function exLevel(hist, pre) {
@@ -3425,7 +3442,7 @@ const CHECK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke
    damit die Zeile „Empfehlung“ sie auch dann zeigt, wenn er etwas anderes einträgt. Ohne Empfehlung stehen die Werte vom letzten Mal da. */
 function liveSets(id, count, dr) {
   const hist = kHist(id), last = hist[hist.length - 1], an = empAn(), sets = [], st = exStep(hist, id);
-  const base = !last ? [] : an ? vorgabe(last.sets, exVon(id), exBis(id), st, last.bw, hist.length > 1 ? hist[hist.length - 2].sets : null) : last.sets;
+  const base = !last ? [] : an ? vorgabe(last.sets, exVon(id), exBis(id), st, last.bw, hist.length > 1 ? hist[hist.length - 2].sets : null, exAbfall(hist)) : last.sets;
   for (let j = 0; j < count; j++) {
     let b = base[j] || base[base.length - 1];
     /* Dropsatz ohne eigene Werte (der letzte Satz war bisher so schwer wie der davor, oder es gab ihn nicht): rund ein Viertel leichter als der Satz davor, auf den Schritt abgerundet */
@@ -3448,14 +3465,15 @@ function lGruppe(i) {
   return bis > von ? [von, bis] : null;
 }
 /* Nach einem abgehakten Satz j: Die offenen Sätze danach mit demselben Gewicht bekommen eine neue Empfehlung, gemessen an dem, was er gerade geschafft hat.
-   Erwartung für Satz k = geschaffte Wiederholungen minus die Ermüdung bis dorthin (so viel, wie es letztes Mal zwischen diesen Sätzen weniger wurde; ohne Vergleich eine je Satz).
-   - Unter dem Bereich geblieben: weniger Gewicht, so viele Schritte, bis die Erwartung wieder im Bereich liegt (90 kg × 6, Bereich 8–12, Ermüdung 1: 1RM 108 → 85 kg: 8,1 − 1 = 7; 82,5 kg: 9,2 − 1 = 8 → 82,5 kg × 8).
+   Erwartung für Satz k = geschaffte Wiederholungen minus die Ermüdung bis dorthin (so viel, wie es letztes Mal zwischen diesen Sätzen weniger wurde; ohne Vergleich sein gelernter Abfall je Satz, exAbfall).
+   - Der führende Satz eines Gewichts blieb unter dem Bereich: weniger Gewicht, so viele Schritte, bis ein frischer Satz wieder im Bereich läge (90 kg × 6, Bereich 8–12: 1RM 108 → 85 kg: 8,1 → reicht;
+     Satz 2 dann 8 minus Ermüdung). Spätere Sätze dürfen unter dem Bereich liegen, sie lösen das nicht aus.
    - Zwei oder mehr über dem oberen Ende: ein Schritt mehr Gewicht (40 kg × 14: 1RM 58,67 → 42,5 kg: 11,4 − 1 = 10 → 42,5 kg × 10).
-   - Hinter der Empfehlung, aber im Bereich: die Erwartung, mindestens das untere Ende, höchstens die bisherige Empfehlung. Sonst bleibt die Empfehlung oder steigt auf die Erwartung, höchstens das obere Ende.
+   - Hinter der Empfehlung: die Erwartung, höchstens die bisherige Empfehlung. Sonst bleibt die Empfehlung oder steigt auf die Erwartung, höchstens das obere Ende.
    Einen Satz, an dem er die Wiederholungen selbst geändert hat, lässt die App stehen; die Zeile „Empfehlung“ zeigt trotzdem, was sie raten würde. */
 function lAnpassen(it, j) {
   const sj = it.sets[j], a = lNum(sj); if (!a[1]) return;
-  const von = exVon(it.id), bis = exBis(it.id), bw = exBw(it.id, Lw.date), hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], st = exStep(hist, it.id);
+  const von = exVon(it.id), bis = exBis(it.id), bw = exBw(it.id, Lw.date), hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], st = exStep(hist, it.id), ab = exAbfall(hist), fuehrt = !it.sets.slice(0, j).some(q => q.w === it.sets[j].w);
   /* ae = geschafft, dazu die Reserve ab der zweiten (wdhEff): 10 mit 3 in Reserve zählt wie 12 */
   const res = sj.x || 0, ae = wdhEff([a[0], a[1], res]), plan = sj.er != null && sj.ew === sj.w ? +sj.er : 0, rm = rm1(a[0] + bw, ae), ohne = !a[0] && !bw;
   it.sets.forEach((s, k) => {
@@ -3467,16 +3485,16 @@ function lAnpassen(it, j) {
       s.ew = q[0] ? kgn(q[0]) : ''; s.er = String(q[1]); s.eg = q[2]; if (frei) { s.w = s.ew; s.r = s.er; }
       return;
     }
-    const lj = last && last.sets[j], lk = last && last.sets[k], d = lj && lk && lj[0] === lk[0] ? clamp(lj[1] - lk[1], 0, 3 * (k - j)) : k - j, erw = ae - d;
+    const lj = last && last.sets[j], lk = last && last.sets[k], d = lj && lk && lj[0] === lk[0] ? clamp(lj[1] - lk[1], 0, 3 * (k - j)) : ab * (k - j), erw = ae - d;
     const pk = s.er != null && s.ew === sj.w ? +s.er : 0, frei = s.r === (s.er != null ? s.er : '');
     let w = a[0], r, g = 'nach Satz ' + (j + 1) + ' angepasst';
     if (ohne) r = plan && ae < plan ? Math.max(1, Math.min(pk || erw, erw)) : Math.max(pk, erw, 1);
-    else if (a[1] + res < von) {
+    else if (fuehrt && a[1] + res < von) {
       r = Math.max(1, erw);
-      for (let m = 1; m <= 12; m++) { const nw = Math.round((a[0] - m * st) * 100) / 100; if (nw < 0 || nw + bw <= 0) break; w = nw; r = wdhBei(rm, nw + bw) - d; if (r >= von) break; }
-      r = w === a[0] ? r : clamp(r, von, bis); g = w === a[0] ? g : 'weniger Gewicht, zurück in ' + von + '–' + bis;
-    } else if (ae >= bis + 2) { w = Math.round((a[0] + st) * 100) / 100; r = clamp(wdhBei(rm, w + bw) - d, von, bis); g = 'mehr Gewicht, ' + (a[1] >= bis + 2 ? 'du lagst über ' + bis : 'du hattest Reserve'); }
-    else { r = plan && ae < plan ? clamp(erw, von, Math.max(von, pk || erw)) : Math.min(bis, Math.max(pk, erw, von)); if (res > 1 && r > pk) g = 'mehr, du hattest Reserve'; }
+      for (let m = 1; m <= 12; m++) { const nw = Math.round((a[0] - m * st) * 100) / 100; if (nw < 0 || nw + bw <= 0) break; w = nw; r = wdhBei(rm, nw + bw); if (r >= von) break; }
+      r = w === a[0] ? r : clamp(r - d, 1, bis); g = w === a[0] ? g : 'weniger Gewicht, zurück in ' + von + '–' + bis;
+    } else if (ae >= bis + 2) { w = Math.round((a[0] + st) * 100) / 100; r = clamp(wdhBei(rm, w + bw) - d, 1, bis); g = 'mehr Gewicht, ' + (a[1] >= bis + 2 ? 'du lagst über ' + bis : 'du hattest Reserve'); }
+    else { r = plan && ae < plan ? Math.max(1, Math.min(pk || erw, erw)) : Math.min(bis, Math.max(pk, erw, 1)); if (res > 1 && r > pk) g = 'mehr, du hattest Reserve'; }
     const ws = w ? kgn(w) : '', rs = String(r);
     if (ws === s.ew && rs === s.er) return;                      // nichts Neues: Der Grund vom Anfang bleibt stehen
     s.ew = ws; s.er = rs; s.eg = g;
@@ -3569,6 +3587,8 @@ async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = awai
 function wakeOff() { try { if (wakeL) wakeL.release(); } catch (e) {} wakeL = null; }
 function saveLive() { if (Lw && K.live && JSON.stringify(Lw) !== JSON.stringify(K.live)) kdoc.patch({ live: clone(Lw) }); }
 let lI = 0, lJ = null, lAdd = false, lRm = false, lMenu = false;
+/* Kette: Zeichen für den Supersatz (v114, sein Wunsch: „Supersatz mit Art Verkettungs-Symbol“) */
+const KETTE = '<svg class="kette" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6.8 9.2a3 3 0 0 0 4.2 0l2.2-2.2a3 3 0 0 0-4.2-4.2l-.9.9"/><path d="M9.2 6.8a3 3 0 0 0-4.2 0L2.8 9a3 3 0 0 0 4.2 4.2l.9-.9"/></svg>';
 const DOTS = '<svg viewBox="0 0 18 5" fill="currentColor" aria-hidden="true"><circle cx="2.5" cy="2.5" r="2"/><circle cx="9" cy="2.5" r="2"/><circle cx="15.5" cy="2.5" r="2"/></svg>';
 const PEN = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.8 2.6l2.6 2.6L5.6 13H3v-2.6z"/></svg>';
 /* Werte eines Satzes im laufenden Training als Zahlen [kg, Wdh]; leer oder ungültig zählt als 0 */
@@ -3587,7 +3607,7 @@ function paintL() {
   const tabs = $('#l-tabs');
   tabs.innerHTML = Lw.items.map((it, i) => {
     const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = undone(it) < 0;
-    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>' + (it.su && i < Lw.items.length - 1 ? '<span class="lx-plus" aria-hidden="true">+</span>' : '');
+    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>' + (it.su && i < Lw.items.length - 1 ? '<span class="lx-plus" aria-hidden="true">' + KETTE + '</span>' : '');
   }).join('') + '<button type="button" class="lx-tab addx" data-la="addx" aria-expanded="' + (lAdd || !Lw.items.length) + '" aria-label="Übung hinzufügen">+</button>';
   $('#l-add').hidden = !lAdd && Lw.items.length > 0;
   paintLPick();
@@ -3596,7 +3616,7 @@ function paintL() {
   const it = Lw.items[lI];
   if (!it) { $('#l-items').innerHTML = ''; return; }
   const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], an = empAn(), zv = exVon(it.id), zb = exBis(it.id);
-  const gr = lGruppe(lI), nr = j => it.dr && it.sets.length > 1 && j === it.sets.length - 1 ? '<abbr title="Dropsatz">D</abbr>' : j + 1;
+  const gr = lGruppe(lI), nr = j => it.dr && it.sets.length > 1 && j === it.sets.length - 1 ? '<i class="dz" title="Dropsatz">' + (j + 1) + '</i>' : j + 1;
   const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v), rek = lRek(it);
   /* Ein abgehakter Satz zeigt in Grün, um wie viel er über demselben Satz vom letzten Mal liegt: mehr Gewicht („+2,5“ am Gewicht), bei gleichem Gewicht mehr Wiederholungen („+1“ an den Wiederholungen) */
   const mehr = (s, j) => { const l = last && last.sets[j], q = lNum(s), m = t => '<small class="mehr">+' + t + '</small>';
@@ -3608,7 +3628,7 @@ function paintL() {
     '<button type="button" class="lx-m" data-la="menu" aria-expanded="' + lMenu + '" aria-label="Sätze und Übung ändern">' + DOTS + '</button></div>' +
     '<div class="lx-zr">' + (an ? '<button type="button" class="lx-z" data-la="ziel" aria-label="Ziel: ' + zv + ' bis ' + zb + ' Wiederholungen je Satz, ändern">Ziel ' + zv + '–' + zb + ' Wdh' + PEN + '</button>' : '') +
       '<button type="button" class="lx-z" data-la="schritt" aria-label="Schritt beim Gewicht: ' + schrittText(exStep(hist, it.id)) + ', ändern">Schritt ' + schrittText(exStep(hist, it.id)) + PEN + '</button></div>' +
-    (gr ? '<p class="lx-su">Supersatz mit ' + esc(Lw.items.slice(gr[0], gr[1] + 1).filter(o => o !== it).map(o => K.ex[o.id] ? K.ex[o.id].n : 'Übung').join(' + ')) + '</p>' : '') +
+    (gr ? '<p class="lx-su">' + KETTE + 'Supersatz mit ' + esc(Lw.items.slice(gr[0], gr[1] + 1).filter(o => o !== it).map(o => K.ex[o.id] ? K.ex[o.id].n : 'Übung').join(' + ')) + '</p>' : '') +
     (rek ? '<p class="rek-l">Neuer Rekord · ' + (rek.q.w ? '1RM ' + rmText(rek.q.v) + ' kg' : rek.q.v + ' Wdh') + '</p>' : '') + '</div>' +
     (lMenu ? '<div class="lx-akt"><button type="button" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" data-la="rmset">− Satz</button>' : '') +
       '<button type="button" class="danger" data-la="rm">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>' : '') +
@@ -3762,10 +3782,10 @@ $('#l-del').addEventListener('click', () => {
 let pMenu = -1;
 function paintP() {
   $('#p-items').innerHTML = pS.items.map((it, i) => { const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', nach = pS.items[i + 1], nn = nach && K.ex[nach.id] ? K.ex[nach.id].n : '';
-    const art = [it.dr && it.sets > 1 ? 'Dropsatz' : '', it.su && nach ? 'Supersatz mit ' + nn : ''].filter(Boolean).join(' · ');
-    return '<div class="prow" data-i="' + i + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + esc(name) + (art ? '<small>' + esc(art) + '</small>' : '') + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + '<i>' + (it.sets === 1 ? ' Satz' : ' Sätze') + '</i></span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
+    const art = [it.dr && it.sets > 1 ? 'Dropsatz' : '', it.su && nach ? KETTE + 'Supersatz mit ' + esc(nn) : ''].filter(Boolean).join(' · ');
+    return '<div class="prow" data-i="' + i + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + esc(name) + (art ? '<small>' + art + '</small>' : '') + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + '<i>' + (it.sets === 1 ? ' Satz' : ' Sätze') + '</i></span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
       '<button type="button" class="x sm" data-pa="menu" aria-expanded="' + (pMenu === i) + '" aria-label="' + esc(name) + ': Dropsatz, Supersatz, entfernen">' + DOTS + '</button>' +
-      (pMenu === i ? '<div class="lx-akt p-akt">' + (it.sets > 1 ? '<button type="button" data-pa="dr" aria-pressed="' + !!it.dr + '">Dropsatz</button>' : '') + (nach ? '<button type="button" data-pa="su" aria-pressed="' + !!it.su + '" aria-label="Supersatz mit der nächsten Übung, ' + esc(nn) + '">Supersatz ↓</button>' : '') +
+      (pMenu === i ? '<div class="lx-akt p-akt">' + (it.sets > 1 ? '<button type="button" data-pa="dr" aria-pressed="' + !!it.dr + '">Dropsatz</button>' : '') + (nach ? '<button type="button" data-pa="su" aria-pressed="' + !!it.su + '" aria-label="Supersatz mit der nächsten Übung, ' + esc(nn) + '">' + KETTE + 'Supersatz</button>' : '') +
         '<button type="button" class="danger" data-pa="rm">Entfernen</button></div>' : '') + '</div>'; }).join('');
   paintPPick();
 }
@@ -4355,7 +4375,7 @@ function paintE() {
     secHTML('Auf Heute zeigen') + '<ul class="entries">' + OV.map(q => '<li>' + schalter('ov', q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' +
     secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
       '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
-    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht (den Schritt legst du im Training je Übung fest). Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
+    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
 }
 const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
