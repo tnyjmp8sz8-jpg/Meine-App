@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v109 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v109): alle 16 Reihen stimmen.
+- App-Inhalt (`index.html`): v110 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v110): alle 16 Reihen stimmen (Gym 169). Mit gestellter Uhr geprüft (Gym, Klappzeilen): 1.1.2027, 2.3.
+- v110 (25.11., sein „übernimm alle Einstellungen-Änderungen“ zu meinen vier Vorschlägen): (1) Start-Bereich wählbar. (2) „Auf Heute zeigen“: Schalter je Zeile der Übersicht (Gewicht, Finanzen, Training, Arbeit, Uni). (3) „Nach der Reserve fragen“ getrennt von der Empfehlung abschaltbar. (4) Schritt beim Gewicht je Übung, im Training neben dem Ziel („Schritt 2,5 kg“; ohne Wahl rät die App wie bisher). Die Einstellungen stehen in der Sicherung. Am iPhone ungeprüft.
 - v109 (25.11., sein Bildschirmfoto von Heute mit v108 am iPhone: „ich will auf heute das nicht sehen mit gym“): Die Zeile „Heute dran“ ist von Heute weg. Sein Bild belegt am iPhone: v108 ist angekommen, Zahnrad, großer Titel, Licht hinter der Seite und Linse in der Leiste sitzen; er benutzt inzwischen auch Finanzen und Arbeit. Dazu seine Frage „was noch hinzufügen alles? auch für einstellungen? vorschläge“: Liste unten unter „Offene Vorschläge“.
 - v108 (25.11., sein „ja baue ein“ auf meinen Vorschlag zu v107): Reserve je Satz. Nach dem Abhaken steht unter den Sätzen „Satz 1: Wie viele wären noch gegangen?“ mit 0, 1, 2, 3, 4+ (ein Tipp, keine Pflicht, zweiter Tipp nimmt zurück). 0 und 1 ändern nichts; ab 2 hebt die App die nächsten Sätze an, bei viel Reserve das Gewicht; „zu schwer“ gilt nur noch, wenn es auch mit der Reserve nicht für 8 gereicht hätte. Die Angabe wird mit dem Training gespeichert und fließt in den Plan fürs nächste Mal ein. Von mir geändert nach dem ersten Bild: Die Reihe stand erst unten am Bildschirm (bei langen Übungen erst nach dem Scrollen da), jetzt direkt unter den Sätzen. Am iPhone ungeprüft.
 - v107 (25.11., sein Auftrag: „ich will, dass du vorgibst nach schlaustem System, was im nächsten Satz empfohlen ist, sozusagen Progression-Empfehlung nach wissenschaftlich optimalem System“, dann „mach 8–12 wie du empfohlen hast. dazu: gib mir die Möglichkeit, in den Einstellungen dieses System einzustellen und auszustellen“): Empfehlung je Satz. Bereich 8–12 Wdh je Übung (im Training über „Ziel 8–12 Wdh“ änderbar: 3–6 bis 15–20). Vor dem Training plant die App aus dem letzten Mal (erst Wiederholungen bis 12, dann mehr Gewicht; zweimal in Folge unter 8 → weniger Gewicht), nach jedem abgehakten Satz passt sie die nächsten an. Unter den Sätzen steht die Zeile „Empfehlung 90 kg × 11 · eine Wdh mehr“. Schalter „Empfehlung je Satz“ in den Einstellungen; aus = nur die Werte vom letzten Mal. Von mir entschieden: ohne Eingabe der Anstrengung je Satz (meine Rückfrage dazu ließ er offen). Ihm gesagt: ein bewiesen „optimales“ System gibt es nicht, dies ist das am besten belegte einfache Verfahren. Ein Fehler vor dem Veröffentlichen gefunden (Test): Die Sätze eines gestarteten Trainings waren leer. Am iPhone ungeprüft.
@@ -28,9 +29,8 @@
 - Zurzeit keiner.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
-Auf seine Frage vom 25.11. („was noch hinzufügen alles? auch für einstellungen?“) vorgeschlagen, Antwort steht aus:
-- Einstellungen: Start-Bereich wählen (z. B. gleich Training); Übersicht auf Heute selbst bestimmen (welche Bereiche erscheinen); Frage nach der Reserve getrennt von der Empfehlung abschaltbar; Schritt beim Gewicht je Übung festlegen.
-- Funktionen: Aufwärmsätze vor dem ersten Satz vorschlagen; leichtere Woche vorschlagen, wenn mehrere Übungen über Wochen fallen; Wochenrückblick als Mitteilung am Sonntag (iPhone-App).
+Auf seine Frage vom 25.11. („was noch hinzufügen alles?“) vorgeschlagen, die Einstellungen sind mit v110 gebaut, offen sind:
+- Aufwärmsätze vor dem ersten Satz vorschlagen; leichtere Woche vorschlagen, wenn mehrere Übungen über Wochen fallen; Wochenrückblick als Mitteilung am Sonntag (iPhone-App).
 Auf seine Frage „was würdest du jetzt noch ändern oder hinzufügen mit wirklich mehrwert?“ (18.11.):
 1. Zuerst das Gebaute am iPhone zum Laufen bringen (0.6, Kurzbefehle, Ordner für die Sicherung).
 2. (erledigt mit v80: Zeilen für Arbeit und Uni auf Heute)
@@ -86,6 +86,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v107: Empfehlung je Satz im Training (Bereich 8–12, Anpassung nach jedem Satz), Schalter dafür in den Einstellungen.
 - v108: Reserve je Satz („Wie viele wären noch gegangen?“) fließt in die Empfehlung ein.
 - v109: „Heute dran“ wieder von Heute entfernt.
+- v110: Einstellungen für Start-Bereich, Übersicht auf Heute, Frage nach der Reserve; Schritt beim Gewicht je Übung.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
