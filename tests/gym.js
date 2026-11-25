@@ -763,12 +763,12 @@ lauf(async () => {
   /* Ändern: Blatt „Einheit ändern“ mit Dauer. 45 Minuten → 2700 s, der Plan bleibt an der Einheit; ein Satz auf 9 Wiederholungen. */
   await nb.click('#rs-edit'); await nb.waitForTimeout(300);
   P.ok('„Ändern“ öffnet „Einheit ändern“ mit dem Feld für die Dauer', (await text(nb, '#ks-title')) === 'Einheit ändern' && await nb.evaluate(() => document.querySelector('#ksheet').open && !!document.querySelector('#k-dur')));
-  await nb.fill('#k-dur', '45'); await nb.fill('#k-r-0-1', '9'); await nb.click('#k-save'); await nb.waitForTimeout(250);
+  await zahlWahl(nb, '#k-dur', '45'); await nb.fill('#k-r-0-1', '9'); await nb.click('#k-save'); await nb.waitForTimeout(250);
   const e19 = (await gespeichert(nb)).K;
   P.ok('gespeichert: Dauer 45 min (2700 s), der Plan bleibt, der zweite Satz hat 9 Wiederholungen', e19.meta[heute].dur === 2700 && e19.meta[heute].plan === 'p' && JSON.stringify(e19.log[heute]) === '{"a":[[90,11],[90,9]]}', JSON.stringify(e19.meta[heute]) + ' ' + JSON.stringify(e19.log[heute]));
   /* Aus „Einheit ändern“ weiter trainieren und dann verwerfen: Die Einheit bleibt, wie sie war; die Uhr stand bei 45 Minuten. */
   await nb.click('#v-training [data-fold="einheiten"]'); await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
-  P.ok('Dauer steht im Feld, „Weiter trainieren“ ist da', (await nb.inputValue('#k-dur')) === '45' && await nb.evaluate(() => !document.querySelector('#k-weiter').hidden));
+  P.ok('Dauer steht im Feld, „Weiter trainieren“ ist da', (await text(nb, '#k-dur')) === '45 min' && await nb.evaluate(() => !document.querySelector('#k-weiter').hidden));
   await nb.click('#k-weiter'); await nb.waitForTimeout(350);
   const st19 = (await gespeichert(nb)).K.live.start;
   P.ok('weiter aus „Einheit ändern“: Die Uhr steht bei rund 45 Minuten', Math.abs(Date.now() - st19 - 2700000) < 5000, String(Date.now() - st19));
@@ -779,18 +779,18 @@ lauf(async () => {
      wer daneben tippt, um sie loszuwerden, schloss bisher das ganze Blatt samt Eingabe. Jetzt bleibt das Blatt beim ersten Tipp daneben offen (die Tastatur geht zu, weil das Feld
      den Fokus verliert) und sagt „Noch nicht gespeichert“; erst der zweite Tipp verwirft. „Speichern“ übernimmt 80 Minuten = 4800 s. Dasselbe gilt für „Plan bearbeiten“. */
   const daneben = async () => { await nb.mouse.click(195, 6); await nb.waitForTimeout(120); };
-  const k19 = () => nb.evaluate(() => ({ offen: document.querySelector('#ksheet').open, feld: document.activeElement && document.activeElement.id, dauer: document.querySelector('#k-dur').value, hinweis: document.querySelector('#k-err').hidden ? '' : document.querySelector('#k-err').textContent }));
+  const k19 = () => nb.evaluate(() => ({ offen: document.querySelector('#ksheet').open, feld: document.activeElement && document.activeElement.id, dauer: document.querySelector('#k-dur').textContent, hinweis: document.querySelector('#k-err').hidden ? '' : document.querySelector('#k-err').textContent }));
   await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
-  await nb.click('#k-dur'); await nb.fill('#k-dur', '80');
+  await zahlWahl(nb, '#k-dur', '80');
   await daneben(); const a19 = await k19();
-  P.ok('Dauer getippt, Tipp neben das Blatt: Das Blatt bleibt offen, das Feld gibt den Fokus ab (Tastatur zu), die Eingabe steht noch da, unten steht „Noch nicht gespeichert“', a19.offen && a19.feld !== 'k-dur' && a19.dauer === '80' && a19.hinweis.indexOf('Noch nicht gespeichert') === 0, JSON.stringify(a19));
+  P.ok('Dauer getippt, Tipp neben das Blatt: Das Blatt bleibt offen, das Feld gibt den Fokus ab (Tastatur zu), die Eingabe steht noch da, unten steht „Noch nicht gespeichert“', a19.offen && a19.feld !== 'k-dur' && a19.dauer === '80 min' && a19.hinweis.indexOf('Noch nicht gespeichert') === 0, JSON.stringify(a19));
   await nb.click('#k-save'); await nb.waitForTimeout(250);
   P.ok('„Speichern“ übernimmt die Dauer: 80 min = 4800 s', (await gespeichert(nb)).K.meta[heute].dur === 4800 && !(await nb.evaluate(() => document.querySelector('#ksheet').open)), JSON.stringify((await gespeichert(nb)).K.meta[heute]));
   await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
   await daneben();
   P.ok('ohne Änderung schließt ein Tipp daneben das Blatt wie bisher', !(await nb.evaluate(() => document.querySelector('#ksheet').open)));
   await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
-  await nb.fill('#k-dur', '5');
+  await zahlWahl(nb, '#k-dur', '5');
   await daneben(); await daneben();
   P.ok('geändert, zweimal daneben getippt: verworfen, es bleibt bei 4800 s', !(await nb.evaluate(() => document.querySelector('#ksheet').open)) && (await gespeichert(nb)).K.meta[heute].dur === 4800);
   /* Plan bearbeiten: ein Satz mehr, Tipp daneben → bleibt offen mit Hinweis; zweiter Tipp verwirft (Latzug behält 3 Sätze). Ohne Änderung schließt der erste Tipp. */
@@ -806,24 +806,30 @@ lauf(async () => {
      (1) „Speichern“ lag am Ende des langen Blatts, weit unter dem Feld und mit offener Tastatur außer Sicht. Jetzt steht es fest am unteren Rand des Blatts (.fuss), auch über der Tastatur
          (hier nachgestellt mit --kb: 336 px; das Blatt endet dann 8 px darüber, bei 844 px Höhe also bei 500 px).
      (2) Das Kreuz oben schloss ohne Speichern und ohne Hinweis. Jetzt wie der Tipp daneben: erst der Hinweis (er steht direkt über „Speichern“ und ist zu sehen), der zweite Tipp verwirft.
-     (3) Tippen hängte an den alten Wert an (aus 80 und „65“ wurde 8065: „Die Dauer ist eine Zahl in Minuten“). Jetzt ist der alte Wert beim Antippen markiert, Tippen ersetzt: 65 min = 3900 s. */
+     (3) Tippen hängte an den alten Wert an (aus 80 und „65“ wurde 8065: „Die Dauer ist eine Zahl in Minuten“).
+     v123, seine dritte Meldung („ich kann die Zeit immer noch nicht editieren“): Die Dauer ist kein Feld mit der Tastatur des iPhones mehr, sondern ein Knopf, der „Zahl wählen“ öffnet
+     (dasselbe Blatt wie für kg und Wdh im Training: Werte in 5-Minuten-Schritten zum Antippen, eigene Tasten, Haken). Getippt wird dort neu, nichts hängt an: 65 min = 3900 s. */
   const sicht = sel => nb.evaluate(q => { const k = document.querySelector('dialog[open]'), d = k.getBoundingClientRect(), r = document.querySelector(q).getBoundingClientRect(); return { lang: k.scrollHeight > k.clientHeight + 100, oben: k.scrollTop, drin: r.height > 0 && r.top >= d.top && r.bottom <= d.bottom + 0.5, unten: Math.round(r.bottom), blatt: Math.round(d.bottom) }; }, sel);
   await nb.setViewportSize({ width: 390, height: 480 });   // niedriger Bildschirm: Die Einheit der Testdaten (wenige Sätze) ist erst so länger als das Blatt, wie seine echten mit fünf Übungen
   await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
   const s1 = await sicht('#k-save'); await nb.setViewportSize({ width: 390, height: 844 }); await nb.waitForTimeout(150);
   P.ok('Einheit ändern: Das Blatt ist länger als der Bildschirm, „Speichern“ ist trotzdem ohne Scrollen im Blatt zu sehen', s1.lang && s1.oben === 0 && s1.drin, JSON.stringify(s1));
   await nb.evaluate(() => document.documentElement.style.setProperty('--kb', '336px')); await nb.waitForTimeout(300);
-  await nb.click('#k-dur'); const mark = await nb.evaluate(() => { const f = document.querySelector('#k-dur'); return [f.value, f.selectionStart, f.selectionEnd].join(' '); });
-  P.ok('Feld der Dauer angetippt: der alte Wert (80) ist ganz markiert', mark === '80 0 2', mark);
-  await nb.keyboard.type('65'); const s2 = await sicht('#k-save'), wert = await nb.evaluate(() => document.querySelector('#k-dur').value);
-  P.ok('getippt wird ersetzt (65, nicht 8065); mit offener Tastatur (336 px) steht „Speichern“ im Blatt darüber', wert === '65' && s2.drin && s2.unten <= 844 - 336 - 8 + 1, wert + ' ' + JSON.stringify(s2));
+  await nb.click('#k-dur'); await nb.waitForTimeout(150);
+  const z23 = await nb.evaluate(() => ({ z: document.querySelector('#zsheet').open, k: document.querySelector('#ksheet').open, titel: document.querySelector('#zs-title').textContent, wert: document.querySelector('#z-out').textContent,
+    gewaehlt: (document.querySelector('#z-list [aria-pressed="true"]') || {}).textContent, liste: [...document.querySelectorAll('#z-list button')].map(b => b.textContent).filter((t, i, a) => i === 0 || i === a.length - 1).join(' bis '), komma: document.querySelector('#z-komma').disabled, tastatur: document.activeElement.tagName }));
+  P.ok('Dauer angetippt: „Zahl wählen“ geht über dem Blatt auf (keine Tastatur des iPhones), 80 min ist gewählt, Werte von 20 bis 195 min in 5er-Schritten, kein Komma',
+    z23.z && z23.k && z23.titel === 'Dauer in Minuten' && z23.wert === '80' && z23.gewaehlt === '80 min' && z23.liste === '20 min bis 195 min' && z23.komma && z23.tastatur !== 'INPUT', JSON.stringify(z23));
+  await nb.keyboard.type('65'); await nb.keyboard.press('Enter'); await nb.waitForTimeout(150);
+  const s2 = await sicht('#k-save'), wert = await text(nb, '#k-dur');
+  P.ok('getippt wird neu (65, nicht 8065), der Haken übernimmt; „Speichern“ steht im Blatt darüber', wert === '65 min' && s2.drin && s2.unten <= 844 - 336 - 8 + 1, wert + ' ' + JSON.stringify(s2));
   await nb.click('#ks-close'); await nb.waitForTimeout(150); const a22 = await k19(), s3 = await sicht('#k-err');
-  P.ok('geändert und das Kreuz getippt: Das Blatt bleibt offen, „Noch nicht gespeichert“ steht sichtbar über „Speichern“', a22.offen && a22.dauer === '65' && a22.hinweis.indexOf('Noch nicht gespeichert') === 0 && s3.drin, JSON.stringify([a22, s3]));
+  P.ok('geändert und das Kreuz getippt: Das Blatt bleibt offen, „Noch nicht gespeichert“ steht sichtbar über „Speichern“', a22.offen && a22.dauer === '65 min' && a22.hinweis.indexOf('Noch nicht gespeichert') === 0 && s3.drin, JSON.stringify([a22, s3]));
   await nb.click('#k-save'); await nb.waitForTimeout(250);
   P.ok('„Speichern“ übernimmt: 65 min = 3900 s', (await gespeichert(nb)).K.meta[heute].dur === 3900 && !(await nb.evaluate(() => document.querySelector('#ksheet').open)), JSON.stringify((await gespeichert(nb)).K.meta[heute]));
   await nb.evaluate(() => document.documentElement.style.setProperty('--kb', '0px'));
   await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
-  await nb.fill('#k-dur', '5'); await nb.click('#ks-close'); await nb.waitForTimeout(150); await nb.click('#ks-close'); await nb.waitForTimeout(250);
+  await nb.click('#k-dur'); await nb.click('#z-list [data-zv="5"], #z-list button'); await nb.waitForTimeout(150); await nb.click('#ks-close'); await nb.waitForTimeout(150); await nb.click('#ks-close'); await nb.waitForTimeout(250);
   P.ok('geändert, zweimal das Kreuz: verworfen, es bleibt bei 3900 s; ohne Änderung schließt das Kreuz sofort', !(await nb.evaluate(() => document.querySelector('#ksheet').open)) && (await gespeichert(nb)).K.meta[heute].dur === 3900 &&
     await (async () => { await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250); await nb.click('#ks-close'); await nb.waitForTimeout(250); return !(await nb.evaluate(() => document.querySelector('#ksheet').open)); })());
   await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(250);

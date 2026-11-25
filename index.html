@@ -43,7 +43,7 @@
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
   --glass:rgba(255,255,255,.58); --glass-sel:rgba(0,0,0,.08);
-  --rand-a:inset 0 0 0 .5px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.6); --rand-s:var(--rand-a); --rand:var(--rand-a); --glanz:linear-gradient(transparent,transparent); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+  --rand-a:inset 0 0 0 .5px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.6); --rand-s:var(--rand-a); --rand:var(--rand-a); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
   --sheet:rgba(242,242,247,.84); --sheet-fest:#E1E2E7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -59,7 +59,7 @@
   --mid:#AEAEB2;
   --sel:#E5E5EA;
   /* Glas (v102): --edge-top ist das Licht von oben an der Linse der Umschalter, --cut und --schild deckende Farben für Stellen, an denen nichts durchscheinen darf (Ring um den Punkt im Graphen, Schild beim Ablesen).
-     Kante und Fläche stehen im dunklen Block unten (--rand-a, --rand-s, --glanz). --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
+     Kante und Fläche stehen im dunklen Block unten (--rand-a, --rand-s). --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
   --edge-top:rgba(255,255,255,.9); --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
   --danger:#D70015;
   --good:#248A3D;--warn:#D9A300;
@@ -76,36 +76,24 @@
     /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
     --surface:rgba(255,255,255,.067); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
     --edge-top:rgba(255,255,255,.14); --cut:#161618;
-    /* Rand und Fläche wie in iOS 26 (v116, v118; ausgemessen an seinen Bildschirmfotos vom 25.11., dreifache Schärfe; Apples Richtlinien nennen keine Maße):
-       Dock: Fläche einfarbig #111 (17 von 255). Oben und unten derselbe helle Streifen, an den Seiten keiner. Helligkeit je Bildpunkt von der Kante nach innen:
-       125, 94, 67, 38, dann ein Rest, der über gut 6 px ausläuft: 34, 32, 29, 27, 26, 24, 23, 22, 22, 21, 20, 20, 19, 18 … 17.
-       Seit v118 („Farbverlauf rausnehmen, 1 zu 1 wie bei dem Apple-Bild“) sind alle Flächen so, auch die Karten (v116 und v117: Verlauf wie das Kalender-Widget). --surface ergibt auf Schwarz 17.
-       --rand-a baut die vier hellen Bildpunkte aus Schatten nach innen mit senkrechtem Versatz und ohne Weichzeichnung, in Dritteln eines Punkts: Am iPhone ist das je ein Bildpunkt.
-       --glanz legt den auslaufenden Rest als Verlauf in den Grund (Stützstellen aus der Messung).
-       Flächen mit Kante dürfen keinen Rand haben, auch keinen durchsichtigen: Der Schatten beginnt innerhalb des Rands, der Streifen läge 1 px zu weit innen (so war es bis v117).
-       v119 (sein Bild mit v118: „immer noch zu viel … bei Apple geht es kaum um die Kante, es läuft schon vorher aus … clean, nicht überfordernd“):
-       (1) Das Licht läuft vor der Ecke aus. Am Dock gemessen: 125 am geraden Rand, in der Rundung sofort schwächer (um 100, dann rund 60, 50, 40), an der Seite fast nichts. Bis v118 blieb der Streifen bei uns um die
-           ganze Ecke hell und wurde nur dünner: Jede Fläche sah umrandet aus. Jetzt hat jede Schicht ein aufgeweitetes Loch (negativer vierter Wert, Versatz = Dicke + Aufweitung): Am geraden Rand bleibt die Dicke gleich,
-           in der Rundung endet die Schicht früh. Die hellste (0,333 px, Aufweitung 20) endet nach rund 10 bis 15 Grad, die zweite (0,667 px, 8) nach rund 20 bis 27, die dritte (1 px, 2) nach rund 50.
-           Die Versätze sind keine glatten Drittel: oben knapp über dem ganzen Bildpunkt (20,344 statt 20,333), unten knapp darunter (20,327). WebKit rechnet in 1/64 px und rundet ab: Mit glatten Dritteln
-           war der Streifen dort oben einen Bildpunkt zu dünn und mit halben Punkten (2,5 px, Aufweitung 1,5) oben 4 und unten 2 Bildpunkte dick (v119, gefunden mit WebKitGTK 2.52, demselben Kern wie Safari).
-           So ergibt jede Art zu runden dieselbe Dicke. Aufweitungen nur in ganzen px.
-       (2) Zwei Stufen statt einer: --rand-a (volles Licht wie das Dock) tragen nur Leiste, Blätter, Hinweis, runde Knöpfe oben und die Karten der Seite. --rand-s (leise, am Rand 55 statt 93 von 255) tragen
-           Bedienteile (Chips, Umschalter, Nebenknöpfe, Eingabefelder, Linsen) und alles in einem Blatt (dialog setzt --rand auf die leise Stufe, dort auch ohne --glanz): kein Glas auf Glas, wie Apple es vorgibt.
-       --rand ist die Stufe, die Karten nehmen: auf der Seite die volle, in Blättern die leise.
-       Mit den Werten von Apple (Schichten 18,9, 14, 13,4, 1,5 % Weiß; Rest ab 9 %) gemessen in dreifacher Schärfe, oben wie unten: Chromium 125, 94, 67, 38, 34, 32, 29, 27; WebKit 126, 95, 68, 38, 34, 32, 29, 27; Apple 125, 94, 67, 38, 34, 32, 29, 27.
-       v121 (sein Wort zu v120: „so ist gut, aber nimm Helligkeit etwas raus, ist zu auffällig“): Form und Auslaufen bleiben, alle Deckkräfte mal 0,65 (leise Stufe mal 0,78). Gemessen in WebKit und Chromium: 93, 70, 51, 32, 28, 26, 25; leise Stufe 55 am Rand. */
-    --rand-a:inset 0 20.344px 0 -20px rgba(255,255,255,.123),inset 0 8.672px 0 -8px rgba(255,255,255,.091),inset 0 3px 0 -2px rgba(255,255,255,.087),inset 0 2.344px 0 -1px rgba(255,255,255,.01),inset 0 -20.327px 0 -20px rgba(255,255,255,.123),inset 0 -8.655px 0 -8px rgba(255,255,255,.091),inset 0 -3px 0 -2px rgba(255,255,255,.087),inset 0 -2.327px 0 -1px rgba(255,255,255,.01);
-    --rand-s:inset 0 20.344px 0 -20px rgba(255,255,255,.07),inset 0 8.672px 0 -8px rgba(255,255,255,.055),inset 0 3px 0 -2px rgba(255,255,255,.045),inset 0 -20.327px 0 -20px rgba(255,255,255,.07),inset 0 -8.655px 0 -8px rgba(255,255,255,.055),inset 0 -3px 0 -2px rgba(255,255,255,.045);
-    --glanz-s:rgba(255,255,255,.058),rgba(255,255,255,.046) 1.5px,rgba(255,255,255,.027) 2.5px,rgba(255,255,255,.016) 3.5px,rgba(255,255,255,.011) 4.5px,rgba(255,255,255,.005) 5.5px,rgba(255,255,255,0) 7.5px;
-    --glanz:linear-gradient(to bottom,var(--glanz-s)),linear-gradient(to top,var(--glanz-s));
+    /* Rand und Fläche wie in iOS 26 (v116 bis v123; Maß sind seine Bildschirmfotos vom Dock, 25.11.; Apples Richtlinien nennen keine Maße):
+       Fläche einfarbig wie das Dock (--surface ergibt auf Schwarz 17 von 255), kein Verlauf über die Fläche. Ein heller Streifen nur oben und unten, an den Seiten keiner, und er läuft vor der Ecke aus.
+       Flächen mit Kante haben keinen Rand, auch keinen durchsichtigen: Der Schatten beginnt innerhalb des Rands, der Streifen läge zu weit innen (so war es bis v117).
+       Stand v123 (sein Wort zu v122: „Streifen so lassen, aber mehr auslaufen, nicht so harter Übergang von hell zu dunkel, alles smoother und unauffälliger“): Der Streifen ist weichgezeichnet, je Seite zwei Schichten:
+       eine schmale helle (Kante 0,6 px innen, Weichzeichnung 2 px) und eine breite leise (1,5 px, 7 px). Die Aufweitung des Lochs (−6 und −10 px) ist größer als die Weichzeichnung reicht: So kommt an den Seiten nichts an
+       und der Streifen läuft in der Rundung von selbst aus. Gemessen in dreifacher Schärfe von der Kante nach innen: 80, 71, 61, 52, 43, 36, 32, 28, 25 … 17, also ohne Stufe (bis v122 hart: 93, 70, 51, 32, dann flach).
+       Kein Verlauf im Grund mehr (--glanz bis v122): Den Rest übernimmt die breite Schicht.
+       Zwei Stufen: --rand-a (voll) tragen nur Leiste, Blätter, Hinweis, runde Knöpfe oben und die Karten der Seite; --rand-s (leise, rund 60 %) tragen Bedienteile (Chips, Umschalter, Nebenknöpfe, Eingabefelder, Linsen)
+       und alles in einem Blatt (dialog setzt --rand auf die leise Stufe): kein Glas auf Glas, wie Apple es vorgibt. --rand ist die Stufe, die Karten nehmen.
+       Nachmessen: Chromium (tests/lib.js, schaerfe 3) und WebKit (tests/webkit.py, derselbe Kern wie Safari). */
+    --rand-a:inset 0 6.6px 2px -6px rgba(255,255,255,.34),inset 0 12px 7px -10px rgba(255,255,255,.09),inset 0 -6.6px 2px -6px rgba(255,255,255,.34),inset 0 -12px 7px -10px rgba(255,255,255,.09);
+    --rand-s:inset 0 6.6px 2px -6px rgba(255,255,255,.2),inset 0 12px 7px -10px rgba(255,255,255,.055),inset 0 -6.6px 2px -6px rgba(255,255,255,.2),inset 0 -12px 7px -10px rgba(255,255,255,.055);
     --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
   dialog{--rand:var(--rand-s);--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge-top:rgba(255,255,255,.17);--cut:#2B2B2E;--schild:#48484A}
-  dialog > *{--glanz:linear-gradient(transparent,transparent)}   /* in Blättern tragen Flächen nur die leise Kante, ohne den auslaufenden Rest */
 }
 
 *{box-sizing:border-box}
@@ -137,7 +125,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .mark{transform-origin:left center;transition:transform .32s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
 .top.klein .mark{transform:translateX(var(--mx,0)) scale(.62)}
 .mark .dot{color:var(--amb-c)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
-.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--glanz),var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:var(--rand)}
+.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:var(--rand)}
 .add svg{width:20px;height:20px}
 .add[hidden]{display:none}
 
@@ -208,7 +196,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 /* Blätter (v94): Sie schweben wie in iOS 26 mit 8 px Abstand zum Rand, sind rundum gerundet und aus Glas (halb durchsichtig mit Milchglas); dahinter wird die Seite dunkler und unscharf.
    Mit offener Tastatur (--kb) sitzen sie 8 px über ihr. */
-dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--glanz),var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:var(--rand-a),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
+dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:var(--rand-a),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
@@ -230,6 +218,9 @@ input::-webkit-date-and-time-value{text-align:left;margin:0;min-width:0}
 dialog,.scroll{overflow-x:hidden}
 dialog{overscroll-behavior:contain}
 .fld{min-width:0}
+/* Feld, das ein Blatt zum Wählen öffnet statt der Tastatur (v123: Dauer in „Einheit ändern“). Sieht aus wie ein Eingabefeld. */
+.feldknopf{display:flex;align-items:center;width:100%;min-height:44px;padding:11px 14px;border:0;border-radius:22px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;text-align:left;box-shadow:var(--rand-s)}
+.feldknopf.leer{color:var(--muted)}
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
 .stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
@@ -264,7 +255,7 @@ body{display:flex;flex-direction:column;overflow:hidden}
    Die Leiste steht außerhalb des scrollenden Bereichs: Dort macht der Milchglas-Effekt das Element selbst nicht unscharf (anders als die Kopfzeile, v37). */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px var(--unten);pointer-events:none}
 .tabs::before{content:"";position:absolute;inset:-26px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 82%,transparent))}
-.tabs-in{position:relative;pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glanz),var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:var(--rand),0 10px 30px rgba(0,0,0,.32)}
+.tabs-in{position:relative;pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:var(--rand),0 10px 30px rgba(0,0,0,.32)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:999px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
 .tab[aria-current="page"]{color:var(--ink);font-weight:600}
@@ -530,7 +521,7 @@ body{font-size:14px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glanz),var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:var(--rand),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:var(--rand),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
@@ -833,7 +824,7 @@ dialog{border-radius:32px}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active,.feldknopf:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
@@ -882,8 +873,8 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .mnav button:disabled{color:var(--muted)}
 .mnav svg{width:17px;height:17px}
 .kx,.prow{background:var(--surface)}
-/* Flächen mit Inhalt sind einfarbig wie das Dock (v118; der Verlauf des Widgets aus v116 ist weg) und tragen wie die Leiste den auslaufenden Rest des Streifens */
-.row,.card,.entries,.ovs,.rows.one,.fig,.kx,.prow,.remind{background:var(--glanz),var(--surface)}
+/* Flächen mit Inhalt sind einfarbig wie das Dock (v118; der Verlauf des Widgets aus v116 ist weg) */
+.row,.card,.entries,.ovs,.rows.one,.fig,.kx,.prow,.remind{background:var(--surface)}
 .kx input[type="text"]{background:var(--fill)}
 .kset button,.x.sm,.pst button{border:0;background:var(--fill)}
 .seg2 button[aria-pressed="true"]::before{box-shadow:inset 0 1px 0 var(--edge-top),0 1px 3px rgba(0,0,0,.22)}
@@ -1247,10 +1238,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Datum</span>
       <input id="k-date" name="date" type="date">
     </label>
-    <label class="fld" for="k-dur">
-      <span>Dauer in Minuten</span>
-      <input id="k-dur" name="dur" type="text" inputmode="numeric" autocomplete="off" maxlength="4" placeholder="–">
-    </label>
+    <div class="fld">
+      <span id="lbl-k-dur">Dauer</span>
+      <button type="button" class="feldknopf" id="k-dur" aria-describedby="lbl-k-dur">–</button>
+    </div>
     <p class="note" id="k-uhr" hidden></p>
     <div id="k-items"></div>
     <div class="fld">
@@ -1332,7 +1323,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v122</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v123</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3301,7 +3292,7 @@ function openK(date) {
   const tk = todayKey(), d = date && kDay(date).length ? date : !date && kDay(tk).length ? tk : null;
   const dur = d && (K.meta || {})[d] ? (K.meta[d].dur || 0) : 0;
   kS = { orig: d, date: d || tk, items: d ? kDay(d).map(x => ({ id: x.id, sets: kSetsIn(x.sets) })) : [], dur: dur >= 30 ? String(Math.round(dur / 60)) : '' }; pickG = '';
-  $('#k-dur').value = kS.dur; $('#k-weiter').hidden = !(d === tk && !K.live);
+  kS.dn = kS.dur; paintKDur(); $('#k-weiter').hidden = !(d === tk && !K.live);
   $('#ks-title').textContent = d ? 'Einheit ändern' : 'Einheit eintragen';
   $('#k-date').max = tk; $('#k-date').value = kS.date;
   $('#k-new').value = ''; $('#k-err').hidden = true; $('#k-del').hidden = !d;
@@ -3322,11 +3313,17 @@ function daneben(dlg, o, stand, errSel, zu) {
   if (o && o.snap !== stand() && !o.gewarnt) { o.gewarnt = true; const x = $(errSel); x.textContent = 'Noch nicht gespeichert. Tippe auf „Speichern“, oder schließe noch einmal, um die Änderungen zu verwerfen.'; x.hidden = false; return; }
   zu();
 }
-const kStand = () => JSON.stringify([$('#k-date').value, $('#k-dur').value.trim(), kS.items]);
+const kStand = () => JSON.stringify([$('#k-date').value, kS.dn, kS.items]);
 kdlg.addEventListener('click', e => { if (e.target === kdlg) daneben(kdlg, kS, kStand, '#k-err', closeK); });
-/* Die Dauer wird ersetzt, nicht ergänzt (v122): Beim Antippen ist der alte Wert markiert, die erste Ziffer löscht ihn. Vorher hängte Tippen an (aus 55 und „60“ wurde 5560, eine Dauer, die es nicht gibt).
-   Zweimal, weil das iPhone die Markierung nach dem Antippen noch einmal auf die Stelle des Fingers setzt. */
-$('#k-dur').addEventListener('focus', e => { const f = e.target, alles = () => { try { f.setSelectionRange(0, f.value.length); } catch (x) {} }; alles(); setTimeout(alles, 0); });
+/* Dauer (v123, seine dritte Meldung vom 25.11.: „ich kann die Zeit immer noch nicht editieren“): Statt eines Felds mit der Tastatur des iPhones öffnet ein Tipp „Zahl wählen“,
+   das Blatt, das er im Training für kg und Wdh benutzt (Werte in 5-Minuten-Schritten zum Antippen, darunter eigene Tasten, Haken übernimmt). Die Tastatur des iPhones war in diesem langen Blatt der Stolperstein:
+   ohne Taste zum Schließen, und ein Tipp daneben schloss das Blatt (bis v116), danach hängte Tippen an den alten Wert an (bis v121). kS.dn ist die Dauer in Minuten als Text ('' = keine). */
+function paintKDur() { const b = $('#k-dur'); b.textContent = kS.dn ? kS.dn + ' min' : 'Keine Angabe'; b.classList.toggle('leer', !kS.dn); }
+$('#k-dur').addEventListener('click', () => {
+  const v = kS.dn ? +kS.dn : null, mitte = v ? Math.round(v / 5) * 5 : 60;
+  openZ({ titel: 'Dauer in Minuten', wert: v, einheit: 'min', komma: false, liste: reihe(Math.max(5, mitte - 60), Math.max(5, mitte - 60) + 175, 5),
+    dann: n => { const m = Math.round(n); if (m >= 1 && m <= 999) { kS.dn = String(m); kS.gewarnt = false; $('#k-err').hidden = true; paintKDur(); } } });
+});
 $('#kform').addEventListener('input', e => {
   const t = e.target, f = t.dataset ? t.dataset.f : null, box = f ? t.closest('.kx') : null;
   if (box) kS.items[+box.dataset.i].sets[+t.dataset.s][f] = t.value;
@@ -3365,7 +3362,7 @@ $('#kform').addEventListener('submit', e => {
   });
   if (!n) return err('Trag bei mindestens einer Übung die Wiederholungen ein.');
   /* Dauer (v115): nur wenn er sie geändert hat, sonst bliebe aus 47:20 eine glatte 47 */
-  const dt = $('#k-dur').value.trim(), dmin = dt === '' ? 0 : Math.round(Number(dt.replace(',', '.')));
+  const dt = kS.dn, dmin = dt === '' ? 0 : Math.round(Number(dt));
   if (dt !== kS.dur && !(dmin >= 0 && dmin <= 1440)) return err('Die Dauer ist eine Zahl in Minuten.');
   const p = { log: {} }; p.log[d] = day;
   if (kS.orig) {
