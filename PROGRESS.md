@@ -118,5 +118,6 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 ## Nächste Schritte
 - Zu Beginn einer neuen Sitzung: `CLAUDE.md` und diese Datei lesen (das genügt), seinen Wunsch umsetzen, kurz antworten. `IPHONE.md` und `BEREICHE.md` nur bei Bedarf.
 - Der Nutzer entscheidet, was als Nächstes kommt. Von ihm stehen aus: Fassung 1.0 installieren (vorher Sicherung, alte `Track.ipa` löschen, AltStore „+“, „Keep App Extensions“), in Kurzbefehle die zwei Schritte für das Krafttraining anlegen (`IPHONE.md`, Vertrag), dann Bildschirmfotos: Pausen-Uhr im Training, das Blatt der Einheit nach einem Training mit der Uhr, Heute und Finanzen im neuen Look. Ältere offene Rückmeldungen: erste Zahlung mit Apple Pay, erster Lauf über „Läufe übernehmen“.
+- Entwickler-Konto: Er fragte am 25.11. selbst, was es bringt und ob damit mehrere Apps gehen. Beantwortet (kein Ablauf nach 7 Tagen, Health direkt, beliebig viele Apps, Updates über TestFlight; Kosten 99 € im Jahr, neue Installation mit Umzug über die Sicherung). Entscheidung steht aus.
 - Offene Fragen an ihn: Punkte je Semester getrennt? Will er die Kategorie bei jeder Zahlung wählen oder nur bei neuen Händlern (so gebaut)?
 - Bei Änderungen am Aussehen erst ein Bild „jetzt / Vorschlag“ zeigen.
