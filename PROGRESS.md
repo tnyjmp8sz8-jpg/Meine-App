@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v117 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v117): alle 16 Reihen stimmen (Gym 219, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v118 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v118): alle 16 Reihen stimmen (Gym 219, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- v118 (25.11., seine zwei Bilder: Dock von iOS neben der Kachel „Trainingszeit“ der App mit v117: „immer noch nicht gleich … Farbverlauf bei den Glas-Dingern rausnehmen, 1 zu 1 wie bei dem Apple-Bild“): Beide Bilder ausgemessen. Gefunden: (1) Der helle Streifen lag an fast allen Flächen 1 px zu weit innen, weil sie einen durchsichtigen Rand hatten (davor ein Streifen Fläche, in seinem Bild messbar); (2) der Verlauf in den Karten aus v116; (3) der Streifen war in halben Punkten gebaut und am iPhone unscharf; (4) der auslaufende Rest fehlte an einigen Kacheln und lief gerade statt wie bei Apple aus. Jetzt: alle Flächen einfarbig wie das Dock (17 von 255), kein Rand mehr, Streifen in Dritteln eines Punkts, Rest nach Messung. Im Test-Browser an Leiste und Karte 125, 94, 67, 38, 34, 32, 29, 27 wie bei Apple. Folge: Flächen ohne Rand sind 2 px niedriger (Zeilen, Eingabefelder); alle Tests stimmen. Am iPhone ungeprüft: Bild erbeten.
 - v117 (25.11., seine Meldung: „wenn ich Trainingszeit ändern will, stürzt es ab, geht nicht“; auf Nachfrage: im Blatt „Einheit ändern“, „Blatt geht zu, nichts geändert“): Im Test-Browser ging es auf allen Wegen (Liste, Kalender, Rückblick; auch mit nachgebildeter iPhone-App). Erklärung, sehr wahrscheinlich, am Gerät nicht belegt: Die Zahlentastatur hat keine Taste zum Schließen; ein Tipp neben das Blatt oder das Wegziehen schloss das Blatt samt Eingabe. Jetzt bleiben „Einheit ändern“ und „Plan bearbeiten“ bei ungespeicherten Änderungen offen und sagen „Noch nicht gespeichert“. Ihn um Rückmeldung bitten, ob es damit geht; wenn nicht, Bildschirmaufnahme erbitten.
 - Die Sitzung vom 25.11. hat v106 bis v116 und die iPhone-App 1.2 gebracht (je Version eine Zeile unter „Erledigt“; die Regeln dazu stehen in `CLAUDE.md` und `BEREICHE.md`). Sie war sehr lang: Für das nächste Thema eine neue Sitzung beginnen.
 - v116 (25.11., sein Auftrag zu zwei Bildschirmfotos von Dock und Kalender-Widget in iOS 26: „das Glas sieht immer noch nicht gleich aus … bei Bars ist Hintergrund gleiche Farbe, oben und unten heller Streifen gleich hell, an Seite dunkel; beim Widget Streifen gleich, aber Hintergrund mit Verlauf … genauso wie iOS, zur Not google … danach alles vermerken, für nächsten Chat bereit machen“): Seine Bilder ausgemessen und im Test-Browser in dreifacher Schärfe nachgemessen. Leiste jetzt 123, 95, 68, 38 an der Kante gegen Apples 125, 93, 69, 38, Fläche 17 wie bei Apple, an der Seite kein Streifen. Karten tragen den Verlauf des Widgets (oben heller, unten dunkler) und dieselben Streifen. Apples Richtlinien dazu gesucht und gefunden (Zusammenfassung in `CLAUDE.md`, „Design-Regeln“): Sie nennen keine Maße. Hell und dunkel im Bild geprüft. Am iPhone ungeprüft.
@@ -50,8 +51,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v66–v80 mit iPhone-App 0.5 bis 0.7: Cardio ruhiger und nur noch draußen, Händler bestimmt die Kategorie, neues App-Symbol, Tastatur geht sofort auf, „Arbeit“ und „Uni“ im Planer; Aufgaben, Routinen und Ordner ausgebaut; Titel je Bereich.
 - v81–v95 mit iPhone-App 0.8 und 0.9: Haptik und Bewegung; Gym nach Alpha Progression (Punkt je Übung, Rekord, „Zahl wählen“, „Sätze besser“, Runde der Pläne, Überspringen); Schwarz mit neutralem Grau; Graphen mit weicher Linie; schwebende Glas-Leiste und Blätter; runde Eingabefelder.
 - v96–v105 mit iPhone-App 1.0 und 1.1: Training im Vollbild aus Glas, Übungen nach Gruppen, Glas und Licht in der ganzen App, Gym-Einheit von der Apple Watch, Wechsel des Bereichs ohne Flackern.
-- v106: Zahnrad mit Einstellungen (Sicherung, Version), „Heute dran“, großer Titel, Pausen-Uhr nur als Timer, Pläne sortierbar und der nächste oben, stärkste und schwächste Übung, ruhigere Zielkarte, größere Tippflächen, Zahlen für das Widget.
-- v107: Empfehlung je Satz im Training (Bereich 8–12, Anpassung nach jedem Satz), Schalter dafür in den Einstellungen.
+- v106–v107: Zahnrad mit Einstellungen, großer Titel, Pausen-Uhr nur als Timer, Pläne sortierbar, größere Tippflächen; Empfehlung je Satz im Training.
 - v108: Reserve je Satz („Wie viele wären noch gegangen?“) fließt in die Empfehlung ein.
 - v109: „Heute dran“ wieder von Heute entfernt.
 - v110: Einstellungen für Start-Bereich, Übersicht auf Heute, Frage nach der Reserve; Schritt beim Gewicht je Übung.
@@ -62,6 +62,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v115: Training nachträglich ändern (mit Dauer) und weiter trainieren; Übung hinzufügen nach Gruppen.
 - v116: Glas und Flächen nach Messung an iOS 26 (Leiste einfarbig mit gleichem Streifen oben und unten, Karten mit Verlauf wie das Widget).
 - v117: „Einheit ändern“ und „Plan bearbeiten“ verlieren Ungespeichertes nicht mehr durch einen Tipp neben das Blatt.
+- v118: Glas 1 zu 1 wie das Dock: alle Flächen einfarbig, Streifen genau auf der Kante, kein Verlauf mehr in den Karten.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -74,13 +75,14 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - Negative Kontostände lassen sich speichern, aber auf dem iPhone nicht eintippen (Zahlentastatur ohne Minus).
 - Feste Posten, deren Tag im Monat des eingetragenen Stands schon vorbei ist, zählen erst ab dem Folgemonat (gewollt). Buchungen ohne Konto aus der Zeit vor v42 zählen nicht, bis er das Konto nachträgt (Zeile „Ohne Konto“).
 - `healBal()` wirkt nur im November 2026: Ab Dezember 2026 samt Prüfung entfernen.
-- Alte CSS-Regeln, die weiter unten überschrieben werden, sind nicht zusammengeführt (nur mit Bildvergleich anfassen).
+- Alte CSS-Regeln, die weiter unten überschrieben werden, sind nicht zusammengeführt (nur mit Bildvergleich anfassen). Seit v116 unbenutzt und zu streichen: die Variablen `--glass-top`, `--glass-bot`, `--glass-line`, `--edge`, `--edge-bot` (nur `--edge-top` wird noch gebraucht).
+- `node tests/bilder.js` meldet für „heute-sicherung“ einen Fehler: Die Klappzeile gibt es seit v106 nicht mehr auf Heute (die Zeile im Skript streichen oder auf das Zahnrad umstellen).
 - Der Gesten-Test ist zeitempfindlich: bei einem einzelnen Fehlschlag dort einzeln wiederholen.
 - Die Reihe „Speichern“ schlug am 24.11. einmal in einem vollen Lauf fehl („25-mal neu geladen“, 1 Abweichung) und danach nicht mehr. Kommt es wieder, die Abweichung ausgeben lassen: Seit v96 öffnet die App beim Laden mit laufendem Training das Vollbild.
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
 - v117: Lässt sich die Dauer in „Einheit ändern“ jetzt ändern (tippen, daneben tippen, „Speichern“)?
-- v116: Sieht das Glas jetzt aus wie bei iOS (Leiste einfarbig mit gleichem Streifen oben und unten, Karten mit Verlauf)? Zu viel Glanz an den vielen Karten und Chips, oder passt es?
+- v118: Sieht das Glas jetzt aus wie das Dock (Bildschirmfoto einer Karte und der Leiste erbeten)? Wirken Zeilen und Eingabefelder, die 2 px niedriger sind, noch richtig?
 - v115: „Weiter trainieren“ nach dem Beenden; „Einheit ändern“ mit Dauer; Wahl der Übung nach Gruppen.
 - v114: Passen die Empfehlungen jetzt zu seinem Muster (nach 12 kommen 10, Erhöhen bei 12/10/8 für alle Sätze)? Blauer Knopf mit Schein rundum: gut oder wieder zu viel? Rote Zahl im Ring am Dropsatz, Kette am Supersatz.
 - v113: Drop- und Supersatz im Plan hinter „…“ einstellen; wechselt die Ansicht im Supersatz richtig hin und her?

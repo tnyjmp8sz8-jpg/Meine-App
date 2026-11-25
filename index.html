@@ -43,7 +43,7 @@
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
   --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.9); --glass-bot:rgba(255,255,255,.55);
-  --rand:inset 0 0 0 .5px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.6); --karte:linear-gradient(var(--surface),var(--surface)); --glanz:linear-gradient(transparent,transparent); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+  --rand:inset 0 0 0 .5px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.6); --glanz:linear-gradient(transparent,transparent); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
   --sheet:rgba(242,242,247,.84);
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -76,20 +76,25 @@
   :root{
     --bg:#000000; --glass:rgba(30,30,30,.56); --glass-line:rgba(255,255,255,.055); --glass-sel:rgba(255,255,255,.11); --glass-top:rgba(255,255,255,.42); --glass-bot:rgba(255,255,255,.26); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
     /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
-    --surface:rgba(255,255,255,.085); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
+    --surface:rgba(255,255,255,.067); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
     --edge:rgba(255,255,255,.04); --edge-top:rgba(255,255,255,.14); --edge-bot:rgba(255,255,255,.07); --cut:#161618;
-    /* Rand und Fläche wie in iOS 26 (v116, ausgemessen an seinen zwei Bildschirmfotos vom 25.11., dreifache Schärfe; Apples Richtlinien nennen keine Maße):
-       Dock: Fläche einfarbig #111. Oben und unten derselbe helle Streifen: am äußersten Bildpunkt 49 % Weiß, dann 32 %, 22 %, 9 % und ein Rest von rund 5 %, der nach 2 px ausläuft. An den Seiten kein Streifen.
-       Kalender-Widget: dieselben Streifen (oben 48 %, unten 41 %), die Fläche läuft von oben #232323 nach unten #0D0D0D.
-       --rand baut den Streifen aus Schatten nach innen mit senkrechtem Versatz und ohne Weichzeichnung (die träfe auch die Seiten), --glanz legt den auslaufenden Rest als Verlauf in den Grund der Flächen (Leiste, Linse, Hinweis, Blätter, runde Knöpfe, Karten): Sie folgen der Rundung und laufen zu den Seiten von selbst aus. Nachgemessen im Test-Browser in dreifacher Schärfe: 125, 93, 69, 38 wie bei Apple. --karte ist der Verlauf der Flächen auf der Seite. */
-    --rand:inset 0 .5px 0 rgba(255,255,255,.29),inset 0 1px 0 rgba(255,255,255,.138),inset 0 1.5px 0 rgba(255,255,255,.032),inset 0 -.5px 0 rgba(255,255,255,.29),inset 0 -1px 0 rgba(255,255,255,.138),inset 0 -1.5px 0 rgba(255,255,255,.032);
-    --glanz:linear-gradient(to bottom,rgba(255,255,255,.075),rgba(255,255,255,0) 6px),linear-gradient(to top,rgba(255,255,255,.075),rgba(255,255,255,0) 6px);
-    --karte:linear-gradient(180deg,rgba(255,255,255,.125),rgba(255,255,255,.05)); --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
+    /* Rand und Fläche wie in iOS 26 (v116, v118; ausgemessen an seinen Bildschirmfotos vom 25.11., dreifache Schärfe; Apples Richtlinien nennen keine Maße):
+       Dock: Fläche einfarbig #111 (17 von 255). Oben und unten derselbe helle Streifen, an den Seiten keiner. Helligkeit je Bildpunkt von der Kante nach innen:
+       125, 94, 67, 38, dann ein Rest, der über gut 6 px ausläuft: 34, 32, 29, 27, 26, 24, 23, 22, 22, 21, 20, 20, 19, 18 … 17.
+       Seit v118 („Farbverlauf rausnehmen, 1 zu 1 wie bei dem Apple-Bild“) sind alle Flächen so, auch die Karten (v116 und v117: Verlauf wie das Kalender-Widget). --surface ergibt auf Schwarz 17.
+       --rand baut die vier hellen Bildpunkte aus Schatten nach innen mit senkrechtem Versatz und ohne Weichzeichnung (die träfe auch die Seiten), in Dritteln eines Punkts: Am iPhone ist das je ein Bildpunkt.
+       --glanz legt den auslaufenden Rest als Verlauf in den Grund (Stützstellen aus der Messung). Beides folgt der Rundung und läuft zu den Seiten von selbst aus.
+       Flächen mit --rand dürfen keinen Rand haben, auch keinen durchsichtigen: Der Schatten beginnt innerhalb des Rands, der Streifen läge 1 px zu weit innen (so war es bis v117, in seinem Bild zu sehen).
+       Nachgemessen im Test-Browser in dreifacher Schärfe an Leiste und Karte: 125, 94, 67, 38, 34, 32, 29, 27, 26, 24 wie bei Apple. */
+    --rand:inset 0 .333px 0 rgba(255,255,255,.189),inset 0 .667px 0 rgba(255,255,255,.14),inset 0 1px 0 rgba(255,255,255,.134),inset 0 1.333px 0 rgba(255,255,255,.015),inset 0 -.333px 0 rgba(255,255,255,.189),inset 0 -.667px 0 rgba(255,255,255,.14),inset 0 -1px 0 rgba(255,255,255,.134),inset 0 -1.333px 0 rgba(255,255,255,.015);
+    --glanz-s:rgba(255,255,255,.09),rgba(255,255,255,.071) 1.5px,rgba(255,255,255,.042) 2.5px,rgba(255,255,255,.025) 3.5px,rgba(255,255,255,.017) 4.5px,rgba(255,255,255,.008) 5.5px,rgba(255,255,255,0) 7.5px;
+    --glanz:linear-gradient(to bottom,var(--glanz-s)),linear-gradient(to top,var(--glanz-s));
+    --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
-  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.06);--edge-top:rgba(255,255,255,.17);--edge-bot:rgba(255,255,255,.09);--karte:linear-gradient(180deg,rgba(255,255,255,.12),rgba(255,255,255,.045));--cut:#2B2B2E;--schild:#48484A}
+  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.06);--edge-top:rgba(255,255,255,.17);--edge-bot:rgba(255,255,255,.09);--cut:#2B2B2E;--schild:#48484A}
 }
 
 *{box-sizing:border-box}
@@ -261,7 +266,6 @@ body{display:flex;flex-direction:column;overflow:hidden}
 
 /* Gewicht */
 .w-hero h1 .num{font-size:clamp(72px,23vw,112px)}
-.figs.on-bg .fig{background:var(--surface);border:1px solid var(--line)}
 .fig b small{font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:0;color:var(--muted);margin-left:3px}
 .card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:12px}
 .seg{display:flex;gap:6px;flex-wrap:wrap}
@@ -849,24 +853,24 @@ dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 .nrow.weg .tk i::after{content:"";width:12px;height:12px;border-radius:50%;background:var(--mid);animation:punkt .16s cubic-bezier(.3,.7,.3,1)}
 
 /* Apple-Look: Flächen ohne Rand, klare Überschriften, runde Ziffern */
-.row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
+.row,.card,.entries,.fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border:0}
 /* Glas (v102): Statt eines Rands trägt jede Fläche eine feine helle Kante und Licht von oben, wie die Leiste unten; die Flächen selbst sind durchscheinend (Variablen oben).
    Neue Flächen hier aufnehmen. Eingabefelder tragen die Kante in ihrer eigenen Regel, damit der Rahmen beim Tippen sie ablöst. */
 .row,.card,.entries,.ovs,.rows.one,.fig,.seg2,.remind,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab,.lx-m,.lx-akt button,.n-text,.stepper button,.zk,.z-list button,.lt-r.act .n,.lt-r .pv{box-shadow:var(--rand)}
 .rows.one .row,.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"],#l-del{box-shadow:none}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border:0}
 .chip,.lx-tab{background:var(--surface)}
 .card .chip{background:var(--fill)}
-.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--ink);border-color:transparent;color:var(--bg)}
-.stepper button,.mnav button{border-color:transparent;background:var(--surface)}
+.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.stepper button,.mnav button{border:0;background:var(--surface)}
 .mnav button{background:none;color:var(--accent)}
 .mnav button:disabled{color:var(--muted)}
 .mnav svg{width:17px;height:17px}
 .kx,.prow{background:var(--surface)}
-/* Flächen mit Inhalt tragen den Verlauf des Widgets (--karte), Leisten und Bedienteile bleiben einfarbig wie das Dock */
-.row,.card,.entries,.ovs,.rows.one,.fig,.kx,.prow,.remind{background:var(--glanz),var(--karte)}
+/* Flächen mit Inhalt sind einfarbig wie das Dock (v118; der Verlauf des Widgets aus v116 ist weg) und tragen wie die Leiste den auslaufenden Rest des Streifens */
+.row,.card,.entries,.ovs,.rows.one,.fig,.kx,.prow,.remind{background:var(--glanz),var(--surface)}
 .kx input[type="text"]{background:var(--fill)}
-.kset button,.x.sm,.pst button{border-color:transparent;background:var(--fill)}
+.kset button,.x.sm,.pst button{border:0;background:var(--fill)}
 .seg2 button[aria-pressed="true"]::before{box-shadow:inset 0 1px 0 var(--edge-top),0 1px 3px rgba(0,0,0,.22)}
 .mbar{background:var(--fill)}
 .tab{font-size:10px;font-weight:500}
@@ -1311,7 +1315,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v117</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v118</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
