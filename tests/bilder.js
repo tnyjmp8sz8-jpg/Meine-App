@@ -40,7 +40,6 @@ lauf(async () => {
       await versuch('blatt-routine', async () => { await bereich(page, 'routinen'); await page.click('#add'); });
       await versuch('blatt-gewicht', async () => { await bereich(page, 'gewicht'); await page.click('#add'); });
       // Aufgeklappte Listen: Die Klappzeile steht oben im Bild, darunter ihre Zeilen
-      await versuch('heute-sicherung', async () => { await bereich(page, 'heute'); await auf('sicherung'); });
       await versuch('budget-ausgaben', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await auf('ausgaben'); });
       await versuch('cardio-laeufe', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await auf('laeufe'); });
     }
