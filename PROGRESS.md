@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v120 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v120): alle 16 Reihen stimmen (Gym 219, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v121 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v121): alle 16 Reihen stimmen (Gym 219, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- v121 (25.11., seine Antwort auf das Bild von v120: „so ist gut, aber nimm Helligkeit etwas raus, ist zu auffällig“): Form, Auslaufen und die zwei Stufen sind damit von ihm bestätigt. Helligkeit der Streifen und des auslaufenden Rests mal 0,65 (leise Stufe mal 0,78): am Rand 93 statt 126 von 255, leise 55 statt 66; in WebKit und Chromium gemessen, oben wie unten gleich.
 - v120 (25.11., derselbe Auftrag: „arbeite so lange und überprüfe dich, bis es überall gut und stimmig aussieht“): Die App mit WebKit gezeichnet (WebKitGTK 2.52, derselbe Kern wie Safari; neu: `tests/webkit.py`). Ergebnis: Das Auslaufen an der Ecke zeichnet WebKit wie Chromium. Gefunden und behoben: In WebKit war der Streifen von v119 an Karten oben einen Bildpunkt zu dünn, und eine Schicht oben 4 und unten 2 Bildpunkte dick (WebKit rechnet in 1/64 px und rundet ab); die Versätze sind jetzt dagegen abgesichert. Nachgemessen in WebKit an Leiste, Kachel und Karte, oben wie unten: 126, 95, 68, 38, 34, 32, 29, 27 (Apple 125, 94, 67, 38, 34, 32, 29, 27). Alle Bereiche und Blätter durchsucht: kein volles Licht in vollem Licht, keines in Blättern, kein Rand an einer Fläche mit Kante. Im Bild durchgesehen: alle Bereiche, Woche, Jahr, Kalender, Einstellungen, alle Blätter, laufendes Training, leer, 320 px, hell. Die graue Kante am aktiven Eingabefeld ist 1 px statt 1,5.
 - v119 (25.11., sein Bildschirmfoto vom Gym mit v118: „es ist immer noch zu viel, prüfe dein eigenes Bild; bei Apple geht es kaum um die Kante, es läuft schon vorher aus; passe das überall an, es sieht unfertig aus … clean, modern, funktional und schön“): An seinem Bild gemessen: Der gerade Rand stimmt am iPhone genau (126, 95, 68, 38 gegen Apples 125, 94, 67, 38). Falsch war die Ecke: Bei uns blieb der Streifen um die ganze Rundung hell, am Dock fällt er dort sofort ab. Dazu trug jedes Bedienteil dasselbe volle Licht. Jetzt: Der Streifen läuft vor der Ecke aus; volles Licht nur an Leiste, Blättern, Hinweis, runden Knöpfen oben und Karten der Seite; Chips, Umschalter, Nebenknöpfe, Felder, Linsen und alles in Blättern tragen eine leise Stufe (rund halb so hell), in Blättern ohne den auslaufenden Rest. Alle Bereiche und Blätter dunkel und hell im Bild durchgesehen (hell unverändert). Tote Variablen gestrichen, `tests/bilder.js` läuft wieder ohne Fehler. Am iPhone ungeprüft: Bild erbeten.
 - v118 (25.11., seine zwei Bilder: Dock von iOS neben der Kachel „Trainingszeit“ der App mit v117: „immer noch nicht gleich … Farbverlauf bei den Glas-Dingern rausnehmen, 1 zu 1 wie bei dem Apple-Bild“): Beide Bilder ausgemessen. Gefunden: (1) Der helle Streifen lag an fast allen Flächen 1 px zu weit innen, weil sie einen durchsichtigen Rand hatten (davor ein Streifen Fläche, in seinem Bild messbar); (2) der Verlauf in den Karten aus v116; (3) der Streifen war in halben Punkten gebaut und am iPhone unscharf; (4) der auslaufende Rest fehlte an einigen Kacheln und lief gerade statt wie bei Apple aus. Jetzt: alle Flächen einfarbig wie das Dock (17 von 255), kein Rand mehr, Streifen in Dritteln eines Punkts, Rest nach Messung. Im Test-Browser an Leiste und Karte 125, 94, 67, 38, 34, 32, 29, 27 wie bei Apple. Folge: Flächen ohne Rand sind 2 px niedriger (Zeilen, Eingabefelder); alle Tests stimmen. Am iPhone ungeprüft: Bild erbeten.
@@ -57,8 +58,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v106–v107: Zahnrad mit Einstellungen, großer Titel, Pausen-Uhr nur als Timer, Pläne sortierbar, größere Tippflächen; Empfehlung je Satz im Training.
 - v108–v109: Reserve je Satz fließt in die Empfehlung ein; „Heute dran“ wieder von Heute entfernt.
 - v110–v111: Einstellungen für Start-Bereich, Übersicht auf Heute, Frage nach der Reserve; Schritt je Übung.
-- v112: Neuanfang im Gym: alle Einheiten vor dem 23.11.2026 gelöscht, die App trägt nur noch Pläne und Übungen fest in sich.
-- v113: Glas-Kanten wie bei Apple; Drop- und Supersätze im Plan einstellbar.
+- v112–v113: Neuanfang im Gym (nur Einheiten ab 23.11.2026); Drop- und Supersätze im Plan einstellbar.
 - v114: Steigern nach seinem Muster (erster Satz führt, Abfall gelernt); Glas mit Bogen oben und unten; Knopf mit Schein rundum; Dropsatz rot im Ring, Supersatz mit Kette.
 - v115: Training nachträglich ändern (mit Dauer) und weiter trainieren; Übung hinzufügen nach Gruppen.
 - v116: Glas und Flächen nach Messung an iOS 26 (Leiste einfarbig mit gleichem Streifen oben und unten, Karten mit Verlauf wie das Widget).
@@ -66,6 +66,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v118: Glas 1 zu 1 wie das Dock: alle Flächen einfarbig, Streifen genau auf der Kante, kein Verlauf mehr in den Karten.
 - v119: Licht läuft vor der Ecke aus; Bedienteile und Blätter tragen nur noch eine leise Kante.
 - v120: Kanten in WebKit geprüft und gegen dessen Rundung abgesichert; Prüfskript `tests/webkit.py`.
+- v121: Helligkeit der Kanten auf sein Wort zurückgenommen.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -84,7 +85,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
 - v117: Lässt sich die Dauer in „Einheit ändern“ jetzt ändern (tippen, daneben tippen, „Speichern“)?
-- v120: Ist es jetzt ruhig genug? Läuft der Streifen an den Ecken aus wie am Dock (in WebKit so gemessen)? Wirken Zeilen und Eingabefelder, die seit v118 2 px niedriger sind, noch richtig?
+- v121: Passt die Helligkeit der Kanten jetzt, oder noch weniger? Läuft der Streifen an den Ecken am iPhone aus wie im Bild? Wirken Zeilen und Eingabefelder, die seit v118 2 px niedriger sind, noch richtig?
 - v115: „Weiter trainieren“ nach dem Beenden; „Einheit ändern“ mit Dauer; Wahl der Übung nach Gruppen.
 - v114: Passen die Empfehlungen jetzt zu seinem Muster (nach 12 kommen 10, Erhöhen bei 12/10/8 für alle Sätze)? Blauer Knopf mit Schein rundum: gut oder wieder zu viel? Rote Zahl im Ring am Dropsatz, Kette am Supersatz.
 - v113: Drop- und Supersatz im Plan hinter „…“ einstellen; wechselt die Ansicht im Supersatz richtig hin und her?

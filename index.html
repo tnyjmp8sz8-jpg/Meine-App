@@ -90,13 +90,14 @@
            Die Versätze sind keine glatten Drittel: oben knapp über dem ganzen Bildpunkt (20,344 statt 20,333), unten knapp darunter (20,327). WebKit rechnet in 1/64 px und rundet ab: Mit glatten Dritteln
            war der Streifen dort oben einen Bildpunkt zu dünn und mit halben Punkten (2,5 px, Aufweitung 1,5) oben 4 und unten 2 Bildpunkte dick (v119, gefunden mit WebKitGTK 2.52, demselben Kern wie Safari).
            So ergibt jede Art zu runden dieselbe Dicke. Aufweitungen nur in ganzen px.
-       (2) Zwei Stufen statt einer: --rand-a (volles Licht wie das Dock) tragen nur Leiste, Blätter, Hinweis, runde Knöpfe oben und die Karten der Seite. --rand-s (leise, am Rand 66 statt 125 von 255) tragen
+       (2) Zwei Stufen statt einer: --rand-a (volles Licht wie das Dock) tragen nur Leiste, Blätter, Hinweis, runde Knöpfe oben und die Karten der Seite. --rand-s (leise, am Rand 55 statt 93 von 255) tragen
            Bedienteile (Chips, Umschalter, Nebenknöpfe, Eingabefelder, Linsen) und alles in einem Blatt (dialog setzt --rand auf die leise Stufe, dort auch ohne --glanz): kein Glas auf Glas, wie Apple es vorgibt.
        --rand ist die Stufe, die Karten nehmen: auf der Seite die volle, in Blättern die leise.
-       Nachgemessen in dreifacher Schärfe an Leiste, Kachel und Karte, oben wie unten: Chromium 125, 94, 67, 38, 34, 32, 29, 27; WebKit 126, 95, 68, 38, 34, 32, 29, 27; Apple 125, 94, 67, 38, 34, 32, 29, 27. */
-    --rand-a:inset 0 20.344px 0 -20px rgba(255,255,255,.189),inset 0 8.672px 0 -8px rgba(255,255,255,.14),inset 0 3px 0 -2px rgba(255,255,255,.134),inset 0 2.344px 0 -1px rgba(255,255,255,.015),inset 0 -20.327px 0 -20px rgba(255,255,255,.189),inset 0 -8.655px 0 -8px rgba(255,255,255,.14),inset 0 -3px 0 -2px rgba(255,255,255,.134),inset 0 -2.327px 0 -1px rgba(255,255,255,.015);
-    --rand-s:inset 0 20.344px 0 -20px rgba(255,255,255,.09),inset 0 8.672px 0 -8px rgba(255,255,255,.07),inset 0 3px 0 -2px rgba(255,255,255,.06),inset 0 -20.327px 0 -20px rgba(255,255,255,.09),inset 0 -8.655px 0 -8px rgba(255,255,255,.07),inset 0 -3px 0 -2px rgba(255,255,255,.06);
-    --glanz-s:rgba(255,255,255,.09),rgba(255,255,255,.071) 1.5px,rgba(255,255,255,.042) 2.5px,rgba(255,255,255,.025) 3.5px,rgba(255,255,255,.017) 4.5px,rgba(255,255,255,.008) 5.5px,rgba(255,255,255,0) 7.5px;
+       Mit den Werten von Apple (Schichten 18,9, 14, 13,4, 1,5 % Weiß; Rest ab 9 %) gemessen in dreifacher Schärfe, oben wie unten: Chromium 125, 94, 67, 38, 34, 32, 29, 27; WebKit 126, 95, 68, 38, 34, 32, 29, 27; Apple 125, 94, 67, 38, 34, 32, 29, 27.
+       v121 (sein Wort zu v120: „so ist gut, aber nimm Helligkeit etwas raus, ist zu auffällig“): Form und Auslaufen bleiben, alle Deckkräfte mal 0,65 (leise Stufe mal 0,78). Gemessen in WebKit und Chromium: 93, 70, 51, 32, 28, 26, 25; leise Stufe 55 am Rand. */
+    --rand-a:inset 0 20.344px 0 -20px rgba(255,255,255,.123),inset 0 8.672px 0 -8px rgba(255,255,255,.091),inset 0 3px 0 -2px rgba(255,255,255,.087),inset 0 2.344px 0 -1px rgba(255,255,255,.01),inset 0 -20.327px 0 -20px rgba(255,255,255,.123),inset 0 -8.655px 0 -8px rgba(255,255,255,.091),inset 0 -3px 0 -2px rgba(255,255,255,.087),inset 0 -2.327px 0 -1px rgba(255,255,255,.01);
+    --rand-s:inset 0 20.344px 0 -20px rgba(255,255,255,.07),inset 0 8.672px 0 -8px rgba(255,255,255,.055),inset 0 3px 0 -2px rgba(255,255,255,.045),inset 0 -20.327px 0 -20px rgba(255,255,255,.07),inset 0 -8.655px 0 -8px rgba(255,255,255,.055),inset 0 -3px 0 -2px rgba(255,255,255,.045);
+    --glanz-s:rgba(255,255,255,.058),rgba(255,255,255,.046) 1.5px,rgba(255,255,255,.027) 2.5px,rgba(255,255,255,.016) 3.5px,rgba(255,255,255,.011) 4.5px,rgba(255,255,255,.005) 5.5px,rgba(255,255,255,0) 7.5px;
     --glanz:linear-gradient(to bottom,var(--glanz-s)),linear-gradient(to top,var(--glanz-s));
     --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
@@ -1326,7 +1327,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v120</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v121</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
