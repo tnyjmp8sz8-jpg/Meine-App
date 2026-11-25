@@ -155,6 +155,6 @@ struct WidgetVorschau: View {
     }
 
     private func kachel<Inhalt: View>(_ inhalt: Inhalt, _ f: Farben, _ breite: CGFloat) -> some View {
-        inhalt.padding(16).frame(width: breite, height: 158).background(f.grund).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        inhalt.padding(16).frame(width: breite, height: 158).background(f.widget).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
     }
 }

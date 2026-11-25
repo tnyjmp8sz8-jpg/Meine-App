@@ -34,7 +34,7 @@ struct NotizenWidgetAnsicht: View {
                 Leer(f: f)
             }
         }
-        .containerBackground(for: .widget) { f.grund }
+        .containerBackground(for: .widget) { f.widget }
     }
 }
 

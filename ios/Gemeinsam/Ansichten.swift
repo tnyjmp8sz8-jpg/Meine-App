@@ -9,10 +9,13 @@ extension Color {
 
 /// Farben wie in der Web-App (dunkel und hell). Dunkel seit 1.0 schwarz mit neutralem Grau, wie die Web-App seit v87.
 struct Farben {
-    let seite, grund, schrift, blass, blau, gruen, orange, spur: Color
+    let seite, grund, widget, schrift, blass, blau, gruen, orange, spur: Color
     init(dunkel: Bool) {
         seite = Color(dunkel ? 0x000000 : 0xF2F2F7)
         grund = Color(dunkel ? 0x1C1C1E : 0xFFFFFF)
+        // Grund des Widgets (1.1, sein Wunsch nach seinem Bildschirmfoto vom 25.11.: „wie das darunter von Apple“, das Kalender-Widget): schwarz wie Apples eigene Widgets,
+        // iOS legt sein Glas mit der hellen Kante oben selbst darüber. Bis 1.0 war es #1C1C1E und wirkte darunter deutlich grauer als die Widgets von Apple.
+        widget = Color(dunkel ? 0x000000 : 0xFFFFFF)
         schrift = Color(dunkel ? 0xF5F5F7 : 0x111114)
         blass = Color(dunkel ? 0x98989F : 0x6C6C72)
         blau = Color(dunkel ? 0x0A84FF : 0x007AFF)
