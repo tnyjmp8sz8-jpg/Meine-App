@@ -42,7 +42,7 @@
 :root{
   /* Farben: fast schwarzer, leicht bläulicher Grund (dunkel) bzw. helles Grau (hell), Karten eine Stufe heller, ein klares Blau nur für Aktionen, Links, aktiven Tab und Verläufe (--accent als Fläche, --at als Schrift und Linie). Grün und Rot nur für erledigt/besser bzw. schlechter. Jeder Bereich hat eine Kennfarbe (--c-…), sie steht nur an seinem Symbol auf Heute. Flächen ohne Rand, Trennlinien nur in Listen. Schrift: die Systemschrift des Geräts (auf Apple-Geräten San Francisco), nichts wird nachgeladen, große Zahlen in der runden Variante. Layout: eine Spalte in Telefonbreite. */
   --bg:#F2F2F7;
-  --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.7); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+  --glass:rgba(255,255,255,.58); --glass-line:rgba(0,0,0,.08); --glass-sel:rgba(0,0,0,.08); --glass-top:rgba(255,255,255,.85); --glass-bot:rgba(255,255,255,.4); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
   --sheet:rgba(242,242,247,.84);
   --surface:#FFFFFF;
   --fill:#E9E9EE;
@@ -58,8 +58,10 @@
   --mid:#AEAEB2;
   --sel:#E5E5EA;
   /* Glas (v102): --edge und --edge-top sind die feine Kante und das Licht von oben an jeder Fläche, --cut und --schild deckende Farben für Stellen, an denen nichts durchscheinen darf
-     (Ring um den Punkt im Graphen, Schild beim Ablesen). --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
-  --edge:rgba(0,0,0,.05); --edge-top:rgba(255,255,255,.9); --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
+     (Ring um den Punkt im Graphen, Schild beim Ablesen). Seit v113 nach seinem Bild vom Dock in iOS 26 („passe alle Glas- und transparenten Teile in dem Stil von Apple an“):
+     Das schwebende Glas (Leiste, Blätter, Hinweis, runde Knöpfe oben) ist dunkler und trägt oben einen hellen Lichtbogen (--glass-top), unten einen schwächeren (--glass-bot), rundum eine feine Linie;
+     die Flächen auf der Seite tragen dasselbe leiser (--edge-top, --edge-bot). Alles als Schatten nach innen: Sie folgen der Rundung und scrollen in Blättern nicht mit. --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
+  --edge:rgba(0,0,0,.05); --edge-top:rgba(255,255,255,.9); --edge-bot:rgba(0,0,0,.03); --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
   --danger:#D70015;
   --good:#248A3D;--warn:#D9A300;
   --c-weight:#AF52DE;
@@ -71,15 +73,15 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#000000; --glass:rgba(58,58,62,.46); --glass-line:rgba(255,255,255,.16); --glass-sel:rgba(255,255,255,.1); --glass-top:rgba(255,255,255,.12); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
+    --bg:#000000; --glass:rgba(30,30,33,.56); --glass-line:rgba(255,255,255,.13); --glass-sel:rgba(255,255,255,.11); --glass-top:rgba(255,255,255,.36); --glass-bot:rgba(255,255,255,.13); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
     /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
     --surface:rgba(255,255,255,.085); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
-    --edge:rgba(255,255,255,.055); --edge-top:rgba(255,255,255,.1); --cut:#161618; --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
+    --edge:rgba(255,255,255,.055); --edge-top:rgba(255,255,255,.13); --edge-bot:rgba(255,255,255,.035); --cut:#161618; --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
-  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.1);--edge-top:rgba(255,255,255,.12);--cut:#2B2B2E;--schild:#48484A}
+  dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--edge:rgba(255,255,255,.09);--edge-top:rgba(255,255,255,.16);--edge-bot:rgba(255,255,255,.05);--cut:#2B2B2E;--schild:#48484A}
 }
 
 *{box-sizing:border-box}
@@ -111,7 +113,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 .mark{transform-origin:left center;transition:transform .32s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
 .top.klein .mark{transform:translateX(var(--mx,0)) scale(.62)}
 .mark .dot{color:var(--amb-c)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
-.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top)}
+.add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),inset 0 -1px 0 var(--glass-bot)}
 .add svg{width:20px;height:20px}
 .add[hidden]{display:none}
 
@@ -181,7 +183,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 
 /* Blätter (v94): Sie schweben wie in iOS 26 mit 8 px Abstand zum Rand, sind rundum gerundet und aus Glas (halb durchsichtig mit Milchglas); dahinter wird die Seite dunkler und unscharf.
    Mit offener Tastatur (--kb) sitzen sie 8 px über ihr. */
-dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
+dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),inset 0 -1px 0 var(--glass-bot),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
@@ -191,7 +193,7 @@ dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);ba
 .x svg{width:16px;height:16px}
 .fld{display:flex;flex-direction:column;gap:6px}
 .fld>span{font-size:13px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
-input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
+input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{font:inherit;font-size:16px;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:11px 14px;width:100%;min-width:0;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top),inset 0 -1px 0 var(--edge-bot)}
 /* Eingabefelder (v95, mein Vorschlag, sein „überall nachziehen“): fast Kapseln und ohne blauen Rahmen. Beim Tippen zeigt wie in iOS die blaue Einfügemarke, wo man ist;
    das Feld bekommt nur eine feine graue Kante. Markierter Text ist zart blau hinterlegt statt kräftig. */
 input:focus-visible,.n-text:focus-visible{outline:none;box-shadow:inset 0 0 0 1.5px var(--mid)}
@@ -234,13 +236,13 @@ body{display:flex;flex-direction:column;overflow:hidden}
    Die Leiste steht außerhalb des scrollenden Bereichs: Dort macht der Milchglas-Effekt das Element selbst nicht unscharf (anders als die Kopfzeile, v37). */
 .tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;padding:0 14px var(--unten);pointer-events:none}
 .tabs::before{content:"";position:absolute;inset:-26px 0 0;z-index:-1;background:linear-gradient(to bottom,transparent,color-mix(in srgb,var(--bg) 82%,transparent))}
-.tabs-in{position:relative;pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 10px 30px rgba(0,0,0,.32)}
+.tabs-in{position:relative;pointer-events:auto;max-width:452px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:2px;padding:5px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),inset 0 -1px 0 var(--glass-bot),0 10px 30px rgba(0,0,0,.32)}
 .tab{display:flex;flex-direction:column;align-items:center;gap:2px;padding:8px 0 6px;border:0;background:none;color:var(--muted);font-size:12px;font-weight:500;border-radius:999px;font-variant-numeric:tabular-nums}
 .tab svg{width:24px;height:24px}
 .tab[aria-current="page"]{color:var(--ink);font-weight:600}
 /* Der gewählte Bereich (v102): eine helle Linse aus Glas, die beim Wechsel zum neuen Bereich gleitet und ganz leicht nachfedert (--i = Platz des Bereichs, setzt show()).
    Sie liegt hinter den Knöpfen (z-index -1 im eigenen Stapel der Leiste). Bis v101 eine dunklere Kapsel, die sprang. */
-.tabs-in::before{content:"";position:absolute;z-index:-1;top:5px;bottom:5px;left:5px;width:calc((100% - 18px) / 5);border-radius:999px;background:var(--glass-sel);box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--glass-top);transform:translateX(calc(var(--i,0) * (100% + 2px)));transition:transform .36s cubic-bezier(.3,1.3,.45,1)}
+.tabs-in::before{content:"";position:absolute;z-index:-1;top:5px;bottom:5px;left:5px;width:calc((100% - 18px) / 5);border-radius:999px;background:var(--glass-sel);box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),inset 0 -1px 0 var(--glass-bot);transform:translateX(calc(var(--i,0) * (100% + 2px)));transition:transform .36s cubic-bezier(.3,1.3,.45,1)}
 /* Aktiver Bereich: Flächen (.f) gefüllt, Details (.k, .d) in der Farbe der Leiste ausgespart, reine Linien (.b) kräftiger */
 .tab .d{display:none}
 .tab[aria-current="page"] .f{fill:currentColor}
@@ -431,7 +433,14 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #l-items,#p-items{display:flex;flex-direction:column;gap:10px}
 #l-items:empty,#p-items:empty{display:none}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
-.prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
+.prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere;-webkit-hyphens:auto;hyphens:auto}
+.pst i{font-style:normal}
+@media (max-width:359px){.pst i{display:none}.pst{gap:6px}}   /* schmal: nur die Zahl zwischen Minus und Plus, sonst bleibt dem Namen kein Platz */
+.prow{flex-wrap:wrap}
+.prow b small{display:block;margin-top:1px;font-size:12px;font-weight:500;color:var(--muted)}
+.p-akt{flex-basis:100%;padding:2px 0 4px}
+.lx-akt button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+.x.sm svg[viewBox="0 0 18 5"]{width:15px;height:auto;color:var(--at)}
 /* Griff zum Umsortieren (v106) und die Zeile, die gerade gezogen wird: Sie hebt sich leicht ab, die anderen weichen weich aus */
 .griff{flex:none;display:grid;place-items:center;width:28px;height:40px;margin:-6px -6px -6px -6px;color:var(--mid);touch-action:none;cursor:grab}
 .griff svg{width:16px;height:16px}
@@ -493,7 +502,7 @@ body{font-size:14px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top),inset 0 -1px 0 var(--glass-bot),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
@@ -541,7 +550,7 @@ body{font-size:14px}
 .wd{border:0;background:none;padding:4px 0 3px;border-radius:14px;display:flex;flex-direction:column;align-items:center;color:var(--mid)}
 .wd small{font-size:11px;font-weight:600}
 .wd b{font-size:15px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
-.wd.now{color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}   /* heute liegt in einer kleinen Linse aus Glas (v103), wie der gewählte Bereich in der Leiste unten */
+.wd.now{color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top),inset 0 -1px 0 var(--edge-bot)}   /* heute liegt in einer kleinen Linse aus Glas (v103), wie der gewählte Bereich in der Leiste unten */
 .wd:active{background:var(--surface)}
 .wk i,.cd i{display:flex;justify-content:center;gap:3px;height:6px}
 .wk i{margin-top:4px}
@@ -599,7 +608,7 @@ u.w{background:var(--c-weight)}
    Sie zählt ab dem letzten abgehakten Satz hoch; vor dem ersten Satz steht „Pause“. Sie ist kein Knopf. */
 .l-akt{display:flex;gap:8px}
 .l-akt .primary{flex:1;min-width:0}
-.l-rest{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:44px;padding:0 14px;border-radius:999px;background:var(--surface);color:var(--muted);font-family:var(--round);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
+.l-rest{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:44px;padding:0 14px;border-radius:999px;background:var(--surface);color:var(--muted);font-family:var(--round);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top),inset 0 -1px 0 var(--edge-bot)}
 .l-rest svg{width:16px;height:16px;flex:none}
 .l-rest.laeuft{color:var(--ink)}
 .ls-t{margin:2px 0 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
@@ -622,6 +631,9 @@ u.w{background:var(--c-weight)}
 .lx-z svg{width:12px;height:12px;color:var(--mid)}
 .lx-z:active{opacity:.55}
 .rek-l{margin:0;font-size:12.5px;font-weight:600;color:var(--good)}
+.lx-su{margin:0;font-size:12.5px;font-weight:600;color:var(--muted)}
+.lx-plus{flex:none;align-self:center;margin:0 -3px;font-size:14px;font-weight:600;color:var(--mid)}
+.lt-r abbr{text-decoration:none}
 .lx-e{margin:2px 2px 0;font-size:12.5px;color:var(--muted)}
 .lx-e b{font-weight:600;color:var(--ink);margin-right:4px}
 .rk{font-weight:600;color:var(--good)}
@@ -824,7 +836,7 @@ dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 .row,.card,.entries,.empty,.fig,.figs.on-bg .fig,.seg2,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab{border-color:transparent}
 /* Glas (v102): Statt eines Rands trägt jede Fläche eine feine helle Kante und Licht von oben, wie die Leiste unten; die Flächen selbst sind durchscheinend (Variablen oben).
    Neue Flächen hier aufnehmen. Eingabefelder tragen die Kante in ihrer eigenen Regel, damit der Rahmen beim Tippen sie ablöst. */
-.row,.card,.entries,.ovs,.rows.one,.fig,.seg2,.remind,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab,.lx-m,.lx-akt button,.n-text,.stepper button,.zk,.z-list button,.lt-r.act .n,.lt-r .pv{box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
+.row,.card,.entries,.ovs,.rows.one,.fig,.seg2,.remind,.kx,.prow,.tog,.x,.ghost,.chip,.lx-tab,.lx-m,.lx-akt button,.n-text,.stepper button,.zk,.z-list button,.lt-r.act .n,.lt-r .pv{box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top),inset 0 -1px 0 var(--edge-bot)}
 .rows.one .row,.chip[aria-pressed="true"],.lx-tab[aria-pressed="true"],#l-del{box-shadow:none}
 input[type="text"],input[type="number"],input[type="date"],input[type="month"],input[type="time"]{border-color:transparent}
 .chip,.lx-tab{background:var(--surface)}
@@ -1276,7 +1288,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v112</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v113</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2727,7 +2739,7 @@ function normK(o) {
   out.plans = {};
   if (o && o.plans && typeof o.plans === 'object') for (const id in o.plans) {
     const pl = o.plans[id];
-    out.plans[id] = pl && typeof pl === 'object' && pl.n ? Object.assign({ n: String(pl.n).slice(0, 40), items: (Array.isArray(pl.items) ? pl.items : []).filter(it => it && it.id).map(it => ({ id: String(it.id), sets: clamp(Math.round(Number(it.sets)) || 3, 1, 10) })).slice(0, 20) }, pl.o >= 1 && pl.o <= 999 ? { o: Math.round(pl.o) } : {}) : null;
+    out.plans[id] = pl && typeof pl === 'object' && pl.n ? Object.assign({ n: String(pl.n).slice(0, 40), items: (Array.isArray(pl.items) ? pl.items : []).filter(it => it && it.id).map(it => Object.assign({ id: String(it.id), sets: clamp(Math.round(Number(it.sets)) || 3, 1, 10) }, it.dr ? { dr: 1 } : {}, it.su ? { su: 1 } : {})).slice(0, 20) }, pl.o >= 1 && pl.o <= 999 ? { o: Math.round(pl.o) } : {}) : null;
   }
   /* Übersprungene Pläne (v93): aus[Tag][Plan] = 1. Für die Runde zählt ein übersprungener Plan wie einer, der dran war (planRunde). */
   out.aus = {};
@@ -2742,7 +2754,7 @@ function normK(o) {
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? {
     plan: lv.plan ? String(lv.plan) : null, start: lv.start, last: Number.isFinite(lv.last) ? lv.last : null, date: lv.date,
-    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => ({ id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
+    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => Object.assign(it.dr ? { dr: 1 } : {}, it.su ? { su: 1 } : {}, { id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
   } : null;
   return out;
 }
@@ -3411,15 +3423,29 @@ const GRIFF = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke
 const CHECK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>';
 /* Sätze für eine Übung im laufenden Training: so viele wie im Plan. Mit Empfehlung (empAn) vorbelegt mit der Vorgabe für heute (vorgabe()); sie steht dazu am Satz (ew, er, eg = Gewicht, Wiederholungen, Grund),
    damit die Zeile „Empfehlung“ sie auch dann zeigt, wenn er etwas anderes einträgt. Ohne Empfehlung stehen die Werte vom letzten Mal da. */
-function liveSets(id, count) {
-  const hist = kHist(id), last = hist[hist.length - 1], an = empAn(), sets = [];
-  const base = !last ? [] : an ? vorgabe(last.sets, exVon(id), exBis(id), exStep(hist, id), last.bw, hist.length > 1 ? hist[hist.length - 2].sets : null) : last.sets;
+function liveSets(id, count, dr) {
+  const hist = kHist(id), last = hist[hist.length - 1], an = empAn(), sets = [], st = exStep(hist, id);
+  const base = !last ? [] : an ? vorgabe(last.sets, exVon(id), exBis(id), st, last.bw, hist.length > 1 ? hist[hist.length - 2].sets : null) : last.sets;
   for (let j = 0; j < count; j++) {
-    const b = base[j] || base[base.length - 1], x = { w: b && b[0] ? kgn(b[0]) : '', r: b ? String(b[1]) : '', done: false };
+    let b = base[j] || base[base.length - 1];
+    /* Dropsatz ohne eigene Werte (der letzte Satz war bisher so schwer wie der davor, oder es gab ihn nicht): rund ein Viertel leichter als der Satz davor, auf den Schritt abgerundet */
+    const vor = base[j - 1] || base[base.length - 1];
+    if (an && dr && count > 1 && j === count - 1 && vor && vor[0] > 0 && (!last.sets[j] || !last.sets[j - 1] || last.sets[j][0] >= last.sets[j - 1][0])) b = dropVon(vor[0], vor[1], st);
+    const x = { w: b && b[0] ? kgn(b[0]) : '', r: b ? String(b[1]) : '', done: false };
     if (an && b) { x.ew = x.w; x.er = x.r; x.eg = b[2] || ''; }
     sets.push(x);
   }
   return sets;
+}
+/* Dropsatz (v113, sein Wunsch: „Option für Drop- und Supersätze … man stellt es vorher einmalig im Plan ein und dann passt es“): Der letzte Satz der Übung folgt ohne Pause mit weniger Gewicht.
+   Vorschlag: drei Viertel des Gewichts davor, abgerundet auf den Schritt (90 kg, Schritt 5 → 67,5 → 65 kg), mit denselben Wiederholungen. Hat der Dropsatz eigene Werte vom letzten Mal, steigt er wie jeder Satz für sich. */
+const dropVon = (w, n, st) => [Math.max(0, Math.floor(w * 0.75 / st + 1e-9) * st), n, 'Dropsatz: ein Viertel leichter, ohne Pause'];
+/* Supersatz: Übungen, die im Plan mit „Supersatz mit der nächsten“ verbunden sind, bilden eine Gruppe [von, bis]. Nach jedem abgehakten Satz geht es zur nächsten Übung der Gruppe mit offenen Sätzen. */
+function lGruppe(i) {
+  let von = i, bis = i; const l = Lw.items;
+  while (von > 0 && l[von - 1].su) von--;
+  while (bis < l.length - 1 && l[bis].su) bis++;
+  return bis > von ? [von, bis] : null;
 }
 /* Nach einem abgehakten Satz j: Die offenen Sätze danach mit demselben Gewicht bekommen eine neue Empfehlung, gemessen an dem, was er gerade geschafft hat.
    Erwartung für Satz k = geschaffte Wiederholungen minus die Ermüdung bis dorthin (so viel, wie es letztes Mal zwischen diesen Sätzen weniger wurde; ohne Vergleich eine je Satz).
@@ -3433,7 +3459,14 @@ function lAnpassen(it, j) {
   /* ae = geschafft, dazu die Reserve ab der zweiten (wdhEff): 10 mit 3 in Reserve zählt wie 12 */
   const res = sj.x || 0, ae = wdhEff([a[0], a[1], res]), plan = sj.er != null && sj.ew === sj.w ? +sj.er : 0, rm = rm1(a[0] + bw, ae), ohne = !a[0] && !bw;
   it.sets.forEach((s, k) => {
-    if (k <= j || s.done || !(s.w === sj.w || (s.w === '' && s.r === ''))) return;
+    if (k <= j || s.done) return;
+    const drop = it.dr && k === it.sets.length - 1 && a[0] > 0 && (s.w === sj.w || s.w === '' || (s.w === s.ew && String(s.eg || '').indexOf('Dropsatz') === 0));
+    if (!drop && !(s.w === sj.w || (s.w === '' && s.r === ''))) return;
+    if (drop) {   // Dropsatz ohne eigenes Gewicht vom letzten Mal: richtet sich nach dem, was gerade bewegt wurde
+      const q = dropVon(a[0], a[1], st), frei = s.r === (s.er != null ? s.er : '');
+      s.ew = q[0] ? kgn(q[0]) : ''; s.er = String(q[1]); s.eg = q[2]; if (frei) { s.w = s.ew; s.r = s.er; }
+      return;
+    }
     const lj = last && last.sets[j], lk = last && last.sets[k], d = lj && lk && lj[0] === lk[0] ? clamp(lj[1] - lk[1], 0, 3 * (k - j)) : k - j, erw = ae - d;
     const pk = s.er != null && s.ew === sj.w ? +s.er : 0, frei = s.r === (s.er != null ? s.er : '');
     let w = a[0], r, g = 'nach Satz ' + (j + 1) + ' angepasst';
@@ -3508,7 +3541,7 @@ zdlg.addEventListener('keydown', e => {
 function startPlan(id) {
   if (K.live) return openL();
   const pl = K.plans && K.plans[id]; if (!pl) return;
-  const items = pl.items.filter(it => K.ex[it.id]).map(it => ({ id: it.id, sets: liveSets(it.id, it.sets) }));
+  const items = pl.items.filter(it => K.ex[it.id]).map((it, i, l) => Object.assign({ id: it.id, sets: liveSets(it.id, it.sets, it.dr) }, it.dr && it.sets > 1 ? { dr: 1 } : {}, it.su && i < l.length - 1 ? { su: 1 } : {}));
   if (!items.length) return openP(id);
   kdoc.patch({ live: { plan: id, start: Date.now(), last: null, date: todayKey(), items } });
   renderTraining(); ensureLiveTick(); openL();
@@ -3554,7 +3587,7 @@ function paintL() {
   const tabs = $('#l-tabs');
   tabs.innerHTML = Lw.items.map((it, i) => {
     const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = undone(it) < 0;
-    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>';
+    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>' + (it.su && i < Lw.items.length - 1 ? '<span class="lx-plus" aria-hidden="true">+</span>' : '');
   }).join('') + '<button type="button" class="lx-tab addx" data-la="addx" aria-expanded="' + (lAdd || !Lw.items.length) + '" aria-label="Übung hinzufügen">+</button>';
   $('#l-add').hidden = !lAdd && Lw.items.length > 0;
   paintLPick();
@@ -3563,6 +3596,7 @@ function paintL() {
   const it = Lw.items[lI];
   if (!it) { $('#l-items').innerHTML = ''; return; }
   const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], an = empAn(), zv = exVon(it.id), zb = exBis(it.id);
+  const gr = lGruppe(lI), nr = j => it.dr && it.sets.length > 1 && j === it.sets.length - 1 ? '<abbr title="Dropsatz">D</abbr>' : j + 1;
   const act = lJ != null && it.sets[lJ] ? lJ : undone(it), val = v => v === '' || v == null ? '–' : esc(v), rek = lRek(it);
   /* Ein abgehakter Satz zeigt in Grün, um wie viel er über demselben Satz vom letzten Mal liegt: mehr Gewicht („+2,5“ am Gewicht), bei gleichem Gewicht mehr Wiederholungen („+1“ an den Wiederholungen) */
   const mehr = (s, j) => { const l = last && last.sets[j], q = lNum(s), m = t => '<small class="mehr">+' + t + '</small>';
@@ -3574,13 +3608,14 @@ function paintL() {
     '<button type="button" class="lx-m" data-la="menu" aria-expanded="' + lMenu + '" aria-label="Sätze und Übung ändern">' + DOTS + '</button></div>' +
     '<div class="lx-zr">' + (an ? '<button type="button" class="lx-z" data-la="ziel" aria-label="Ziel: ' + zv + ' bis ' + zb + ' Wiederholungen je Satz, ändern">Ziel ' + zv + '–' + zb + ' Wdh' + PEN + '</button>' : '') +
       '<button type="button" class="lx-z" data-la="schritt" aria-label="Schritt beim Gewicht: ' + schrittText(exStep(hist, it.id)) + ', ändern">Schritt ' + schrittText(exStep(hist, it.id)) + PEN + '</button></div>' +
+    (gr ? '<p class="lx-su">Supersatz mit ' + esc(Lw.items.slice(gr[0], gr[1] + 1).filter(o => o !== it).map(o => K.ex[o.id] ? K.ex[o.id].n : 'Übung').join(' + ')) + '</p>' : '') +
     (rek ? '<p class="rek-l">Neuer Rekord · ' + (rek.q.w ? '1RM ' + rmText(rek.q.v) + ' kg' : rek.q.v + ' Wdh') + '</p>' : '') + '</div>' +
     (lMenu ? '<div class="lx-akt"><button type="button" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" data-la="rmset">− Satz</button>' : '') +
       '<button type="button" class="danger" data-la="rm">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>' : '') +
     '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span>' + (it.sets.some(s => lNum(s)[0] + bwL > 0) ? '1RM' : '') + '</span><span></span></div>' + it.sets.map((s, j) => j === act
-    ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + (j + 1) + '</span>' + pv(s, j, 'w', 'Gewicht') + pv(s, j, 'r', 'Wiederholungen') + rm(s, j) +
+    ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + nr(j) + '</span>' + pv(s, j, 'w', 'Gewicht') + pv(s, j, 'r', 'Wiederholungen') + rm(s, j) +
       '<button type="button" class="chk" data-la="done" data-s="' + j + '" aria-pressed="' + s.done + '" aria-label="Satz ' + (j + 1) + (s.done ? ' ist erledigt, zurücknehmen' : ' erledigt') + '">' + CHECK + '</button></div>'
-    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
+    : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + nr(j) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   /* Empfehlung für den Satz, der dran ist: Gewicht × Wiederholungen und in wenigen Worten, warum */
   const es = an && act >= 0 && it.sets[act] && !it.sets[act].done && it.sets[act].er != null ? it.sets[act] : null;
   h += resHTML();
@@ -3629,13 +3664,13 @@ $('#lform').addEventListener('click', e => {
   if (a === 'ziel' && it) return openZ({ titel: 'Wiederholungen je Satz', wert: exVon(it.id) * 100 + exBis(it.id), nurListe: true, liste: BEREICHE, text: v => Math.floor(v / 100) + '–' + v % 100 + ' Wdh', dann: v => {
     /* Neuer Bereich: Die offenen Sätze bekommen die Vorgabe, die dazu passt */
     const p = { ex: {} }; p.ex[it.id] = { zu: Math.floor(v / 100), z: v % 100 }; kdoc.patch(p);
-    const neu = liveSets(it.id, it.sets.length); it.sets.forEach((x, j) => { if (!x.done) Object.assign(x, neu[j]); });
+    const neu = liveSets(it.id, it.sets.length, it.dr); it.sets.forEach((x, j) => { if (!x.done) Object.assign(x, neu[j]); });
     paintL(); saveLive();
   } });
   if (a === 'schritt' && it) return openZ({ titel: 'Schritt beim Gewicht', wert: exStep(kHist(it.id), it.id), einheit: 'kg', nurListe: true, liste: SCHRITTE, dann: v => {
     /* Fester Schritt für diese Übung (Gerät 5 kg, Hantel 2,5 kg …): Die offenen Sätze bekommen die Vorgabe, die dazu passt */
     const p = { ex: {} }; p.ex[it.id] = { st: v }; kdoc.patch(p);
-    if (empAn()) { const neu = liveSets(it.id, it.sets.length); it.sets.forEach((x, j) => { if (!x.done) Object.assign(x, neu[j]); }); }
+    if (empAn()) { const neu = liveSets(it.id, it.sets.length, it.dr); it.sets.forEach((x, j) => { if (!x.done) Object.assign(x, neu[j]); }); }
     paintL(); saveLive();
   } });
   if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lMenu = false; lR = lVor = null; }
@@ -3651,9 +3686,13 @@ $('#lform').addEventListener('click', e => {
     if (s.done) {
       if (!vorher && lRek(it)) setTimeout(() => haptik('erfolg'), 120);   // Rekord: nach dem leichten Impuls fürs Abhaken ein zweiter, deutlicher
       Lw.last = Date.now();
-      if (empAn()) { lR = { i: lI, j: +t.dataset.s }; lVor = { i: lI, j: lR.j, sets: clone(it.sets) }; lAnpassen(it, lR.j); }
+      const j = +t.dataset.s, gr = lGruppe(lI), fragen = empAn() && K.res !== 0 && !gr && !(it.dr && j === it.sets.length - 1);   // Dropsatz geht bis ans Ende, im Supersatz geht es sofort weiter
+      if (empAn()) { lVor = { i: lI, j, sets: clone(it.sets) }; lAnpassen(it, j); }
+      lR = fragen ? { i: lI, j } : null;
       it.sets.forEach(n => { if (!n.done) { if (n.w === '') n.w = s.w; if (n.r === '') n.r = s.r; } });   // leere Folgesätze übernehmen die Werte
-      if (undone(it) < 0 && !(empAn() && K.res !== 0)) lWeiter();   // mit der Frage nach der Reserve erst nach der Antwort (lReserve)
+      if (gr) { let ziel = -1; for (let k = 1; k <= gr[1] - gr[0]; k++) { const q = gr[0] + (lI - gr[0] + k) % (gr[1] - gr[0] + 1); if (undone(Lw.items[q]) >= 0) { ziel = q; break; } }
+        if (ziel >= 0) lI = ziel; else if (undone(it) < 0) lWeiter(); }
+      else if (undone(it) < 0 && !fragen) lWeiter();   // mit der Frage nach der Reserve erst nach der Antwort (lReserve)
     }
   }
   else if (a === 'res') lReserve(+t.dataset.v);
@@ -3719,10 +3758,15 @@ $('#l-del').addEventListener('click', () => {
   closeL(); liveTick();
 });
 
+/* Zeile je Übung: Griff, Name (darunter, was eingestellt ist), Sätze, „…“. Hinter „…“ liegen wie im Training die seltenen Dinge: Dropsatz, Supersatz mit der nächsten, Entfernen (pMenu = offene Zeile). */
+let pMenu = -1;
 function paintP() {
-  $('#p-items').innerHTML = pS.items.map((it, i) => { const ex = K.ex[it.id], name = ex ? ex.n : 'Übung';
-    return '<div class="prow" data-i="' + i + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + esc(name) + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + (it.sets === 1 ? ' Satz' : ' Sätze') + '</span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
-      '<button type="button" class="x sm" data-pa="rm" aria-label="' + esc(name) + ' aus dem Plan entfernen">' + XSVG + '</button></div>'; }).join('');
+  $('#p-items').innerHTML = pS.items.map((it, i) => { const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', nach = pS.items[i + 1], nn = nach && K.ex[nach.id] ? K.ex[nach.id].n : '';
+    const art = [it.dr && it.sets > 1 ? 'Dropsatz' : '', it.su && nach ? 'Supersatz mit ' + nn : ''].filter(Boolean).join(' · ');
+    return '<div class="prow" data-i="' + i + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + esc(name) + (art ? '<small>' + esc(art) + '</small>' : '') + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + '<i>' + (it.sets === 1 ? ' Satz' : ' Sätze') + '</i></span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
+      '<button type="button" class="x sm" data-pa="menu" aria-expanded="' + (pMenu === i) + '" aria-label="' + esc(name) + ': Dropsatz, Supersatz, entfernen">' + DOTS + '</button>' +
+      (pMenu === i ? '<div class="lx-akt p-akt">' + (it.sets > 1 ? '<button type="button" data-pa="dr" aria-pressed="' + !!it.dr + '">Dropsatz</button>' : '') + (nach ? '<button type="button" data-pa="su" aria-pressed="' + !!it.su + '" aria-label="Supersatz mit der nächsten Übung, ' + esc(nn) + '">Supersatz ↓</button>' : '') +
+        '<button type="button" class="danger" data-pa="rm">Entfernen</button></div>' : '') + '</div>'; }).join('');
   paintPPick();
 }
 function paintPPick() { paintPick('#p-pick', '#p-new', pS.items.map(it => it.id), 'pa'); }
@@ -3735,6 +3779,7 @@ $('#p-items').addEventListener('pointerdown', e => {
   if (rows.length < 2 || i < 0) return;
   e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (x) {}
   const top = k => rows[k].getBoundingClientRect().top;
+  if (pMenu >= 0) { pMenu = -1; paintP(); return; }   // offene Zeile zuerst schließen: Die Zeilen sind sonst ungleich hoch
   pZug = { rows, row, i, ziel: i, y0: e.clientY, schritt: top(1) - top(0), mitte: rows.map(x => { const q = x.getBoundingClientRect(); return q.top + q.height / 2; }) };
   row.classList.add('zieht'); haptik('wahl');
 });
@@ -3751,7 +3796,7 @@ $('#p-items').addEventListener('pointerup', pZugEnde);
 $('#p-items').addEventListener('pointercancel', pZugEnde);
 function openP(id) {
   const pl = id && K.plans ? K.plans[id] : null;
-  pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => ({ id: it.id, sets: it.sets })) : [] }; pArm = false;
+  pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => Object.assign({}, it)) : [] }; pArm = false; pMenu = -1;
   $('#ps-title').textContent = pl ? 'Plan bearbeiten' : 'Neuer Plan';
   $('#p-name').value = pl ? pl.n : ''; $('#p-new').value = ''; $('#p-err').hidden = true;
   $('#p-del').hidden = !pl; $('#p-del').textContent = 'Plan löschen';
@@ -3767,7 +3812,9 @@ $('#pform').addEventListener('click', e => {
   const t = e.target.closest('[data-pa]'); if (!t) return;
   const a = t.dataset.pa, row = t.closest('.prow'), i = row ? +row.dataset.i : -1;
   if (a === 'pick') { pS.items.push({ id: t.dataset.id, sets: 3 }); $('#p-new').value = ''; }
-  else if (a === 'rm') pS.items.splice(i, 1);
+  else if (a === 'menu') pMenu = pMenu === i ? -1 : i;
+  else if (a === 'dr' || a === 'su') { if (pS.items[i][a]) delete pS.items[i][a]; else pS.items[i][a] = 1; }
+  else if (a === 'rm') { pS.items.splice(i, 1); pMenu = -1; }
   else if (a === 'inc') pS.items[i].sets = Math.min(10, pS.items[i].sets + 1);
   else if (a === 'dec') pS.items[i].sets = Math.max(1, pS.items[i].sets - 1);
   paintP();
@@ -3787,7 +3834,7 @@ $('#pform').addEventListener('submit', e => {
   const name = $('#p-name').value.trim();
   if (!name) return err('Gib dem Plan einen Namen.');
   if (!pS.items.length) return err('Füge mindestens eine Übung hinzu.');
-  const q = { plans: {} }; q.plans[pS.id || newId()] = Object.assign({ n: name.slice(0, 40), items: pS.items.map(it => ({ id: it.id, sets: it.sets })) }, pS.id ? {} : { o: kPlans().reduce((m, p) => Math.max(m, p.o), 0) + 1 });
+  const q = { plans: {} }; q.plans[pS.id || newId()] = Object.assign({ n: name.slice(0, 40), items: pS.items.map((it, i, l) => Object.assign({ id: it.id, sets: it.sets }, it.dr && it.sets > 1 ? { dr: 1 } : {}, it.su && i < l.length - 1 ? { su: 1 } : {})) }, pS.id ? {} : { o: kPlans().reduce((m, p) => Math.max(m, p.o), 0) + 1 });
   kdoc.patch(q);
   tSub = 'kraft'; closeP(); renderTraining();
 });

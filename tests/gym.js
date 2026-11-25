@@ -660,5 +660,55 @@ lauf(async () => {
   P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(sf, '#l-emp')) === 'Empfehlung 30 kg × 12 · halten, bis die Sätze davor 12 schaffen', await text(sf, '#l-emp'));
   await sf.click('#l-del'); await sf.click('#l-del'); await sf.waitForTimeout(150);
   await o17.browser.close();
-  await P.ende(null, fehler.concat(o17.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+
+  // --- Drop- und Supersätze (v113): einmal im Plan eingestellt, im Training läuft es von selbst ---
+  /* Letztes Mal (vor 3 Tagen), Bereich 8–12, Schritt 2,5 kg. Plan: Latzug 4 Sätze, Bank 2, Curls 2, Rudern 3 (Dropsatz schon in den Daten).
+     Latzug 90×10, 90×9, 90×8 → 90×11, 90×10, 90×9; der vierte Satz hat keine eigenen Werte und wird als Dropsatz ein Viertel leichter: 90 × 0,75 = 67,5 kg mit den 9 des Satzes davor.
+     Rudern 50×10, 50×9, 35×9: Der Dropsatz hat eigene Werte und steigt wie jeder Satz für sich → 50×11, 50×10, 35×10. */
+  const K18 = { ex: { a: { n: 'Latzug' }, b: { n: 'Bank' }, c: { n: 'Curls' }, d: { n: 'Rudern' } }, log: { [tag(3)]: { a: [[90, 10], [90, 9], [90, 8]], b: [[40, 10], [40, 10]], c: [[20, 10], [20, 10]], d: [[50, 10], [50, 9], [35, 9]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'a', sets: 4 }, { id: 'b', sets: 2 }, { id: 'c', sets: 2 }, { id: 'd', sets: 3, dr: 1 }], o: 1 } }, meta: {}, live: null };
+  const o18 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K18 } }), ds = o18.page;
+  await bereich(ds, 'training'); await ds.click('#v-training [data-k="plan"][data-id="p"]'); await ds.waitForTimeout(200);
+  const zeilen18 = () => ds.$$eval('#p-items .prow', l => l.map(r => r.querySelector('b').firstChild.textContent + (r.querySelector('b small') ? ' [' + r.querySelector('b small').textContent + ']' : '')).join(' | '));
+  const akt18 = () => ds.$$eval('#p-items .p-akt button', l => l.map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' | '));
+  P.ok('Plan-Blatt: Rudern trägt schon „Dropsatz“ unter dem Namen', (await zeilen18()) === 'Latzug | Bank | Curls | Rudern [Dropsatz]', await zeilen18());
+  await ds.click('#p-items .prow[data-i="0"] [data-pa="menu"]');
+  P.ok('„…“ an der Übung: Dropsatz, Supersatz (mit der nächsten), Entfernen', (await akt18()) === 'Dropsatz | Supersatz ↓ | Entfernen', await akt18());
+  await ds.click('#p-items [data-pa="dr"]');
+  await ds.click('#p-items .prow[data-i="1"] [data-pa="menu"]'); await ds.click('#p-items [data-pa="su"]');
+  P.ok('eingestellt: Latzug mit Dropsatz, Bank im Supersatz mit Curls', (await zeilen18()) === 'Latzug [Dropsatz] | Bank [Supersatz mit Curls] | Curls | Rudern [Dropsatz]' && (await akt18()) === 'Dropsatz | Supersatz ↓* | Entfernen', (await zeilen18()) + ' # ' + (await akt18()));
+  await ds.click('#p-items .prow[data-i="3"] [data-pa="menu"]');
+  P.ok('letzte Übung: kein Supersatz zur Wahl; „Entfernen“ liegt hier', (await akt18()) === 'Dropsatz* | Entfernen', await akt18());
+  await ds.click('#p-save'); await ds.waitForTimeout(150);
+  const plan18 = JSON.stringify((await gespeichert(ds)).K.plans.p.items);
+  P.ok('gespeichert am Plan: dr und su', plan18 === '[{"id":"a","sets":4,"dr":1},{"id":"b","sets":2,"su":1},{"id":"c","sets":2},{"id":"d","sets":3,"dr":1}]', plan18);
+  await ds.click('#v-training [data-k="start"]'); await ds.waitForTimeout(300);
+  const reihen18 = () => ds.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
+  const nummern18 = () => ds.$$eval('#l-items .lx > .lt .lt-r .n', l => l.map(n => n.textContent).join(' '));
+  const offen18 = () => ds.evaluate(() => document.querySelector('#l-tabs .lx-tab[aria-pressed="true"]').textContent);
+  const frage18 = async () => !!(await ds.$('#l-res'));
+  P.ok('Dropsatz ohne eigene Werte: ein Viertel leichter als der Satz davor (67,5×9), in der Spalte „#“ steht D', (await reihen18()) === '90×11 90×10 90×9 67,5×9' && (await nummern18()) === '1 2 3 D', (await reihen18()) + ' # ' + (await nummern18()));
+  await ds.click('.lt-r[data-s="3"]');
+  P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(ds, '#l-emp')) === 'Empfehlung 67,5 kg × 9 · Dropsatz: ein Viertel leichter, ohne Pause', await text(ds, '#l-emp'));
+  await ds.click('.lt-r[data-s="0"]'); await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
+  P.ok('normaler Satz: Die Frage nach der Reserve kommt', await frage18());
+  /* Satz 2 mit 80 statt 90 kg (das neue Gewicht gilt auch für Satz 3): Der Dropsatz richtet sich nach dem, was gerade bewegt wurde: 80 × 0,75 = 60 kg, mit den 10 von Satz 2; nach Satz 3 (80×9) mit 9. */
+  await zahlWahl(ds, '#l-w', '80'); await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
+  P.ok('anderes Gewicht im Satz davor: Der Dropsatz zieht mit (60×10)', (await reihen18()) === '90×11 80×10 80×9 60×10', await reihen18());
+  await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
+  P.ok('… und nach dem dritten Satz 60×9', (await reihen18()) === '90×11 80×10 80×9 60×9', await reihen18());
+  await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60);
+  P.ok('Dropsatz abgehakt: keine Frage nach der Reserve, gleich weiter zur nächsten Übung', (await offen18()) === 'Bank' && !(await frage18()), await offen18());
+  /* Supersatz Bank + Curls: Nach jedem Satz wechselt die Ansicht zur anderen Übung, ohne Frage; sind beide fertig, geht es zur nächsten offenen Übung (Rudern). */
+  const su18 = await ds.evaluate(() => ({ hinweis: (document.querySelector('#l-items .lx-su') || {}).textContent, plus: document.querySelectorAll('#l-tabs .lx-plus').length, nach: (document.querySelector('#l-tabs .lx-plus').previousElementSibling || {}).textContent }));
+  P.ok('Supersatz: Hinweis unter dem Namen, ein „+“ zwischen den beiden Reitern', su18.hinweis === 'Supersatz mit Curls' && su18.plus === 1 && su18.nach === 'Bank', JSON.stringify(su18));
+  const folge = [];
+  for (let k = 0; k < 4; k++) { await ds.click('.lt-r.act .chk'); await ds.waitForTimeout(60); folge.push((await offen18()) + ((await frage18()) ? '?' : '')); }
+  P.ok('Supersatz: Bank 1 → Curls 1 → Bank 2 → Curls 2 → Rudern, ohne Frage dazwischen', folge.join(' ') === 'Curls Bank Curls Rudern', folge.join(' '));
+  P.ok('Dropsatz mit eigenen Werten steigt wie jeder Satz für sich (35×10)', (await reihen18()) === '50×11 50×10 35×10' && (await nummern18()) === '1 2 D', (await reihen18()) + ' # ' + (await nummern18()));
+  await ds.click('#l-save'); await ds.waitForTimeout(250); await ds.click('#rs-ok');
+  const log18 = (await gespeichert(ds)).K.log[heute];
+  P.ok('gespeichert: Latzug mit vier Sätzen samt Dropsatz, Bank und Curls je zwei', JSON.stringify(log18.a) === '[[90,11],[80,10],[80,9],[60,9]]' && log18.b.length === 2 && log18.c.length === 2 && !log18.d, JSON.stringify(log18));
+  await o18.browser.close();
+  await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
