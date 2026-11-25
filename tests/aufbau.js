@@ -67,6 +67,9 @@ lauf(async () => {
     edel.balken = await page.evaluate(() => { const r = document.querySelector('#v-training rect.g-pos'); return r ? getComputedStyle(r).fill : ''; });
     await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training .subtabs [data-v="kraft"]');
     P.ok('Hauptknopf mit Verlauf und Schein, Linie mit Schein darunter, Balken mit Verlauf' + b, edel.knopf && edel.linien >= 1 && edel.schein === edel.linien && edel.gleich && (edel.balken === '' || /g-bar/.test(edel.balken))   /* am Jahresanfang gibt es noch keinen Balken */, JSON.stringify(edel));
+    /* Wochenleiste (v103): „heute“ liegt in einer kleinen Linse aus Glas (Fläche und feine Kante), die anderen Tage nicht */
+    const linse = await page.evaluate(() => [...document.querySelectorAll('#v-training .wk .wd')].map(w => { const c = getComputedStyle(w); return (w.classList.contains('now') ? 'H' : 'x') + (c.backgroundColor !== 'rgba(0, 0, 0, 0)' && c.boxShadow !== 'none' ? '1' : '0'); }).join(' '));
+    P.ok('Wochenleiste: nur „heute“ trägt die Linse' + b, (linse.match(/H1/g) || []).length === 1 && !/x1|H0/.test(linse), linse);
     /* Der Punkt im Titel und die Linse folgen dem Bereich: Gewicht lila, Finanzen orange, Heute blau wie das Plus */
     const folgt = [];
     for (const [v, f] of [['gewicht', '--c-weight'], ['haushalt', '--c-money'], ['heute', '--accent']]) { await bereich(page, v);

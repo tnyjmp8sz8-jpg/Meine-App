@@ -7,18 +7,18 @@ extension Color {
     init(_ hex: UInt32) { self.init(red: Double((hex >> 16) & 255) / 255, green: Double((hex >> 8) & 255) / 255, blue: Double(hex & 255) / 255) }
 }
 
-/// Farben wie in der Web-App (dunkel und hell)
+/// Farben wie in der Web-App (dunkel und hell). Dunkel seit 1.0 schwarz mit neutralem Grau, wie die Web-App seit v87.
 struct Farben {
     let seite, grund, schrift, blass, blau, gruen, orange, spur: Color
     init(dunkel: Bool) {
-        seite = Color(dunkel ? 0x0E0F13 : 0xF2F2F7)
-        grund = Color(dunkel ? 0x1A1C22 : 0xFFFFFF)
-        schrift = Color(dunkel ? 0xF5F6F8 : 0x111114)
-        blass = Color(dunkel ? 0x9296A3 : 0x6C6C72)
+        seite = Color(dunkel ? 0x000000 : 0xF2F2F7)
+        grund = Color(dunkel ? 0x1C1C1E : 0xFFFFFF)
+        schrift = Color(dunkel ? 0xF5F5F7 : 0x111114)
+        blass = Color(dunkel ? 0x98989F : 0x6C6C72)
         blau = Color(dunkel ? 0x0A84FF : 0x007AFF)
         gruen = Color(dunkel ? 0x30D158 : 0x248A3D)
         orange = Color(dunkel ? 0xFF9F0A : 0xF08C00)
-        spur = Color(dunkel ? 0x272A32 : 0xE9E9EE)
+        spur = Color(dunkel ? 0x2C2C2E : 0xE9E9EE)
     }
 }
 

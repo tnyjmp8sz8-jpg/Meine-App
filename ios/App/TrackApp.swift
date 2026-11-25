@@ -19,7 +19,7 @@ struct TrackApp: App {
                 ZStack {
                     WebView()
                         .ignoresSafeArea()
-                        .background(Color(red: 14 / 255, green: 15 / 255, blue: 19 / 255))
+                        .background(Color("Startfarbe"))   // wie das Startbild: dunkel schwarz, hell wie die Seite (bis 0.9 ein bläuliches Dunkel)
                     if let art = lage.schnell { Schnelleingabe(art: art) }
                 }
                 // Eigene Adresse der App: trackpunkt://schnell/notiz (oder ausgabe) zeigt nur die Schnelleingabe, z. B. aus dem Widget;
@@ -135,7 +135,7 @@ struct WebView: UIViewRepresentable {
         view.scrollView.bounces = false
         view.allowsBackForwardNavigationGestures = false
         view.navigationDelegate = context.coordinator
-        if CommandLine.arguments.contains("-pruefen") { Halter.probeEingang(); Laufbuch.probe() }
+        if CommandLine.arguments.contains("-pruefen") { Halter.probeEingang(); Laufbuch.probe(); Gymbuch.probe() }
         view.load(URLRequest(url: Web.start))
         context.coordinator.view = view
         context.coordinator.aktualisieren()
@@ -197,6 +197,9 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             Sicherung.shared.ordnerVergessen()
         } else if art == "haptik" {
             Haptik.gib(inhalt["w"] as? String ?? "")
+        } else if art == "pause" {
+            // Pausen-Uhr im Training: Mitteilung „Pause vorbei“ planen oder streichen (sek 0). Im Selbsttest nicht: Dort darf iOS nichts fragen.
+            if !still { Mitteilungen.pause(sekunden: (inhalt["sek"] as? NSNumber)?.doubleValue ?? 0, text: inhalt["text"] as? String ?? "") }
         }
     }
 
@@ -204,12 +207,13 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     /// An „sicherung“ erkennt die Web-App, dass sie ihre Sicherung schicken darf (ab 0.5).
     private func auskunft() {
         var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand,
-                                   "sicherung": Sicherung.shared.auskunft, "uhr": Laufbuch.auskunft]
+                                   "sicherung": Sicherung.shared.auskunft, "uhr": Laufbuch.auskunft, "gym": Gymbuch.auskunft]
         if let ablauf = Profil.ablauf { info["ablauf"] = ablauf.timeIntervalSince1970 * 1000 }
         rufe("info", info)
     }
 
-    /// Nach „Lauf merken“ oder „Lauf eintragen“ (Kurzbefehle, siehe Uhr.swift) bei offener App: der Web-App sagen, welche Läufe die Uhr gemeldet hat
+    /// Nach „Lauf merken“ oder „Lauf eintragen“ (Kurzbefehle, siehe Uhr.swift; ebenso „Gym merken“ und „Gym eintragen“ aus Gym.swift) bei offener App:
+    /// der Web-App sagen, was die Uhr gemeldet hat
     @objc func uhrMelden() {
         DispatchQueue.main.async { if self.bereit { self.auskunft() } }
     }
@@ -252,6 +256,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     @objc func zurueck() {
         guard bereit else { return }
+        if !still { Mitteilungen.pauseGesehen() }
         zeigen()
         auskunft(); eingangHolen(); laeufeHolen()
         Sicherung.shared.nachholen()
@@ -352,7 +357,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     }
 
     /// Ergänzt das Ergebnis aus der Web-App um das, was die Hülle selbst weiß: Verbindung, Ablage für das Widget, Plan der Mitteilungen
-    private func pruefungSchreiben(_ ausWeb: String, lauf: String) {
+    private func pruefungSchreiben(_ ausWeb: String, lauf: String, gym: String) {
         var text = ausWeb
         if var alles = (try? JSONSerialization.jsonObject(with: Data(ausWeb.utf8))) as? [String: Any] {
             alles["bruecke"] = standDa
@@ -370,6 +375,10 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             // nach dem dritten Start genau ein Lauf mit 850 m, 300 s und Puls 145
             alles["uhrRechnung"] = Laufbuch.pruefung()
             alles["lauf"] = lauf
+            // Krafttraining von der Uhr (Gym.swift): erst die reine Rechnung, dann der ganze Weg bis in den Speicher der Web-App (siehe Gymbuch.probe):
+            // nach dem dritten Start für heute genau ein Training mit 1800 s und Puls 135
+            alles["gymRechnung"] = Gymbuch.pruefung()
+            alles["gym"] = gym
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()
             let plan = Mitteilungen.plan(sicherung: "2026-11-20", ablauf: jetzt.addingTimeInterval(4 * 86400), jetzt: jetzt)
@@ -417,9 +426,13 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             // Kurz warten: Die Web-App schickt ihren Stand 0,3 Sekunden nach dem Laden. Die Läufe werden erst danach gezählt (Vorgemerktes kommt nach „bereit“ an):
             // Anzahl, dazu vom ersten Meter, Sekunden und Puls
             let laeufe = "(function () { try { var r = (JSON.parse(localStorage.getItem('takt.v1') || '{}').T || {}).runs || {}, k = Object.keys(r).filter(function (i) { return r[i]; }); return k.length + '|' + (k.length ? r[k[0]].m + '|' + r[k[0]].s + '|' + r[k[0]].hr : ''); } catch (e) { return 'Fehler: ' + e; } })()"
+            // Trainings von der Uhr: Anzahl der Tage mit Werten, dazu vom ersten Sekunden und Puls
+            let trainings = "(function () { try { var u = (JSON.parse(localStorage.getItem('takt.v1') || '{}').K || {}).uhr || {}, k = Object.keys(u).filter(function (i) { return u[i]; }); return k.length + '|' + (k.length ? u[k[0]].s + '|' + u[k[0]].hr : ''); } catch (e) { return 'Fehler: ' + e; } })()"
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 webView.evaluateJavaScript(laeufe) { lauf, _ in
-                    self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))", lauf: (lauf as? String) ?? "")
+                    webView.evaluateJavaScript(trainings) { gym, _ in
+                        self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))", lauf: (lauf as? String) ?? "", gym: (gym as? String) ?? "")
+                    }
                 }
             }
         }

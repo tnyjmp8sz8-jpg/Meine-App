@@ -521,7 +521,7 @@ body{font-size:14px}
 .wd{border:0;background:none;padding:4px 0 3px;border-radius:14px;display:flex;flex-direction:column;align-items:center;color:var(--mid)}
 .wd small{font-size:11px;font-weight:600}
 .wd b{font-size:15px;font-weight:600;line-height:1.35;font-variant-numeric:tabular-nums}
-.wd.now{color:var(--ink)}
+.wd.now{color:var(--ink);background:var(--surface);box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}   /* heute liegt in einer kleinen Linse aus Glas (v103), wie der gewählte Bereich in der Leiste unten */
 .wd:active{background:var(--surface)}
 .wk i,.cd i{display:flex;justify-content:center;gap:3px;height:6px}
 .wk i{margin-top:4px}
@@ -570,6 +570,20 @@ u.w{background:var(--c-weight)}
 #lsheet .sh-head h2{font-size:15px}
 .l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
 #l-del{border:0;background:none;text-align:center;font-size:13px}
+/* Pausen-Uhr (v103): eine Glas-Kapsel links neben „Training beenden“. Sie zeigt die eingestellte Länge, läuft nach einem abgehakten Satz rückwärts (dabei füllt sie sich von links zart blau)
+   und wird am Ende grün („Los“). */
+.l-akt{display:flex;gap:8px}
+.l-akt .primary{flex:1;min-width:0}
+.l-rest{flex:none;position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--surface);color:var(--muted);font-family:var(--round);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
+.l-rest svg,.l-rest span{position:relative;z-index:1}
+.l-rest svg{width:16px;height:16px;flex:none}
+.l-rest i{position:absolute;inset:0 auto 0 0;width:0;background:color-mix(in srgb,var(--accent) 26%,transparent)}
+.l-rest.laeuft{color:var(--ink)}
+.l-rest.los{color:var(--good)}
+.l-rest.los i{background:color-mix(in srgb,var(--good) 20%,transparent)}
+@keyframes gong{50%{transform:scale(1.08)}}
+.l-rest.gong{animation:gong .4s ease}
+#lv-rest.los{color:var(--good)}
 .ls-t{margin:2px 0 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 /* Kopf einer Übung im laufenden Training: Name mit Punkt (Trend), darunter das Ziel und, wenn es einen gibt, der Rekord von heute */
 .lx-k{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
@@ -626,6 +640,8 @@ u.w{background:var(--c-weight)}
 .zk.pl{background:none;color:var(--muted)}
 .zk svg{width:22px;height:22px}
 .zk:disabled{visibility:hidden}
+.z-pad[hidden]{display:none}
+#zsheet.liste .z-list{max-height:none;padding-bottom:max(14px,env(safe-area-inset-bottom))}
 #lsheet .primary{min-height:44px;font-size:14.5px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
@@ -743,7 +759,7 @@ dialog{border-radius:32px}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.l-rest:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
@@ -858,6 +874,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   .view.neu>*,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg,body,.tabs-in::before{transition:none}
+  .l-rest.gong{animation:none}
   .fill,.glyph,.g-scrub>*{transition:none}
 }
 </style>
@@ -886,7 +903,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v102</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v103</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1155,6 +1172,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <span>Datum</span>
       <input id="k-date" name="date" type="date">
     </label>
+    <p class="note" id="k-uhr" hidden></p>
     <div id="k-items"></div>
     <div class="fld">
       <span id="lbl-k-add">Übung hinzufügen</span>
@@ -1214,7 +1232,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div id="l-items"></div>
     <div class="l-fuss">
       <p class="err" id="l-err" role="alert" hidden></p>
-      <button class="primary" type="submit" id="l-save">Training beenden und speichern</button>
+      <div class="l-akt">
+        <button type="button" class="l-rest" id="l-rest" data-la="rest" aria-label="Pausen-Uhr einstellen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.2"/><path d="M8 6.4V9l1.7 1.2M6.6 1.6h2.8"/></svg><span id="l-rest-t">Pause</span><i></i></button>
+        <button class="primary" type="submit" id="l-save" aria-label="Training beenden und speichern">Training beenden</button>
+      </div>
       <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
     </div>
   </form>
@@ -2663,6 +2684,11 @@ function normK(o) {
   if (o && o.aus && typeof o.aus === 'object') for (const d in o.aus) { const a = o.aus[d]; if (!isKey(d) || !a || typeof a !== 'object') continue; for (const id in a) if (a[id]) (out.aus[d] = out.aus[d] || {})[id] = 1; }
   out.meta = {};
   if (o && o.meta && typeof o.meta === 'object') for (const d in o.meta) { const m = o.meta[d]; if (isKey(d) && m && typeof m === 'object') out.meta[d] = Object.assign({ dur: Math.max(0, Math.round(Number(m.dur) || 0)), plan: m.plan ? String(m.plan) : null }, m.n ? { n: String(m.n).slice(0, 40) } : {}); }
+  /* Pausen-Uhr (v103): Länge der Pause in Sekunden; fehlt = aus */
+  if (o && o.rest >= 15 && o.rest <= 900) out.rest = Math.round(o.rest);
+  /* Training auf der Apple Watch je Tag (v103, gymUhr()): s = Dauer in Sekunden, hr = mittlerer Puls, h = Kennung des Trainings (damit eine zweite Lesung nachbessert) */
+  out.uhr = {};
+  if (o && o.uhr && typeof o.uhr === 'object') for (const d in o.uhr) { const u = o.uhr[d]; if (isKey(d) && u && typeof u === 'object' && u.s >= 60 && u.s <= 43200) out.uhr[d] = Object.assign({ s: Math.round(u.s) }, u.hr >= 30 && u.hr <= 250 ? { hr: Math.round(u.hr) } : {}, typeof u.h === 'string' && u.h ? { h: u.h.slice(0, 40) } : {}); }
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? {
     plan: lv.plan ? String(lv.plan) : null, start: lv.start, last: Number.isFinite(lv.last) ? lv.last : null, date: lv.date,
@@ -3090,7 +3116,14 @@ function paintK() {
         '<button type="button" data-ka="rmset" data-s="' + j + '" aria-label="Satz ' + (j + 1) + ' entfernen">−</button></div>').join('') +
       '<button type="button" class="linkbtn" data-ka="addset">+ Satz</button></div>';
   }).join('');
-  paintKPick();
+  paintKPick(); paintKUhr();
+}
+/* Zeile „Apple Watch“ im Blatt der Einheit (v103): Dauer und mittlerer Puls des Trainings auf der Uhr an diesem Tag. Hat die Uhr ein Training gemeldet, zu dem noch kein Puls kam
+   (der Kurzbefehl läuft erst beim Öffnen der App), steht das da: So zeigt ein Bildschirmfoto, welcher Schritt hakt. */
+function paintKUhr() {
+  const el = $('#k-uhr'), u = (K.uhr || {})[kS.date], f = !u && hInfo.gym ? hInfo.gym.letzte.find(x => keyOf(new Date(x.von)) === kS.date) : null;
+  el.hidden = !u && !f;
+  el.textContent = u ? 'Apple Watch · ' + Math.round(u.s / 60) + ' min' + (u.hr ? ' · Ø Puls ' + u.hr : '') : f ? 'Apple Watch · ' + Math.round((f.bis - f.von) / 60000) + ' min · Puls fehlt noch' : '';
 }
 function paintKPick() { paintPick('#k-pick', '#k-new', kS.items.map(it => it.id), 'ka'); }
 function openK(date) {
@@ -3302,15 +3335,17 @@ function paintZ() { const o = $('#z-out'), leer = zS === ''; o.textContent = lee
 function openZ(o) {
   zO = o; zS = '';
   $('#zs-title').textContent = o.titel; $('#z-komma').disabled = !o.komma;
+  /* nurListe (Pausen-Uhr): nur die Werte zur Wahl, ohne die Tasten darunter; text(v) beschriftet einen Wert anders als „Zahl Einheit“ */
+  $('#z-pad').hidden = !!o.nurListe; zdlg.classList.toggle('liste', !!o.nurListe);
   const box = $('#z-list');
-  box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + kgn(v) + ' ' + o.einheit + '</button>').join('');
+  box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + (o.text ? o.text(v) : kgn(v) + ' ' + o.einheit) + '</button>').join('');
   paintZ(); openDlg(zdlg);
   const cur = box.querySelector('[aria-pressed="true"]');
   box.scrollTop = cur ? cur.offsetTop - box.offsetTop - (box.clientHeight - cur.offsetHeight) / 2 : 0;
 }
 function zDone(v) { const o = zO; closeDlg(zdlg); if (o && v != null && isFinite(v)) o.dann(v); }
 function zTaste(c) {
-  if (!zO) return;
+  if (!zO || zO.nurListe) return;
   if (c === 'x') zS = zS.slice(0, -1);
   else if (c === ',') { if (zO.komma && zS.indexOf(',') < 0) zS = (zS || '0') + ','; }
   else if (zS === '0') zS = c;
@@ -3335,6 +3370,26 @@ function startPlan(id) {
   renderTraining(); ensureLiveTick(); openL();
 }
 /* Zeiten laufen über Zeitstempel und stimmen deshalb auch nach einem Wechsel in eine andere App */
+/* Pausen-Uhr (v103, sein „alles fertig machen“ zu den offenen Punkten; Vorbild ist der Knopf unten in seinem Bild aus Alpha Progression). K.rest ist die Länge der Pause in Sekunden (fehlt = aus).
+   Sie läuft ab dem letzten abgehakten Satz (last) rückwärts und meldet sich am Ende einmal mit einem Impuls; die iPhone-App (ab 1.0) zeigt zusätzlich eine Mitteilung, wenn die App nicht vorn ist (hPause()).
+   Ohne eingestellte Länge zählt die Pause wie bisher nur hoch. Alles rechnet über Zeitstempel und stimmt deshalb auch nach einem Wechsel in eine andere App. */
+const REST = [0, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300], restKurz = v => Math.floor(v / 60) + ':' + pad(v % 60), restText = v => v ? restKurz(v) + ' min' : 'Aus';
+let lGong = 0;   // last des Satzes, für den das Ende der Pause schon gemeldet ist
+function restStand(L, now) { const R = K.rest || 0; return R && L && L.last ? { R, rest: R - (now - L.last) / 1000 } : null; }
+function paintRest(p) {
+  const k = $('#l-rest'), R = K.rest || 0; if (!k) return;
+  const laeuft = !!p && p.rest > 0, los = !!p && p.rest <= 0;
+  $('#l-rest-t').textContent = !R ? 'Pause' : laeuft ? restKurz(Math.ceil(p.rest)) : los ? 'Los' : restKurz(R);
+  k.classList.toggle('laeuft', laeuft); k.classList.toggle('los', los);
+  k.lastElementChild.style.width = laeuft ? ((1 - p.rest / p.R) * 100).toFixed(1) + '%' : los ? '100%' : '0';
+  k.setAttribute('aria-label', 'Pausen-Uhr: ' + (!R ? 'aus' : laeuft ? 'noch ' + restKurz(Math.ceil(p.rest)) + ' Minuten' : los ? 'Pause vorbei' : restText(R)) + ', einstellen');
+}
+/* Mitteilung „Pause vorbei“ der iPhone-App planen oder streichen (ab 1.0; ältere überlesen die Nachricht): sek = Sekunden bis zum Ende der laufenden Pause, 0 = keine. text nennt, was dann dran ist. */
+function hPause() {
+  if (!HUELLE) return;
+  const L = ldlg.open && Lw ? Lw : K.live, p = restStand(L, Date.now()), it = L ? L.items.find(x => undone(x) >= 0) : null;
+  hPost({ art: 'pause', sek: p && p.rest > 1 ? Math.round(p.rest) : 0, text: it && K.ex[it.id] ? hCut(K.ex[it.id].n, 60) + ' · Satz ' + (undone(it) + 1) : '' });
+}
 function liveTick() {
   const L = K.live, tab = $('#tab-t');
   if (!L) { if (lvTick) { clearInterval(lvTick); lvTick = null; } if (tab) tab.textContent = 'Training'; return; }
@@ -3343,7 +3398,15 @@ function liveTick() {
   if (a) a.textContent = tot;
   document.querySelectorAll('.lv-card-t').forEach(c => { c.textContent = tot; });
   if (tab) tab.textContent = tot;
-  if (b) b.textContent = src.last ? ' · Pause ' + fmt((now - src.last) / 1000) : '';   // Pause: läuft seit dem letzten abgehakten Satz einfach hoch
+  /* Pause: ohne eingestellte Länge läuft sie seit dem letzten abgehakten Satz einfach hoch, mit Länge rückwärts bis „vorbei“ */
+  const p = restStand(src, now);
+  if (b) { b.textContent = !src.last ? '' : !p ? ' · Pause ' + fmt((now - src.last) / 1000) : p.rest > 0 ? ' · Pause noch ' + fmt(Math.ceil(p.rest)) : ' · Pause vorbei'; b.classList.toggle('los', !!p && p.rest <= 0); }
+  paintRest(p);
+  /* Ende der Pause: einmal melden (Impuls, die Kapsel hebt sich kurz). Nicht, wenn die App erst lange danach wieder aufgeht. */
+  if (p && p.rest <= 0 && lGong !== src.last) {
+    const eben = p.rest > -3; lGong = src.last;
+    if (eben && !document.hidden) { haptik('erfolg'); const k = $('#l-rest'); if (k && !ruhig()) { k.classList.remove('gong'); void k.offsetWidth; k.classList.add('gong'); } }
+  }
 }
 function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick, 1000); liveTick(); }
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
@@ -3429,6 +3492,7 @@ $('#lform').addEventListener('click', e => {
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
   if (a === 'hist') { if (it) openX(it.id, true); return; }
+  if (a === 'rest') return openZ({ titel: 'Pause nach jedem Satz', wert: K.rest || 0, einheit: '', liste: REST, text: restText, nurListe: true, dann: v => { kdoc.patch({ rest: v || null }); liveTick(); hPause(); } });
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
   if (a === 'num' && it) { lJ = +t.dataset.s; return lZahl(it, lJ, t.dataset.f); }
@@ -3461,6 +3525,7 @@ $('#lform').addEventListener('click', e => {
   const y = ldlg.scrollTop;
   paintL(); ldlg.scrollTop = y;
   saveLive(); liveTick();
+  if (a === 'done') hPause();
   if (a === 'addx' && lAdd) $('#l-new').focus();
 });
 function lAddNew() {
@@ -3487,7 +3552,7 @@ $('#lform').addEventListener('submit', e => {
   if (Lw.plan && K.aus[Lw.date] && K.aus[Lw.date][Lw.plan]) { q.aus = {}; q.aus[Lw.date] = {}; q.aus[Lw.date][Lw.plan] = null; }   // heute erst übersprungen, dann doch trainiert
   const tagL = Lw.date;
   Lw = null; kdoc.patch(q);
-  tSub = 'kraft'; closeL(); liveTick(); openR(tagL);
+  tSub = 'kraft'; closeL(); liveTick(); hPause(); openR(tagL);
 });
 /* Rückblick nach „Training beenden“ (sein „ja“ auf meinen Vorschlag, 24.11.): Dauer, bessere Sätze, Rekorde, darunter jede Übung mit ihren Sätzen. Ein Tipp auf eine Übung zeigt ihren Verlauf. */
 const rdlg = $('#rsheet');
@@ -3513,7 +3578,7 @@ rdlg.addEventListener('click', e => {
 $('#l-del').addEventListener('click', () => {
   if (!lArm) { lArm = true; $('#l-del').textContent = 'Wirklich verwerfen? Noch einmal tippen.'; return; }
   Lw = null; kdoc.patch({ live: null });
-  closeL(); liveTick();
+  closeL(); liveTick(); hPause();
 });
 
 function paintP() {
@@ -4522,6 +4587,23 @@ function healthRuns(list) {
 /* Läufe von der Apple Watch über zwei Kurzbefehle (die iPhone-App meldet dazu uhr in info(), ab 0.5): Klappzeile am Ende von Cardio.
    Sie zeigt, was zuletzt erkannt wurde und ob Strecke ankam: Am Bildschirmfoto lässt sich ablesen, welcher Schritt fehlt. Fehlt die Strecke, öffnet ein Tipp das Blatt mit Tag und Dauer.
    uhr: { n Läufe erkannt, offen (Beginn eines laufenden Laufs in ms oder 0), letzte: [{ von, bis, lesungen, km (wie gekommen, 0 = keine), puls }] höchstens drei, ältester zuerst }. */
+/* Gym-Einheit von der Apple Watch (v103, iPhone-App ab 1.0, über Kurzbefehle wie die Läufe: „Gym merken“, „Gym-Zeitraum“, „Gym eintragen“ in ios/App/Gym.swift).
+   g = { id: 'g' + Minute des Beginns, t: Beginn in ms, s: Dauer in Sekunden, pu: Pulswerte }. Abgelegt je Tag in K.uhr; die Sätze kommen weiter aus der App,
+   die Werte der Uhr stehen im Blatt der Einheit (paintKUhr). Dieselbe Kennung noch einmal (die Uhr hat nachgeliefert) bessert nach;
+   bei zwei Trainings am selben Tag bleibt das längere (ein kurzes Aufwärmen auf der Uhr verdrängt die Einheit nicht). */
+function gymUhr(g) {
+  if (!g || typeof g !== 'object' || !isFinite(g.t) || !(g.s >= 60 && g.s <= 43200)) return;
+  const d = keyOf(new Date(g.t)), id = String(g.id || '').slice(0, 40), alt = (K.uhr || {})[d], hr = uhrPuls(Array.isArray(g.pu) ? g.pu : []);
+  if (alt && alt.h !== id && alt.s > g.s) return;
+  const p = { uhr: {} }; p.uhr[d] = Object.assign({ s: Math.round(g.s), h: id }, hr ? { hr: Math.round(hr) } : alt && alt.h === id && alt.hr ? { hr: alt.hr } : {});
+  kdoc.patch(p);
+}
+/* Auskunft der iPhone-App zu den Trainings auf der Uhr (info, Feld gym): wie uhrNorm, nur ohne Strecke */
+function gymNorm(u) {
+  if (!u || typeof u !== 'object') return null;
+  const z = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
+  return { letzte: (Array.isArray(u.letzte) ? u.letzte : []).filter(f => f && z(f.von) && z(f.bis) > f.von).slice(-3).map(f => ({ von: f.von, bis: f.bis, puls: z(f.puls) })) };
+}
 function uhrNorm(u) {
   if (!u || typeof u !== 'object') return null;
   const z = v => typeof v === 'number' && isFinite(v) && v > 0 ? v : 0;
@@ -4590,6 +4672,7 @@ function hEingang(list) {
       for (const y in MY) { const alt = ((MY[y] || {}).tx || {})[c.zu];
         if (alt && alt.k === 'out' && allCats().some(k => k[0] === c.kid)) { const p = { tx: {} }; p.tx[c.zu] = Object.assign({}, alt, { c: c.kid }); mdoc(y).patch(p); } }
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
+    else if (c.art === 'gym') gymUhr(c.gym);
   });
   /* Abgehaktes zuletzt und mit „Rückgängig“: Ein Fehltipp im Widget soll nichts kosten */
   let before = null; try { before = localStorage.getItem(LS); } catch (e) {}
@@ -4682,7 +4765,7 @@ if (HUELLE) window.TrackHuelle = {
      liefe es sonst bei einem Fehler endlos hin und her. */
   info(o) {
     const vor = JSON.stringify(hInfo.sicherung || null);
-    hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung); hInfo.uhr = uhrNorm(hInfo.uhr);
+    hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung); hInfo.uhr = uhrNorm(hInfo.uhr); hInfo.gym = gymNorm(hInfo.gym);
     sGemeldet(); hPaint(); renderTraining();
     if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
     const s = hInfo.sicherung, tk = todayKey();

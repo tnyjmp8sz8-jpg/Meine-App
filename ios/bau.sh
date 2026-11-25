@@ -36,9 +36,9 @@ plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|
 # Beide Schlüssel müssen da sein, sonst erscheint der Ordner mit den Sicherungen nicht in „Dateien“ (Auf meinem iPhone › Track.)
 test "$(plutil -p Payload/Track.app/Info.plist | grep -c -E "UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace")" = 2
 plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
-# Aktionen für Kurzbefehle (Notiz, Ausgabe, drei für Läufe von der Uhr) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
+# Aktionen für Kurzbefehle (Notiz, Ausgabe, je drei für Läufe und Krafttraining von der Uhr) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
 ls Payload/Track.app/Metadata.appintents
-for AKTION in NotizHinzufuegen AusgabeEintragen LaufMerken LaufZeitraum LaufEintragen; do
+for AKTION in NotizHinzufuegen AusgabeEintragen LaufMerken LaufZeitraum LaufEintragen GymMerken GymZeitraum GymEintragen; do
   grep -q "$AKTION" Payload/Track.app/Metadata.appintents/extract.actionsdata || { echo "Aktion fehlt: $AKTION"; exit 1; }
 done
 zip -qr Track.ipa.neu Payload
@@ -116,6 +116,12 @@ grep -q '"sicherungOk":true' pruefung-3.json
 # Ganzer Weg: Start 1 liefert 0,80 km, Start 2 dieselbe Lesung mit 0,85 km, Start 3 nichts Neues → ein Lauf mit 850 m, 300 s, Puls (140 + 150) / 2 = 145
 grep -q '"uhrRechnung":"2|2713|k30000000|true|true"' pruefung-3.json
 grep -q '"lauf":"1|850|300|145"' pruefung-3.json
+# Krafttraining von der Apple Watch über Kurzbefehle (Gym.swift). Rechnung: ein Training von 3600 s, Kennung g + 1 800 000 000 000 / 60 000, dieselben Werte noch einmal ergeben nichts Neues.
+# Ganzer Weg: Start 1 liefert Puls 120 und 130, Start 2 dieselbe Lesung mit 130 und 140, Start 3 nichts Neues → für heute ein Training mit 1800 s, Puls (130 + 140) / 2 = 135
+grep -q '"gymRechnung":"1|3600|g30000000|true"' pruefung-3.json
+grep -q '"gym":"1|1800|135"' pruefung-3.json
+# Die stille Tondatei für „Pause vorbei“ muss in der App liegen, sonst käme die Mitteilung ohne Vibration
+test -f Payload/Track.app/stille.wav
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa

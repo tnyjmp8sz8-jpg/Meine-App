@@ -392,5 +392,54 @@ lauf(async () => {
   P.ok('Gruppe gewählt und gespeichert: Curls stehen unter Brust, „Arme“ entfällt', gex.c.g === 'brust' && (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Curls Dips [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1', await gListe());
   P.ok('gespeicherte Gruppe bleibt beim Laden, eine unbekannte wird verworfen', gex.g.g === 'brust' && !gex.h.g, JSON.stringify(gex));
   await o11.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler));
+  /* Pausen-Uhr (v103). Die Uhr der Seite steht auf dem 15. des laufenden Monats, 12 Uhr, und läuft nur, wenn der Test sie vorstellt; die iPhone-Hülle ist nachgestellt und sammelt, was hinausgeht.
+     Plan mit einer Übung „Rudern“ und drei Sätzen. Ohne eingestellte Länge heißt die Kapsel „Pause“ und die Pause zählt hoch. Erster Satz abgehakt, 5 s später 1:30 gewählt:
+     Es bleiben 90 − 5 = 85 s → die Kapsel zeigt 1:25, oben steht „Pause noch 01:25“, an die iPhone-App geht { art: 'pause', sek: 85, text: 'Rudern · Satz 2' }.
+     86 s später ist die Pause vorbei: „Los“, „Pause vorbei“, genau ein Impuls „erfolg“ (auch nach weiteren Sekunden nur einer). Zweiter Satz abgehakt: neue Pause mit sek 90.
+     „Aus“ gewählt: K.rest ist weg, sek 0. Wieder 1:00 gewählt und das Training beendet: Die letzte Nachricht streicht die Mitteilung (sek 0), die Länge bleibt gespeichert. */
+  const hStub = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
+  const mitte = new Date(+heute.slice(0, 4), +heute.slice(5, 7) - 1, 15, 12);
+  const o12 = await oeffnen({ uhr: mitte, skript: hStub, daten: { S: { routines: [], running: null }, LY: {}, K: { ex: { a: { n: 'Rudern' } }, log: {}, meta: {}, live: null, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }], o: 1 } } } } }), z = o12.page;
+  const vor = async ms => { await z.clock.fastForward(ms); await z.waitForTimeout(60); };
+  const kapsel = () => z.evaluate(() => document.querySelector('#l-rest-t').textContent + ' | ' + document.querySelector('#lv-rest').textContent.trim() + ' | ' + document.querySelector('#l-rest').className.replace('l-rest', '').replace('gong', '').trim()).then(t => t.trim());
+  const pausen = () => z.evaluate(() => window.__post.filter(m => m.art === 'pause').map(m => m.sek + ':' + m.text).join(' # '));
+  const waehle = async v => { await z.click('#l-rest'); await z.waitForTimeout(80); await z.click('#z-list [data-zv="' + v + '"]'); await z.waitForTimeout(80); };
+  await bereich(z, 'training'); await z.click('#v-training [data-k="start"]'); await z.waitForTimeout(200);
+  await zahlWahl(z, '#l-w', '40'); await zahlWahl(z, '#l-r', '10');
+  const ohne = await kapsel(); await z.click('#l-items .chk'); await vor(5000);
+  P.ok('ohne eingestellte Pause: Kapsel „Pause“, die Pause zählt hoch', ohne === 'Pause |  |' && (await kapsel()) === 'Pause | · Pause 00:05 |', ohne + ' → ' + await kapsel());
+  await z.click('#l-rest'); await z.waitForTimeout(80);
+  P.ok('Tipp auf die Kapsel: nur die Liste der Längen, keine Tasten; „Aus“ ist gewählt', await z.evaluate(() => document.querySelector('#zsheet').open && document.querySelector('#z-pad').hidden && getComputedStyle(document.querySelector('#z-pad')).display === 'none' && document.querySelector('#z-list [aria-pressed="true"]').textContent === 'Aus' && document.querySelectorAll('#z-list button').length === 13));
+  await z.click('#z-list [data-zv="90"]'); await z.waitForTimeout(80);
+  P.ok('1:30 gewählt, 5 s nach dem Satz: Kapsel 1:25, oben „Pause noch 01:25“, gespeichert', (await kapsel()) === '1:25 | · Pause noch 01:25 | laeuft' && (await gespeichert(z)).K.rest === 90, await kapsel());
+  P.ok('an die iPhone-App: Mitteilung in 85 s mit dem nächsten Satz', (await pausen()).endsWith('85:Rudern · Satz 2'), await pausen());
+  const impulse = () => z.evaluate(() => window.__post.filter(m => m.art === 'haptik' && m.w === 'erfolg').length), vorher = await impulse();
+  await vor(86000); const los = await kapsel(), einer = (await impulse()) - vorher; await vor(5000);
+  P.ok('86 s später: „Los“, „Pause vorbei“, genau ein Impuls', los === 'Los | · Pause vorbei | los' && einer === 1 && (await impulse()) - vorher === 1, los + ' · ' + einer + ' · ' + ((await impulse()) - vorher));
+  await z.click('#l-items .chk'); await z.waitForTimeout(80);
+  P.ok('zweiter Satz abgehakt: neue Pause, Mitteilung in 90 s für Satz 3', (await kapsel()) === '1:30 | · Pause noch 01:30 | laeuft' && (await pausen()).endsWith('90:Rudern · Satz 3'), (await kapsel()) + ' · ' + await pausen());
+  await waehle(0);
+  P.ok('„Aus“ gewählt: keine Länge mehr gespeichert, Mitteilung gestrichen, die Pause zählt wieder hoch', (await gespeichert(z)).K.rest === undefined && (await pausen()).endsWith('0:Rudern · Satz 3') && (await kapsel()).startsWith('Pause | · Pause 00:0'), JSON.stringify((await gespeichert(z)).K.rest) + ' · ' + await kapsel());
+  await waehle(60); await z.click('#l-save'); await z.waitForTimeout(200); await z.click('#rs-ok');
+  P.ok('Training beendet: Mitteilung gestrichen, die Länge bleibt für das nächste Mal', /(^| # )0:$/.test(await pausen()) && (await gespeichert(z)).K.rest === 60, await pausen());
+  /* Training von der Apple Watch (v103): Die iPhone-App übergibt es wie einen Lauf über den Eingang. Heute (15., 18 Uhr) 3720 s mit Puls 120, 130, 140 → 62 min, Ø Puls 130.
+     Dieselbe Kennung noch einmal mit Puls 140 und 150 bessert nach (145). Ein zweites, kürzeres Training am selben Tag (600 s) verdrängt das erste nicht.
+     Im Blatt der Einheit von heute steht „Apple Watch · 62 min · Ø Puls 145“. Meldet die iPhone-App für einen anderen Tag (den 14.) nur ein Training ohne Puls (45 min),
+     steht dort „Puls fehlt noch“; ohne Training auf der Uhr gibt es die Zeile nicht. */
+  const t18 = new Date(mitte.getFullYear(), mitte.getMonth(), 15, 18).getTime(), tag15 = heute.slice(0, 8) + '15', tag14 = heute.slice(0, 8) + '14', tag13 = heute.slice(0, 8) + '13';
+  const ein = (id, gym) => z.evaluate(a => window.TrackHuelle.eingang([{ id: a[0], art: 'gym', t: Date.now(), gym: a[1] }]), [id, gym]);
+  await ein('a1', { id: 'g1', t: t18, s: 3720, pu: [120, 130, 140] });
+  const erst = JSON.stringify((await gespeichert(z)).K.uhr[tag15]);
+  await ein('a2', { id: 'g1', t: t18, s: 3720, pu: [140, 150] }); await ein('a3', { id: 'g2', t: t18 + 5 * 3600000, s: 600, pu: [100] });
+  P.ok('Training von der Uhr: 3720 s, Puls 130; nachgeliefert 145; ein kürzeres zweites verdrängt es nicht', erst === '{"s":3720,"hr":130,"h":"g1"}' && JSON.stringify((await gespeichert(z)).K.uhr[tag15]) === '{"s":3720,"hr":145,"h":"g1"}', erst + ' → ' + JSON.stringify((await gespeichert(z)).K.uhr));
+  /* Einheiten am 14. und 13. dazulegen (das Training von eben liegt auf dem 15.), dann die Auskunft der iPhone-App für den 14. */
+  await z.evaluate(a => { const d = JSON.parse(localStorage.getItem('takt.v1')); d.K.log[a[0]] = { a: [[40, 10]] }; d.K.log[a[1]] = { a: [[40, 10]] }; localStorage.setItem('takt.v1', JSON.stringify(d)); }, [tag14, tag13]);
+  await z.reload(); await z.waitForTimeout(300);
+  await z.evaluate(a => window.TrackHuelle.info({ app: '1.0', gym: { letzte: [{ von: a, bis: a + 45 * 60000, puls: 0 }] } }), new Date(mitte.getFullYear(), mitte.getMonth(), 14, 17).getTime());
+  await bereich(z, 'training'); await z.click('#v-training [data-fold="einheiten"]'); await z.waitForTimeout(100);
+  const zeileUhr = async d => { await z.click('#v-training [data-k="day"][data-d="' + d + '"]'); await z.waitForTimeout(150); const t = await z.evaluate(() => { const e = document.querySelector('#k-uhr'); return e.hidden ? '(keine)' : e.textContent; }); await z.click('#ks-close'); await z.waitForTimeout(80); return t; };
+  const uhr3 = [await zeileUhr(tag15), await zeileUhr(tag14), await zeileUhr(tag13)].join(' # ');
+  P.ok('Blatt der Einheit nennt Dauer und Puls von der Uhr; ohne Puls „fehlt noch“; ohne Training auf der Uhr keine Zeile', uhr3 === 'Apple Watch · 62 min · Ø Puls 145 # Apple Watch · 45 min · Puls fehlt noch # (keine)', uhr3);
+  await o12.browser.close();
+  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler));
 });
