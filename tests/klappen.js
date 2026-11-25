@@ -206,7 +206,7 @@ lauf(async () => {
   await blatt('„+ Umbuchung“ steht in der Überschrift „Konten“ und öffnet das Blatt „Umbuchung“', '.sec-a[data-m="newtr"]', '#msheet', '#ms-title', 'Umbuchung', 'Konten');
   await blatt('das Plus bei „Sparziele“ öffnet das Blatt „Sparziel“', '.sec-a[data-m="newgoal"]', '#vsheet', '#vs-title', 'Sparziel', 'Sparziele');
   await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
-  await blatt('das Plus bei „Pläne“ öffnet das Blatt „Neuer Plan“', '.sec-a[data-k="plan"]', '#psheet', '#ps-title', 'Neuer Plan', 'Pläne');
+  await blatt('„Anpassen“ bei „Plan“ öffnet das Blatt „Plan“ (v126)', '.sec-a[data-k="ordnen"]', '#osheet', '#os-title', 'Plan', 'Plan');
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   // --- Teil 4: Tippfläche der Aktionen in der Überschrift, und bei 320 px ragt nichts hinaus ---
@@ -221,7 +221,7 @@ lauf(async () => {
     await bereich(p, 'heute'); await tippTest(p, 'Heute', 'Alle 7', b);
     await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await tippTest(p, 'Vermögen', 'Umbuchung, Sparziel anlegen', b);
     await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await tippTest(p, 'Budget', 'Budget', b);
-    await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Plan anlegen', b);
+    await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Anpassen', b);
 
     if (breite === 320) {
       /* Jede Ansicht einmal mit allem aufgeklappt (min = so viele Klappzeilen müssen dort mindestens offen sein, damit die Prüfung nicht ins Leere läuft) */
@@ -387,12 +387,12 @@ lauf(async () => {
   P.ok('… mit Sparziel: Abschnitt „Sparziele“, kein leerer Kasten für Klappzeilen', zl.kopf === 'Konten | Sparziele' && zl.ziel === 'Urlaub · 1.000 € noch 500 € 50 %' && (await z('#v-haushalt .folds')) === 0, JSON.stringify(zl));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
-  /* Gym ohne Plan: Der Satz unter „Pläne“ sitzt wie eine Liste 6 px unter der Überschrift, die Klappzeilen folgen mit 12 px. */
+  /* Gym ohne Plan: Der Satz unter „Plan“ sitzt wie eine Liste 6 px unter der Überschrift, die Klappzeilen folgen mit 12 px. */
   const ohnePlan = daten(); ohnePlan.K.plans = {};
   ({ browser, page, fehler } = await oeffnen({ daten: ohnePlan }));
   await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
-  uk = await unterKopf('Pläne');
-  P.ok('Gym ohne Plan: der Satz unter „Pläne“ hat 6 px Abstand zur Überschrift und 12 px zu den Klappzeilen', uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12 && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
+  uk = await unterKopf('Plan');
+  P.ok('Gym ohne Plan: der Satz unter „Plan“ hat 6 px Abstand zur Überschrift und 12 px zu den Klappzeilen', uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12 && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   /* Gewicht bei wenigen Einträgen im jüngsten Monat (Monatsanfang, oder wer einmal die Woche wiegt): heute einer, im Vormonat am 28., 21. und 14., davor einer.

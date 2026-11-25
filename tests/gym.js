@@ -218,7 +218,8 @@ lauf(async () => {
   const r = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K4 } }), s = r.page;
   await bereich(s, 'training');
   const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
-  P.ok('Torso B ist als Nächstes dran und steht oben (v106), danach die erledigten Torso A und Extremitäten; die Zahl im Ring bleibt sein Platz 3', (await plaene()) === 'Torso B:is-idle:3 | Torso A:is-done: | Extremitäten:is-done:' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
+  /* Seit v126 steht die Liste fest in seiner Reihenfolge (von v106 bis v125 rückte nach oben, was dran ist), und die Überschrift zählt Einheiten eines Plans */
+  P.ok('feste Reihenfolge (v126): Torso A und Extremitäten erledigt, Torso B ist dran und bleibt auf Platz 3; Überschrift „Plan“ mit „2 von 3 Einheiten“', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:3' && /^Plan\s*2 von 3 Einheiten/.test(await text(s, '#v-training h2.sec')), (await plaene()) + ' · ' + (await text(s, '#v-training h2.sec')));
   /* Übungen (v90, v97): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → liegt in derselben Liste hinter der letzten Zeile
      „Weitere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“; seit v99 steht oben, was in einem Plan steht: „Rudern“, und „Uralt“ steht in keinem). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
      Mit der Liste geht auch ihr älterer Teil wieder zu. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
@@ -241,9 +242,31 @@ lauf(async () => {
   await s.click('#v-training [data-k="start"][aria-label^="Torso B"]'); await s.waitForTimeout(250); await s.click('#l-items .chk'); await s.click('#l-save'); await s.waitForTimeout(200); await s.click('#rs-ok');
   P.ok('Runde voll und diese Woche trainiert: drei Haken bis Montag, „3 von 3“', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:' && (await text(s, '#v-training h2.sec')).includes('3 von 3'), await plaene());
   // Neuer Plan: hängt sich hinten an (Platz 4), obwohl „Arme“ nach Namen vorn stünde. Mit vier Plänen ist die Runde wieder offen: Die drei anderen waren dran, „Arme“ kommt als Nächstes.
-  await s.click('#v-training h2.sec [data-k="plan"]'); await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
+  /* Blatt „Plan“ (v126): „Anpassen“ in der Überschrift öffnet es; es zeigt die Einheiten in ihrer Reihenfolge mit der Zahl ihrer Übungen. „Einheit hinzufügen“ öffnet darüber das Blatt der Einheit. */
+  const oListe = () => s.$$eval('#o-items .prow', l => l.map(z => z.querySelector('b').firstChild.textContent + ':' + z.querySelector('small').textContent).join(' | '));
+  const platz = async () => Object.values((await gespeichert(s)).K.plans).filter(Boolean).sort((a, b) => a.o - b.o).map(p => p.n + ':' + p.o).join(' ');
+  await s.click('#v-training h2.sec [data-k="ordnen"]'); await s.waitForTimeout(100);
+  P.ok('„Anpassen“ öffnet das Blatt „Plan“ mit den drei Einheiten in ihrer Reihenfolge', await s.evaluate(() => document.querySelector('#osheet').open && document.querySelector('#os-title').textContent === 'Plan') && (await oListe()) === 'Torso A:1 Übung | Extremitäten:1 Übung | Torso B:1 Übung', await oListe());
+  await s.click('#o-add'); await s.waitForTimeout(100);
+  P.ok('„Einheit hinzufügen“ öffnet das Blatt „Neue Einheit im Plan“ über dem Blatt „Plan“', (await text(s, '#ps-title')) === 'Neue Einheit im Plan' && await s.evaluate(() => document.querySelector('#osheet').open && document.querySelector('#psheet').open));
+  await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
   const neuerPlan = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
-  P.ok('neuer Plan trägt Platz 4, ist als Nächstes dran und steht deshalb oben', (await plaene()) === 'Arme:is-idle:4 | Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:' && neuerPlan.o === 4, await plaene());
+  P.ok('neue Einheit trägt Platz 4, ist als Nächstes dran und steht am Ende (auch im Blatt „Plan“, das offen bleibt)', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:4' && neuerPlan.o === 4 && (await oListe()).endsWith('| Arme:1 Übung') && await s.evaluate(() => document.querySelector('#osheet').open && !document.querySelector('#psheet').open), (await plaene()) + ' · ' + (await oListe()));
+  /* Ziehen am Griff: „Arme“ (Platz 4) über die erste Zeile → Arme 1, Torso A 2, Extremitäten 3, Torso B 4. Gespeichert wird sofort, Name und Übungen bleiben.
+     Runde danach: Ereignisse nach Tag (vor 9 Tagen Torso B, vor 6 Torso A, vor 4 Extremitäten, heute Torso B); von hinten gelesen gehören zur Runde, solange der Platz kleiner wird:
+     Torso B (4), Extremitäten (3), Torso A (2), dann Torso B (4) nicht mehr. Zuletzt war der letzte Platz dran → voll, heute trainiert → drei Haken bleiben, Arme wartet auf Platz 1. */
+  const ziehe = async (von, nach) => { const b = await s.evaluate(([a, z]) => { const l = [...document.querySelectorAll('#o-items .prow')], g = l[a].querySelector('.griff').getBoundingClientRect(), t = l[z].getBoundingClientRect(); return { x: g.left + g.width / 2, y: g.top + g.height / 2, zy: t.top + (z < a ? 4 : t.height - 4) }; }, [von, nach]);
+    await s.mouse.move(b.x, b.y); await s.mouse.down(); await s.mouse.move(b.x, (b.y + b.zy) / 2, { steps: 4 }); await s.mouse.move(b.x, b.zy, { steps: 4 }); await s.mouse.up(); await s.waitForTimeout(150); };
+  await ziehe(3, 0);
+  const armeNach = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
+  P.ok('Arme an den Anfang gezogen: Plätze 1 bis 4 neu gespeichert, Name und Übungen bleiben, Blatt und Gym zeigen die neue Reihenfolge',
+    (await platz()) === 'Arme:1 Torso A:2 Extremitäten:3 Torso B:4' && armeNach.items.length === 1 && (await oListe()) === 'Arme:1 Übung | Torso A:1 Übung | Extremitäten:1 Übung | Torso B:1 Übung' && (await plaene()) === 'Arme:is-wait:1 | Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:', (await platz()) + ' · ' + (await oListe()) + ' · ' + (await plaene()));
+  await ziehe(0, 3);
+  P.ok('und wieder ans Ende gezogen: die alte Reihenfolge, Arme ist wieder dran', (await platz()) === 'Torso A:1 Extremitäten:2 Torso B:3 Arme:4' && (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:4', (await platz()) + ' · ' + (await plaene()));
+  await s.click('#o-items .o-go[aria-label^="Torso A"]'); await s.waitForTimeout(100);
+  P.ok('Tipp auf eine Zeile öffnet die Einheit: „Einheit im Plan“ mit ihrem Namen, löschen heißt „Aus dem Plan löschen“', (await text(s, '#ps-title')) === 'Einheit im Plan' && (await s.inputValue('#p-name')) === 'Torso A' && (await text(s, '#p-del')) === 'Aus dem Plan löschen');
+  await s.click('#ps-close'); await s.click('#os-close'); await s.waitForTimeout(100);
+  P.ok('beide Blätter sind zu', await s.evaluate(() => !document.querySelector('dialog[open]')));
 
   /* Einlesen: Die Datei führt „RUDERN“ unter der Kennung q1 und einen Plan „Torso A“ unter pp. Beides gibt es schon (x, a): Die Einheit hängt sich an x, der Plan ersetzt a, nichts steht doppelt da.
      Ein Name mit 50 Zeichen bleibt ganz (bis v86 wurden Namen nach 40 abgeschnitten). */
@@ -304,7 +327,7 @@ lauf(async () => {
   P.ok('erster Start: 3 Pläne und ihre 15 Übungen sind da, keine Einheit; die Merker stehen, eine Kopie gibt es nicht (nichts gelöscht)', Object.keys(K6.log).length === 0 && Object.values(K6.ex).filter(Boolean).length === 15 && Object.values(K6.plans).filter(Boolean).length === 3 && merker6 === '2026-11-20|2026-11-23|', Object.keys(K6.log).length + ' · ' + merker6);
   P.ok('Dips und Klimmzüge rechnen mit Körpergewicht, Namen ohne Klammern', Object.values(K6.ex).filter(x => x.bw).map(x => x.n).sort().join() === 'Dips,Klimmzüge weit mit Obergriff' && !Object.values(K6.ex).some(x => /[()]/.test(x.n)));
   await bereich(u, 'training');
-  /* Seine Reihenfolge steht in den Plänen (o); im Gym steht seit v106 der Plan oben, der gerade dran ist (hängt vom Tag ab), die Zahl im Ring nennt seinen Platz */
+  /* Seine Reihenfolge steht in den Plänen (o); die Zahl im Ring nennt den Platz */
   const reihe6 = Object.values((await gespeichert(u)).K.plans).filter(Boolean).sort((a, b) => a.o - b.o).map(x => x.n).join(' | ');
   const ringe6 = await u.$$eval('#v-training .rows.one .row', l => l.map(r => r.querySelector('.name').textContent + (r.classList.contains('is-done') ? '' : ':' + r.querySelector('.glyph').textContent)).sort().join(' | '));
   P.ok('seine drei Pläne in seiner Reihenfolge (Torso A, Extremitäten, Torso B), die Ringe nennen den Platz', reihe6 === 'Torso A | Extremitäten | Torso B' && ['Extremitäten', 'Torso A', 'Torso B'].every(n => ringe6.includes(n)) && !/Torso A:[^1]|Extremitäten:[^2]|Torso B:[^3]/.test(ringe6), reihe6 + ' · ' + ringe6);
@@ -338,11 +361,11 @@ lauf(async () => {
   const o7 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: mit(K7(), [[9, 'a'], [8, 'e']]) } }), v = o7.page;
   await bereich(v, 'training');
   const reihe = () => v.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
-  P.ok('letzte Woche zwei von drei: Torso B ist dran und trägt als einziger den Knopf zum Überspringen', (await reihe()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-done', await reihe());
+  P.ok('letzte Woche zwei von drei: Torso B ist dran und trägt als einziger den Knopf zum Überspringen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
   await v.click('#v-training [data-k="skip"]'); await v.waitForTimeout(150);
   P.ok('übersprungen ohne Einheit in dieser Woche: sofort neue Runde, Torso A ist dran', (await reihe()) === 'Torso A:is-idle:Knopf | Extremitäten:is-wait | Torso B:is-wait' && !(await text(v, '#v-training h2.sec')).includes(' von ') && (await text(v, '#toast')).includes('Übersprungen'), await reihe() + ' · ' + await text(v, '#toast'));
   await v.click('#toast button'); await v.waitForTimeout(150);
-  P.ok('„Rückgängig“: Torso B ist wieder offen', (await reihe()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-done', await reihe());
+  P.ok('„Rückgängig“: Torso B ist wieder offen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
   await o7.browser.close();
   /* Diese Woche trainiert: Torso A heute. Extremitäten überspringen → Torso B ist dran. Auch Torso B überspringen → die Runde ist voll, bleibt aber bis Montag stehen,
      weil in ihr diese Woche trainiert wurde („1 von 3“, kein Knopf mehr). Gespeichert ist je übersprungenem Plan ein Eintrag unter dem heutigen Tag. */
@@ -350,7 +373,7 @@ lauf(async () => {
   await bereich(y8, 'training');
   const reihe8 = () => y8.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
   await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
-  P.ok('diese Woche trainiert, Extremitäten übersprungen: Torso B ist dran', (await reihe8()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-skip' && (await text(y8, '#v-training .is-skip .meta')) === 'übersprungen', await reihe8());
+  P.ok('diese Woche trainiert, Extremitäten übersprungen: Torso B ist dran', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-idle:Knopf' && (await text(y8, '#v-training .is-skip .meta')) === 'übersprungen', await reihe8());
   await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
   const aus8 = (await gespeichert(y8)).K.aus;
   P.ok('auch Torso B übersprungen: Die Runde bleibt bis Montag stehen, „1 von 3“, kein Knopf', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-skip' && (await text(y8, '#v-training h2.sec')).includes('1 von 3') && JSON.stringify(aus8) === JSON.stringify({ [heute]: { e: 1, b: 1 } }), await reihe8() + ' · ' + JSON.stringify(aus8));

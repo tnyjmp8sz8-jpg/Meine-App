@@ -456,7 +456,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .entries b.down{color:var(--danger)}
 
 /* Trainingsplan und laufendes Training */
-#l-items,#p-items{display:flex;flex-direction:column;gap:10px}
+#l-items,#p-items,#o-items{display:flex;flex-direction:column;gap:10px}
 #l-items:empty,#p-items:empty{display:none}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
 .prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere;-webkit-hyphens:auto;hyphens:auto}
@@ -471,8 +471,12 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 /* Griff zum Umsortieren (v106) und die Zeile, die gerade gezogen wird: Sie hebt sich leicht ab, die anderen weichen weich aus */
 .griff{flex:none;display:grid;place-items:center;width:28px;height:40px;margin:-6px -6px -6px -6px;color:var(--mid);touch-action:none;cursor:grab}
 .griff svg{width:16px;height:16px}
-#p-items .prow{transition:transform .18s ease}
-#p-items .prow.zieht{transition:none;position:relative;z-index:2;background:var(--sel);box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
+#p-items .prow,#o-items .prow{transition:transform .18s ease}
+/* Zeile einer Einheit im Blatt „Plan“: Der ganze Rest neben dem Griff ist ein Knopf, der die Einheit öffnet */
+.o-go{flex:1;min-width:0;min-height:40px;display:flex;align-items:center;justify-content:space-between;gap:10px;border:0;background:none;padding:0;color:inherit;font:inherit;text-align:left}
+.o-go svg{flex:none;width:14px;height:14px;color:var(--mid)}
+.o-go:active{opacity:.5}
+#p-items .prow.zieht,#o-items .prow.zieht{transition:none;position:relative;z-index:2;background:var(--sel);box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
 .pst{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
 #x-stats,#x-recap{display:flex;flex-direction:column;gap:10px}
@@ -950,7 +954,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,.sch .sw,.sch .sw::after{transition:none}
+  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
 }
 </style>
@@ -1333,7 +1337,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v125</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v126</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1373,7 +1377,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <dialog tabindex="-1" id="psheet" aria-labelledby="ps-title">
   <form id="pform" novalidate>
     <div class="sh-head">
-      <h2 id="ps-title">Plan</h2>
+      <h2 id="ps-title">Einheit im Plan</h2>
       <button type="button" class="x" id="ps-close" aria-label="Schließen">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
@@ -1395,8 +1399,21 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       <p class="err" id="p-err" role="alert" hidden></p>
       <button class="primary" type="submit" id="p-save">Speichern</button>
     </div>
-    <button type="button" class="ghost danger" id="p-del" hidden>Plan löschen</button>
+    <button type="button" class="ghost danger" id="p-del" hidden>Aus dem Plan löschen</button>
   </form>
+</dialog>
+
+<dialog tabindex="-1" id="osheet" aria-labelledby="os-title">
+  <div class="es">
+    <div class="sh-head">
+      <h2 id="os-title">Plan</h2>
+      <button type="button" class="x" id="os-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div id="o-items"></div>
+    <button type="button" class="ghost center" id="o-add">Einheit hinzufügen</button>
+  </div>
 </dialog>
 
 <dialog tabindex="-1" id="csheet" aria-labelledby="cs-title">
@@ -3105,11 +3122,12 @@ function kraftHTML(curYM) {
   /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, übersprungen grau mit dem Zeichen dafür, als Nächstes dran blau mit seinem Platz,
      die übrigen grau mit ihrem Platz. Nur der Plan, der dran ist, trägt rechts den Knopf zum Überspringen (v93): So bleibt die Reihenfolge der Runde eindeutig.
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
+  /* Sein Wort (25.11., v126): „da steht 1/3 Plänen, aber es ist ja ein Plan mit 3 Einheiten“ und „ich will, dass meine Pläne nicht die Reihenfolge tauschen“.
+     Die Überschrift heißt deshalb „Plan“, gezählt werden Einheiten, und die Liste steht fest in seiner Reihenfolge (von v106 bis v125 rückte nach oben, was dran ist).
+     Die Reihenfolge ändert er im Blatt „Plan“ (openO) durch Ziehen; „Anpassen“ in der Überschrift öffnet es. */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
-  h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length : '', secAct('data-k="plan"', '', 'Plan anlegen'));
-  /* Der Plan, der dran ist, steht oben (v106); danach die folgenden in der Reihe der Runde, die erledigten am Ende. Die Zahl im Ring bleibt sein Platz in der Reihe. */
-  const reihe = plans.map((p, i) => i), ord = runde.next > 0 ? reihe.slice(runde.next).concat(reihe.slice(0, runde.next)) : reihe;
-  h += plans.length ? '<ul class="rows one">' + ord.map(i => { const pl = plans[i];
+  h += secHTML('Plan', fertig ? fertig + ' von ' + plans.length + ' Einheiten' : '', plans.length ? '<button type="button" class="sec-a" data-k="ordnen">Anpassen</button>' : secAct('data-k="plan"', '', 'Plan anlegen'));
+  h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
     const last = planLast(pl.id), ok = runde.done[pl.id], weg = runde.aus[pl.id], dran = i === runde.next;
     return '<li class="row ' + (ok ? 'is-done' : weg ? 'is-skip' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : weg ? ', in dieser Runde übersprungen' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : weg ? SKIP : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + (weg ? 'übersprungen' : pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '')) + '</span></span></button>' +
@@ -3129,6 +3147,7 @@ $('#v-training').addEventListener('click', e => {
   else if (a === 'skip') { const q = { aus: {} }, d = todayKey(); q.aus[d] = {}; q.aus[d][t.dataset.id] = 1; kdoc.patch(q); renderTraining(); }
   else if (a === 'live') openL();
   else if (a === 'plan') openP(t.dataset.id || null);
+  else if (a === 'ordnen') openO();
 });
 
 /* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: das Training (Läufe und Gym). */
@@ -3913,36 +3932,57 @@ function paintP() {
   paintPPick();
 }
 function paintPPick() { paintPick('#p-pick', '#p-new', pS.items.map(it => it.id), 'pa'); }
-/* Reihenfolge der Übungen im Plan (v106, mein Vorschlag, sein „alles einbauen“): am Griff links ziehen. Die übrigen Zeilen weichen aus, beim Loslassen steht die Übung an ihrem Platz.
-   Der Griff nimmt keine Scroll- oder Wischgeste an (touch-action: none, und das Wegziehen des Blatts lässt ihn aus). */
-let pZug = null;
-$('#p-items').addEventListener('pointerdown', e => {
-  const g = e.target.closest('.griff'); if (!g || !pS) return;
-  const rows = [...$('#p-items').children], row = g.closest('.prow'), i = rows.indexOf(row);
-  if (rows.length < 2 || i < 0) return;
-  e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (x) {}
-  const top = k => rows[k].getBoundingClientRect().top;
-  if (pMenu >= 0) { pMenu = -1; paintP(); return; }   // offene Zeile zuerst schließen: Die Zeilen sind sonst ungleich hoch
-  pZug = { rows, row, i, ziel: i, y0: e.clientY, schritt: top(1) - top(0), mitte: rows.map(x => { const q = x.getBoundingClientRect(); return q.top + q.height / 2; }) };
-  row.classList.add('zieht'); haptik('wahl');
+/* Reihenfolge durch Ziehen am Griff links (v106 für die Übungen einer Einheit, seit v126 auch für die Einheiten des Plans): Die übrigen Zeilen weichen aus,
+   beim Loslassen steht die Zeile an ihrem Platz. Der Griff nimmt keine Scroll- oder Wischgeste an (touch-action: none, und das Wegziehen des Blatts lässt ihn aus).
+   bereit() darf den Zug ablehnen (false), fertig(von, nach) bekommt den alten und den neuen Platz und zeichnet die Liste neu. */
+function ziehListe(el, bereit, fertig) {
+  let z = null;
+  el.addEventListener('pointerdown', e => {
+    const g = e.target.closest('.griff'); if (!g) return;
+    const rows = [...el.children], row = g.closest('.prow'), i = rows.indexOf(row);
+    if (rows.length < 2 || i < 0) return;
+    e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (x) {}
+    if (!bereit()) return;
+    const top = k => rows[k].getBoundingClientRect().top;
+    z = { rows, row, i, ziel: i, y0: e.clientY, schritt: top(1) - top(0), mitte: rows.map(x => { const q = x.getBoundingClientRect(); return q.top + q.height / 2; }) };
+    row.classList.add('zieht'); haptik('wahl');
+  });
+  el.addEventListener('pointermove', e => {
+    if (!z) return;
+    const dy = e.clientY - z.y0, m = z.mitte[z.i] + dy;
+    let ziel = z.i; z.mitte.forEach((c, k) => { if (k < z.i && m < c) ziel = Math.min(ziel, k); if (k > z.i && m > c) ziel = Math.max(ziel, k); });
+    if (ziel !== z.ziel) { z.ziel = ziel; haptik('wahl'); }
+    z.row.style.transform = 'translateY(' + dy + 'px)';
+    z.rows.forEach((x, k) => { if (k !== z.i) x.style.transform = k > z.i && k <= ziel ? 'translateY(' + -z.schritt + 'px)' : k < z.i && k >= ziel ? 'translateY(' + z.schritt + 'px)' : ''; });
+  });
+  const ende = () => { const q = z; if (!q) return; z = null; fertig(q.i, q.ziel); };
+  el.addEventListener('pointerup', ende);
+  el.addEventListener('pointercancel', ende);
+}
+/* Übungen einer Einheit: Eine offene Zeile („…“) wird zuerst geschlossen, die Zeilen sind sonst ungleich hoch. */
+ziehListe($('#p-items'), () => { if (!pS) return false; if (pMenu >= 0) { pMenu = -1; paintP(); return false; } return true; },
+  (von, nach) => { if (von !== nach) { const it = pS.items.splice(von, 1)[0]; pS.items.splice(nach, 0, it); } paintP(); });
+/* Blatt „Plan“ (v126, sein Wunsch: „durch Ziehen mit Finger selbst Folge tauschen … meinen Plan mit meinen Einheiten anpassen und da die Reihenfolge ändern, also wie Einstellungen des Plans“):
+   die Einheiten des Plans in ihrer Reihenfolge, je Zeile Griff, Name und Zahl der Übungen. Ziehen ordnet um und speichert sofort (o = 1 … n für alle),
+   ein Tipp auf die Zeile öffnet die Einheit darüber (openP), „Einheit hinzufügen“ legt eine neue an. Die Reihenfolge ist auch die der Runde (planRunde). */
+const odlg = $('#osheet');
+function paintO() {
+  $('#o-items').innerHTML = kPlans().map(pl => '<div class="prow"><span class="griff" aria-hidden="true">' + GRIFF + '</span><button type="button" class="o-go" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten"><b>' + esc(pl.n) +
+    '<small>' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + '</small></b>' + CHEV(1) + '</button></div>').join('');
+}
+function openO() { paintO(); openDlg(odlg); odlg.scrollTop = 0; }
+ziehListe($('#o-items'), () => true, (von, nach) => {
+  if (von !== nach) { const l = kPlans(), pl = l.splice(von, 1)[0], q = { plans: {} }; l.splice(nach, 0, pl); l.forEach((x, i) => { q.plans[x.id] = { o: i + 1 }; }); kdoc.patch(q); renderTraining(); }
+  paintO();
 });
-$('#p-items').addEventListener('pointermove', e => {
-  const z = pZug; if (!z) return;
-  const dy = e.clientY - z.y0, m = z.mitte[z.i] + dy;
-  let ziel = z.i; z.mitte.forEach((c, k) => { if (k < z.i && m < c) ziel = Math.min(ziel, k); if (k > z.i && m > c) ziel = Math.max(ziel, k); });
-  if (ziel !== z.ziel) { z.ziel = ziel; haptik('wahl'); }
-  z.row.style.transform = 'translateY(' + dy + 'px)';
-  z.rows.forEach((x, k) => { if (k !== z.i) x.style.transform = k > z.i && k <= ziel ? 'translateY(' + -z.schritt + 'px)' : k < z.i && k >= ziel ? 'translateY(' + z.schritt + 'px)' : ''; });
-});
-const pZugEnde = () => { const z = pZug; if (!z) return; pZug = null; if (z.ziel !== z.i) { const it = pS.items.splice(z.i, 1)[0]; pS.items.splice(z.ziel, 0, it); } paintP(); };
-$('#p-items').addEventListener('pointerup', pZugEnde);
-$('#p-items').addEventListener('pointercancel', pZugEnde);
+$('#os-close').addEventListener('click', () => closeDlg(odlg));
+odlg.addEventListener('click', e => { if (e.target === odlg) return closeDlg(odlg); const b = e.target.closest('.o-go, #o-add'); if (b) openP(b.dataset.id || null); });
 function openP(id) {
   const pl = id && K.plans ? K.plans[id] : null;
   pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => Object.assign({}, it)) : [] }; pArm = false; pMenu = -1; pickG = '';
-  $('#ps-title').textContent = pl ? 'Plan bearbeiten' : 'Neuer Plan';
+  $('#ps-title').textContent = pl ? 'Einheit im Plan' : 'Neue Einheit im Plan';   // „Einheit ändern“ heißt das Blatt eines Trainings, das schon war
   $('#p-name').value = pl ? pl.n : ''; $('#p-new').value = ''; $('#p-err').hidden = true;
-  $('#p-del').hidden = !pl; $('#p-del').textContent = 'Plan löschen';
+  $('#p-del').hidden = !pl; $('#p-del').textContent = 'Aus dem Plan löschen';
   paintP();
   pS.snap = pStand();
   openDlg(pdlg);
@@ -3977,16 +4017,16 @@ $('#pform').addEventListener('submit', e => {
   e.preventDefault();
   const err = m => { const x = $('#p-err'); x.textContent = m; x.hidden = false; };
   const name = $('#p-name').value.trim();
-  if (!name) return err('Gib dem Plan einen Namen.');
+  if (!name) return err('Gib der Einheit einen Namen.');
   if (!pS.items.length) return err('Füge mindestens eine Übung hinzu.');
   const q = { plans: {} }; q.plans[pS.id || newId()] = Object.assign({ n: name.slice(0, 40), items: pS.items.map((it, i, l) => Object.assign({ id: it.id, sets: it.sets }, it.dr && it.sets > 1 ? { dr: 1 } : {}, it.su && i < l.length - 1 ? { su: 1 } : {})) }, pS.id ? {} : { o: kPlans().reduce((m, p) => Math.max(m, p.o), 0) + 1 });
   kdoc.patch(q);
-  tSub = 'kraft'; closeP(); renderTraining();
+  tSub = 'kraft'; closeP(); renderTraining(); paintTop(); if (odlg.open) paintO();
 });
 $('#p-del').addEventListener('click', () => {
   if (!pArm) { pArm = true; $('#p-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
   const q = { plans: {} }; q.plans[pS.id] = null; kdoc.patch(q);
-  closeP(); renderTraining();
+  closeP(); renderTraining(); paintTop(); if (odlg.open) { if (kPlans().length) paintO(); else closeDlg(odlg); }
 });
 
 /* ---------- Planer: Notizen, Arbeit, Uni ---------- */
@@ -4718,7 +4758,7 @@ function paintTop() {
   const add = $('#add');
   $('#mark').textContent = view === 'training' ? tName() : TITEL[view] || 'Track';
   if (topEl.classList.contains('klein')) titelMitte();
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? (kPlans().length ? 'Einheit zum Plan hinzufügen' : 'Plan anlegen') : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
   add.hidden = view === 'heute'; $('#gear').hidden = view !== (istAn('heute') ? 'heute' : erster());   // auf Heute steht statt des Plus das Zahnrad (v106); ist Heute aus, steht es im ersten Bereich links neben dem Plus
 }
 document.addEventListener('click', e => {

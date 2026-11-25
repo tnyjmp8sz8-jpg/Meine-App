@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v125 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v125): alle 17 Reihen stimmen (Gym 226, Hülle 169, Klappzeilen 159, Aufbau 78, Bereiche 25). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v126 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v126): alle 17 Reihen stimmen (Gym 232, Hülle 169, Klappzeilen 159, Aufbau 78, Bereiche 25, Gesten 25). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114).
+- v126 (25.11., sein Auftrag: „ich will, dass meine Pläne nicht die Reihenfolge tauschen, und ich will durch Ziehen mit Finger selbst Folge tauschen können bzw. meinen Plan mit meinen Einheiten anpassen und da die Reihenfolge ändern etc., also wie Einstellungen des Plans. Da steht 1/3 Plänen, aber es ist ja ein Plan mit 3 Einheiten“): Die Liste im Gym steht fest in seiner Reihenfolge (mein Umsortieren aus v106 ist weg). Überschrift „Plan“ mit „1 von 3 Einheiten“; „Anpassen“ öffnet das neue Blatt „Plan“: Einheiten am Griff ziehen (speichert sofort), antippen zum Bearbeiten, „Einheit hinzufügen“. Wortwahl nachgezogen („Einheit im Plan“, „Aus dem Plan löschen“). Ohne Bild vorab gebaut, weil der Wunsch eindeutig war; Bild danach geschickt. Geprüft mit Maus und mit echter Berührung im Test-Browser; am iPhone ungeprüft.
 - v125 (25.11., sein Auftrag: „füge Einstellung hinzu, dass ich selbst wählen kann, welche Bereiche unten überhaupt angezeigt werden, also dass ich theoretisch zu einer Gym-App (auch ohne Cardio) alleine machen kann, alles ein aus machen können. Und noch eine Stufe die Streifen des Glas dunkler machen, Übergang und Rest ist echt gut“): Neuer Abschnitt „Bereiche“ in den Einstellungen mit sechs Schaltern (Heute, Planer, Gewicht, Finanzen, Gym, Cardio). Aus heißt: weg aus der Leiste, aus der Wahl des Starts und von Heute; die Daten bleiben. Mit weniger Bereichen wird die Leiste schmaler, mit einem einzigen gibt es keine; ist Heute aus, steht das Zahnrad im ersten Bereich neben dem Plus; der letzte Bereich lässt sich nicht abschalten. Glas: nur das Licht oben und unten mal 0,78 (oben 58, 55, 42 statt 65, 63, 49), Linie, Übergang und Aufbau unverändert; nur in Chromium gemessen (WebKit war in der Sitzung nicht eingerichtet, geändert sind allein Deckkräfte). Von mir so entschieden, ihm gesagt: Die Teile des Planers (Notizen, Arbeit, Uni) und der Finanzen (Vermögen, Budget) haben noch keine eigenen Schalter. Am iPhone ungeprüft.
 - v124 (25.11.): Erst sein „noch mehr Übergang von dunkel zu hell und noch eine Stufe dunkler“, dann ein Bild der Fassung vor v113 (Blatt einer Übung, feine Linie rundum): „ich fand es in der Version besser, also mehr so, aber Mischung aus beiden“. Gebaut: feine Linie rundum wie damals, dazu das weiche Licht oben (stärker) und unten; Karten in Blättern tragen wieder die volle Stufe. Im Bild neben sein altes gelegt, in Chromium und WebKit gemessen (oben 65, 63, 49, 46 …, Seite 30). Am iPhone ungeprüft.
 - v123 (25.11., seine Nachricht: „ich kann die Zeit immer noch nicht editieren, brauche ich dafür eine neue App? und kannst du die Streifen im Glas so lassen, aber mehr auslaufen … alles smoother und unauffälliger“): Keine neue Installation nötig (Änderung nur im Inhalt). Dauer: kein Feld mit Tastatur mehr, ein Tipp öffnet „Zahl wählen“ wie im Training (Werte in 5er-Schritten, eigene Tasten, Haken); geprüft in Chromium und WebKit, gespeichert. Ihm geraten, im Zahnrad die Version zu prüfen (v123), sonst App einmal ganz schließen und neu öffnen. Glas: Streifen weichgezeichnet, läuft gleichmäßig aus (80, 71, 61, 52, 43 … statt 93, 70, 51, 32 und flach), Ecken und Seiten wie bisher; der Verlauf `--glanz` ist weg.
@@ -20,6 +21,7 @@
 - Zurzeit keiner.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
+- Zu v126: im Blatt „Plan“ dem Plan einen Namen geben (z. B. „Torso / Extremitäten“), der dann als Überschrift im Gym steht.
 - Zu v125: eigene Schalter für die Teile des Planers (Notizen, Arbeit, Uni) und der Finanzen (Vermögen, Budget), nach demselben Muster wie Gym und Cardio.
 Auf seine Frage vom 25.11. („was noch hinzufügen alles?“) vorgeschlagen, die Einstellungen sind mit v110 gebaut, offen sind:
 - Aufwärmsätze vor dem ersten Satz vorschlagen; leichtere Woche vorschlagen, wenn mehrere Übungen über Wochen fallen; Wochenrückblick als Mitteilung am Sonntag (iPhone-App).
@@ -32,7 +34,7 @@ Bewusst nicht: weitere Felder, weitere Graphen, Bankanbindung, tägliche Abfrage
 
 Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser als Alpha Progression; die Liste bestimmt er). Mit v85 gebaut: Punkt, Vorgabe, Rekord, „Zahl wählen“, Körpergewicht. Noch offen, nur auf Zuruf:
 1. (erledigt mit v103 und iPhone-App 1.0: Dauer und Puls der Einheit von der Apple Watch; offen ist nur, ob er die zwei Schritte in Kurzbefehle anlegt.)
-3. Weiter offen: zu v93 „Woche 15 · 2 von 3“ neben „Pläne“.
+3. Weiter offen: zu v93 „Woche 15 · 2 von 3“ neben „Plan“.
 4. Plan „Bauch“ ergänzen, falls er ihn doch will.
 5. Von ihm noch nicht genannt, nicht ungefragt bauen: fertige Übungsliste mit Anleitung, Plan erstellen lassen, Übung tauschen, Aufwärmsätze, Anstrengung je Satz (RIR), Auswertung nach Muskelgruppen.
 
@@ -64,6 +66,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v123: Dauer über „Zahl wählen“ statt Tastatur; Glas-Streifen weich auslaufend.
 - v124: Kante als Mischung: feine Linie rundum wie vor v113, dazu weiches Licht oben und unten.
 - v125: Bereiche in den Einstellungen an- und abschaltbar (auch Gym und Cardio einzeln); Licht der Glas-Kante eine Stufe dunkler.
+- v126: Gym: ein Plan mit Einheiten in fester Reihenfolge; Blatt „Plan“ zum Umsortieren durch Ziehen.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -81,6 +84,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - Die Reihe „Speichern“ schlug am 24.11. einmal in einem vollen Lauf fehl („25-mal neu geladen“, 1 Abweichung) und danach nicht mehr. Kommt es wieder, die Abweichung ausgeben lassen: Seit v96 öffnet die App beim Laden mit laufendem Training das Vollbild.
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
+- v126: Gym → „Anpassen“ neben „Plan“: Lässt sich eine Einheit am Griff (drei Striche links) ziehen, ohne dass das Blatt mitgeht? Passt die Wortwahl „Plan“ mit „Einheiten“?
 - v125: Bereiche abschalten (Zahnrad → „Bereiche“): Sieht die schmalere Leiste gut aus? Gym allein ohne Leiste: Findet er das Zahnrad neben dem Plus? Sind die Streifen im Glas jetzt dunkel genug?
 - v123: Steht im Zahnrad unten v123? Lässt sich die Dauer jetzt ändern („55 min“ antippen, Wert wählen oder tippen, Haken, „Speichern“)? Wenn nicht: Bildschirmaufnahme erbitten.
 - v124: Trifft die Mischung (feine Linie rundum plus weiches Licht) das, was er an der alten Fassung mochte? Leiser oder kräftiger? Wirken Zeilen und Eingabefelder, die seit v118 2 px niedriger sind, noch richtig?

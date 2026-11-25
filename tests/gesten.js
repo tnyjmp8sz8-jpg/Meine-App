@@ -102,5 +102,15 @@ lauf(async () => {
   const balken = await page.evaluate(() => JSON.parse(document.querySelector('#v-haushalt svg.scrub').dataset.pts).map(p => p[2]).join(' | '));
   P.ok('Balken tragen Monat und Betrag', /[A-Z][a-zä]+ · [+−][\d.]+ €/.test(balken), balken);
   await page.click('#v-haushalt [data-m="mode"][data-v="month"]');
+  /* Blatt „Plan“ (v126): eine Einheit mit dem Finger am Griff über die andere ziehen. Die Beispieldaten haben zwei Einheiten (Oberkörper, Beine);
+     die zweite Zeile wird über die Mitte der ersten gezogen → Reihenfolge getauscht und gespeichert, das Blatt bleibt offen (der Griff zieht es nicht weg). */
+  await page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  await bereich(page, 'training'); await page.waitForTimeout(200);
+  const oVor = await page.$$eval('#v-training .rows.one .name', l => l.map(x => x.textContent).join(' | '));
+  await page.click('#v-training h2.sec [data-k="ordnen"]'); await page.waitForTimeout(500);
+  const og = await page.evaluate(() => { const l = [...document.querySelectorAll('#o-items .prow')], a = l[1].querySelector('.griff').getBoundingClientRect(), z = l[0].getBoundingClientRect(); return { x: a.left + a.width / 2, y: a.top + a.height / 2, zy: z.top + 6 }; });
+  await wischen(ctx, page, og.x, og.y, og.x, og.zy, 400);
+  const oNach = await page.$$eval('#v-training .rows.one .name', l => l.map(x => x.textContent).join(' | '));
+  P.ok('Einheit mit dem Finger am Griff nach oben gezogen: Reihenfolge getauscht, das Blatt „Plan“ bleibt offen', oVor.split(' | ').length === 2 && oNach === oVor.split(' | ').reverse().join(' | ') && await offen('#osheet') && (await page.$$eval('#o-items .prow b', l => l.map(x => x.firstChild.textContent).join(' | '))) === oNach, oVor + ' → ' + oNach);
   await P.ende(browser, fehler);
 });
