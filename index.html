@@ -1276,7 +1276,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v110</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v111</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2823,25 +2823,31 @@ const schrittText = st => st.toLocaleString('de-DE') + ' kg';
    10 Wdh mit 3 in Reserve rechnen wie 12. Ohne Angabe ändert sich nichts. */
 const wdhEff = q => q[1] + Math.max(0, (q[2] || 0) - 1);
 /* Vorgabe für heute aus den Sätzen vom letzten Mal, je Satz [Gewicht, Wiederholungen, Grund]. von–bis = Bereich, davor = Sätze der Einheit vor der letzten, bw = Körpergewicht, das mitbewegt wird.
-   Sätze mit demselben Gewicht gehören zusammen:
-   1. Haben alle das obere Ende geschafft, kommt ein Schritt Gewicht dazu, mit so vielen Wiederholungen, dass das geschätzte Maximum nicht sinkt, mindestens das untere Ende
+   Seit v111 steigt jeder Satz für sich (seine Frage zum Bild vom 25.11.: „ist 12 bis 12 in jedem Satz besser als erhöhen bei 12 10 8?“). Wer nah an die Grenze geht, schafft von Satz zu Satz weniger;
+   bis v110 wartete das Gewicht, bis alle Sätze oben waren, und das kommt bei 12, 10, 8 nie, ohne den ersten Satz zu schonen. Jetzt:
+   1. Ein Satz am oberen Ende bekommt einen Schritt mehr Gewicht, mit so vielen Wiederholungen, dass das geschätzte Maximum nicht sinkt, mindestens das untere Ende
       (40 kg × 12 = 56 → 42,5 kg: (56 / 42,5 − 1) × 30 = 9,5 → 9). Dips +15 kg × 12 bei 90 kg: 105 × 1,4 = 147 → +17,5 kg: (147 / 107,5 − 1) × 30 = 11,02 → 11.
-   2. Lag der erste Satz zweimal in Folge unter dem Bereich, geht ein Schritt Gewicht weg (ein schlechter Tag allein ändert nichts: seine Regel vom 24.11.).
-   3. Sonst bleibt das Gewicht: unter dem oberen Ende eine Wiederholung mehr, am oberen Ende halten, bis die übrigen Sätze nachgezogen haben.
+      Von vorn nach hinten: Ein späterer Satz steigt nur, wenn die Sätze davor mit demselben Gewicht auch steigen (sonst wäre er schwerer als der Satz vor ihm); bis dahin hält er.
+   2. Lag derselbe Satz zweimal in Folge mit demselben Gewicht unter dem Bereich, geht ein Schritt Gewicht weg (ein schlechter Tag allein ändert nichts: seine Regel vom 24.11.).
+   3. Sonst bleibt das Gewicht und es kommt eine Wiederholung dazu.
+   So wird aus 40×12, 40×10, 40×8 → 42,5×9, 40×11, 40×9: Das Gewicht fällt im Training von Satz zu Satz, jeder Satz bleibt im Bereich und nah an der Grenze.
    Ganz ohne Gewicht (und ohne Körpergewicht) immer eine Wiederholung mehr.
    Mit Reserve (wdhEff): 20 kg × 10 mit 3 in Reserve zählt wie 12 → oben angekommen, mehr Gewicht; 40 kg × 9 mit 3 in Reserve → Ziel 11 statt 10.
    „Unter dem Bereich“ heißt mit Reserve: Auch mit dem, was noch gegangen wäre, hätte es nicht für das untere Ende gereicht. */
 function vorgabe(sets, von, bis, step, bw, davor) {
   bw = bw || 0;
-  const erster = (l, w) => (l && l.find(o => o[0] === w)) || null, unter = q => q[1] + (q[2] || 0) < von;
-  return sets.map(q => {
+  const unter = q => q[1] + (q[2] || 0) < von, oben = q => wdhEff(q) >= bis;
+  return sets.map((q, j) => {
     const w = q[0], n = q[1], rm = rm1(w + bw, wdhEff(q));
     if (!w && !bw) return [0, n + 1, 'eine Wdh mehr'];
-    if (sets.every(o => o[0] !== w || wdhEff(o) >= bis)) { const nw = Math.round((w + step) * 100) / 100; return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '+' + schrittText(step)]; }
-    const e1 = erster(davor, w), nw = Math.round((w - step) * 100) / 100;
-    if (unter(erster(sets, w)) && e1 && unter(e1) && nw + bw > 0 && nw >= 0) return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '−' + schrittText(step) + ', zurück in ' + von + '–' + bis];
+    if (oben(q)) {
+      if (!sets.every((o, k) => k >= j || o[0] !== w || oben(o))) return [w, n, 'halten, bis die Sätze davor ' + bis + ' schaffen'];
+      const nw = Math.round((w + step) * 100) / 100; return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '+' + schrittText(step)];
+    }
+    const alt = davor && davor[j], nw = Math.round((w - step) * 100) / 100;
+    if (unter(q) && alt && alt[0] === w && unter(alt) && nw + bw > 0 && nw >= 0) return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '−' + schrittText(step) + ', zurück in ' + von + '–' + bis];
     const ziel = Math.min(bis, Math.max(n + 1, wdhEff(q)));
-    return n >= bis ? [w, n, 'halten, bis alle Sätze ' + bis + ' schaffen'] : [w, ziel, ziel - n > 1 ? ziel - n + ' Wdh mehr, du hattest Reserve' : 'eine Wdh mehr'];
+    return [w, ziel, ziel - n > 1 ? ziel - n + ' Wdh mehr, du hattest Reserve' : 'eine Wdh mehr'];
   });
 }
 /* Stand einer Übung in einem Zeitraum: bester Vergleichswert der Einheiten, deren Datum mit pre beginnt ('YYYY-MM' oder 'YYYY') */
@@ -3444,14 +3450,14 @@ function lAnpassen(it, j) {
     if (frei) { s.w = ws; s.r = rs; }
   });
 }
-/* Reserve zum zuletzt abgehakten Satz (lR = { i, j }): Reihe gleich unter den Sätzen und über der Empfehlung (unten am Bildschirm wäre sie bei langen Übungen erst nach dem Scrollen da), ein Tipp genügt, nichts davon ist Pflicht. Ein zweiter Tipp auf dieselbe Zahl nimmt sie zurück.
+/* Reserve zum zuletzt abgehakten Satz (lR = { i, j }; v111, sein Bild: Die Frage zum letzten Satz stand erst bei der nächsten Übung): Nach dem letzten Satz einer Übung bleibt die Ansicht stehen, bis er geantwortet hat;
+   wechselt er selbst die Übung, ist die Frage weg. Reihe gleich unter den Sätzen und über der Empfehlung (unten am Bildschirm wäre sie bei langen Übungen erst nach dem Scrollen da), ein Tipp genügt, nichts davon ist Pflicht. Ein zweiter Tipp auf dieselbe Zahl nimmt sie zurück.
    Weil die Sätze danach beim Abhaken schon angepasst wurden, merkt lVor ihren Stand von davor: Die Wahl rechnet von dort neu, statt auf der ersten Anpassung aufzubauen. */
 let lR = null, lVor = null;
 function resHTML() {
   const it = lR && Lw && Lw.items[lR.i], s = it && it.sets[lR.j];
-  if (!(s && s.done && empAn() && K.res !== 0)) return '';
-  const name = K.ex[it.id] ? K.ex[it.id].n : 'Übung';
-  return '<div class="l-res" id="l-res"><p class="note">' + (lR.i !== lI ? esc(name) + ' · ' : '') + 'Satz ' + (lR.j + 1) + ': Wie viele wären noch gegangen?</p><div class="l-res-c" role="group" aria-label="Wiederholungen in Reserve">' +
+  if (!(s && s.done && lR.i === lI && empAn() && K.res !== 0)) return '';
+  return '<div class="l-res" id="l-res"><p class="note">' + 'Satz ' + (lR.j + 1) + ': Wie viele wären noch gegangen?</p><div class="l-res-c" role="group" aria-label="Wiederholungen in Reserve">' +
     [0, 1, 2, 3, 4].map(v => '<button type="button" class="chip" data-la="res" data-v="' + v + '" aria-pressed="' + (s.x === v) + '" aria-label="' + (v === 4 ? '4 oder mehr' : v) + ' in Reserve">' + v + (v === 4 ? '+' : '') + '</button>').join('') + '</div></div>';
 }
 function lReserve(v) {
@@ -3461,7 +3467,10 @@ function lReserve(v) {
     const unberuehrt = n.r === n.er && n.w === n.ew; n.ew = alt.ew; n.er = alt.er; n.eg = alt.eg; if (unberuehrt) { n.w = alt.w; n.r = alt.r; }
     if (n.er == null) { delete n.ew; delete n.er; delete n.eg; } });
   lAnpassen(it, lR.j);
+  if (s.x != null && undone(it) < 0) { lWeiter(); lR = lVor = null; }   // letzter Satz der Übung beantwortet: jetzt erst zur nächsten offenen Übung
 }
+/* Zur nächsten Übung, die noch offene Sätze hat */
+function lWeiter() { const n = Lw.items.length; for (let k = 1; k < n; k++) { const q = (lI + k) % n; if (undone(Lw.items[q]) >= 0) { lI = q; break; } } }
 /* Zahl wählen (nach dem Vorbild seiner Bildschirmfotos aus Alpha Progression, 24.11.): Blatt mit den Werten in der Nähe und eigenen Tasten statt der Tastatur des iPhones.
    o = { titel, wert (Zahl oder null), einheit, komma (Nachkommastellen erlaubt), liste (Zahlen), dann(zahl), dazu wahlweise text(zahl) für die Beschriftung und nurListe (ohne Tasten) }. Ein Tipp auf einen Wert übernimmt ihn sofort;
    getippt wird unten, der Haken übernimmt (ohne Eingabe bleibt alles, wie es war). Am Rechner gehen auch die Tasten der Tastatur. */
@@ -3629,7 +3638,7 @@ $('#lform').addEventListener('click', e => {
     if (empAn()) { const neu = liveSets(it.id, it.sets.length); it.sets.forEach((x, j) => { if (!x.done) Object.assign(x, neu[j]); }); }
     paintL(); saveLive();
   } });
-  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lMenu = false; }
+  if (a === 'tab') { lI = +t.dataset.i; lJ = null; lAdd = false; lMenu = false; lR = lVor = null; }
   else if (a === 'menu') lMenu = !lMenu;
   else if (a === 'addx') lAdd = !lAdd;
   else if (a === 'sel') lJ = +t.dataset.s;
@@ -3644,7 +3653,7 @@ $('#lform').addEventListener('click', e => {
       Lw.last = Date.now();
       if (empAn()) { lR = { i: lI, j: +t.dataset.s }; lVor = { i: lI, j: lR.j, sets: clone(it.sets) }; lAnpassen(it, lR.j); }
       it.sets.forEach(n => { if (!n.done) { if (n.w === '') n.w = s.w; if (n.r === '') n.r = s.r; } });   // leere Folgesätze übernehmen die Werte
-      if (undone(it) < 0) { const n = Lw.items.length; for (let k = 1; k < n; k++) { const q = (lI + k) % n; if (undone(Lw.items[q]) >= 0) { lI = q; break; } } }
+      if (undone(it) < 0 && !(empAn() && K.res !== 0)) lWeiter();   // mit der Frage nach der Reserve erst nach der Antwort (lReserve)
     }
   }
   else if (a === 'res') lReserve(+t.dataset.v);
