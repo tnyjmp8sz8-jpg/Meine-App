@@ -44,7 +44,7 @@
   --bg:#F2F2F7;
   --glass:rgba(255,255,255,.58); --glass-sel:rgba(0,0,0,.08);
   --rand-a:inset 0 0 0 .5px rgba(0,0,0,.05),inset 0 1px 0 rgba(255,255,255,.9),inset 0 -1px 0 rgba(255,255,255,.6); --rand-s:var(--rand-a); --rand:var(--rand-a); --glanz:linear-gradient(transparent,transparent); --tab-cut:#E6E6EA; --unten:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
-  --sheet:rgba(242,242,247,.84);
+  --sheet:rgba(242,242,247,.84); --sheet-fest:#E1E2E7;
   --surface:#FFFFFF;
   --fill:#E9E9EE;
   --ink:#111114;
@@ -72,7 +72,7 @@
 }
 @media (prefers-color-scheme:dark){
   :root{
-    --bg:#000000; --glass:rgba(30,30,30,.56); --glass-sel:rgba(255,255,255,.11); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
+    --bg:#000000; --glass:rgba(30,30,30,.56); --glass-sel:rgba(255,255,255,.11); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --sheet-fest:#1A1A1C; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
     /* Flächen sind durchscheinend (Weiß mit wenig Deckkraft): Auf Schwarz ergibt das die gewohnten Grautöne, über dem Licht oben nehmen sie dessen Farbe leicht an */
     --surface:rgba(255,255,255,.067); --fill:rgba(255,255,255,.13); --sel:rgba(255,255,255,.2);
     --edge-top:rgba(255,255,255,.14); --cut:#161618;
@@ -236,6 +236,9 @@ dialog{overscroll-behavior:contain}
 .stepper input::-webkit-outer-spin-button,.stepper input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
 .stepper .unit{flex:none;color:var(--muted);font-weight:500}
 .err{margin:0;color:var(--danger);font-size:14px;font-weight:500}
+/* Fuß der langen Blätter (Einheit ändern, Plan bearbeiten; v122): „Speichern“ und die Meldung darüber bleiben beim Scrollen am unteren Rand des Blatts stehen, also auch über der Tastatur.
+   Vorher lag „Speichern“ bis zu 1400 px unter dem Feld (seine Meldung: Dauer geändert, nichts gespeichert). Deckende Farbe des Blatts, oben weich auslaufend: Milchglas im Milchglas macht am iPhone Ärger. */
+.fuss{position:sticky;bottom:0;z-index:3;display:flex;flex-direction:column;gap:10px;margin:-8px -16px -6px;padding:16px 16px 12px;background:linear-gradient(to bottom,transparent,var(--sheet-fest) 16px)}
 #sh-extra{display:flex;flex-direction:column;gap:8px}
 #sh-extra[hidden],#sh-stats[hidden],.err[hidden],.ghost[hidden]{display:none}
 
@@ -1258,8 +1261,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </div>
       <div class="chips" id="k-pick" role="group" aria-label="Passende Übungen" hidden></div>
     </div>
-    <p class="err" id="k-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="k-save">Speichern</button>
+    <div class="fuss">
+      <p class="err" id="k-err" role="alert" hidden></p>
+      <button class="primary" type="submit" id="k-save">Speichern</button>
+    </div>
     <button type="button" class="ghost" id="k-weiter" hidden>Weiter trainieren</button>
     <button type="button" class="ghost danger" id="k-del" hidden>Einheit löschen</button>
   </form>
@@ -1327,7 +1332,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v121</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v122</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1385,8 +1390,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </div>
       <div class="chips" id="p-pick" role="group" aria-label="Passende Übungen" hidden></div>
     </div>
-    <p class="err" id="p-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="p-save">Speichern</button>
+    <div class="fuss">
+      <p class="err" id="p-err" role="alert" hidden></p>
+      <button class="primary" type="submit" id="p-save">Speichern</button>
+    </div>
     <button type="button" class="ghost danger" id="p-del" hidden>Plan löschen</button>
   </form>
 </dialog>
@@ -3304,18 +3311,22 @@ function openK(date) {
   kdlg.scrollTop = 0;
 }
 function closeK() { closeDlg(kdlg); }
-$('#ks-close').addEventListener('click', closeK);
+$('#ks-close').addEventListener('click', () => daneben(kdlg, kS, kStand, '#k-err', closeK));
 /* Ungespeichertes (v117, seine Meldung vom 25.11.: Dauer in „Einheit ändern“ eingetippt, „Blatt geht zu, nichts geändert“): Die Zahlentastatur des iPhones hat keine Taste zum Schließen.
    Wer sie loswerden will, tippt neben das Blatt oder zieht nach unten, und das schloss das ganze Blatt samt Eingabe. In den langen Blättern (Einheit ändern, Plan bearbeiten) schließt ein Tipp
    daneben oder das Wegziehen deshalb nicht gleich, wenn etwas geändert ist: Das Blatt bleibt, die Tastatur geht zu, unten steht „Noch nicht gespeichert“; erst der zweite Tipp verwirft.
-   Das Kreuz oben schließt wie immer sofort. Die kurzen Blätter (Gewicht, Ausgabe, Notiz) schließen weiter mit einem Tipp daneben.
+   Seit v122 gilt das auch für das Kreuz oben (seine zweite Meldung: „kann die Uhrzeit immer noch nicht anpassen“), und „Speichern“ steht fest am unteren Rand des Blatts (.fuss), der Hinweis direkt darüber:
+   Nichts muss mehr gesucht werden. Die kurzen Blätter (Gewicht, Ausgabe, Notiz) schließen weiter mit einem Tipp daneben.
    o = der Zustand des Blatts (kS, pS), stand() = seine Eingaben als Text, snap = der Stand beim Öffnen. */
 function daneben(dlg, o, stand, errSel, zu) {
-  if (o && o.snap !== stand() && !o.gewarnt) { o.gewarnt = true; const x = $(errSel); x.textContent = 'Noch nicht gespeichert. Tippe auf „Speichern“, oder noch einmal neben das Blatt, um die Änderungen zu verwerfen.'; x.hidden = false; dlg.scrollTop = dlg.scrollHeight; return; }
+  if (o && o.snap !== stand() && !o.gewarnt) { o.gewarnt = true; const x = $(errSel); x.textContent = 'Noch nicht gespeichert. Tippe auf „Speichern“, oder schließe noch einmal, um die Änderungen zu verwerfen.'; x.hidden = false; return; }
   zu();
 }
 const kStand = () => JSON.stringify([$('#k-date').value, $('#k-dur').value.trim(), kS.items]);
 kdlg.addEventListener('click', e => { if (e.target === kdlg) daneben(kdlg, kS, kStand, '#k-err', closeK); });
+/* Die Dauer wird ersetzt, nicht ergänzt (v122): Beim Antippen ist der alte Wert markiert, die erste Ziffer löscht ihn. Vorher hängte Tippen an (aus 55 und „60“ wurde 5560, eine Dauer, die es nicht gibt).
+   Zweimal, weil das iPhone die Markierung nach dem Antippen noch einmal auf die Stelle des Fingers setzt. */
+$('#k-dur').addEventListener('focus', e => { const f = e.target, alles = () => { try { f.setSelectionRange(0, f.value.length); } catch (x) {} }; alles(); setTimeout(alles, 0); });
 $('#kform').addEventListener('input', e => {
   const t = e.target, f = t.dataset ? t.dataset.f : null, box = f ? t.closest('.kx') : null;
   if (box) kS.items[+box.dataset.i].sets[+t.dataset.s][f] = t.value;
@@ -3916,8 +3927,8 @@ function openP(id) {
   if (!pl) fokus($('#p-name'));
 }
 function closeP() { closeDlg(pdlg); }
-$('#ps-close').addEventListener('click', closeP);
 const pStand = () => JSON.stringify([$('#p-name').value, pS.items]);
+$('#ps-close').addEventListener('click', () => daneben(pdlg, pS, pStand, '#p-err', closeP));
 pdlg.addEventListener('click', e => { if (e.target === pdlg) daneben(pdlg, pS, pStand, '#p-err', closeP); });
 $('#pform').addEventListener('click', e => {
   const t = e.target.closest('[data-pa]'); if (!t) return;

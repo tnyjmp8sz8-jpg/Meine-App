@@ -742,7 +742,7 @@ lauf(async () => {
   P.ok('gewählt: Curls steht im Plan, die Gruppe ohne freie Übung verschwindet', (await text(nb, '#p-items .prow b')) === 'Latzug | Bankdrücken | Curls' && (await wahl19('#p-pick')) === 'Beine Sonstige # ', (await text(nb, '#p-items .prow b')) + ' # ' + (await wahl19('#p-pick')));
   await nb.fill('#p-new', 'sei');
   P.ok('beim Tippen wie bisher: passende Übungen statt der Gruppen', (await wahl19('#p-pick')) === ' # Seitheben', await wahl19('#p-pick'));
-  await nb.click('#ps-close'); await nb.waitForTimeout(200);
+  await nb.click('#ps-close'); await nb.waitForTimeout(150); await nb.click('#ps-close'); await nb.waitForTimeout(200);   // der Plan ist geändert (Curls): Seit v122 warnt das erste Kreuz, das zweite verwirft
   await nb.click('#v-training [data-k="start"]'); await nb.waitForTimeout(300);
   await nb.click('#l-tabs .addx');
   P.ok('im Training: dieselbe Wahl nach Gruppen', (await wahl19('#l-pick')) === 'Arme Beine Sonstige # ', await wahl19('#l-pick'));
@@ -802,6 +802,35 @@ lauf(async () => {
   P.ok('zweiter Tipp daneben verwirft: Latzug behält 3 Sätze', !(await nb.evaluate(() => document.querySelector('#psheet').open)) && (await gespeichert(nb)).K.plans.p.items[0].sets === 3);
   await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(250); await daneben();
   P.ok('Plan ohne Änderung: Ein Tipp daneben schließt wie bisher', !(await nb.evaluate(() => document.querySelector('#psheet').open)));
+  /* v122, seine zweite Meldung vom 25.11. („ich kann die Uhrzeit immer noch nicht anpassen“). Im Test-Browser ging der Weg weiter; gefunden wurden drei Stolpersteine, die jeder für sich zu „nichts geändert“ führen:
+     (1) „Speichern“ lag am Ende des langen Blatts, weit unter dem Feld und mit offener Tastatur außer Sicht. Jetzt steht es fest am unteren Rand des Blatts (.fuss), auch über der Tastatur
+         (hier nachgestellt mit --kb: 336 px; das Blatt endet dann 8 px darüber, bei 844 px Höhe also bei 500 px).
+     (2) Das Kreuz oben schloss ohne Speichern und ohne Hinweis. Jetzt wie der Tipp daneben: erst der Hinweis (er steht direkt über „Speichern“ und ist zu sehen), der zweite Tipp verwirft.
+     (3) Tippen hängte an den alten Wert an (aus 80 und „65“ wurde 8065: „Die Dauer ist eine Zahl in Minuten“). Jetzt ist der alte Wert beim Antippen markiert, Tippen ersetzt: 65 min = 3900 s. */
+  const sicht = sel => nb.evaluate(q => { const k = document.querySelector('dialog[open]'), d = k.getBoundingClientRect(), r = document.querySelector(q).getBoundingClientRect(); return { lang: k.scrollHeight > k.clientHeight + 100, oben: k.scrollTop, drin: r.height > 0 && r.top >= d.top && r.bottom <= d.bottom + 0.5, unten: Math.round(r.bottom), blatt: Math.round(d.bottom) }; }, sel);
+  await nb.setViewportSize({ width: 390, height: 480 });   // niedriger Bildschirm: Die Einheit der Testdaten (wenige Sätze) ist erst so länger als das Blatt, wie seine echten mit fünf Übungen
+  await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  const s1 = await sicht('#k-save'); await nb.setViewportSize({ width: 390, height: 844 }); await nb.waitForTimeout(150);
+  P.ok('Einheit ändern: Das Blatt ist länger als der Bildschirm, „Speichern“ ist trotzdem ohne Scrollen im Blatt zu sehen', s1.lang && s1.oben === 0 && s1.drin, JSON.stringify(s1));
+  await nb.evaluate(() => document.documentElement.style.setProperty('--kb', '336px')); await nb.waitForTimeout(300);
+  await nb.click('#k-dur'); const mark = await nb.evaluate(() => { const f = document.querySelector('#k-dur'); return [f.value, f.selectionStart, f.selectionEnd].join(' '); });
+  P.ok('Feld der Dauer angetippt: der alte Wert (80) ist ganz markiert', mark === '80 0 2', mark);
+  await nb.keyboard.type('65'); const s2 = await sicht('#k-save'), wert = await nb.evaluate(() => document.querySelector('#k-dur').value);
+  P.ok('getippt wird ersetzt (65, nicht 8065); mit offener Tastatur (336 px) steht „Speichern“ im Blatt darüber', wert === '65' && s2.drin && s2.unten <= 844 - 336 - 8 + 1, wert + ' ' + JSON.stringify(s2));
+  await nb.click('#ks-close'); await nb.waitForTimeout(150); const a22 = await k19(), s3 = await sicht('#k-err');
+  P.ok('geändert und das Kreuz getippt: Das Blatt bleibt offen, „Noch nicht gespeichert“ steht sichtbar über „Speichern“', a22.offen && a22.dauer === '65' && a22.hinweis.indexOf('Noch nicht gespeichert') === 0 && s3.drin, JSON.stringify([a22, s3]));
+  await nb.click('#k-save'); await nb.waitForTimeout(250);
+  P.ok('„Speichern“ übernimmt: 65 min = 3900 s', (await gespeichert(nb)).K.meta[heute].dur === 3900 && !(await nb.evaluate(() => document.querySelector('#ksheet').open)), JSON.stringify((await gespeichert(nb)).K.meta[heute]));
+  await nb.evaluate(() => document.documentElement.style.setProperty('--kb', '0px'));
+  await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  await nb.fill('#k-dur', '5'); await nb.click('#ks-close'); await nb.waitForTimeout(150); await nb.click('#ks-close'); await nb.waitForTimeout(250);
+  P.ok('geändert, zweimal das Kreuz: verworfen, es bleibt bei 3900 s; ohne Änderung schließt das Kreuz sofort', !(await nb.evaluate(() => document.querySelector('#ksheet').open)) && (await gespeichert(nb)).K.meta[heute].dur === 3900 &&
+    await (async () => { await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250); await nb.click('#ks-close'); await nb.waitForTimeout(250); return !(await nb.evaluate(() => document.querySelector('#ksheet').open)); })());
+  await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(250);
+  const s4 = await sicht('#p-save'); await nb.click('#p-items .prow[data-i="0"] [data-pa="inc"]'); await nb.click('#ps-close'); await nb.waitForTimeout(150);
+  const p22 = await nb.evaluate(() => ({ offen: document.querySelector('#psheet').open, hinweis: document.querySelector('#p-err').hidden ? '' : document.querySelector('#p-err').textContent }));
+  await nb.click('#ps-close'); await nb.waitForTimeout(250);
+  P.ok('Plan bearbeiten: „Speichern“ ist im Blatt zu sehen; geändert und Kreuz → Hinweis, zweites Kreuz verwirft (Latzug behält 3 Sätze)', s4.drin && p22.offen && p22.hinweis.indexOf('Noch nicht gespeichert') === 0 && !(await nb.evaluate(() => document.querySelector('#psheet').open)) && (await gespeichert(nb)).K.plans.p.items[0].sets === 3, JSON.stringify([s4, p22]));
   await o19.browser.close();
   await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
