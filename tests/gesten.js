@@ -11,12 +11,14 @@ lauf(async () => {
   const titel = () => text(page, '#v-haushalt .mnav b');
   const offen = sel => page.evaluate(q => document.querySelector(q).open, sel);
 
-  // --- Einblenden (v102): Beim Öffnen eines Bereichs steigen seine Teile nacheinander auf (Klasse neu); nach 0,7 s ist die Klasse weg und alles steht an seinem Platz ---
-  await bereich(page, 'gewicht');
-  const steigt = await page.evaluate(() => { const v = document.querySelector('#v-gewicht'), c = [...v.children]; return v.classList.contains('neu') + ' ' + getComputedStyle(c[0]).animationName + ' ' + (parseFloat(getComputedStyle(c[2]).animationDelay) > 0); });
-  await page.waitForTimeout(800);
-  const steht = await page.evaluate(() => { const v = document.querySelector('#v-gewicht'); return v.classList.contains('neu') + ' ' + [...v.children].every(e => getComputedStyle(e).opacity === '1' && getComputedStyle(e).transform === 'none'); });
-  P.ok('Bereich öffnen: Teile steigen nacheinander auf, danach steht alles', steigt === 'true auf true' && steht === 'false true', steigt + ' → ' + steht);
+  // --- Wechsel des Bereichs (v105, sein „ganz kurzer Mikro-Reset, als würde es neu laden“): nichts blendet ein, weder beim Tipp noch 0,7 s später, wenn die Klasse neu geht.
+  //     Gemessen wird Bild für Bild eine Sekunde lang: Der Bereich und sein erstes Teil bleiben die ganze Zeit voll sichtbar. Bis v104 fiel der Bereich nach 0,7 s auf rund 0,4.
+  const ruhig = sel => page.evaluate(q => new Promise(fertig => { const v = document.querySelector(q), t0 = performance.now(); let min = 1;
+    const lies = () => { min = Math.min(min, +getComputedStyle(v).opacity, +getComputedStyle(v.firstElementChild).opacity); if (performance.now() - t0 < 1000) requestAnimationFrame(lies); else fertig(min); };
+    lies(); }), sel);
+  await page.click('.tab[data-view="gewicht"]'); const minG = await ruhig('#v-gewicht');
+  await page.click('.tab[data-view="routinen"]'); const minP = await ruhig('#v-routinen');
+  P.ok('Bereich wechseln: nichts blendet ein, auch nicht 0,7 s später', minG === 1 && minP === 1, minG + ' · ' + minP);
 
   // --- Zwischen Monaten wischen (Budget) ---
   await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]');
@@ -25,6 +27,9 @@ lauf(async () => {
   P.ok('nach links im laufenden Monat: bleibt (kein Monat in der Zukunft)', (await titel()) === name(monat(0)));
   await wischen(ctx, page, 80, 500, 300, 505);
   P.ok('nach rechts: Vormonat', (await titel()) === name(monat(1)));
+  // Nach dem Schieben des Monats (0,24 s) geht die Klasse go-p wieder: Danach darf nichts ein zweites Mal einblenden (bis v104 tat es das, wie nach dem Wechsel des Bereichs)
+  const minM = await ruhig('#v-haushalt');
+  P.ok('nach dem Wischen blendet der Bereich nicht ein zweites Mal ein', minM === 1, String(minM));
   await wischen(ctx, page, 300, 500, 80, 505);
   P.ok('nach links: wieder der laufende Monat', (await titel()) === name(monat(0)));
   await wischen(ctx, page, 200, 300, 215, 600);

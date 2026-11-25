@@ -682,15 +682,9 @@ u.w{background:var(--c-weight)}
 /* Soll der Termine im Teil „Uni“: schmaler Balken unter der großen Zahl */
 .soll{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:-4px}
 .soll i{display:block;height:100%;border-radius:2px;background:var(--accent)}
-/* Wechsel des Bereichs: Die neue Ansicht blendet kurz ein */
-/* Beim Öffnen eines Bereichs oder Teils (Klasse neu, 0,7 s lang; frisch()) steigen seine Teile nacheinander leicht auf, statt als Ganzes einzublenden (v102). Zusammen höchstens 0,5 s. */
-@keyframes auf{from{opacity:0;transform:translateY(10px)}}
-.view.neu>*{animation:auf .36s cubic-bezier(.2,.9,.25,1) backwards}
-.view.neu>*:nth-child(2){animation-delay:.025s}
-.view.neu>*:nth-child(3){animation-delay:.05s}
-.view.neu>*:nth-child(4){animation-delay:.075s}
-.view.neu>*:nth-child(5){animation-delay:.1s}
-.view.neu>*:nth-child(n+6){animation-delay:.125s}
+/* Wechsel des Bereichs (v105): sofort und ohne Einblenden, wie die Leiste unten in iOS. Bis v104 blendete die Ansicht ein und ihre Teile stiegen nacheinander auf;
+   0,7 s später, wenn die Klasse neu ging, blendete der ganze Bereich ein zweites Mal von fast unsichtbar ein (sein Eindruck: „ganz kurzer Mikro-Reset, als würde es neu laden“).
+   Keine Regel animation an .view:not([hidden]): Sie startet neu, sobald eine Klasse mit eigener Animation (neu, go-n, go-p) wieder geht. */
 .lastx{gap:0;padding:10px 12px 8px}
 .lastx .note{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;gap:10px}
 .lastx .note b{flex:none;font-weight:600}
@@ -778,8 +772,6 @@ dialog[open]::backdrop{animation:dim .2s ease}
 @keyframes dimZu{to{opacity:0}}
 dialog[open].zu{animation:sheetZu .15s ease-in forwards;pointer-events:none}
 dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
-.view:not([hidden]){animation:fade .22s cubic-bezier(.16,1,.3,1)}
-.view.neu:not([hidden]){animation:none}
 @keyframes goN{from{opacity:.3;transform:translateX(26px)}to{opacity:1;transform:none}}
 @keyframes goP{from{opacity:.3;transform:translateX(-26px)}to{opacity:1;transform:none}}
 .view.go-n:not([hidden]){animation:goN .24s cubic-bezier(.16,1,.3,1)}
@@ -872,8 +864,8 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
-  .view.neu>*,.view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
-  dialog[open],dialog[open]::backdrop,.view:not([hidden]),.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
+  .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
+  dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg,body,.tabs-in::before{transition:none}
   .l-rest.gong{animation:none}
   .fill,.glyph,.g-scrub>*{transition:none}
@@ -904,7 +896,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v104</span><span class="ver" id="h-line" hidden></span></footer>
+  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v105</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -4329,7 +4321,8 @@ function show(v, user) {
   VIEWS.forEach(n => { $('#v-' + n).hidden = view !== n; });
   document.querySelectorAll('.tab').forEach(b => { if (b.dataset.view === view) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current'); });
   paintTop();
-  if (user && view !== was) { foldsShut(); render(); frisch($('#v-' + view)); }
+  /* Gezeichnet wird nur der neue Bereich (v105): Die übrigen sind verborgen und werden gezeichnet, wenn sie dran sind. Mit seinen Trainingsdaten braucht ein Wechsel so im Schnitt rund die Hälfte der Zeit (Training selbst bleibt am aufwendigsten). */
+  if (user && view !== was) { foldsShut(); ({ heute: renderHome, routinen: renderPlaner, gewicht: renderWeight, haushalt: renderMoney, training: renderTraining })[view](); ensureLiveTick(); frisch($('#v-' + view)); }
   if (user) {
     $('#scroll').scrollTop = 0;
     try { if (location.hash.slice(1) !== view) location.hash = view; } catch (e) {}
