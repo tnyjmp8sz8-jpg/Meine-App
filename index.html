@@ -592,6 +592,11 @@ u.w{background:var(--c-weight)}
 #lsheet .sh-head h2{font-size:15px}
 .l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
 #l-del{border:0;background:none;text-align:center;font-size:13px}
+/* Reserve nach einem Satz: eine Frage, fünf gleich breite Kapseln */
+.l-res{display:flex;flex-direction:column;gap:6px}
+.l-res .note{margin:0 2px}
+.l-res-c{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.l-res-c .chip{min-height:36px;padding:0;font-family:var(--round);font-size:15px;font-weight:600}
 /* Pausen-Uhr (v103, seit v106 nur noch ein laufender Timer, sein Wunsch: „nur als laufender Timer ohne Grenze oder Signal“): eine Glas-Kapsel links neben „Training beenden“.
    Sie zählt ab dem letzten abgehakten Satz hoch; vor dem ersten Satz steht „Pause“. Sie ist kein Knopf. */
 .l-akt{display:flex;gap:8px}
@@ -1269,7 +1274,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v107</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v108</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2703,7 +2708,7 @@ function normK(o) {
     if (!isKey(d) || !day || typeof day !== 'object') continue;
     out.log[d] = {};
     for (const id in day) {
-      const sets = Array.isArray(day[id]) ? day[id].filter(s => Array.isArray(s) && isFinite(s[0]) && s[0] >= 0 && s[0] <= 1000 && isFinite(s[1]) && s[1] >= 1 && s[1] <= 1000).map(s => [Math.round(s[0] * 100) / 100, Math.round(s[1])]).slice(0, 20) : [];
+      const sets = Array.isArray(day[id]) ? day[id].filter(s => Array.isArray(s) && isFinite(s[0]) && s[0] >= 0 && s[0] <= 1000 && isFinite(s[1]) && s[1] >= 1 && s[1] <= 1000).map(s => [Math.round(s[0] * 100) / 100, Math.round(s[1])].concat(Number.isInteger(s[2]) && s[2] >= 0 && s[2] <= 4 ? [s[2]] : [])).slice(0, 20) : [];
       out.log[d][id] = sets.length ? sets : null;
     }
   }
@@ -2724,7 +2729,7 @@ function normK(o) {
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? {
     plan: lv.plan ? String(lv.plan) : null, start: lv.start, last: Number.isFinite(lv.last) ? lv.last : null, date: lv.date,
-    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => ({ id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {})) }))
+    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => ({ id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
   } : null;
   return out;
 }
@@ -2799,23 +2804,30 @@ const empAn = () => K.emp !== 0;
 /* So viele Wiederholungen ergeben mit der Last „last“ dasselbe geschätzte Maximum rm (Umkehrung von rm1): 53,33 mit 42,5 kg → (53,33 / 42,5 − 1) × 30 = 7,6 → 7 */
 const wdhBei = (rm, last) => last > 0 ? Math.floor((rm / last - 1) * 30 + 1e-9) : 0;
 const schrittText = st => st.toLocaleString('de-DE') + ' kg';
+/* Reserve (v108, sein „ja baue ein“ auf meinen Vorschlag): Nach einem Satz kann er antippen, wie viele Wiederholungen noch gegangen wären (0 bis 4, 4 heißt „4 oder mehr“).
+   Am Satz steht sie als drittes Feld [Gewicht, Wiederholungen, Reserve]. 0 und 1 gelten als hart genug; ab 2 zählt jede weitere wie eine geschaffte Wiederholung:
+   10 Wdh mit 3 in Reserve rechnen wie 12. Ohne Angabe ändert sich nichts. */
+const wdhEff = q => q[1] + Math.max(0, (q[2] || 0) - 1);
 /* Vorgabe für heute aus den Sätzen vom letzten Mal, je Satz [Gewicht, Wiederholungen, Grund]. von–bis = Bereich, davor = Sätze der Einheit vor der letzten, bw = Körpergewicht, das mitbewegt wird.
    Sätze mit demselben Gewicht gehören zusammen:
    1. Haben alle das obere Ende geschafft, kommt ein Schritt Gewicht dazu, mit so vielen Wiederholungen, dass das geschätzte Maximum nicht sinkt, mindestens das untere Ende
       (40 kg × 12 = 56 → 42,5 kg: (56 / 42,5 − 1) × 30 = 9,5 → 9). Dips +15 kg × 12 bei 90 kg: 105 × 1,4 = 147 → +17,5 kg: (147 / 107,5 − 1) × 30 = 11,02 → 11.
    2. Lag der erste Satz zweimal in Folge unter dem Bereich, geht ein Schritt Gewicht weg (ein schlechter Tag allein ändert nichts: seine Regel vom 24.11.).
    3. Sonst bleibt das Gewicht: unter dem oberen Ende eine Wiederholung mehr, am oberen Ende halten, bis die übrigen Sätze nachgezogen haben.
-   Ganz ohne Gewicht (und ohne Körpergewicht) immer eine Wiederholung mehr. */
+   Ganz ohne Gewicht (und ohne Körpergewicht) immer eine Wiederholung mehr.
+   Mit Reserve (wdhEff): 20 kg × 10 mit 3 in Reserve zählt wie 12 → oben angekommen, mehr Gewicht; 40 kg × 9 mit 3 in Reserve → Ziel 11 statt 10.
+   „Unter dem Bereich“ heißt mit Reserve: Auch mit dem, was noch gegangen wäre, hätte es nicht für das untere Ende gereicht. */
 function vorgabe(sets, von, bis, step, bw, davor) {
   bw = bw || 0;
-  const erster = (l, w) => { const q = l && l.find(o => o[0] === w); return q ? q[1] : null; };
+  const erster = (l, w) => (l && l.find(o => o[0] === w)) || null, unter = q => q[1] + (q[2] || 0) < von;
   return sets.map(q => {
-    const w = q[0], n = q[1], rm = rm1(w + bw, n);
+    const w = q[0], n = q[1], rm = rm1(w + bw, wdhEff(q));
     if (!w && !bw) return [0, n + 1, 'eine Wdh mehr'];
-    if (sets.every(o => o[0] !== w || o[1] >= bis)) { const nw = Math.round((w + step) * 100) / 100; return [nw, clamp(wdhBei(rm, nw + bw), Math.min(von, n), Math.min(n, bis)), '+' + schrittText(step)]; }
-    const e0 = erster(sets, w), e1 = erster(davor, w), nw = Math.round((w - step) * 100) / 100;
-    if (e0 < von && e1 != null && e1 < von && nw + bw > 0 && nw >= 0) return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '−' + schrittText(step) + ', zurück in ' + von + '–' + bis];
-    return n < bis ? [w, n + 1, 'eine Wdh mehr'] : [w, n, 'halten, bis alle Sätze ' + bis + ' schaffen'];
+    if (sets.every(o => o[0] !== w || wdhEff(o) >= bis)) { const nw = Math.round((w + step) * 100) / 100; return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '+' + schrittText(step)]; }
+    const e1 = erster(davor, w), nw = Math.round((w - step) * 100) / 100;
+    if (unter(erster(sets, w)) && e1 && unter(e1) && nw + bw > 0 && nw >= 0) return [nw, clamp(wdhBei(rm, nw + bw), von, bis), '−' + schrittText(step) + ', zurück in ' + von + '–' + bis];
+    const ziel = Math.min(bis, Math.max(n + 1, wdhEff(q)));
+    return n >= bis ? [w, n, 'halten, bis alle Sätze ' + bis + ' schaffen'] : [w, ziel, ziel - n > 1 ? ziel - n + ' Wdh mehr, du hattest Reserve' : 'eine Wdh mehr'];
   });
 }
 /* Stand einer Übung in einem Zeitraum: bester Vergleichswert der Einheiten, deren Datum mit pre beginnt ('YYYY-MM' oder 'YYYY') */
@@ -3408,24 +3420,43 @@ function liveSets(id, count) {
 function lAnpassen(it, j) {
   const sj = it.sets[j], a = lNum(sj); if (!a[1]) return;
   const von = exVon(it.id), bis = exBis(it.id), bw = exBw(it.id, Lw.date), hist = kHist(it.id).filter(x => x.d <= Lw.date), last = hist[hist.length - 1], st = exStep(hist);
-  const plan = sj.er != null && sj.ew === sj.w ? +sj.er : 0, rm = rm1(a[0] + bw, a[1]), ohne = !a[0] && !bw;
+  /* ae = geschafft, dazu die Reserve ab der zweiten (wdhEff): 10 mit 3 in Reserve zählt wie 12 */
+  const res = sj.x || 0, ae = wdhEff([a[0], a[1], res]), plan = sj.er != null && sj.ew === sj.w ? +sj.er : 0, rm = rm1(a[0] + bw, ae), ohne = !a[0] && !bw;
   it.sets.forEach((s, k) => {
     if (k <= j || s.done || !(s.w === sj.w || (s.w === '' && s.r === ''))) return;
-    const lj = last && last.sets[j], lk = last && last.sets[k], d = lj && lk && lj[0] === lk[0] ? clamp(lj[1] - lk[1], 0, 3 * (k - j)) : k - j, erw = a[1] - d;
+    const lj = last && last.sets[j], lk = last && last.sets[k], d = lj && lk && lj[0] === lk[0] ? clamp(lj[1] - lk[1], 0, 3 * (k - j)) : k - j, erw = ae - d;
     const pk = s.er != null && s.ew === sj.w ? +s.er : 0, frei = s.r === (s.er != null ? s.er : '');
     let w = a[0], r, g = 'nach Satz ' + (j + 1) + ' angepasst';
-    if (ohne) r = plan && a[1] < plan ? Math.max(1, Math.min(pk || erw, erw)) : Math.max(pk, erw, 1);
-    else if (a[1] < von) {
+    if (ohne) r = plan && ae < plan ? Math.max(1, Math.min(pk || erw, erw)) : Math.max(pk, erw, 1);
+    else if (a[1] + res < von) {
       r = Math.max(1, erw);
       for (let m = 1; m <= 12; m++) { const nw = Math.round((a[0] - m * st) * 100) / 100; if (nw < 0 || nw + bw <= 0) break; w = nw; r = wdhBei(rm, nw + bw) - d; if (r >= von) break; }
       r = w === a[0] ? r : clamp(r, von, bis); g = w === a[0] ? g : 'weniger Gewicht, zurück in ' + von + '–' + bis;
-    } else if (a[1] >= bis + 2) { w = Math.round((a[0] + st) * 100) / 100; r = clamp(wdhBei(rm, w + bw) - d, von, bis); g = 'mehr Gewicht, du lagst über ' + bis; }
-    else r = plan && a[1] < plan ? clamp(erw, von, Math.max(von, pk || erw)) : Math.min(bis, Math.max(pk, erw, von));
+    } else if (ae >= bis + 2) { w = Math.round((a[0] + st) * 100) / 100; r = clamp(wdhBei(rm, w + bw) - d, von, bis); g = 'mehr Gewicht, ' + (a[1] >= bis + 2 ? 'du lagst über ' + bis : 'du hattest Reserve'); }
+    else { r = plan && ae < plan ? clamp(erw, von, Math.max(von, pk || erw)) : Math.min(bis, Math.max(pk, erw, von)); if (res > 1 && r > pk) g = 'mehr, du hattest Reserve'; }
     const ws = w ? kgn(w) : '', rs = String(r);
     if (ws === s.ew && rs === s.er) return;                      // nichts Neues: Der Grund vom Anfang bleibt stehen
     s.ew = ws; s.er = rs; s.eg = g;
     if (frei) { s.w = ws; s.r = rs; }
   });
+}
+/* Reserve zum zuletzt abgehakten Satz (lR = { i, j }): Reihe gleich unter den Sätzen und über der Empfehlung (unten am Bildschirm wäre sie bei langen Übungen erst nach dem Scrollen da), ein Tipp genügt, nichts davon ist Pflicht. Ein zweiter Tipp auf dieselbe Zahl nimmt sie zurück.
+   Weil die Sätze danach beim Abhaken schon angepasst wurden, merkt lVor ihren Stand von davor: Die Wahl rechnet von dort neu, statt auf der ersten Anpassung aufzubauen. */
+let lR = null, lVor = null;
+function resHTML() {
+  const it = lR && Lw && Lw.items[lR.i], s = it && it.sets[lR.j];
+  if (!(s && s.done && empAn())) return '';
+  const name = K.ex[it.id] ? K.ex[it.id].n : 'Übung';
+  return '<div class="l-res" id="l-res"><p class="note">' + (lR.i !== lI ? esc(name) + ' · ' : '') + 'Satz ' + (lR.j + 1) + ': Wie viele wären noch gegangen?</p><div class="l-res-c" role="group" aria-label="Wiederholungen in Reserve">' +
+    [0, 1, 2, 3, 4].map(v => '<button type="button" class="chip" data-la="res" data-v="' + v + '" aria-pressed="' + (s.x === v) + '" aria-label="' + (v === 4 ? '4 oder mehr' : v) + ' in Reserve">' + v + (v === 4 ? '+' : '') + '</button>').join('') + '</div></div>';
+}
+function lReserve(v) {
+  const it = lR && Lw.items[lR.i], s = it && it.sets[lR.j]; if (!s || !s.done) return;
+  if (s.x === v) delete s.x; else s.x = v;
+  if (lVor && lVor.i === lR.i && lVor.j === lR.j) it.sets.forEach((n, k) => { const alt = lVor.sets[k]; if (k <= lR.j || n.done || !alt) return;
+    const unberuehrt = n.r === n.er && n.w === n.ew; n.ew = alt.ew; n.er = alt.er; n.eg = alt.eg; if (unberuehrt) { n.w = alt.w; n.r = alt.r; }
+    if (n.er == null) { delete n.ew; delete n.er; delete n.eg; } });
+  lAnpassen(it, lR.j);
 }
 /* Zahl wählen (nach dem Vorbild seiner Bildschirmfotos aus Alpha Progression, 24.11.): Blatt mit den Werten in der Nähe und eigenen Tasten statt der Tastatur des iPhones.
    o = { titel, wert (Zahl oder null), einheit, komma (Nachkommastellen erlaubt), liste (Zahlen), dann(zahl), dazu wahlweise text(zahl) für die Beschriftung und nurListe (ohne Tasten) }. Ein Tipp auf einen Wert übernimmt ihn sofort;
@@ -3538,6 +3569,7 @@ function paintL() {
     : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + (j + 1) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   /* Empfehlung für den Satz, der dran ist: Gewicht × Wiederholungen und in wenigen Worten, warum */
   const es = an && act >= 0 && it.sets[act] && !it.sets[act].done && it.sets[act].er != null ? it.sets[act] : null;
+  h += resHTML();
   if (es) h += '<p class="lx-e" id="l-emp"><b>Empfehlung</b> ' + (es.ew ? esc(es.ew) + ' kg × ' + esc(es.er) : esc(es.er) + ' Wdh') + (es.eg ? '<span> · ' + esc(es.eg) + '</span>' : '') + '</p>';
   if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets, last.bw) + '</button>' + exFigsHTML(hist);
   else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte.</p>';
@@ -3545,7 +3577,7 @@ function paintL() {
 }
 function openL() {
   if (!K.live) return;
-  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lMenu = false;
+  Lw = clone(K.live); lArm = false; lJ = null; lAdd = false; lRm = false; lMenu = false; lR = lVor = null;
   const open = Lw.items.findIndex(it => undone(it) >= 0);
   lI = open >= 0 ? open : 0;
   $('#l-err').hidden = true; $('#l-new').value = ''; $('#l-del').textContent = 'Training verwerfen';
@@ -3594,18 +3626,20 @@ $('#lform').addEventListener('click', e => {
     if (!s.done && !(Math.round(Number(String(s.r).replace(',', '.'))) >= 1)) { const x = $('#l-err'); x.textContent = 'Trag zuerst die Wiederholungen für diesen Satz ein.'; x.hidden = false; return; }
     const vorher = !!lRek(it);
     s.done = !s.done; lJ = null; lMenu = false;
+    if (!s.done) { delete s.x; if (lR && lR.i === lI && lR.j === +t.dataset.s) lR = lVor = null; }
     if (s.done) {
       if (!vorher && lRek(it)) setTimeout(() => haptik('erfolg'), 120);   // Rekord: nach dem leichten Impuls fürs Abhaken ein zweiter, deutlicher
       Lw.last = Date.now();
-      if (empAn()) lAnpassen(it, +t.dataset.s);
+      if (empAn()) { lR = { i: lI, j: +t.dataset.s }; lVor = { i: lI, j: lR.j, sets: clone(it.sets) }; lAnpassen(it, lR.j); }
       it.sets.forEach(n => { if (!n.done) { if (n.w === '') n.w = s.w; if (n.r === '') n.r = s.r; } });   // leere Folgesätze übernehmen die Werte
       if (undone(it) < 0) { const n = Lw.items.length; for (let k = 1; k < n; k++) { const q = (lI + k) % n; if (undone(Lw.items[q]) >= 0) { lI = q; break; } } }
     }
   }
+  else if (a === 'res') lReserve(+t.dataset.v);
   else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, 3) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; lMenu = false; $('#l-new').value = ''; }
-  else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; lMenu = false; } else lRm = true; }
+  else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; lMenu = false; lR = lVor = null; } else lRm = true; }
   else if (a === 'addset' && it) { const s = it.sets, l = s[s.length - 1]; s.push({ w: l.w, r: l.r, done: false }); }
-  else if (a === 'rmset' && it) { if (it.sets.length > 1) it.sets.pop(); lJ = null; }
+  else if (a === 'rmset' && it) { if (it.sets.length > 1) it.sets.pop(); lJ = null; if (lR && lR.i === lI && !it.sets[lR.j]) lR = lVor = null; }
   const y = ldlg.scrollTop;
   paintL(); ldlg.scrollTop = y;
   saveLive(); liveTick();
@@ -3626,7 +3660,7 @@ $('#lform').addEventListener('submit', e => {
   if (!Lw || !K.live) return closeL();
   const day = {}; let n = 0;
   Lw.items.forEach(it => {
-    const sets = it.sets.filter(s => s.done).map(s => { const w = dec(s.w); return [isFinite(w) ? Math.round(w * 100) / 100 : 0, Math.round(Number(String(s.r).replace(',', '.')))]; }).filter(s => s[0] >= 0 && s[0] <= 1000 && s[1] >= 1 && s[1] <= 1000);
+    const sets = it.sets.filter(s => s.done).map(s => { const w = dec(s.w); return [isFinite(w) ? Math.round(w * 100) / 100 : 0, Math.round(Number(String(s.r).replace(',', '.')))].concat(s.x != null ? [s.x] : []); }).filter(s => s[0] >= 0 && s[0] <= 1000 && s[1] >= 1 && s[1] <= 1000);
     if (sets.length) { day[it.id] = sets; n++; }
   });
   if (!n) { const x = $('#l-err'); x.textContent = 'Hake mindestens einen Satz ab. Wenn du nichts speichern willst, verwirf das Training.'; x.hidden = false; return; }
@@ -4248,7 +4282,7 @@ function paintE() {
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
     (au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '') +
     secHTML('Training') + '<ul class="entries"><li class="irow"><button type="button" class="two sch" role="switch" aria-checked="' + empAn() + '" data-h="emp"><span class="l"><span>Empfehlung je Satz</span></span><span class="sw" aria-hidden="true"></span></button>' + INFO('emp') + '</li></ul>' +
-    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
+    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Tippst du dazu an, wie viele Wiederholungen noch gegangen wären, rechnet sie genauer: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
 }
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
 /* Empfehlung im Training an oder aus. Läuft gerade ein Training, gilt es ab der nächsten Übung, die dazukommt; die Zeile „Empfehlung“ und der Bereich verschwinden sofort. */

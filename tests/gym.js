@@ -530,5 +530,50 @@ lauf(async () => {
   await einstellungen(em); await em.click('#esheet [data-h="emp"]');
   P.ok('wieder eingeschaltet: Schalter an, der Merker ist weg', (await sch()) === 'switch true 1' && (await gespeichert(em)).K.emp == null, await sch());
   await o14.browser.close();
-  await P.ende(null, fehler.concat(o14.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+
+  // --- Reserve je Satz (v108): „Wie viele wären noch gegangen?“ nach dem Abhaken; 0 und 1 ändern nichts, ab 2 zählt jede weitere wie eine geschaffte Wiederholung ---
+  /* Letztes Mal (vor 3 Tagen), Bereich 8–12, Schritt 2,5 kg:
+     Presse: 40×9 mit 3 in Reserve, 40×9, 40×8 → Satz 1 zählt wie 9 + (3 − 1) = 11: Ziel 11 („2 Wdh mehr“), Satz 2 und 3 je eine mehr (10, 9).
+     Curls:  20×10 mit 3 in Reserve, 20×11 mit 2 → beide zählen wie 12 → oben: 22,5 kg; 1RM 20 × (1 + 12/30) = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7, mindestens 8 → 22,5×8. */
+  const K15 = { ex: { p: { n: 'Presse' }, c: { n: 'Curls' } }, log: { [tag(3)]: { p: [[40, 9, 3], [40, 9], [40, 8]], c: [[20, 10, 3], [20, 11, 2]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'p', sets: 3 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
+  const o15 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K15 } }), rs = o15.page;
+  P.ok('die Reserve bleibt beim Laden am Satz stehen (drittes Feld)', JSON.stringify((await gespeichert(rs)).K.log[tag(3)].p) === '[[40,9,3],[40,9],[40,8]]', JSON.stringify((await gespeichert(rs)).K.log[tag(3)].p));
+  await bereich(rs, 'training'); await rs.click('#v-training [data-k="start"]'); await rs.waitForTimeout(300);
+  const reihen15 = () => rs.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
+  const emp15 = async () => (await rs.$('#l-emp')) ? text(rs, '#l-emp') : '';
+  const frage = () => rs.evaluate(() => { const b = document.querySelector('#l-res'); return !b ? '' : b.querySelector('.note').textContent + ' # ' + [...b.querySelectorAll('.chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '); });
+  P.ok('Vorgabe mit Reserve vom letzten Mal: 40×11 (zwei mehr), 40×10, 40×9', (await reihen15()) === '40×11 40×10 40×9' && (await emp15()) === 'Empfehlung 40 kg × 11 · 2 Wdh mehr, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
+  P.ok('vor dem ersten Satz gibt es keine Frage nach der Reserve', (await frage()) === '', await frage());
+  /* Satz 1 wie empfohlen (11), ohne Angabe: Ermüdung letztes Mal 9 − 9 = 0 → Satz 2: 11; Satz 3: 11 − (9 − 8) = 10. */
+  await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
+  P.ok('nach dem Abhaken: Frage zu Satz 1 mit fünf Kapseln, nichts gewählt; die Sätze danach sind angepasst', (await frage()) === 'Satz 1: Wie viele wären noch gegangen? # 0 1 2 3 4+' && (await reihen15()) === '40×11 40×11 40×10', (await frage()) + ' # ' + (await reihen15()));
+  /* 3 in Reserve: Satz 1 zählt wie 11 + 2 = 13 → Satz 2: 13 − 0 = 13, höchstens 12; Satz 3: 13 − 1 = 12. Gerechnet wird vom Stand vor dem Abhaken, nicht auf der ersten Anpassung. */
+  await rs.click('#l-res [data-v="3"]'); await rs.waitForTimeout(60);
+  P.ok('3 in Reserve: die Sätze danach steigen auf 12', (await reihen15()) === '40×11 40×12 40×12' && (await emp15()) === 'Empfehlung 40 kg × 12 · mehr, du hattest Reserve' && (await frage()).endsWith('0 1 2 3* 4+'), (await reihen15()) + ' # ' + (await emp15()) + ' # ' + (await frage()));
+  /* 4 oder mehr: zählt wie 11 + 3 = 14 = zwei über dem oberen Ende → 42,5 kg; 1RM 40 × (1 + 14/30) = 58,67 → (58,67 / 42,5 − 1) × 30 = 11,4 → 11; Satz 3: 11 − 1 = 10. */
+  await rs.click('#l-res [data-v="4"]'); await rs.waitForTimeout(60);
+  P.ok('4 oder mehr in Reserve: mehr Gewicht für die Sätze danach (42,5×11, 42,5×10)', (await reihen15()) === '40×11 42,5×11 42,5×10' && (await emp15()) === 'Empfehlung 42,5 kg × 11 · mehr Gewicht, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
+  await rs.click('#l-res [data-v="4"]'); await rs.waitForTimeout(60);
+  P.ok('zweiter Tipp nimmt die Angabe zurück: wieder wie ohne Reserve', (await reihen15()) === '40×11 40×11 40×10' && (await frage()).endsWith('0 1 2 3 4+'), (await reihen15()) + ' # ' + (await frage()));
+  await rs.click('#l-res [data-v="0"]'); await rs.waitForTimeout(60);
+  P.ok('0 in Reserve ändert die Empfehlung nicht, steht aber am Satz (x = 0)', (await reihen15()) === '40×11 40×11 40×10' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 0, (await reihen15()) + ' ' + JSON.stringify((await gespeichert(rs)).K.live.items[0].sets[0]));
+  /* Curls: Vorgabe 22,5×8. Satz 1 nur 7: unter dem Bereich → 20 kg; 1RM 22,5 × (1 + 7/30) = 27,75 → (27,75 / 20 − 1) × 30 = 11,6 → 11.
+     Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt, Satz 2 steht wieder bei 22,5×8. Die Frage nennt die Übung nur, wenn gerade eine andere offen ist. */
+  await rs.click('#l-tabs .lx-tab:has-text("Curls")');
+  P.ok('andere Übung offen: Die Frage nennt die Übung des Satzes', (await frage()).startsWith('Presse · Satz 1: Wie viele wären noch gegangen?') && (await reihen15()) === '22,5×8 22,5×8', (await frage()) + ' # ' + (await reihen15()));
+  await zahlWahl(rs, '#l-r', '7'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
+  P.ok('unter dem Bereich ohne Angabe: weniger Gewicht (20×11)', (await reihen15()) === '22,5×7 20×11' && (await frage()).startsWith('Satz 1: '), (await reihen15()) + ' # ' + (await frage()));
+  await rs.click('#l-res [data-v="2"]'); await rs.waitForTimeout(60);
+  P.ok('mit 2 in Reserve hätte es gereicht: Das Gewicht bleibt (22,5×8)', (await reihen15()) === '22,5×7 22,5×8' && (await emp15()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen15()) + ' # ' + (await emp15()));
+  /* Haken zurücknehmen: Die Angabe und die Frage sind weg */
+  await rs.click('.lt-r[data-s="0"]'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
+  P.ok('Haken zurückgenommen: keine Frage mehr, die Reserve ist vom Satz weg', (await frage()) === '' && (await gespeichert(rs)).K.live.items[1].sets[0].x == null, await frage());
+  await rs.click('.lt-r.act .chk'); await rs.click('#l-res [data-v="2"]'); await rs.waitForTimeout(60);
+  /* Speichern: Nur Sätze mit Angabe tragen das dritte Feld */
+  await rs.click('#l-save'); await rs.waitForTimeout(250); await rs.click('#rs-ok');
+  const log15 = (await gespeichert(rs)).K.log[heute];
+  P.ok('gespeichert: Presse 40×11 mit Reserve 0, Curls 22,5×7 mit Reserve 2', JSON.stringify(log15) === '{"p":[[40,11,0]],"c":[[22.5,7,2]]}', JSON.stringify(log15));
+  await o15.browser.close();
+  await P.ende(null, fehler.concat(o14.fehler, o15.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
