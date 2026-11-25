@@ -14,7 +14,10 @@ lauf(async () => {
   const K = (await gespeichert(page)).K || {}, tage = Object.keys(K.log || {}).sort();
   await browser.close();
   if (!tage.length || fehler.length) { console.log('Nichts eingelesen. ' + fehler.join(' · ')); process.exit(1); }
-  const daten = JSON.stringify({ ex: K.ex, log: K.log, plans: K.plans, meta: K.meta }).replace(/</g, '\\u003c');
+  /* Seit v112 (sein Neuanfang ab Montag, 23.11.2026): Einheiten davor kommen nicht mehr in den Block, und nur Übungen, die in einem Plan oder einer verbleibenden Einheit stehen */
+  const AB = '2026-11-23', ab = o => Object.fromEntries(Object.entries(o || {}).filter(e => e[0] >= AB)), log = ab(K.log), bleibt = new Set();
+  Object.values(K.plans || {}).forEach(p => p && p.items.forEach(it => bleibt.add(it.id))); Object.values(log).forEach(t => Object.keys(t || {}).forEach(id => bleibt.add(id)));
+  const daten = JSON.stringify({ ex: Object.fromEntries(Object.entries(K.ex).filter(e => bleibt.has(e[0]))), log, plans: K.plans, meta: ab(K.meta) }).replace(/</g, '\\u003c');
   const datei = path.join(__dirname, '..', 'index.html'), alt = fs.readFileSync(datei, 'utf8');
   const neu = alt.replace(/<script type="application\/json" id="start-gym" data-stand="[^"]*">[^]*?<\/script>/, () => '<script type="application/json" id="start-gym" data-stand="' + tage[tage.length - 1] + '">' + daten + '</script>');
   if (neu === alt && alt.indexOf(daten) < 0) { console.log('Der Block start-gym fehlt in index.html.'); process.exit(1); }

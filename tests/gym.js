@@ -297,19 +297,35 @@ lauf(async () => {
   P.ok('Vorgabe rechnet mit dem Körpergewicht: +20 kg × 9, 1RM 143', v5 === '20×9×143', v5);
   await t.click('#l-del'); await t.click('#l-del'); await b5.browser.close();
 
-  /* Seine Trainings stehen fest in der App (Block start-gym) und kommen beim ersten Start von selbst: 304 Einheiten, die drei Pläne in seiner Reihenfolge,
-     alte Einheiten mit ihrem Namen. Der Merker takt.start trägt den Stand: Was er danach löscht, kommt beim nächsten Start nicht zurück. */
+  /* Seine Pläne stehen fest in der App (Block start-gym) und kommen beim ersten Start von selbst. Seit v112 ohne die alten Einheiten (sein Neuanfang ab Montag, 23.11.2026):
+     3 Pläne, ihre 15 Übungen, keine Einheit. Der Merker takt.start trägt den Stand: Was er danach löscht, kommt beim nächsten Start nicht zurück. */
   const h6 = await oeffnen({ historie: true }), u = h6.page, K6 = (await gespeichert(u)).K, stand = await u.evaluate(() => document.querySelector('#start-gym').dataset.stand);
-  P.ok('erster Start: 304 Einheiten und 61 Übungen sind da, der Merker trägt den Stand', Object.keys(K6.log).length === 304 && Object.values(K6.ex).filter(Boolean).length === 61 && stand === '2026-11-20' && (await u.evaluate(() => localStorage.getItem('takt.start'))) === stand, Object.keys(K6.log).length + ' · ' + stand);
-  P.ok('alte Einheit trägt ihren Namen, Dips und Klimmzüge rechnen mit Körpergewicht, Namen ohne Klammern', K6.meta['2026-07-06'].n === 'Pull A' && Object.values(K6.ex).filter(x => x.bw).map(x => x.n).sort().join() === 'Dips,Klimmzüge eng mit Neutralgriff,Klimmzüge weit mit Obergriff' && !Object.values(K6.ex).some(x => /[()]/.test(x.n)), JSON.stringify(K6.meta['2026-07-06']));
+  const merker6 = await u.evaluate(() => [localStorage.getItem('takt.start'), localStorage.getItem('takt.neu'), localStorage.getItem('takt.gymAlt')].join('|'));
+  P.ok('erster Start: 3 Pläne und ihre 15 Übungen sind da, keine Einheit; die Merker stehen, eine Kopie gibt es nicht (nichts gelöscht)', Object.keys(K6.log).length === 0 && Object.values(K6.ex).filter(Boolean).length === 15 && Object.values(K6.plans).filter(Boolean).length === 3 && merker6 === '2026-11-20|2026-11-23|', Object.keys(K6.log).length + ' · ' + merker6);
+  P.ok('Dips und Klimmzüge rechnen mit Körpergewicht, Namen ohne Klammern', Object.values(K6.ex).filter(x => x.bw).map(x => x.n).sort().join() === 'Dips,Klimmzüge weit mit Obergriff' && !Object.values(K6.ex).some(x => /[()]/.test(x.n)));
   await bereich(u, 'training');
   /* Seine Reihenfolge steht in den Plänen (o); im Gym steht seit v106 der Plan oben, der gerade dran ist (hängt vom Tag ab), die Zahl im Ring nennt seinen Platz */
   const reihe6 = Object.values((await gespeichert(u)).K.plans).filter(Boolean).sort((a, b) => a.o - b.o).map(x => x.n).join(' | ');
   const ringe6 = await u.$$eval('#v-training .rows.one .row', l => l.map(r => r.querySelector('.name').textContent + (r.classList.contains('is-done') ? '' : ':' + r.querySelector('.glyph').textContent)).sort().join(' | '));
   P.ok('seine drei Pläne in seiner Reihenfolge (Torso A, Extremitäten, Torso B), die Ringe nennen den Platz', reihe6 === 'Torso A | Extremitäten | Torso B' && ['Extremitäten', 'Torso A', 'Torso B'].every(n => ringe6.includes(n)) && !/Torso A:[^1]|Extremitäten:[^2]|Torso B:[^3]/.test(ringe6), reihe6 + ' · ' + ringe6);
-  await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1')); delete d.K.log['2022-05-15']; delete d.K.meta['2022-05-15']; localStorage.setItem('takt.v1', JSON.stringify(d)); });
+  await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1')), id = Object.keys(d.K.plans).find(k => d.K.plans[k].n === 'Torso B'); delete d.K.plans[id]; localStorage.setItem('takt.v1', JSON.stringify(d)); });
   await u.reload(); await u.waitForTimeout(300);
-  P.ok('zweiter Start: nichts wird noch einmal eingelesen, Gelöschtes bleibt weg', Object.keys((await gespeichert(u)).K.log).length === 303);
+  P.ok('zweiter Start: nichts wird noch einmal eingelesen, ein gelöschter Plan bleibt weg', Object.values((await gespeichert(u)).K.plans).filter(Boolean).length === 2);
+  /* Neu beginnen (v112): einmal je Gerät gehen alle Einheiten vor dem 23.11.2026. Hier so nachgestellt, wie es auf seinem iPhone liegt: Einheiten am 20.11. (alt), 23.11. und 24.11.,
+     dazu Dauer, Übersprungenes und Werte der Uhr am alten Tag; „Uralt“ kommt nur in der alten Einheit vor, „Bank“ auch am 23.11., „Curls“ steht nur in einem Plan.
+     Danach: 2 Einheiten, „Uralt“ ist weg, „Bank“ und „Curls“ bleiben (mit Bereich und Schritt), die Kopie auf dem Gerät trägt, was ging. Ein zweiter Start löscht nichts mehr. */
+  await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1'));
+    d.K = { ex: { u: { n: 'Uralt' }, b: { n: 'Bank', z: 10, st: 5 }, c: { n: 'Curls' } }, log: { '2026-11-20': { u: [[10, 10]], b: [[40, 10]] }, '2026-11-23': { b: [[40, 11]] }, '2026-11-24': { b: [[40, 12]] } },
+      plans: { p: { n: 'Arme', items: [{ id: 'c', sets: 3 }] } }, meta: { '2026-11-20': { dur: 600, plan: null }, '2026-11-23': { dur: 700, plan: null } }, aus: { '2026-11-19': { p: 1 } }, uhr: { '2026-11-20': { s: 600, hr: 120 } }, live: null };
+    localStorage.setItem('takt.v1', JSON.stringify(d)); localStorage.removeItem('takt.neu'); });
+  await u.reload(); await u.waitForTimeout(300);
+  const K6n = (await gespeichert(u)).K, alt6 = await u.evaluate(() => JSON.parse(localStorage.getItem('takt.gymAlt') || 'null'));
+  P.ok('Neu beginnen: nur die Einheiten ab dem 23.11. bleiben, mit ihrer Dauer; Übersprungenes und Uhr von davor sind weg', Object.keys(K6n.log).join() === '2026-11-23,2026-11-24' && Object.keys(K6n.meta).join() === '2026-11-23' && !Object.keys(K6n.aus).length && !Object.keys(K6n.uhr).length, JSON.stringify(K6n.log));
+  P.ok('… die Übung ohne Einheit und ohne Plan ist weg, die anderen bleiben mit Bereich und Schritt', Object.keys(K6n.ex).sort().join() === 'b,c' && K6n.ex.b.z === 10 && K6n.ex.b.st === 5 && K6n.plans.p.n === 'Arme', JSON.stringify(K6n.ex));
+  P.ok('… was ging, liegt als Kopie auf dem Gerät (takt.gymAlt)', !!alt6 && JSON.stringify(alt6.log['2026-11-20']) === '{"u":[[10,10]],"b":[[40,10]]}' && alt6.ex.u.n === 'Uralt' && alt6.meta['2026-11-20'].dur === 600 && alt6.uhr['2026-11-20'].s === 600 && alt6.aus['2026-11-19'].p === 1, JSON.stringify(alt6));
+  await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1')); d.K.log['2026-11-01'] = { b: [[30, 10]] }; localStorage.setItem('takt.v1', JSON.stringify(d)); });
+  await u.reload(); await u.waitForTimeout(300);
+  P.ok('zweiter Start danach: Es wird nichts mehr gelöscht (eine später eingelesene alte Einheit bleibt)', Object.keys((await gespeichert(u)).K.log).length === 3);
   await h6.browser.close();
 
   // --- Plan überspringen und Beginn der neuen Runde (v93) ---
