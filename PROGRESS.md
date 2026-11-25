@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v123 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v123): alle 16 Reihen stimmen (Gym 226, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v124 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v124): alle 16 Reihen stimmen (Gym 226, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- v124 (25.11.): Erst sein „noch mehr Übergang von dunkel zu hell und noch eine Stufe dunkler“, dann ein Bild der Fassung vor v113 (Blatt einer Übung, feine Linie rundum): „ich fand es in der Version besser, also mehr so, aber Mischung aus beiden“. Gebaut: feine Linie rundum wie damals, dazu das weiche Licht oben (stärker) und unten; Karten in Blättern tragen wieder die volle Stufe. Im Bild neben sein altes gelegt, in Chromium und WebKit gemessen (oben 65, 63, 49, 46 …, Seite 30). Am iPhone ungeprüft.
 - v123 (25.11., seine Nachricht: „ich kann die Zeit immer noch nicht editieren, brauche ich dafür eine neue App? und kannst du die Streifen im Glas so lassen, aber mehr auslaufen … alles smoother und unauffälliger“): Keine neue Installation nötig (Änderung nur im Inhalt). Dauer: kein Feld mit Tastatur mehr, ein Tipp öffnet „Zahl wählen“ wie im Training (Werte in 5er-Schritten, eigene Tasten, Haken); geprüft in Chromium und WebKit, gespeichert. Ihm geraten, im Zahnrad die Version zu prüfen (v123), sonst App einmal ganz schließen und neu öffnen. Glas: Streifen weichgezeichnet, läuft gleichmäßig aus (80, 71, 61, 52, 43 … statt 93, 70, 51, 32 und flach), Ecken und Seiten wie bisher; der Verlauf `--glanz` ist weg.
 - v122 (25.11., seine Meldung: „ich kann die Uhrzeit immer noch nicht anpassen“): Sein Fall mit seinen echten Plänen nachgestellt (Training über „Training starten“ mit Reserve, „Ändern“ aus dem Rückblick, Dauer 75 min): im Test-Browser und in WebKit gespeichert, kein Fehler. Gefunden und behoben, jeder Punkt führt für sich zu „nichts geändert“: „Speichern“ lag bis zu 1400 px unter dem Feld (jetzt fest am unteren Rand des Blatts, auch über der Tastatur); das Kreuz schloss ohne Hinweis (jetzt erst Hinweis); Tippen hängte an den alten Wert an (jetzt wird ersetzt). Gilt auch für „Plan bearbeiten“. Am Gerät nicht belegt, dass es daran lag: Geht es weiter nicht, eine Bildschirmaufnahme erbitten (Kontrollzentrum, Aufnahme-Knopf) und fragen, was genau passiert.
 - v121 (25.11., seine Antwort auf das Bild von v120: „so ist gut, aber nimm Helligkeit etwas raus, ist zu auffällig“): Form, Auslaufen und die zwei Stufen sind damit von ihm bestätigt. Helligkeit der Streifen und des auslaufenden Rests mal 0,65 (leise Stufe mal 0,78): am Rand 93 statt 126 von 255, leise 55 statt 66; in WebKit und Chromium gemessen, oben wie unten gleich.
@@ -63,11 +64,10 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v112–v113: Neuanfang im Gym (nur Einheiten ab 23.11.2026); Drop- und Supersätze im Plan einstellbar.
 - v114–v115: Steigern nach seinem Muster; Knopf mit Schein rundum; Dropsatz rot im Ring, Supersatz mit Kette; Training nachträglich ändern und weiter trainieren; Übung hinzufügen nach Gruppen.
 - v116–v118: Glas nach Messung an iOS 26, Flächen einfarbig wie das Dock; „Einheit ändern“ verliert Ungespeichertes nicht mehr durch einen Tipp daneben.
-- v119: Licht läuft vor der Ecke aus; Bedienteile und Blätter tragen nur noch eine leise Kante.
-- v120: Kanten in WebKit geprüft und gegen dessen Rundung abgesichert; Prüfskript `tests/webkit.py`.
-- v121: Helligkeit der Kanten auf sein Wort zurückgenommen.
+- v119–v121: Licht läuft vor der Ecke aus, Bedienteile leiser; Kanten in WebKit geprüft (Prüfskript `tests/webkit.py`); Helligkeit zurückgenommen.
 - v122: „Speichern“ steht in „Einheit ändern“ und „Plan bearbeiten“ fest am unteren Rand; Kreuz warnt bei Ungespeichertem; Dauer wird beim Tippen ersetzt.
 - v123: Dauer über „Zahl wählen“ statt Tastatur; Glas-Streifen weich auslaufend.
+- v124: Kante als Mischung: feine Linie rundum wie vor v113, dazu weiches Licht oben und unten.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -86,7 +86,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
 - v123: Steht im Zahnrad unten v123? Lässt sich die Dauer jetzt ändern („55 min“ antippen, Wert wählen oder tippen, Haken, „Speichern“)? Wenn nicht: Bildschirmaufnahme erbitten.
-- v123: Sind die weicheren Streifen so richtig, oder noch leiser? Wirken Zeilen und Eingabefelder, die seit v118 2 px niedriger sind, noch richtig?
+- v124: Trifft die Mischung (feine Linie rundum plus weiches Licht) das, was er an der alten Fassung mochte? Leiser oder kräftiger? Wirken Zeilen und Eingabefelder, die seit v118 2 px niedriger sind, noch richtig?
 - v115: „Weiter trainieren“ nach dem Beenden; „Einheit ändern“ mit Dauer; Wahl der Übung nach Gruppen.
 - v114: Passen die Empfehlungen jetzt zu seinem Muster (nach 12 kommen 10, Erhöhen bei 12/10/8 für alle Sätze)? Blauer Knopf mit Schein rundum: gut oder wieder zu viel? Rote Zahl im Ring am Dropsatz, Kette am Supersatz.
 - v113: Drop- und Supersatz im Plan hinter „…“ einstellen; wechselt die Ansicht im Supersatz richtig hin und her?
