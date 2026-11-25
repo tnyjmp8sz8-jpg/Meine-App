@@ -133,9 +133,9 @@ lauf(async () => {
      Fällt:  60, 60, 60 | 55, 55, 60 → 73,33 gegen 80 = −8,3 % → rot (zwei von drei schlechter).
      Steigt: 40, 40, 40 | 44, 44, 40 → 58,67 gegen 53,33 = +10,0 % → grün.
      Neu:    drei Einheiten → kein Punkt. Voll und Stufen: je eine Einheit → kein Punkt.
-     Vorgabe (Ziel 10 Wdh): „Voll“ zuletzt 40×10, 40×10, 40×10 → alle am Ziel, Schritt 2,5 kg: 42,5 kg mit (53,33 / 42,5 − 1) × 30 = 7,6 → 7 Wdh; 1RM 42,5 × (1 + 7/30) = 52,4.
+     Vorgabe (Bereich 6–10 Wdh, an beiden Übungen als z: 10 gesetzt; ohne Angabe gälte seit v107 8–12): „Voll“ zuletzt 40×10, 40×10, 40×10 → alle am Ziel, Schritt 2,5 kg: 42,5 kg mit (53,33 / 42,5 − 1) × 30 = 7,6 → 7 Wdh; 1RM 42,5 × (1 + 7/30) = 52,4.
      „Stufen“ zuletzt 55×5, 50×7, 50×6 → je eine Wiederholung mehr: 55×6, 50×8, 50×7. */
-  const K3 = { ex: { s: { n: 'Steht' }, f: { n: 'Fällt' }, g: { n: 'Steigt' }, n: { n: 'Neu' }, v: { n: 'Voll' }, u: { n: 'Stufen' } }, log: {},
+  const K3 = { ex: { s: { n: 'Steht' }, f: { n: 'Fällt' }, g: { n: 'Steigt' }, n: { n: 'Neu' }, v: { n: 'Voll', z: 10 }, u: { n: 'Stufen', z: 10 } }, log: {},
     plans: { p: { n: 'Probe', items: [{ id: 'v', sets: 3 }, { id: 'u', sets: 3 }] }, q: { n: 'Zweiter', items: [{ id: 's', sets: 1 }] } }, meta: {}, live: null };
   const reihen = { s: [50, 50, 50, 50, 50, 40], f: [60, 60, 60, 55, 55, 60], g: [40, 40, 40, 44, 44, 40] };
   [20, 17, 14, 11, 8, 5].forEach((n, i) => { const d = K3.log[tag(n)] = {}; for (const id in reihen) d[id] = [[reihen[id][i], 10]]; if (i > 2) d.n = [[20, 10]]; });
@@ -160,9 +160,14 @@ lauf(async () => {
   await q.click('#l-tabs .lx-tab:has-text("Stufen")');
   P.ok('Vorgabe unter dem Ziel: je Satz eine Wiederholung mehr bei gleichem Gewicht', (await saetze()) === '55×6 50×8 50×7', await saetze());
   await q.click('#l-tabs .lx-tab:has-text("Voll")');
-  // Ziel 12 statt 10: 40×10 liegt jetzt unter dem Ziel → 40×11. Das Ziel steht an der Übung (K.ex.v.z).
-  await zahlWahl(q, '#l-items [data-la="ziel"]', '12');
-  P.ok('neues Ziel 12: offene Sätze bekommen die passende Vorgabe (40×11), das Ziel ist gespeichert', (await saetze()) === '40×11 40×11 40×11' && (await gespeichert(q)).K.ex.v.z === 12 && (await text(q, '#l-items [data-la="ziel"]')) === 'Ziel 12 Wdh', await saetze());
+  // Bereich 8–12 statt 6–10 (v107: Liste der Bereiche ohne Tasten, der jetzige ist markiert): 40×10 liegt jetzt unter dem oberen Ende → 40×11. Der Bereich steht an der Übung (K.ex.v.zu und z).
+  P.ok('der Bereich steht unter dem Namen: „Ziel 6–10 Wdh“', (await text(q, '#l-items [data-la="ziel"]')) === 'Ziel 6–10 Wdh', await text(q, '#l-items [data-la="ziel"]'));
+  await q.click('#l-items [data-la="ziel"]'); await q.waitForTimeout(80);
+  const bl = await q.evaluate(() => ({ liste: [...document.querySelectorAll('#z-list button')].map(b => b.textContent).join(' | '), wahl: (document.querySelector('#z-list [aria-pressed="true"]') || {}).textContent, tasten: !document.querySelector('#z-pad').hidden && document.querySelector('#z-pad').getBoundingClientRect().height > 0 }));
+  P.ok('Bereich wählen: sieben Bereiche, 6–10 markiert, keine Tasten', bl.liste === '3–6 Wdh | 5–8 Wdh | 6–10 Wdh | 8–12 Wdh | 10–15 Wdh | 12–20 Wdh | 15–20 Wdh' && bl.wahl === '6–10 Wdh' && !bl.tasten, JSON.stringify(bl));
+  await q.click('#z-list [data-zv="812"]'); await q.waitForTimeout(80);
+  const exV = (await gespeichert(q)).K.ex.v;
+  P.ok('neuer Bereich 8–12: offene Sätze bekommen die passende Vorgabe (40×11), der Bereich ist gespeichert', (await saetze()) === '40×11 40×11 40×11' && exV.z === 12 && exV.zu === 8 && (await text(q, '#l-items [data-la="ziel"]')) === 'Ziel 8–12 Wdh', await saetze() + ' ' + JSON.stringify(exV));
   // Zahl wählen: Liste mit den Werten in der Nähe, der jetzige ist markiert; ein Tipp übernimmt. Das neue Gewicht gilt auch für die offenen Sätze danach mit demselben Gewicht.
   await q.click('#l-w');
   const zs = await q.evaluate(() => ({ offen: document.querySelector('#zsheet').open, wahl: (document.querySelector('#z-list [aria-pressed="true"]') || {}).textContent, komma: !document.querySelector('#z-komma').disabled, aus: document.querySelector('#z-out').textContent }));
@@ -200,7 +205,7 @@ lauf(async () => {
   await q.click('#v-training .folds [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
   P.enthaelt('Blatt der Übung: „Rekord · +12,5 %“ an der Einheit von heute', await text(q, '#x-recap .lastx .note'), ['Rekord · +12,5 %']);
   await q.click('#xs-close'); await q.reload(); await q.waitForTimeout(300);
-  P.ok('nach neuem Laden: Das Ziel 12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12);
+  P.ok('nach neuem Laden: Der Bereich 8–12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12 && (await gespeichert(q)).K.ex.v.zu === 8);
   await g.browser.close();
 
   // --- Reihenfolge der Pläne und Runde, Einlesen nach Namen (v87), Übernahme aus Alpha Progression (v88) ---
@@ -275,10 +280,10 @@ lauf(async () => {
   /* Körpergewicht 90 kg (ein Eintrag vor 30 Tagen, gilt für alle Tage danach). Dips und Klimmzüge tragen bw: Gerechnet wird mit Körpergewicht plus Zusatzgewicht.
      Dips: vor 10 Tagen +10 kg × 11 → 100 × (1 + 11/30) = 136,67. Heute +15 kg × 11 → 105 × 41/30 = 143,5 → +5,0 % und Rekord (ohne Körpergewicht wären es +50 %).
      Klimmzüge: vor 10 Tagen +10 kg × 9 → 100 × 1,3 = 130. Heute ohne Gewicht × 12 → 90 × 1,4 = 126 → −3,1 % (ohne Körpergewicht gäbe es keinen Vergleich).
-     Vorgabe Dips (Ziel 10, heute 11 geschafft; Schritt 5 kg, weil +10 und +15 vorkamen): +20 kg mit (143,5 / 110 − 1) × 30 = 9,1 → 9 Wdh; 1RM 110 × 1,3 = 143.
+     Vorgabe Dips (Bereich 6–10 über z: 10, heute 11 geschafft; Schritt 5 kg, weil +10 und +15 vorkamen): +20 kg mit (143,5 / 110 − 1) × 30 = 9,1 → 9 Wdh; 1RM 110 × 1,3 = 143.
      Ohne Körpergewicht wären es (15 × 41/30 / 20 − 1) × 30 = 0,75 → 1 Wiederholung.
      Die Einheit von heute hat keinen Plan, aber einen Namen („Pull A“): Er steht in der Liste wie sonst der Plan. */
-  const K5 = { ex: { d: { n: 'Dips', bw: 1 }, k: { n: 'Klimmzüge', bw: 1 } }, log: { [tag(10)]: { d: [[10, 11]], k: [[10, 9]] }, [heute]: { d: [[15, 11]], k: [[0, 12]] } },
+  const K5 = { ex: { d: { n: 'Dips', bw: 1, z: 10 }, k: { n: 'Klimmzüge', bw: 1 } }, log: { [tag(10)]: { d: [[10, 11]], k: [[10, 9]] }, [heute]: { d: [[15, 11]], k: [[0, 12]] } },
     plans: { p: { n: 'Körper', items: [{ id: 'd', sets: 1 }], o: 1 } }, meta: { [heute]: { dur: 0, plan: null, n: 'Pull A' } }, live: null };
   const b5 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K5, W: { entries: { [tag(30)]: 90 } } } }), t = b5.page;
   await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]'); await t.click('#v-training [data-fold="uebungenAlt"]');   // Klimmzüge stehen in keinem Plan: seit v99 hinter „Weitere Übungen“
@@ -472,5 +477,58 @@ lauf(async () => {
     return { seg: Math.round(h('#v-training .seg2:not(.mini) button, #v-heute .seg2 button', '::after')), sub: Math.round(h('#v-training .subtabs button', '::after')) }; });
   P.ok('Tippflächen: Teile oben (Gym/Cardio) mindestens 44 px hoch', tf.sub >= 42, JSON.stringify(tf));
   await o13.browser.close();
-  await P.ende(null, fehler.concat(w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+
+  // --- Empfehlung je Satz (v107): Bereich 8–12 ohne Angabe, Vorgabe nach doppelter Progression, Anpassung nach jedem abgehakten Satz, Schalter in den Einstellungen ---
+  /* Schritt beim Gewicht ist überall 2,5 kg (kein kleinerer Abstand in den Daten). Vorgabe aus dem letzten Mal (vor 3 Tagen), Bereich 8–12:
+     Latzug: 90×12, 90×10, 90×8, 65×6; davor (vor 6 Tagen) 90×11, 90×10, 90×8, 65×6.
+       90 kg: nicht alle bei 12 → Satz 1 hält 12, Satz 2 und 3 je eine mehr (11, 9).
+       65 kg: erster Satz zweimal in Folge unter 8 → 62,5 kg; 1RM 65 × (1 + 6/30) = 78 → (78 / 62,5 − 1) × 30 = 7,4 → 7, mindestens 8 → 62,5×8.
+     Bank: 40×10, 40×10, 40×10 (nur eine Einheit) → 40×11 je Satz.
+     Curls: 20×12, 20×12 → alle oben: 22,5 kg; 1RM 20 × 1,4 = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7, mindestens 8 → 22,5×8. */
+  const K14 = { ex: { l: { n: 'Latzug' }, b: { n: 'Bank' }, c: { n: 'Curls' } }, log: { [tag(6)]: { l: [[90, 11], [90, 10], [90, 8], [65, 6]] }, [tag(3)]: { l: [[90, 12], [90, 10], [90, 8], [65, 6]], b: [[40, 10], [40, 10], [40, 10]], c: [[20, 12], [20, 12]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'l', sets: 4 }, { id: 'b', sets: 3 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
+  const o14 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K14 } }), em = o14.page;
+  await bereich(em, 'training'); await em.click('#v-training [data-k="start"]'); await em.waitForTimeout(300);
+  const reihen14 = () => em.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
+  const emp = async () => (await em.$('#l-emp')) ? text(em, '#l-emp') : '';
+  P.ok('Bereich ohne Angabe: „Ziel 8–12 Wdh“', (await text(em, '#l-items [data-la="ziel"]')) === 'Ziel 8–12 Wdh', await text(em, '#l-items [data-la="ziel"]'));
+  P.ok('Vorgabe Latzug: oben halten, sonst eine mehr; 65 kg lag zweimal unter 8 → 62,5×8', (await reihen14()) === '90×12 90×11 90×9 62,5×8', await reihen14());
+  P.ok('Zeile „Empfehlung“ nennt Satz 1 mit Grund', (await emp()) === 'Empfehlung 90 kg × 12 · halten, bis alle Sätze 12 schaffen', await emp());
+  /* Satz 1 wie empfohlen (12): Erwartung Satz 2 = 12 − (12 − 10) = 10, die Empfehlung 11 bleibt; Satz 3 = 12 − 4 = 8, die 9 bleibt. */
+  await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('Satz 1 wie empfohlen: Die Empfehlungen danach bleiben', (await reihen14()) === '90×12 90×11 90×9 62,5×8' && (await emp()) === 'Empfehlung 90 kg × 11 · eine Wdh mehr', (await reihen14()) + ' # ' + (await emp()));
+  /* Satz 2 nur 9 statt 11 (im Bereich, aber dahinter): Erwartung Satz 3 = 9 − (10 − 8) = 7, mindestens das untere Ende 8, höchstens die alte Empfehlung 9 → 90×8. Der Satz mit 62,5 kg gehört nicht dazu. */
+  await zahlWahl(em, '#l-r', '9'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('Satz 2 hinter der Empfehlung: Satz 3 wird auf 90×8 angepasst, der leichtere Satz bleibt', (await reihen14()) === '90×12 90×9 90×8 62,5×8' && (await emp()) === 'Empfehlung 90 kg × 8 · nach Satz 2 angepasst', (await reihen14()) + ' # ' + (await emp()));
+  const lv14 = (await gespeichert(em)).K.live.items[0].sets[2];
+  P.ok('die Empfehlung steht am Satz und ist gespeichert (ew, er, eg)', lv14.ew === '90' && lv14.er === '8' && lv14.eg === 'nach Satz 2 angepasst' && lv14.w === '90' && lv14.r === '8', JSON.stringify(lv14));
+  /* Bank: Vorgabe 40×11 je Satz. Satz 1 nur 6 (unter dem Bereich): 1RM 40 × 1,2 = 48; Ermüdung letztes Mal 0 → 37,5 kg: (48 / 37,5 − 1) × 30 = 8,4 → 8 → 37,5×8 für beide Sätze danach. */
+  await em.click('#l-tabs .lx-tab:has-text("Bank")');
+  P.ok('Vorgabe Bank: je Satz eine Wiederholung mehr', (await reihen14()) === '40×11 40×11 40×11', await reihen14());
+  await zahlWahl(em, '#l-r', '6'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('unter dem Bereich geblieben: weniger Gewicht für die Sätze danach (37,5×8)', (await reihen14()) === '40×6 37,5×8 37,5×8' && (await emp()) === 'Empfehlung 37,5 kg × 8 · weniger Gewicht, zurück in 8–12', (await reihen14()) + ' # ' + (await emp()));
+  /* Satz 3 von Hand auf 5 gestellt, dann Satz 2 mit 14 (zwei über dem oberen Ende): 1RM 37,5 × (1 + 14/30) = 55 → 40 kg: (55 / 40 − 1) × 30 = 11,25 → 11.
+     Der von Hand geänderte Satz bleibt stehen (37,5×5), die Zeile nennt trotzdem die Empfehlung 40 kg × 11. */
+  await em.click('.lt-r[data-s="2"]'); await zahlWahl(em, '#l-r', '5');
+  await em.click('.lt-r[data-s="1"]'); await zahlWahl(em, '#l-r', '14'); await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('deutlich über dem Bereich: Empfehlung mit mehr Gewicht (40 kg × 11); der von Hand geänderte Satz bleibt, wie er ist', (await reihen14()) === '40×6 37,5×14 37,5×5' && (await emp()) === 'Empfehlung 40 kg × 11 · mehr Gewicht, du lagst über 12', (await reihen14()) + ' # ' + (await emp()));
+  await em.click('#l-tabs .lx-tab:has-text("Curls")');
+  P.ok('Vorgabe Curls, alle Sätze oben: ein Schritt mehr Gewicht, mindestens das untere Ende (22,5×8)', (await reihen14()) === '22,5×8 22,5×8' && (await emp()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen14()) + ' # ' + (await emp()));
+  /* Schalter in den Einstellungen: aus → K.emp = 0; ein neu gestartetes Training zeigt die Werte vom letzten Mal, ohne Zeile „Empfehlung“ und ohne Bereich. Wieder an → der Merker ist weg. */
+  await em.click('#l-del'); await em.click('#l-del'); await em.waitForTimeout(150);
+  await einstellungen(em);
+  const sch = () => em.evaluate(() => { const b = document.querySelector('#esheet [data-h="emp"]'); return b.getAttribute('role') + ' ' + b.getAttribute('aria-checked') + ' ' + Math.round(b.getBoundingClientRect().height >= 40); });
+  P.ok('Einstellungen: Schalter „Empfehlung je Satz“ steht auf an und ist mindestens 40 px hoch', (await sch()) === 'switch true 1' && (await text(em, '#esheet [data-h="emp"]')) === 'Empfehlung je Satz', await sch());
+  await em.click('#esheet [data-h="emp"]');
+  P.ok('ausgeschaltet: Schalter aus, gespeichert als K.emp = 0', (await sch()) === 'switch false 1' && (await gespeichert(em)).K.emp === 0, await sch());
+  await em.click('#es-close'); await bereich(em, 'training'); await em.click('#v-training [data-k="start"]'); await em.waitForTimeout(300);
+  const aus14 = await em.evaluate(() => ({ zeile: !!document.querySelector('#l-emp'), ziel: !!document.querySelector('#l-items [data-la="ziel"]') }));
+  P.ok('ohne Empfehlung: die Werte vom letzten Mal, keine Zeile „Empfehlung“, kein Bereich', (await reihen14()) === '90×12 90×10 90×8 65×6' && !aus14.zeile && !aus14.ziel, (await reihen14()) + ' ' + JSON.stringify(aus14));
+  await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
+  P.ok('ohne Empfehlung passt sich nach dem Abhaken nichts an', (await reihen14()) === '90×12 90×10 90×8 65×6', await reihen14());
+  await em.click('#l-del'); await em.click('#l-del'); await em.waitForTimeout(150);
+  await einstellungen(em); await em.click('#esheet [data-h="emp"]');
+  P.ok('wieder eingeschaltet: Schalter an, der Merker ist weg', (await sch()) === 'switch true 1' && (await gespeichert(em)).K.emp == null, await sch());
+  await o14.browser.close();
+  await P.ende(null, fehler.concat(o14.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });

@@ -55,7 +55,7 @@ const merker = page => page.evaluate(() => localStorage.getItem('takt.backup'));
 const zeile = async page => { await einst(page); return page.evaluate(() => { const t = q => { const e = document.querySelector(q); return e && !e.hidden ? e.innerText.replace(/\s+/g, ' ').trim() : ''; };
   const mass = document.createElement('i'); mass.style.color = 'var(--danger)'; document.body.appendChild(mass); const gefahr = getComputedStyle(mass).color; mass.remove();
   const rot = q => { const e = document.querySelector(q); return !!e && !e.hidden && getComputedStyle(e).color === gefahr; };
-  return { oben: t('#bk-due'), art: (document.querySelector('#bk-due') || { dataset: {} }).dataset.h || '', sub: t('#bk-msg'), akt: [...document.querySelectorAll('#esheet .act')].map(a => a.innerText.trim()).join(' | '), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#esheet .entries .info').length, rot: { sub: rot('#bk-msg'), fehler: rot('#bk-err') } }; }); };
+  return { oben: t('#bk-due'), art: (document.querySelector('#bk-due') || { dataset: {} }).dataset.h || '', sub: t('#bk-msg'), akt: [...document.querySelectorAll('#esheet .act')].map(a => a.innerText.trim()).join(' | '), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#esheet .entries .info[data-info="bk"]').length, rot: { sub: rot('#bk-msg'), fehler: rot('#bk-err') } }; }); };
 /* Merkt sich das erste Element von Heute; gleich() sagt später, ob Heute seitdem neu gezeichnet wurde */
 const marke = page => page.evaluate(() => { window.__m = document.querySelector('#v-heute').firstElementChild; });
 const gleich = page => page.evaluate(() => document.querySelector('#v-heute').firstElementChild === window.__m);
