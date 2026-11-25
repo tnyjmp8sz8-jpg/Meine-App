@@ -45,14 +45,17 @@ const lade = async (page, d, merker) => {
   await page.evaluate(([d, b]) => { localStorage.clear(); if (d) localStorage.setItem('takt.v1', JSON.stringify(d)); if (b) localStorage.setItem('takt.backup', String(b)); }, [d, merker || 0]);
   await page.reload(); await page.waitForTimeout(450);
 };
-const tipp = async (page, sel) => { if (!(await page.$(sel))) return false; await page.click(sel); await page.waitForTimeout(120); return true; };
+/* Tipp auf ein Element; liegt es nicht in den Einstellungen, gehen diese vorher zu (das Blatt läge sonst darüber) */
+const tipp = async (page, sel) => { await page.evaluate(q => { const e = document.querySelector('#esheet'), el = document.querySelector(q); if (e.open && el && !e.contains(el)) e.close(); }, sel); if (!(await page.$(sel))) return false; await page.click(sel); await page.waitForTimeout(120); return true; };
+/* Einstellungen hinter dem Zahnrad öffnen (v106: dort liegt die Sicherung). Ist schon ein anderes Blatt offen, bleibt es dabei; gelesen wird dann, was zuletzt gezeichnet wurde. */
+const einst = async page => { await page.evaluate(() => { const e = document.querySelector('#esheet'); if (!e.open && !document.querySelector('dialog[open]')) document.querySelector('#gear').click(); }); await page.waitForTimeout(80); };
 const merker = page => page.evaluate(() => localStorage.getItem('takt.backup'));
-/* Zeile „Sicherung“ auf Heute: Erinnerung oben (oben; art sagt, wohin ihr Tipp führt: export = von Hand sichern, ordner = Ordner wählen), Unterzeile, Aktionen der aufgeklappten Zeile,
-   Wortlaut des Fehlers und Erklärung (leer, solange verborgen), Zahl der „i“. rot: ob Unterzeile und Wortlaut in der Farbe für Fehler stehen (--danger). */
-const zeile = page => page.evaluate(() => { const t = q => { const e = document.querySelector(q); return e && !e.hidden ? e.innerText.replace(/\s+/g, ' ').trim() : ''; };
+/* Sicherung: Erinnerung oben auf Heute (oben; art sagt, wohin ihr Tipp führt: export = von Hand sichern, ordner = Ordner wählen), dazu aus den Einstellungen (seit v106; zeile() öffnet sie)
+   der Stand (sub), die Aktionen, Wortlaut des Fehlers und Erklärung (leer, solange verborgen), Zahl der „i“. rot: ob Stand und Wortlaut in der Farbe für Fehler stehen (--danger). */
+const zeile = async page => { await einst(page); return page.evaluate(() => { const t = q => { const e = document.querySelector(q); return e && !e.hidden ? e.innerText.replace(/\s+/g, ' ').trim() : ''; };
   const mass = document.createElement('i'); mass.style.color = 'var(--danger)'; document.body.appendChild(mass); const gefahr = getComputedStyle(mass).color; mass.remove();
   const rot = q => { const e = document.querySelector(q); return !!e && !e.hidden && getComputedStyle(e).color === gefahr; };
-  return { oben: t('#bk-due'), art: (document.querySelector('#bk-due') || { dataset: {} }).dataset.h || '', sub: t('#bk-msg'), akt: [...document.querySelectorAll('#v-heute [data-fold="sicherung"]')].map(b => [...b.closest('ul').querySelectorAll('.act')].map(a => a.innerText.trim()).join(' | ')).join(), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#v-heute .entries .info').length, rot: { sub: rot('#bk-msg'), fehler: rot('#bk-err') } }; });
+  return { oben: t('#bk-due'), art: (document.querySelector('#bk-due') || { dataset: {} }).dataset.h || '', sub: t('#bk-msg'), akt: [...document.querySelectorAll('#esheet .act')].map(a => a.innerText.trim()).join(' | '), fehler: t('#bk-err'), info: t('#info-bk'), i: document.querySelectorAll('#esheet .entries .info').length, rot: { sub: rot('#bk-msg'), fehler: rot('#bk-err') } }; }); };
 /* Merkt sich das erste Element von Heute; gleich() sagt später, ob Heute seitdem neu gezeichnet wurde */
 const marke = page => page.evaluate(() => { window.__m = document.querySelector('#v-heute').firstElementChild; });
 const gleich = page => page.evaluate(() => document.querySelector('#v-heute').firstElementChild === window.__m);
@@ -159,13 +162,13 @@ async function vonSelbst(p) {
   const fehler = [], D = zweiKonten(), W = 300000;   // W: so lange wartet die App nach der ersten Änderung, bis sie von selbst schickt (fünf Minuten)
   const S = (t, aussen, ordner, fehler, nochmal) => ({ t, aussen: aussen || 0, ordner: ordner || '', fehler: fehler || '', nochmal: !!nochmal }), S0 = S(0);
   const aendern = (page, id, x) => ruf(page, 'eingang', [{ id, art: 'notiz', x }]);
-  const NUR = 'Sicherung liegt nur in der App Ordner wählen', FOLD = '#v-heute [data-fold="sicherung"]';
+  const NUR = 'Sicherung liegt nur in der App Ordner wählen';
 
   /* --- Ohne Hülle (Browser) ist die Zeile wie in v64: zwei Aktionen, kein „i“, keine Zeile zum Ordner. Die Sicherung ist fällig (Routine vom 1., heute der 15.):
          Der Satz steht in der Erinnerung oben und nicht noch einmal in der Zeile. --- */
   let o = await oeffnen({ daten: D, uhr: new Date(um(15, 12)) }), page = o.page;
-  await tipp(page, FOLD); let zl = await zeile(page);
-  p.ok('ohne Hülle: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export' && await page.evaluate(() => !document.querySelector('#bk-ord, #bk-err, #info-bk, #v-heute .irow')), JSON.stringify(zl));
+  await einst(page); let zl = await zeile(page);
+  p.ok('ohne Hülle: Erinnerung oben, in den Einstellungen Stand, speichern und einlesen, kein „i“, nichts zum Ordner', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === 'Noch keine Sicherung gespeichert.' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export' && await page.evaluate(() => !document.querySelector('#bk-ord, #bk-err, #info-bk, #v-heute .irow')), JSON.stringify(zl));
   fehler.push(...o.fehler); await o.browser.close();
 
   o = await oeffnen({ skript: huelle, uhr: new Date(um(15, 12)) }); page = o.page;
@@ -174,9 +177,9 @@ async function vonSelbst(p) {
   await lade(page, D);
   await ruf(page, 'info', { app: '0.4', ablauf: um(22, 9), health: 'fehlt' });
   await aendern(page, 'x1', 'Eine Änderung'); await page.clock.runFor(W + 5000); await ruf(page, 'sichern'); await page.clock.runFor(W + 5000);
-  await tipp(page, FOLD); zl = await zeile(page);
+  await einst(page); zl = await zeile(page);
   p.ok('iPhone-App 0.4 (info ohne sicherung): nie eine Nachricht „sicherung“', (await sich(page)).length === 0, JSON.stringify((await post(page)).map(m => m.art)));
-  p.ok('iPhone-App 0.4: Klappzeile „Sicherung“ wie in v64', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === '' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export', JSON.stringify(zl));
+  p.ok('iPhone-App 0.4: wie ohne Hülle', zl.akt === 'Sicherung speichern | Sicherung einlesen' && zl.i === 0 && zl.sub === 'Noch keine Sicherung gespeichert.' && zl.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && zl.art === 'export', JSON.stringify(zl));
 
   /* --- iPhone-App 0.5, erste Auskunft: Es ist schon etwas offen (eine Änderung vor der Auskunft), also geht die Sicherung sofort hinaus, genau einmal. --- */
   await lade(page, D);
@@ -246,7 +249,7 @@ async function vonSelbst(p) {
          Die Zeile sagt in Rot, dass es nicht ging und von wann die letzte Sicherung ist; aufgeklappt steht darunter der Wortlaut, auch in Rot.
          Von selbst geht nichts noch einmal hinaus (auch nicht nach sechs Minuten), offen bleibt es aber: Das nächste sichern() versucht es wieder.
          Heute wird bei alldem nicht neu gezeichnet (die Erinnerung ändert sich nicht): Nur die Texte der Zeile ändern sich. --- */
-  await tipp(page, FOLD); await marke(page);
+  await einst(page); await marke(page);
   await ruf(page, 'gesichert', S(T1, T1, 'Track-Sicherung', 'Auf dem iPhone ist kein Platz mehr.', true)); zl = await zeile(page);
   p.ok('Fehler: takt.backup bleibt, die Zeile sagt in Rot, dass es nicht ging und von wann die letzte Sicherung ist', (await merker(page)) === String(T1) && zl.sub === 'Sichern ging nicht · zuletzt heute, ' + hhmm(T1) && zl.rot.sub && zl.oben === '', JSON.stringify(zl));
   p.ok('Fehler: aufgeklappt steht der Wortlaut darunter, in Rot', zl.fehler === 'Auf dem iPhone ist kein Platz mehr.' && zl.rot.fehler, JSON.stringify(zl));
@@ -284,7 +287,7 @@ async function vonSelbst(p) {
   await page.evaluate(() => { const mm = window.matchMedia.bind(window); window.matchMedia = q => q === '(pointer:coarse)' ? { matches: true } : mm(q);
     Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
     Object.defineProperty(navigator, 'share', { value: async d => { window.__geteilt = await d.files[0].text(); }, configurable: true }); });
-  await tipp(page, '#v-heute .act[data-h="export"]'); await page.waitForTimeout(200);
+  await tipp(page, '#esheet .act[data-h="export"]'); await page.waitForTimeout(200);
   const ohneZeit = t => { let x = {}; try { x = JSON.parse(t); } catch (e) {} delete x.exported; return JSON.stringify(x); };
   const hand = await page.evaluate(() => window.__geteilt || '');
   p.ok('von Hand und von selbst: derselbe Text', s.length === 8 && hand.length > 100 && ohneZeit(hand) === ohneZeit(s[7].text), s.length + ' · ' + hand.slice(0, 80));
@@ -390,22 +393,22 @@ async function vonSelbst(p) {
   const S11 = S(um(15, 11));
   await lade(page, D, um(14, 12));
   await ruf(page, 'info', { app: '0.5', sicherung: S11 });
-  p.ok('Zeile zu: „Sicherung“ mit „Von selbst gesichert · heute, 11:00“', (await text(page, FOLD)) === 'Sicherung Von selbst gesichert · heute, 11:00' && (await zeile(page)).oben === '', await text(page, FOLD));
-  await tipp(page, FOLD); zl = await zeile(page);
-  p.ok('Zeile auf: speichern, einlesen und „Ordner in iCloud wählen“ mit einem „i“; Erklärung und Fehler verborgen', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner in iCloud wählen' && zl.i === 1 && zl.info === '' && zl.fehler === '', JSON.stringify(zl));
-  await tipp(page, '#v-heute .act[data-h="ordner"]');
+  zl = await zeile(page);
+  p.ok('auf Heute keine Erinnerung; in den Einstellungen der Stand „Von selbst gesichert · heute, 11:00“', zl.oben === '' && zl.sub === 'Von selbst gesichert · heute, 11:00', JSON.stringify(zl));
+  p.ok('Einstellungen: speichern, einlesen und „Ordner in iCloud wählen“ mit einem „i“; Erklärung und Fehler verborgen', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner in iCloud wählen' && zl.i === 1 && zl.info === '' && zl.fehler === '', JSON.stringify(zl));
+  await tipp(page, '#esheet .act[data-h="ordner"]');
   p.ok('Tipp auf die Zeile zum Ordner schickt „ordner“ (einmal, keine Sicherung)', (await ordner()) === 1 && (await sich(page)).length === 0, (await ordner()) + ' · ' + (await sich(page)).length);
-  await tipp(page, '#v-heute [data-info="bk"]'); zl = await zeile(page);
+  await tipp(page, '#esheet [data-info="bk"]'); zl = await zeile(page);
   p.enthaelt('Tipp auf das „i“ zeigt die Erklärung', zl.info, ['bei jeder Änderung von selbst', '„Dateien“ unter „Auf meinem iPhone › Track.“', 'je Tag eine Datei, die neuesten 14 bleiben', 'Wird die App gelöscht', 'Ordner in iCloud Drive', 'die Erinnerung an die Sicherung entfällt', 'bleibt unberührt', '„Sicherung einlesen“']);
   p.ok('das „i“ wählt keinen Ordner', (await ordner()) === 1, String(await ordner()));
   /* Der Ordner ist gewählt: Die iPhone-App meldet seinen Namen. Die Liste bekommt eine Zeile dazu („Ordner nicht mehr benutzen“), dafür wird Heute neu gezeichnet; die Klappzeile bleibt offen. */
   await marke(page); await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), 'Track-Sicherung')); zl = await zeile(page);
   p.ok('Ordner gewählt: die Zeile heißt „Ordner: Track-Sicherung“, darunter „Ordner nicht mehr benutzen“', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: Track-Sicherung | Ordner nicht mehr benutzen' && zl.i === 1 && !(await gleich(page)), JSON.stringify(zl));
   /* Ein anderer Ordner (nur der Name ändert sich): Der Name wird an Ort und Stelle nachgeführt, die offene Erklärung bleibt stehen, Heute wird nicht neu gezeichnet. */
-  await tipp(page, '#v-heute [data-info="bk"]'); await marke(page);
+  await tipp(page, '#esheet [data-info="bk"]'); await marke(page);
   await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), 'Anderer Ordner')); zl = await zeile(page);
   p.ok('anderer Ordner: nur der Name ändert sich, die Erklärung bleibt offen, nichts wird neu gezeichnet', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: Anderer Ordner | Ordner nicht mehr benutzen' && zl.info !== '' && await gleich(page), JSON.stringify(zl));
-  await tipp(page, '#v-heute .act[data-h="ordner"]');
+  await tipp(page, '#esheet .act[data-h="ordner"]');
   p.ok('ein Tipp auf „Ordner: …“ wählt neu', (await ordner()) === 2 && (await ordner('ordnerWeg')) === 0, (await ordner()) + ' · ' + (await ordner('ordnerWeg')));
   /* info() kommt bei jedem Zurückkommen in die App: Mit unveränderter sicherung wird Heute nicht neu gezeichnet, mit veränderter schon (die Zeile bleibt dabei offen).
      Ordnername und Fehler mit Zeichen aus HTML stehen als Text da: beim Zeichnen (info) wie beim Nachführen an Ort und Stelle (gesichert). */
@@ -418,7 +421,7 @@ async function vonSelbst(p) {
   await ruf(page, 'gesichert', S(um(15, 11), um(15, 11), frech + '!', kursiv + '!')); zl = await zeile(page);
   p.ok('beim Nachführen ebenso', zl.akt.includes('| Ordner: ' + frech + '! |') && zl.fehler === kursiv + '!' && await page.evaluate(() => !document.querySelector('#bk-ord b, #bk-err i, #bk-err img') && !window.__xss), JSON.stringify(zl));
   /* „Ordner nicht mehr benutzen“ schickt „ordnerWeg“. Die iPhone-App meldet danach keinen Ordner mehr: Die Zeile dazu verschwindet, „Ordner in iCloud wählen“ steht wieder da. */
-  await tipp(page, '#v-heute .act[data-h="ordnerweg"]');
+  await tipp(page, '#esheet .act[data-h="ordnerweg"]');
   p.ok('„Ordner nicht mehr benutzen“ schickt „ordnerWeg“ (einmal)', (await ordner('ordnerWeg')) === 1 && (await ordner()) === 2, (await ordner('ordnerWeg')) + ' · ' + (await ordner()));
   await ruf(page, 'gesichert', S(um(15, 11), um(15, 11))); zl = await zeile(page);
   p.ok('danach: wieder „Ordner in iCloud wählen“, die Zeile zum Abwählen ist weg, nichts mehr rot', zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner in iCloud wählen' && zl.fehler === '' && !zl.rot.sub, JSON.stringify(zl));
@@ -428,17 +431,17 @@ async function vonSelbst(p) {
   await tipp(page, '#v-heute [data-h="mode"][data-v="day"]'); zl = await zeile(page);
   p.ok('Meldung in der Ansicht „Woche“: kein Fehler, auf „Heute“ steht danach der neue Stand', zl.sub === 'Sichern ging nicht · zuletzt heute, 11:30' && zl.akt.includes('| Ordner: iCloud |'), JSON.stringify(zl));
 
-  /* --- Blatt offen: Die Meldung zeichnet Heute nicht neu (der Nutzer tippt gerade), sie ändert nur den Text der Zeile. Die Erinnerung verschwindet, sobald das Blatt zugeht;
+  /* --- Blatt offen: Die Meldung zeichnet Heute nicht neu (der Nutzer tippt gerade). Die Erinnerung verschwindet, sobald das Blatt zugeht;
          dann steht auch die Zeile zum Abwählen des Ordners da. --- */
   await lade(page, D);
   await ruf(page, 'info', { app: '0.5', sicherung: S0 });
   await ruf(page, 'neu', 'notiz'); await page.waitForTimeout(150); await marke(page);
   const T4 = await page.evaluate(() => Date.now());
   await ruf(page, 'gesichert', S(T4, T4, 'iCloud'));
-  const offen = await page.evaluate(() => ({ blatt: document.querySelector('#nsheet').open, oben: !!document.querySelector('#bk-due'), sub: document.querySelector('#bk-msg').textContent.replace(/\s+/g, ' ') }));
-  p.ok('Blatt offen: Heute wird nicht neu gezeichnet, nur der Text der Zeile ändert sich', offen.blatt && offen.oben && offen.sub === 'Von selbst gesichert · heute, ' + hhmm(T4) && await gleich(page), JSON.stringify(offen));
-  await page.keyboard.press('Enter'); await page.waitForTimeout(200); await tipp(page, FOLD); zl = await zeile(page);
-  p.ok('Blatt zu: die Erinnerung ist weg, die Liste nennt den Ordner', await page.evaluate(() => !document.querySelector('#nsheet').open) && zl.oben === '' && zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: iCloud | Ordner nicht mehr benutzen', JSON.stringify(zl));
+  const offen = await page.evaluate(() => ({ blatt: document.querySelector('#nsheet').open, oben: !!document.querySelector('#bk-due') }));
+  p.ok('Blatt offen: Heute wird nicht neu gezeichnet (die Erinnerung bleibt bis zum Schließen)', offen.blatt && offen.oben && await gleich(page), JSON.stringify(offen));
+  await page.keyboard.press('Enter'); await page.waitForTimeout(200); await einst(page); zl = await zeile(page);
+  p.ok('Blatt zu: die Erinnerung ist weg, die Einstellungen nennen den Ordner und den Stand', await page.evaluate(() => !document.querySelector('#nsheet').open) && zl.oben === '' && zl.akt === 'Sicherung speichern | Sicherung einlesen | Ordner: iCloud | Ordner nicht mehr benutzen' && zl.sub === 'Von selbst gesichert · heute, ' + hhmm(T4), JSON.stringify(zl));
 
   /* --- Halbes Zeichen: Die App kürzt Texte nach Einheiten und teilt dabei gelegentlich ein Emoji (hier: Auftrag aus der Schnelleingabe mit 59 Buchstaben und einem Emoji im Feld
          „Wofür?“, gekürzt auf 60 Einheiten). In der Sicherung steht kein halbes Zeichen: Mit ihm ist die Datei für andere Leser kein gültiges JSON, die iPhone-App lehnte sie ab.
@@ -503,13 +506,13 @@ async function vonSelbst(p) {
     o = await oeffnen({ skript: huelle, uhr: new Date(um(15, 12)), breite, hell: breite === 320 }); page = o.page;
     await lade(page, D);
     await ruf(page, 'info', { app: '0.5', sicherung: S(um(3, 20, 56), um(3, 20, 56), 'Sicherungen von Track auf meinem iCloud Drive für alle Fälle', 'In „' + ohneLuecke + '“ ließ sich nicht sichern. Auf dem iPhone ist die Sicherung gespeichert.') });
+    await einst(page);
     const zu = await page.evaluate(() => ({ zeilen: document.querySelector('#bk-msg').getClientRects().length, text: document.querySelector('#bk-msg').textContent }));
-    /* Zu, mit Fehler und einem Datum: bei 390 px eine Zeile (bei 320 px zwei, das Datum bleibt beisammen) */
-    if (breite === 390) p.ok('390 px: Unterzeile mit Fehler und Datum steht in einer Zeile', zu.zeilen === 1 && zu.text === 'Sichern ging nicht · zuletzt 3. ' + MONATE[+M.slice(5) - 1] + ' ' + JM, JSON.stringify(zu));
-    await tipp(page, FOLD); await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await tipp(page, '#v-heute [data-info="bk"]');
-    await page.evaluate(() => { const sc = document.querySelector('#scroll'); sc.scrollTop = sc.scrollHeight; }); await page.waitForTimeout(150);
+    /* Stand mit Fehler und einem Datum: bei 390 px eine Zeile (bei 320 px zwei, das Datum bleibt beisammen) */
+    if (breite === 390) p.ok('390 px: Stand mit Fehler und Datum steht in einer Zeile', zu.zeilen === 1 && zu.text === 'Sichern ging nicht · zuletzt 3. ' + MONATE[+M.slice(5) - 1] + ' ' + JM, JSON.stringify(zu));
+    await tipp(page, '#esheet [data-info="bk"]'); await page.waitForTimeout(150);
     const eng = await page.evaluate(() => {
-      const sc = document.querySelector('#scroll'), ul = document.querySelector('#v-heute [data-fold="sicherung"]').closest('ul'), i = ul.querySelector('.info'), ord = ul.querySelector('[data-h="ordner"]'), lesen = ul.querySelector('[data-h="import"]'), weg = ul.querySelector('[data-h="ordnerweg"]');
+      const sc = document.querySelector('#esheet'), ul = document.querySelector('#esheet .entries'), i = ul.querySelector('.info'), ord = ul.querySelector('[data-h="ordner"]'), lesen = ul.querySelector('[data-h="import"]'), weg = ul.querySelector('[data-h="ordnerweg"]');
       if (!i || !ord || !weg) return { fehlt: true };
       const r = i.getBoundingClientRect(), cx = r.left + r.width / 2, cy = r.top + r.height / 2, bei = (x, y) => { const e = document.elementFromPoint(x, y); return e ? e.closest('button') : null; };
       const raus = [ul, ...ul.querySelectorAll('*'), ...document.querySelectorAll('#bk-err, #info-bk')].filter(e => { const q = e.getBoundingClientRect(); return e.id !== 'bk-ord' && q.width && (q.left < -0.5 || q.right > window.innerWidth + 0.5); }).length;
@@ -679,7 +682,7 @@ lauf(async () => {
   let dateien = 0; page.on('download', () => dateien++);
   await bereich(page, 'heute');
   const merker = () => page.evaluate(() => localStorage.getItem('takt.backup')), merker0 = await merker();
-  const sichern = async () => { if (!(await page.$('#v-heute .act[data-h="export"]'))) await page.click('#v-heute [data-fold="sicherung"]'); await page.click('#v-heute .act[data-h="export"]'); await page.waitForTimeout(300); return text(page, '#bk-msg'); };
+  const sichern = async () => { await einst(page); await page.click('#esheet .act[data-h="export"]'); await page.waitForTimeout(300); return text(page, '#bk-msg'); };
   /* Teilen nachstellen: wie = 'ok' (Datei gesichert) oder der Name des Fehlers, mit dem das Teilen endet */
   const teilen = wie => page.evaluate(w => { if (!window.__mm) { const mm = window.matchMedia.bind(window); window.__mm = 1; window.matchMedia = q => q === '(pointer:coarse)' ? { matches: true } : mm(q); }
     Object.defineProperty(navigator, 'canShare', { value: () => true, configurable: true });
@@ -694,11 +697,11 @@ lauf(async () => {
   /* geteilt: Erfolg, der Merker ist von jetzt, und die nächste Sicherung ist in 7 Tagen fällig */
   p.ok('Teilen gelungen: Erfolg, Erinnerung zurückgestellt', meldung === 'Sicherung gespeichert: track-sicherung-' + tag(0) + '.json' && Number(await merker()) > Number(merker0) && st.sicherung === tag(-7), meldung + ' · ' + st.sicherung);
 
-  /* Auskunft der Hülle: Zeile in der Fußzeile, Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
+  /* Auskunft der Hülle: Zeile unten in den Einstellungen (seit v106, vorher Fußzeile), Knopf im Cardio-Bereich nur, wenn Health freigegeben ist */
   const ablauf = new Date(2026, 10, 24, 9, 0).getTime();
   await page.evaluate(t => window.TrackHuelle.info({ app: '0.2', ablauf: t, health: 'kann' }), ablauf);
-  p.enthaelt('Fußzeile nennt App und Ablauf', await text(page, '#h-line'), ['iPhone-App 0.2', 'gültig bis 24. November']);
-  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');
+  p.enthaelt('Einstellungen nennen unten App und Ablauf', await text(page, '#h-line'), ['iPhone-App 0.2', 'gültig bis 24. November']);
+  await page.click('#es-close'); await page.waitForTimeout(80); await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]');
   p.ok('Health freigegeben: Knopf im Cardio-Bereich', await page.locator('[data-t="health"]').count() === 1);
   await page.click('[data-t="health"]');
   p.ok('Tipp auf den Knopf bittet die Hülle um Health', (await post(page)).some(x => x.art === 'health'));

@@ -107,9 +107,13 @@ dialog:focus,dialog:focus-visible{outline:none}
 .top{display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:5;margin:calc(-12px - env(safe-area-inset-top,0px)) -16px 0;padding:calc(10px + env(safe-area-inset-top,0px)) 16px 10px;background:var(--amb),var(--bg);-webkit-mask-image:linear-gradient(to bottom,#000 calc(100% - 18px),transparent);mask-image:linear-gradient(to bottom,#000 calc(100% - 18px),transparent);pointer-events:none}
 .top>*{pointer-events:auto}
 .mark{font-family:var(--display);font-weight:700;font-size:22px;letter-spacing:-.02em}
+/* Großer Titel (v106): Scrollt die Seite, wird er klein und gleitet in die Mitte der Kopfzeile, wie in iOS (titelKlein()). Die Kopfzeile behält ihre Höhe: Nichts darunter verschiebt sich. */
+.mark{transform-origin:left center;transition:transform .32s cubic-bezier(.2,.8,.2,1);white-space:nowrap}
+.top.klein .mark{transform:translateX(var(--mx,0)) scale(.62)}
 .mark .dot{color:var(--amb-c)}   /* Erkennungszeichen, wie der Punkt im App-Symbol: die eine Stelle, an der Blau nicht „antippbar“ heißt */
 .add{width:44px;height:44px;border-radius:50%;border:0;background:var(--surface);color:var(--accent);display:grid;place-items:center;box-shadow:inset 0 0 0 .5px var(--glass-line),inset 0 1px 0 var(--glass-top)}
 .add svg{width:20px;height:20px}
+.add[hidden]{display:none}
 
 .hero{display:flex;flex-direction:column;gap:6px}
 .date{margin:0;color:var(--muted);font-size:15px;font-weight:500}
@@ -149,6 +153,8 @@ dialog:focus,dialog:focus-visible{outline:none}
 .is-run .fill{transition:width .3s linear}
 .is-run .glyph{background:none;box-shadow:inset 0 0 0 1.5px var(--accent)}
 .is-run .glyph i{width:8px;height:8px;border-radius:50%;background:var(--accent)}
+.dran-los{display:grid;place-items:center;width:32px;color:var(--mid)}
+.dran-los svg{width:13px;height:13px}
 
 
 .empty{display:flex;flex-direction:column;align-items:center;text-align:center;gap:8px;padding:9vh 8px 0}
@@ -285,6 +291,9 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ghost.center{text-align:center}
 .goal .streak b{font-size:24px}
 /* Ein offenes Ziel (Gewicht, Sparziel) ist kein Startknopf: Das Symbol ist nur getönt, wie die Symbole der Bereiche auf Heute. Voll blau bleibt der Startknopf eines Plans. */
+.goal.ruhig .go{padding:13px 6px 13px 16px}
+.pz{padding-right:16px;font-family:var(--round);font-size:15px;font-weight:700;font-variant-numeric:tabular-nums}
+.goal.ruhig.is-done .pz{color:var(--good)}
 .goal.is-idle .glyph{background:color-mix(in srgb,var(--accent) 17%,transparent);color:var(--at)}
 
 /* Finanzen (im Code „haushalt“) */
@@ -319,7 +328,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .entries .l{display:flex;flex-direction:column;min-width:0;gap:1px}
 .entries .l small{color:var(--muted);font-size:13px}
 .entries .dim{color:var(--muted);font-weight:500}
-.entries .neg{color:var(--danger)}
+.entries .neg,.entries .l small.neg{color:var(--danger)}
 .view>.note,.view>.nach>.note{margin-top:-8px}
 .view>.sec+.note{margin-top:0}
 /* Balken je Monat (v92): Kapseln; im laufenden Jahr trägt nur der laufende Monat die volle Farbe (Klasse jetzt), in früheren Jahren alle */
@@ -376,7 +385,7 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .ov .v.neg{color:var(--danger)}
 .ov .s{grid-area:2/2/3/4;font-size:12px;color:var(--muted)}
 .ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
-.quick{display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
+.quick{display:flex;gap:6px;overflow-x:auto;margin:-6px -16px -2px;padding:6px 16px 2px;scrollbar-width:none}   /* Luft oben und unten: Die Reihe schneidet die größere Tippfläche der Chips sonst ab (unten nur 2 px, darunter beginnt die Tippfläche von „Alle n“) */
 .quick::-webkit-scrollbar{display:none}
 .quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
 .quick svg{width:9px;height:9px;color:var(--at)}
@@ -386,6 +395,12 @@ svg.scrub{touch-action:pan-y;-webkit-user-select:none;user-select:none;-webkit-t
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
+/* Tippflächen auf Apple-Maß (v106): Erinnerung, Umschalter, die Teile oben und Chips sehen gleich aus, nehmen den Finger aber auf 44 px an (Chips, die in Reihen stehen, auf 44 × 38) */
+.remind{position:relative}
+.remind::after{content:"";position:absolute;inset:-4px 0}
+.seg2 button::after{content:"";position:absolute;inset:-8px 0}
+.chip{position:relative}
+.chip::after{content:"";position:absolute;inset:-6px -3px}
 .ins{display:flex;flex-direction:column;gap:2px;padding:9px 0}
 .ins+.ins{border-top:.5px solid var(--line)}
 .ins b{font-size:14px;font-weight:600}
@@ -419,6 +434,11 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 #l-items:empty,#p-items:empty{display:none}
 .prow{display:flex;align-items:center;gap:10px;padding:8px 10px 8px 12px;border:1px solid var(--line);border-radius:14px}
 .prow b{flex:1;min-width:0;font-size:14.5px;overflow-wrap:anywhere}
+/* Griff zum Umsortieren (v106) und die Zeile, die gerade gezogen wird: Sie hebt sich leicht ab, die anderen weichen weich aus */
+.griff{flex:none;display:grid;place-items:center;width:28px;height:40px;margin:-6px -6px -6px -6px;color:var(--mid);touch-action:none;cursor:grab}
+.griff svg{width:16px;height:16px}
+#p-items .prow{transition:transform .18s ease}
+#p-items .prow.zieht{transition:none;position:relative;z-index:2;background:var(--sel);box-shadow:0 10px 24px -10px rgba(0,0,0,.6)}
 .pst{display:flex;align-items:center;gap:8px;font-size:14px;font-variant-numeric:tabular-nums;white-space:nowrap}
 .pst button{width:32px;height:32px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:18px;line-height:1;padding:0}
 #x-stats,#x-recap{display:flex;flex-direction:column;gap:10px}
@@ -433,6 +453,7 @@ body{font-size:14px}
 .add{width:30px;height:30px;position:relative}
 .add::after{content:"";position:absolute;inset:-7px}
 .add svg{width:14px;height:14px}
+#gear svg{width:17px;height:17px}
 .hero{gap:1px}
 .date{font-size:12px}
 .hero h1{font-size:clamp(20px,5.4vw,22px);line-height:1.05}
@@ -571,20 +592,13 @@ u.w{background:var(--c-weight)}
 #lsheet .sh-head h2{font-size:15px}
 .l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
 #l-del{border:0;background:none;text-align:center;font-size:13px}
-/* Pausen-Uhr (v103): eine Glas-Kapsel links neben „Training beenden“. Sie zeigt die eingestellte Länge, läuft nach einem abgehakten Satz rückwärts (dabei füllt sie sich von links zart blau)
-   und wird am Ende grün („Los“). */
+/* Pausen-Uhr (v103, seit v106 nur noch ein laufender Timer, sein Wunsch: „nur als laufender Timer ohne Grenze oder Signal“): eine Glas-Kapsel links neben „Training beenden“.
+   Sie zählt ab dem letzten abgehakten Satz hoch; vor dem ersten Satz steht „Pause“. Sie ist kein Knopf. */
 .l-akt{display:flex;gap:8px}
 .l-akt .primary{flex:1;min-width:0}
-.l-rest{flex:none;position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:44px;padding:0 14px;border:0;border-radius:999px;background:var(--surface);color:var(--muted);font-family:var(--round);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
-.l-rest svg,.l-rest span{position:relative;z-index:1}
+.l-rest{flex:none;display:inline-flex;align-items:center;justify-content:center;gap:6px;min-width:84px;min-height:44px;padding:0 14px;border-radius:999px;background:var(--surface);color:var(--muted);font-family:var(--round);font-size:15px;font-weight:600;font-variant-numeric:tabular-nums;box-shadow:inset 0 0 0 .5px var(--edge),inset 0 1px 0 var(--edge-top)}
 .l-rest svg{width:16px;height:16px;flex:none}
-.l-rest i{position:absolute;inset:0 auto 0 0;width:0;background:color-mix(in srgb,var(--accent) 26%,transparent)}
 .l-rest.laeuft{color:var(--ink)}
-.l-rest.los{color:var(--good)}
-.l-rest.los i{background:color-mix(in srgb,var(--good) 20%,transparent)}
-@keyframes gong{50%{transform:scale(1.08)}}
-.l-rest.gong{animation:gong .4s ease}
-#lv-rest.los{color:var(--good)}
 .ls-t{margin:2px 0 0;font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
 /* Kopf einer Übung im laufenden Training: Name mit Punkt (Trend), darunter das Ziel und, wenn es einen gibt, der Rekord von heute */
 .lx-k{display:flex;flex-direction:column;align-items:flex-start;gap:3px}
@@ -623,6 +637,11 @@ u.w{background:var(--c-weight)}
 .rows.one .is-skip .glyph svg{width:13px;height:13px}
 .rows.one .is-skip .name{color:var(--muted)}
 .rs{display:flex;flex-direction:column;gap:12px;padding:10px 16px 22px}
+/* Einstellungen (v106): hinter dem Zahnrad auf Heute. Sicherung und Version stehen nur hier, nicht mehr auf jeder Seite. */
+.es{display:flex;flex-direction:column;gap:14px;padding:10px 16px 22px}
+.es-body{display:flex;flex-direction:column;gap:10px}
+.es-body .sec{margin:4px 2px -2px}
+.es .foot{margin-top:4px}
 /* Zahl wählen (Gewicht, Wiederholungen): oben die Werte in der Nähe, unten eigene Tasten. Kein Eingabefeld, die Tastatur des iPhones bleibt zu. */
 #zsheet{overflow:hidden}
 #zsheet[open]{display:flex;flex-direction:column}
@@ -641,8 +660,6 @@ u.w{background:var(--c-weight)}
 .zk.pl{background:none;color:var(--muted)}
 .zk svg{width:22px;height:22px}
 .zk:disabled{visibility:hidden}
-.z-pad[hidden]{display:none}
-#zsheet.liste .z-list{max-height:none;padding-bottom:max(14px,env(safe-area-inset-bottom))}
 #lsheet .primary{min-height:44px;font-size:14.5px}
 .lx-tabs{position:relative;display:flex;gap:6px;overflow-x:auto;margin:0 -16px;padding:0 16px;scrollbar-width:none}
 .lx-tabs::-webkit-scrollbar{display:none}
@@ -754,7 +771,7 @@ dialog{border-radius:32px}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.l-rest:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
@@ -850,9 +867,10 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .fld>span{font-size:13px;font-weight:500}
 .streak span{font-size:10.5px;font-weight:500}
 .subtabs{gap:16px}
-.subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0}
+.subtabs button{font-family:var(--display);font-size:17px;font-weight:700;letter-spacing:-.02em;text-transform:none;color:var(--mid);padding:2px 0;position:relative}
+.subtabs button::after{content:"";position:absolute;inset:-8px -8px}
 .subtabs button[aria-pressed="true"]{color:var(--ink);box-shadow:none}
-.mark{font-size:24px;font-weight:700}
+.mark{font-size:28px;font-weight:700}
 .hero h1 .num,.fig b,.streak b,.kv b,.ov .v,.lt-r,.lt-r .pv,.z-list button,.zk,.z-out,.wd b,.cd b,.stepper input,.entries b{font-family:var(--round)}
 .lx h3{color:var(--ink)}
 .entries b{white-space:nowrap}
@@ -866,8 +884,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg,body,.tabs-in::before{transition:none}
-  .l-rest.gong{animation:none}
+  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
 }
 </style>
@@ -878,6 +895,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <div class="app">
   <header class="top">
     <span class="mark"><span id="mark">Track</span><span class="dot">.</span></span>
+    <button class="add" id="gear" type="button" aria-label="Einstellungen" hidden><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><path d="M7.42 3.92 L8.59 3.35 L8.69 1.70 L11.31 1.70 L11.41 3.35 L12.47 3.88 L13.70 4.30 L14.94 3.20 L16.80 5.06 L15.70 6.30 L16.08 7.42 L16.65 8.59 L18.30 8.69 L18.30 11.31 L16.65 11.41 L16.12 12.47 L15.70 13.70 L16.80 14.94 L14.94 16.80 L13.70 15.70 L12.58 16.08 L11.41 16.65 L11.31 18.30 L8.69 18.30 L8.59 16.65 L7.53 16.12 L6.30 15.70 L5.06 16.80 L3.20 14.94 L4.30 13.70 L3.92 12.58 L3.35 11.41 L1.70 11.31 L1.70 8.69 L3.35 8.59 L3.88 7.53 L4.30 6.30 L3.20 5.06 L5.06 3.20 L6.30 4.30Z"/><circle cx="10" cy="10" r="2.6"/></svg></button>
     <button class="add" id="add" type="button" aria-label="Notiz schreiben">
       <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg>
     </button>
@@ -896,7 +914,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
   <div id="v-training" class="view" hidden></div>
 
-  <footer class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v105</span><span class="ver" id="h-line" hidden></span></footer>
 </div>
 </div>
 
@@ -1209,7 +1226,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   <form id="lform" novalidate>
     <i class="l-grab" aria-hidden="true"></i>
     <div class="sh-head">
-      <div><h2 id="ls-title">Training</h2><p class="ls-t"><span id="lv-total">00:00</span><span id="lv-rest"></span></p></div>
+      <div><h2 id="ls-title">Training</h2><p class="ls-t"><span id="lv-total">00:00</span></p></div>
       <button type="button" class="x" id="ls-close" aria-label="Schließen, das Training läuft weiter">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6l5 5 5-5"/></svg>
       </button>
@@ -1226,12 +1243,25 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <div class="l-fuss">
       <p class="err" id="l-err" role="alert" hidden></p>
       <div class="l-akt">
-        <button type="button" class="l-rest" id="l-rest" data-la="rest" aria-label="Pausen-Uhr einstellen"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.2"/><path d="M8 6.4V9l1.7 1.2M6.6 1.6h2.8"/></svg><span id="l-rest-t">Pause</span><i></i></button>
+        <span class="l-rest" id="l-rest" role="timer" aria-label="Pause"><svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="8" cy="9" r="5.2"/><path d="M8 6.4V9l1.7 1.2M6.6 1.6h2.8"/></svg><span id="l-rest-t">Pause</span></span>
         <button class="primary" type="submit" id="l-save" aria-label="Training beenden und speichern">Training beenden</button>
       </div>
       <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
     </div>
   </form>
+</dialog>
+
+<dialog tabindex="-1" id="esheet" aria-labelledby="es-title">
+  <div class="es">
+    <div class="sh-head">
+      <h2 id="es-title">Einstellungen</h2>
+      <button type="button" class="x" id="es-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="es-body" id="es-body"></div>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v106</span><span class="ver" id="h-line" hidden></span></p>
+  </div>
 </dialog>
 
 <dialog tabindex="-1" id="rsheet" aria-labelledby="rs-title">
@@ -1604,16 +1634,17 @@ function renderWeight() {
       if (rate != null && Math.abs(rate) >= 0.05) {
         if (Math.sign(rate) === Math.sign(need)) {
           const days = Math.round(need / rate * 7);
-          meta += days > 730 ? ' · bei diesem Tempo in über 2 Jahren' : ' · bei diesem Tempo etwa am ' + DF_LONG.format(addDays(new Date(), days));
-        } else meta += ' · der Trend läuft gerade in die andere Richtung';
+          const am = addDays(new Date(), days);
+          meta += days > 730 ? ' · in über 2 Jahren' : ' · etwa ' + DF_SHORT.format(am) + (am.getFullYear() !== new Date().getFullYear() ? ' ' + am.getFullYear() : '');
+        } else meta += ' · Trend gerade in die falsche Richtung';
       }
     }
-    goalHTML = '<div class="row goal ' + (reached ? 'is-done' : 'is-idle') + '"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div>' +
+    /* Ruhiger seit v106 (mein Vorschlag, sein „alles einbauen“): ohne Symbol, die Prozentzahl klein in einer Zeile, der Tag kurz („etwa 8. Jan. 2027“); der Fortschritt bleibt die Linie unten.
+       Die Prozentzahl steht erst da, wenn es Fortschritt gibt: „0 %“ sagt nichts. */
+    goalHTML = '<div class="row goal ruhig ' + (reached ? 'is-done' : 'is-idle') + '"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div>' +
       '<button type="button" class="go" data-w="goal" aria-label="Ziel ändern">' +
-        '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
         '<span class="txt"><span class="name">Ziel ' + kg(W.goal) + ' kg</span><span class="meta">' + meta + '</span></span></button>' +
-      /* Die Prozentzahl steht erst da, wenn es Fortschritt gibt: Ein großes „0 %“ sagt nichts */
-      (Math.round(p * 100) > 0 ? '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.round(p * 100) + '</b><span>%</span></span></div>' : '') + '</div>';
+      (Math.round(p * 100) > 0 ? '<div class="side"><span class="pz">' + Math.round(p * 100) + ' %</span></div>' : '') + '</div>';
   }
 
   let h = weekStripHTML('weight') + '<section class="hero w-hero"><p class="date">7-Tage-Schnitt</p>' +
@@ -2677,8 +2708,6 @@ function normK(o) {
   if (o && o.aus && typeof o.aus === 'object') for (const d in o.aus) { const a = o.aus[d]; if (!isKey(d) || !a || typeof a !== 'object') continue; for (const id in a) if (a[id]) (out.aus[d] = out.aus[d] || {})[id] = 1; }
   out.meta = {};
   if (o && o.meta && typeof o.meta === 'object') for (const d in o.meta) { const m = o.meta[d]; if (isKey(d) && m && typeof m === 'object') out.meta[d] = Object.assign({ dur: Math.max(0, Math.round(Number(m.dur) || 0)), plan: m.plan ? String(m.plan) : null }, m.n ? { n: String(m.n).slice(0, 40) } : {}); }
-  /* Pausen-Uhr (v103): Länge der Pause in Sekunden; fehlt = aus */
-  if (o && o.rest >= 15 && o.rest <= 900) out.rest = Math.round(o.rest);
   /* Training auf der Apple Watch je Tag (v103, gymUhr()): s = Dauer in Sekunden, hr = mittlerer Puls, h = Kennung des Trainings (damit eine zweite Lesung nachbessert) */
   out.uhr = {};
   if (o && o.uhr && typeof o.uhr === 'object') for (const d in o.uhr) { const u = o.uhr[d]; if (isKey(d) && u && typeof u === 'object' && u.s >= 60 && u.s <= 43200) out.uhr[d] = Object.assign({ s: Math.round(u.s) }, u.hr >= 30 && u.hr <= 250 ? { hr: Math.round(u.hr) } : {}, typeof u.h === 'string' && u.h ? { h: u.h.slice(0, 40) } : {}); }
@@ -2847,6 +2876,16 @@ function planRunde(plans) {
 }
 const planName = id => id && K.plans && K.plans[id] ? K.plans[id].n : '';
 function planLast(id) { let last = null; for (const d in (K.meta || {})) if (K.meta[d].plan === id && kDay(d).length && (!last || d > last)) last = d; return last; }
+/* „Heute dran“ (v106, sein „alles einbauen“ zu meinem Vorschlag): der Plan, der als Nächstes dran ist, als eine Zeile auf Heute; ein Tipp startet ihn.
+   Nicht, wenn heute schon trainiert wurde, die Runde voll ist oder ein Training läuft (dann steht dessen Karte da). */
+function dranHTML() {
+  const plans = kPlans(); if (!plans.length || kDay(todayKey()).length) return '';
+  const r = planRunde(plans), pl = plans[r.next]; if (!pl) return '';
+  const last = planLast(pl.id);
+  return '<ul class="rows one dran"><li class="row is-idle"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten, heute dran"><span class="glyph">' + (r.next + 1) + '</span>' +
+    '<span class="txt"><span class="name">' + esc(pl.n) + '</span><span class="meta">Heute dran · ' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '') + '</span></span></button>' +
+    '<div class="side"><span class="dran-los" aria-hidden="true">' + CHEV(1) + '</span></div></li></ul>';
+}
 function liveCardHTML() {
   const L = K.live; if (!L) return '';
   const done = L.items.reduce((n, it) => n + it.sets.filter(s => s.done).length, 0), tot = L.items.reduce((n, it) => n + it.sets.length, 0);
@@ -2900,6 +2939,14 @@ function kExFold() {
   return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
     '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
 }
+/* Stärkste und schwächste Übung im Zeitraum (v106): die größte und die kleinste Verbesserung, gerechnet wie in der Liste „Übungen“ (exDelta), erst ab zwei Übungen mit Vergleich.
+   Steht nach den Plänen, über den Klappzeilen; ein Tipp öffnet die Übung. */
+function kBestHTML(pre, wann) {
+  const l = kExs().map(x => ({ x, d: exDelta(kHist(x.id), pre) })).filter(o => o.d && isFinite(o.d.p)).sort((a, b) => b.d.p - a.d.p);
+  if (l.length < 2 || l[0].d.p === l[l.length - 1].d.p) return '';
+  const zeile = (o, titel) => '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + titel + '</small></span><b class="' + o.d.c + '">' + o.d.t + '</b></button></li>';
+  return '<ul class="entries best">' + zeile(l[0], 'Stärkste Übung ' + wann) + zeile(l[l.length - 1], 'Schwächste Übung ' + wann) + '</ul>';
+}
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
@@ -2907,7 +2954,7 @@ function kYearHTML(curYM) {
   if (!s.n) return h;
   h += kTiles(s) + kNote(s, y) + kGewHTML(y, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
-  return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  return h + kBestHTML(y, y) + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFold() + '</div>';
 }
 /* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
@@ -2927,7 +2974,9 @@ function kraftHTML(curYM) {
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
   h += secHTML('Pläne', fertig ? fertig + ' von ' + plans.length : '', secAct('data-k="plan"', '', 'Plan anlegen'));
-  h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
+  /* Der Plan, der dran ist, steht oben (v106); danach die folgenden in der Reihe der Runde, die erledigten am Ende. Die Zahl im Ring bleibt sein Platz in der Reihe. */
+  const reihe = plans.map((p, i) => i), ord = runde.next > 0 ? reihe.slice(runde.next).concat(reihe.slice(0, runde.next)) : reihe;
+  h += plans.length ? '<ul class="rows one">' + ord.map(i => { const pl = plans[i];
     const last = planLast(pl.id), ok = runde.done[pl.id], weg = runde.aus[pl.id], dran = i === runde.next;
     return '<li class="row ' + (ok ? 'is-done' : weg ? 'is-skip' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : weg ? ', in dieser Runde übersprungen' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : weg ? SKIP : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
       '<span class="meta">' + (weg ? 'übersprungen' : pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + (last ? ' · zuletzt ' + dRow(last) : '')) + '</span></span></button>' +
@@ -2936,7 +2985,7 @@ function kraftHTML(curYM) {
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  return h + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
+  return h + kBestHTML(tYM, 'im ' + name) + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -3312,6 +3361,7 @@ function exIdFor(name) {
   const id = newId(), q = { ex: {} }; q.ex[id] = { n: name.slice(0, 60) }; kdoc.patch(q);
   return id;
 }
+const GRIFF = '<svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M3 5h10M3 8h10M3 11h10"/></svg>';
 const CHECK = '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.6 3.6L14.5 5"/></svg>';
 /* Sätze für eine Übung im laufenden Training: so viele wie im Plan, vorbelegt mit der Vorgabe für heute (vorgabe(): das letzte Mal und ein Stück mehr) */
 function liveSets(id, count) {
@@ -3328,17 +3378,15 @@ function paintZ() { const o = $('#z-out'), leer = zS === ''; o.textContent = lee
 function openZ(o) {
   zO = o; zS = '';
   $('#zs-title').textContent = o.titel; $('#z-komma').disabled = !o.komma;
-  /* nurListe (Pausen-Uhr): nur die Werte zur Wahl, ohne die Tasten darunter; text(v) beschriftet einen Wert anders als „Zahl Einheit“ */
-  $('#z-pad').hidden = !!o.nurListe; zdlg.classList.toggle('liste', !!o.nurListe);
   const box = $('#z-list');
-  box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + (o.text ? o.text(v) : kgn(v) + ' ' + o.einheit) + '</button>').join('');
+  box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + kgn(v) + ' ' + o.einheit + '</button>').join('');
   paintZ(); openDlg(zdlg);
   const cur = box.querySelector('[aria-pressed="true"]');
   box.scrollTop = cur ? cur.offsetTop - box.offsetTop - (box.clientHeight - cur.offsetHeight) / 2 : 0;
 }
 function zDone(v) { const o = zO; closeDlg(zdlg); if (o && v != null && isFinite(v)) o.dann(v); }
 function zTaste(c) {
-  if (!zO || zO.nurListe) return;
+  if (!zO) return;
   if (c === 'x') zS = zS.slice(0, -1);
   else if (c === ',') { if (zO.komma && zS.indexOf(',') < 0) zS = (zS || '0') + ','; }
   else if (zS === '0') zS = c;
@@ -3363,43 +3411,22 @@ function startPlan(id) {
   renderTraining(); ensureLiveTick(); openL();
 }
 /* Zeiten laufen über Zeitstempel und stimmen deshalb auch nach einem Wechsel in eine andere App */
-/* Pausen-Uhr (v103, sein „alles fertig machen“ zu den offenen Punkten; Vorbild ist der Knopf unten in seinem Bild aus Alpha Progression). K.rest ist die Länge der Pause in Sekunden (fehlt = aus).
-   Sie läuft ab dem letzten abgehakten Satz (last) rückwärts und meldet sich am Ende einmal mit einem Impuls; die iPhone-App (ab 1.0) zeigt zusätzlich eine Mitteilung, wenn die App nicht vorn ist (hPause()).
-   Ohne eingestellte Länge zählt die Pause wie bisher nur hoch. Alles rechnet über Zeitstempel und stimmt deshalb auch nach einem Wechsel in eine andere App. */
-const REST = [0, 30, 45, 60, 75, 90, 105, 120, 150, 180, 210, 240, 300], restKurz = v => Math.floor(v / 60) + ':' + pad(v % 60), restText = v => v ? restKurz(v) + ' min' : 'Aus';
-let lGong = 0;   // last des Satzes, für den das Ende der Pause schon gemeldet ist
-function restStand(L, now) { const R = K.rest || 0; return R && L && L.last ? { R, rest: R - (now - L.last) / 1000 } : null; }
-function paintRest(p) {
-  const k = $('#l-rest'), R = K.rest || 0; if (!k) return;
-  const laeuft = !!p && p.rest > 0, los = !!p && p.rest <= 0;
-  $('#l-rest-t').textContent = !R ? 'Pause' : laeuft ? restKurz(Math.ceil(p.rest)) : los ? 'Los' : restKurz(R);
-  k.classList.toggle('laeuft', laeuft); k.classList.toggle('los', los);
-  k.lastElementChild.style.width = laeuft ? ((1 - p.rest / p.R) * 100).toFixed(1) + '%' : los ? '100%' : '0';
-  k.setAttribute('aria-label', 'Pausen-Uhr: ' + (!R ? 'aus' : laeuft ? 'noch ' + restKurz(Math.ceil(p.rest)) + ' Minuten' : los ? 'Pause vorbei' : restText(R)) + ', einstellen');
-}
-/* Mitteilung „Pause vorbei“ der iPhone-App planen oder streichen (ab 1.0; ältere überlesen die Nachricht): sek = Sekunden bis zum Ende der laufenden Pause, 0 = keine. text nennt, was dann dran ist. */
-function hPause() {
-  if (!HUELLE) return;
-  const L = ldlg.open && Lw ? Lw : K.live, p = restStand(L, Date.now()), it = L ? L.items.find(x => undone(x) >= 0) : null;
-  hPost({ art: 'pause', sek: p && p.rest > 1 ? Math.round(p.rest) : 0, text: it && K.ex[it.id] ? hCut(K.ex[it.id].n, 60) + ' · Satz ' + (undone(it) + 1) : '' });
+/* Pausen-Uhr (seit v106 nur ein laufender Timer): Sekunden seit dem letzten abgehakten Satz als „1:05“, vor dem ersten Satz „Pause“. Über Zeitstempel, stimmt also auch nach einem Wechsel in eine andere App. */
+function paintRest(src, now) {
+  const k = $('#l-rest'); if (!k) return;
+  const sek = src.last ? Math.max(0, Math.round((now - src.last) / 1000)) : null, t = sek == null ? 'Pause' : Math.floor(sek / 60) + ':' + pad(sek % 60);
+  $('#l-rest-t').textContent = t; k.classList.toggle('laeuft', sek != null);
+  k.setAttribute('aria-label', sek == null ? 'Pause' : 'Pause seit ' + t + ' Minuten');
 }
 function liveTick() {
   const L = K.live, tab = $('#tab-t');
   if (!L) { if (lvTick) { clearInterval(lvTick); lvTick = null; } if (tab) tab.textContent = 'Training'; return; }
   const now = Date.now(), tot = fmt((now - L.start) / 1000), src = ldlg.open && Lw ? Lw : L;
-  const a = $('#lv-total'), b = $('#lv-rest');
+  const a = $('#lv-total');
   if (a) a.textContent = tot;
   document.querySelectorAll('.lv-card-t').forEach(c => { c.textContent = tot; });
   if (tab) tab.textContent = tot;
-  /* Pause: ohne eingestellte Länge läuft sie seit dem letzten abgehakten Satz einfach hoch, mit Länge rückwärts bis „vorbei“ */
-  const p = restStand(src, now);
-  if (b) { b.textContent = !src.last ? '' : !p ? ' · Pause ' + fmt((now - src.last) / 1000) : p.rest > 0 ? ' · Pause noch ' + fmt(Math.ceil(p.rest)) : ' · Pause vorbei'; b.classList.toggle('los', !!p && p.rest <= 0); }
-  paintRest(p);
-  /* Ende der Pause: einmal melden (Impuls, die Kapsel hebt sich kurz). Nicht, wenn die App erst lange danach wieder aufgeht. */
-  if (p && p.rest <= 0 && lGong !== src.last) {
-    const eben = p.rest > -3; lGong = src.last;
-    if (eben && !document.hidden) { haptik('erfolg'); const k = $('#l-rest'); if (k && !ruhig()) { k.classList.remove('gong'); void k.offsetWidth; k.classList.add('gong'); } }
-  }
+  paintRest(src, now);   // die Pause steht nur in der Kapsel unten, nicht noch einmal oben neben der Gesamtzeit
 }
 function ensureLiveTick() { if (K.live && !lvTick) lvTick = setInterval(liveTick, 1000); liveTick(); }
 async function wakeOn() { try { if (navigator.wakeLock && !wakeL) { wakeL = await navigator.wakeLock.request('screen'); wakeL.addEventListener('release', () => { wakeL = null; }); } } catch (e) { wakeL = null; } }
@@ -3485,7 +3512,6 @@ $('#lform').addEventListener('click', e => {
   const t = e.target.closest('[data-la]'); if (!t || !Lw) return;
   const a = t.dataset.la, it = Lw.items[lI];
   if (a === 'hist') { if (it) openX(it.id, true); return; }
-  if (a === 'rest') return openZ({ titel: 'Pause nach jedem Satz', wert: K.rest || 0, einheit: '', liste: REST, text: restText, nurListe: true, dann: v => { kdoc.patch({ rest: v || null }); liveTick(); hPause(); } });
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
   if (a === 'num' && it) { lJ = +t.dataset.s; return lZahl(it, lJ, t.dataset.f); }
@@ -3518,7 +3544,6 @@ $('#lform').addEventListener('click', e => {
   const y = ldlg.scrollTop;
   paintL(); ldlg.scrollTop = y;
   saveLive(); liveTick();
-  if (a === 'done') hPause();
   if (a === 'addx' && lAdd) $('#l-new').focus();
 });
 function lAddNew() {
@@ -3545,7 +3570,7 @@ $('#lform').addEventListener('submit', e => {
   if (Lw.plan && K.aus[Lw.date] && K.aus[Lw.date][Lw.plan]) { q.aus = {}; q.aus[Lw.date] = {}; q.aus[Lw.date][Lw.plan] = null; }   // heute erst übersprungen, dann doch trainiert
   const tagL = Lw.date;
   Lw = null; kdoc.patch(q);
-  tSub = 'kraft'; closeL(); liveTick(); hPause(); openR(tagL);
+  tSub = 'kraft'; closeL(); liveTick(); openR(tagL);
 });
 /* Rückblick nach „Training beenden“ (sein „ja“ auf meinen Vorschlag, 24.11.): Dauer, bessere Sätze, Rekorde, darunter jede Übung mit ihren Sätzen. Ein Tipp auf eine Übung zeigt ihren Verlauf. */
 const rdlg = $('#rsheet');
@@ -3571,16 +3596,39 @@ rdlg.addEventListener('click', e => {
 $('#l-del').addEventListener('click', () => {
   if (!lArm) { lArm = true; $('#l-del').textContent = 'Wirklich verwerfen? Noch einmal tippen.'; return; }
   Lw = null; kdoc.patch({ live: null });
-  closeL(); liveTick(); hPause();
+  closeL(); liveTick();
 });
 
 function paintP() {
   $('#p-items').innerHTML = pS.items.map((it, i) => { const ex = K.ex[it.id], name = ex ? ex.n : 'Übung';
-    return '<div class="prow" data-i="' + i + '"><b>' + esc(name) + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + (it.sets === 1 ? ' Satz' : ' Sätze') + '</span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
+    return '<div class="prow" data-i="' + i + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + esc(name) + '</b><div class="pst"><button type="button" data-pa="dec" aria-label="' + esc(name) + ', ein Satz weniger">−</button><span>' + it.sets + (it.sets === 1 ? ' Satz' : ' Sätze') + '</span><button type="button" data-pa="inc" aria-label="' + esc(name) + ', ein Satz mehr">+</button></div>' +
       '<button type="button" class="x sm" data-pa="rm" aria-label="' + esc(name) + ' aus dem Plan entfernen">' + XSVG + '</button></div>'; }).join('');
   paintPPick();
 }
 function paintPPick() { paintPick('#p-pick', '#p-new', pS.items.map(it => it.id), 'pa'); }
+/* Reihenfolge der Übungen im Plan (v106, mein Vorschlag, sein „alles einbauen“): am Griff links ziehen. Die übrigen Zeilen weichen aus, beim Loslassen steht die Übung an ihrem Platz.
+   Der Griff nimmt keine Scroll- oder Wischgeste an (touch-action: none, und das Wegziehen des Blatts lässt ihn aus). */
+let pZug = null;
+$('#p-items').addEventListener('pointerdown', e => {
+  const g = e.target.closest('.griff'); if (!g || !pS) return;
+  const rows = [...$('#p-items').children], row = g.closest('.prow'), i = rows.indexOf(row);
+  if (rows.length < 2 || i < 0) return;
+  e.preventDefault(); try { g.setPointerCapture(e.pointerId); } catch (x) {}
+  const top = k => rows[k].getBoundingClientRect().top;
+  pZug = { rows, row, i, ziel: i, y0: e.clientY, schritt: top(1) - top(0), mitte: rows.map(x => { const q = x.getBoundingClientRect(); return q.top + q.height / 2; }) };
+  row.classList.add('zieht'); haptik('wahl');
+});
+$('#p-items').addEventListener('pointermove', e => {
+  const z = pZug; if (!z) return;
+  const dy = e.clientY - z.y0, m = z.mitte[z.i] + dy;
+  let ziel = z.i; z.mitte.forEach((c, k) => { if (k < z.i && m < c) ziel = Math.min(ziel, k); if (k > z.i && m > c) ziel = Math.max(ziel, k); });
+  if (ziel !== z.ziel) { z.ziel = ziel; haptik('wahl'); }
+  z.row.style.transform = 'translateY(' + dy + 'px)';
+  z.rows.forEach((x, k) => { if (k !== z.i) x.style.transform = k > z.i && k <= ziel ? 'translateY(' + -z.schritt + 'px)' : k < z.i && k >= ziel ? 'translateY(' + z.schritt + 'px)' : ''; });
+});
+const pZugEnde = () => { const z = pZug; if (!z) return; pZug = null; if (z.ziel !== z.i) { const it = pS.items.splice(z.i, 1)[0]; pS.items.splice(z.ziel, 0, it); } paintP(); };
+$('#p-items').addEventListener('pointerup', pZugEnde);
+$('#p-items').addEventListener('pointercancel', pZugEnde);
 function openP(id) {
   const pl = id && K.plans ? K.plans[id] : null;
   pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => ({ id: it.id, sets: it.sets })) : [] }; pArm = false;
@@ -4049,8 +4097,8 @@ const bkOrd = () => hInfo.sicherung.ordner ? 'Ordner: ' + hInfo.sicherung.ordner
    Neu gezeichnet wird Heute nur, wenn die Erinnerung oben kommt, geht oder ihren Satz wechselt, und nicht bei offenem Blatt (dessen Schließen zeichnet Heute ohnehin neu). */
 function bkPaint() {
   const s = hInfo.sicherung, due = backupDue(), alt = $('#bk-due'), er = $('#bk-err'), ms = $('#bk-msg'), set = (id, t) => { const el = $(id); if (el) el.textContent = t; };
-  if (hMode === 'day' && (alt ? alt.firstElementChild.textContent : '') !== due && !document.querySelector('dialog[open]')) return renderHome();
-  set('#bk-msg', bkSub(due)); if (ms) ms.classList.toggle('neg', bkBad());
+  if (hMode === 'day' && (alt ? alt.firstElementChild.textContent : '') !== due && !document.querySelector('dialog[open]:not(#esheet)')) renderHome();
+  set('#bk-msg', bkSub('')); if (ms) ms.classList.toggle('neg', bkBad());   // der Stand steht seit v106 in den Einstellungen, dort immer (auch wenn die Erinnerung oben steht)
   set('#bk-ord', bkOrd());
   if (er) { er.textContent = s.fehler; er.hidden = !s.fehler; }
 }
@@ -4073,19 +4121,9 @@ function backupDue() {
   return n < BK_DAYS ? '' : sOhne() ? 'Sicherung liegt nur in der App' : b.saved ? 'Letzte Sicherung vor ' + n + ' Tagen' : 'Noch keine Sicherung gespeichert';
 }
 
-function renderHome() {
-  const el = $('#v-heute');
-  const seg = '<div class="seg2 three" role="group" aria-label="Zeitraum">' + [['day', 'Heute'], ['week', 'Woche'], ['month', 'Monat']].map(m => '<button type="button" data-h="mode" data-v="' + m[0] + '" aria-pressed="' + (hMode === m[0]) + '">' + m[1] + '</button>').join('') + '</div>';
-  if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
+/* Kurzform je Bereich für die Übersicht auf Heute: Wert (v) und Unterzeile (s), mc = Farbe des Werts bei Finanzen */
+function homeWerte() {
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
-  let h = seg + weekStripHTML('all');
-  h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe']]
-    .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
-  const bkDue = backupDue();
-  h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
-  if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
-  const rcYM = recapDue();
-  if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
   const wl = withTrend(wList()); let wv = '', ws = '';
   if (wl.length) {
     const rate = weeklyRate(wl, dayNum(tk));
@@ -4108,7 +4146,23 @@ function renderHome() {
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
   let tv = '', ts = '';
   if (runsAll.length || kdAll.length) { tv = kg(g.m / 1000) + ' km'; ts = g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + kn + '× Gym im ' + mName; }
-  h += liveCardHTML();
+  return { wv, ws, mv, ms, mc, tv, ts };
+}
+function renderHome() {
+  const el = $('#v-heute');
+  const seg = '<div class="seg2 three" role="group" aria-label="Zeitraum">' + [['day', 'Heute'], ['week', 'Woche'], ['month', 'Monat']].map(m => '<button type="button" data-h="mode" data-v="' + m[0] + '" aria-pressed="' + (hMode === m[0]) + '">' + m[1] + '</button>').join('') + '</div>';
+  if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
+  const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
+  let h = seg + weekStripHTML('all');
+  h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + [['notiz', 'Notiz'], ['gewicht', 'Gewicht'], ['ausgabe', 'Ausgabe']]
+    .map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
+  const bkDue = backupDue();
+  h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
+  if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
+  const rcYM = recapDue();
+  if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
+  const { wv, ws, mv, ms, mc, tv, ts } = homeWerte();
+  h += liveCardHTML() || dranHTML();
   /* Übersicht: nur Bereiche, in denen etwas eingetragen ist. Ein leerer Bereich stünde sonst jeden Tag als Zeile ohne Inhalt da („Tippe, um zu starten“); er bleibt über die Leiste unten erreichbar. */
   /* Arbeit: Verdienst im laufenden Monat. Uni: Punkte gesamt und wie viele der Termine geschafft sind. */
   const wk = workList(), wc = wk.filter(x => x.d.slice(0, 7) === curYM), un = uniList(), pkt = un.reduce((n, x) => n + x.p, 0), wTage = new Set(wc.map(x => x.d)).size;
@@ -4116,31 +4170,37 @@ function renderHome() {
   const ovs = (wv ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv ? ovCard('training', 'Training', tv, ts) : '') +
     (av ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '') + (un.length ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '');
   if (ovs) h += '<div class="ovs">' + ovs + '</div>';
-  /* Sicherung: eine eingeklappte Zeile am Ende. Ist sie fällig, steht die Erinnerung oben; derselbe Satz steht dann hier nicht noch einmal.
-     Sichert die iPhone-App von selbst, kommt die Zeile zum Ordner dazu (ist einer gewählt, auch die Zeile, ihn nicht mehr zu benutzen); was dabei geschieht, steht hinter dem „i“,
-     ein Fehler der iPhone-App im Wortlaut darunter. */
-  const au = hInfo.sicherung;
-  h += foldHTML('sicherung', 'Sicherung', '<span id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub(bkDue)) + '</span>', '',
-    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen')
-    + (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : ''),
-    au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
   el.innerHTML = h;
 }
+/* Einstellungen (v106, sein Wunsch: „diesen Button Sicherung ausblenden, nur einblenden, wenn lange keine Sicherung … oder ein Zahnrad bei Heute mit all diesen Sachen“).
+   Auf Heute steht nur noch die Erinnerung, wenn die Sicherung fällig ist; alles Übrige liegt hinter dem Zahnrad: Stand der Sicherung, speichern, einlesen,
+   in der iPhone-App der Ordner für die Sicherung von selbst (was dabei geschieht, hinter dem „i“, ein Fehler der iPhone-App im Wortlaut darunter), dazu die Version. */
+const edlg = $('#esheet');
+function paintE() {
+  const au = hInfo.sicherung;
+  $('#es-body').innerHTML = secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
+    actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
+    (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
+    (au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '');
+}
+function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
+const bkAct = a => { if (a === 'export') exportData(); else if (a === 'import') $('#bk-file').click(); else if (a === 'ordner') hPost({ art: 'ordner' }); else if (a === 'ordnerweg') hPost({ art: 'ordnerWeg' }); };
+$('#gear').addEventListener('click', openE);
+$('#es-close').addEventListener('click', () => closeDlg(edlg));
+edlg.addEventListener('click', e => { if (e.target === edlg) return closeDlg(edlg); const t = e.target.closest('[data-h]'); if (t) bkAct(t.dataset.h); });
 $('#v-heute').addEventListener('click', e => {
   if (nAct(e)) return;
   const n = e.target.closest('[data-m]');
   if (n) { const d = n.dataset.m === 'prev' ? -1 : 1; if (hMode === 'month') hMonth = ymOfIdx(ymIdx(hMonth) + d); else hWeek = keyOf(addDays(parseKey(hWeek), 7 * d)); renderHome(); return; }
   if (e.target.closest('[data-k="live"]')) return openL();
+  const st = e.target.closest('[data-k="start"]'); if (st) return startPlan(st.dataset.id);
   const t = e.target.closest('[data-h]'); if (!t) return;
   const a = t.dataset.h, v = t.dataset.v;
   if (a === 'mode') { hMode = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') { if (t.dataset.teil) rSub = t.dataset.teil; show(v, true); }
   else if (a === 'q') quickOpen(v);
-  else if (a === 'export') exportData();
-  else if (a === 'import') $('#bk-file').click();
-  else if (a === 'ordner') hPost({ art: 'ordner' });
-  else if (a === 'ordnerweg') hPost({ art: 'ordnerWeg' });
+  else bkAct(a);   // die Erinnerung oben: Jetzt sichern, Ordner wählen
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
 
@@ -4295,11 +4355,17 @@ $('#bk-file').addEventListener('change', e => {
 /* ---------- Bereiche ---------- */
 /* Oben steht der Name des Bereichs mit dem blauen Punkt der Marke (v80); auf Heute bleibt es „Track.“ */
 const TITEL = { heute: 'Track', routinen: 'Planer', gewicht: 'Gewicht', haushalt: 'Finanzen', training: 'Training' };
+/* Großer Titel: ab 24 px Scrollweg klein in der Mitte der Kopfzeile. --mx ist der Weg dorthin, gemessen ohne Verkleinerung (offsetLeft, offsetWidth). */
+const topEl = $('.top'), markEl = $('.mark');
+const titelMitte = () => markEl.style.setProperty('--mx', (topEl.clientWidth / 2 - markEl.offsetLeft - markEl.offsetWidth * .62 / 2).toFixed(1) + 'px');
+function titelKlein() { const k = $('#scroll').scrollTop > 24; if (k === topEl.classList.contains('klein')) return; if (k) titelMitte(); topEl.classList.toggle('klein', k); }
+$('#scroll').addEventListener('scroll', titelKlein, { passive: true });
 function paintTop() {
   const add = $('#add');
   $('#mark').textContent = TITEL[view] || 'Track';
+  if (topEl.classList.contains('klein')) titelMitte();
   add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? 'Plan anlegen' : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
-  add.style.visibility = view === 'heute' ? 'hidden' : '';
+  add.hidden = view === 'heute'; $('#gear').hidden = view !== 'heute';   // auf Heute steht statt des Plus das Zahnrad (v106)
 }
 document.addEventListener('click', e => {
   const b = e.target.closest('[data-info]'), p = b && document.getElementById('info-' + b.dataset.info); if (!p) return;
@@ -4451,7 +4517,7 @@ document.addEventListener('click', e => {
   document.addEventListener('touchstart', e => {
     d = null; on = false;
     const el = e.target, dl = el.closest && el.closest('dialog[open]');
-    if (!dl || e.touches.length !== 1 || el.closest('input[type="range"], svg.scrub')) return;
+    if (!dl || e.touches.length !== 1 || el.closest('input[type="range"], svg.scrub, .griff')) return;
     for (let n = el; n && n !== dl.parentNode; n = n.parentNode) if (n.scrollTop > 0) return;
     d = dl; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; t0 = e.timeStamp; dy = 0;
   }, { passive: true });
@@ -4530,6 +4596,22 @@ function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeou
 /* Text für das Widget auf n Zeichen kürzen, nach ganzen Zeichen: slice() könnte ein Emoji in der Mitte teilen, und mit einem halben Zeichen lässt sich der Stand nicht als Datei schreiben.
    Halbe Zeichen, die schon im Text stehen, fallen dabei weg. */
 const hCut = (s, n) => Array.from(s).filter(c => c.length > 1 || c < '\uD800' || c > '\uDFFF').slice(0, n).join('');
+/* Zahlen für das Widget „Überblick“ der iPhone-App (v106, iPhone-App ab 1.2; ältere überlesen das Feld): höchstens vier, fertig formatiert, kurz genug für eine Kachel.
+   Je { b: Bereich (gibt die Farbe), t: Titel, w: Wert, s: Unterzeile }. Gym zuerst (was heute dran ist), dann Gewicht, Laufen, Finanzen; nur Bereiche mit Daten. */
+function hZahlen() {
+  const z = [], tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1], plans = kPlans(), m = (K.meta || {})[tk];
+  if (K.live) z.push({ b: 'training', t: 'Gym', w: planName(K.live.plan) || 'Training', s: 'läuft gerade' });
+  else if (kDay(tk).length) z.push({ b: 'training', t: 'Gym', w: (m && (planName(m.plan) || m.n)) || 'Training', s: 'heute erledigt' });
+  else if (plans.length) { const r = planRunde(plans), pl = plans[r.next]; z.push(pl ? { b: 'training', t: 'Gym', w: pl.n, s: 'heute dran' } : { b: 'training', t: 'Gym', w: 'Runde geschafft', s: 'neue ab Montag' }); }
+  const wl = withTrend(wList());
+  if (wl.length) { const rate = weeklyRate(wl, dayNum(tk)); z.push({ b: 'gewicht', t: 'Gewicht', w: kg(wl[wl.length - 1].m) + ' kg', s: rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt' }); }
+  const runs = tRuns();
+  if (runs.length) { const g = tAgg(runs.filter(x => x.d.slice(0, 7) === curYM)); z.push({ b: 'cardio', t: 'Laufen', w: kg(g.m / 1000) + ' km', s: g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' im ' + mName }); }
+  const wNow = wealthDelta(curYM);
+  if (wNow) z.push({ b: 'haushalt', t: 'Vermögen', w: minus(wNow.end) + eur0(wNow.end) + ' €', s: wNow.d != null ? eurS(wNow.d) + ' im ' + mName : mName });
+  else if (hasMoney()) { const b = mSum(curYM).bal; z.push({ b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
+  return z.slice(0, 4).map(x => ({ b: x.b, t: hCut(x.t, 20), w: hCut(x.w, 24), s: hCut(x.s, 32) }));
+}
 function hStand() {
   const tk = todayKey(), tage = [];
   for (let i = 0; i < 8; i++) {
@@ -4545,7 +4627,7 @@ function hStand() {
   for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c) zahl[t.c] = (zahl[t.c] || 0) + 1; } }
   const kats = allCats().map((k, i) => ({ id: k[0], n: hCut(MF.cats && MF.cats[k[0]] ? MF.cats[k[0]].n : k[1], 40), i })).sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || (zahl[b.id] || 0) - (zahl[a.id] || 0) || a.i - b.i).map(k => ({ id: k.id, n: k.n }));
   const haendler = [...hk.keys()].sort((a, b) => (hk.get(b).d > hk.get(a).d) - (hk.get(b).d < hk.get(a).d) || (hk.get(b).t || 0) - (hk.get(a).t || 0)).slice(0, 300);
-  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler };
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, zahlen: hZahlen() };
 }
 /* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
@@ -4761,7 +4843,7 @@ if (HUELLE) window.TrackHuelle = {
     const vor = JSON.stringify(hInfo.sicherung || null);
     hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung); hInfo.uhr = uhrNorm(hInfo.uhr); hInfo.gym = gymNorm(hInfo.gym);
     sGemeldet(); hPaint(); renderTraining();
-    if (JSON.stringify(hInfo.sicherung) !== vor) renderHome();
+    if (JSON.stringify(hInfo.sicherung) !== vor) { renderHome(); if (edlg.open) paintE(); }   // offene Einstellungen zeigen den neuen Stand
     const s = hInfo.sicherung, tk = todayKey();
     if (s && sTag !== tk) { sTag = tk; if (s.t < new Date().setHours(0, 0, 0, 0)) sOffen = true; sJetzt(); }
   },
@@ -4772,7 +4854,8 @@ if (HUELLE) window.TrackHuelle = {
     const s = sNorm(o), alt = hInfo.sicherung; if (!s) return;
     hInfo.sicherung = s; sGemeldet();
     if (bkHand || s.fehler) { bkMsg = ''; bkHand = false; }
-    if ((!alt || !alt.ordner !== !s.ordner) && !document.querySelector('dialog[open]')) renderHome(); else bkPaint();
+    if ((!alt || !alt.ordner !== !s.ordner) && !document.querySelector('dialog[open]:not(#esheet)')) renderHome(); else bkPaint();   // hinter den Einstellungen darf Heute neu gezeichnet werden
+    if (edlg.open && (!alt || !alt.ordner !== !s.ordner)) paintE();   // Ordner kam dazu oder fiel weg: Die Zeilen der Einstellungen ändern sich
   },
   sichern() { sJetzt(); },
   laeufe(list) { return healthRuns(list); },

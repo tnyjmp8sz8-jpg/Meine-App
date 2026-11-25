@@ -1,6 +1,6 @@
 // Gym: Recap für Monat und Jahr, Verbesserung gesamt und je Übung, laufendes Training mit „Letztes Mal“.
 // Kleiner, von Hand nachgerechneter Datensatz: eine Übung, fünf Einheiten im Vormonat, eine heute.
-const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, nachOben, zahlWahl } = require('./lib');
+const { oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, nachOben, zahlWahl, einstellungen } = require('./lib');
 
 lauf(async () => {
   const P = pruefer('Gym'), vm = monat(1), heute = tag();
@@ -31,7 +31,7 @@ lauf(async () => {
   // Pläne: Bei nur einem Plan ist die Runde nach einer Einheit voll. Heute trainiert (also diese Woche): Der Haken bleibt bis Montag stehen (v93), „1 von 1“.
   P.ok('ein einziger Plan, heute trainiert: Haken bis Montag', (await page.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(page, '#v-training h2.sec')).includes('1 von 1'), await text(page, '#v-training h2.sec'));
   await page.click('#v-training [data-fold="uebungen"]');
-  P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training [data-k="ex"]'), ['Rudern', '+10,0 %']);
+  P.enthaelt('Übungsliste zeigt die Verbesserung im Monat', await text(page, '#v-training .folds [data-k="ex"]'), ['Rudern', '+10,0 %']);
   await page.click('#v-training [data-fold="einheiten"]');
   P.ok('Einheiten klappen auf: eine in diesem Monat', (await page.$$('#v-training [data-k="day"]')).length === 1);
   // Zeile einer Einheit (v100, sein „viel zu viel Text, einfach nur Name des Plans dahin“): Tag, darunter nur der Plan, rechts die Dauer; die Übungen stehen nicht mehr da
@@ -67,7 +67,7 @@ lauf(async () => {
   await page.click('#v-training [data-t="mode"][data-v="month"]');
 
   // Blatt der Übung aus der Liste: Recap startet beim gewählten Monat
-  await page.click('#v-training [data-k="ex"]'); await page.waitForTimeout(250);
+  await page.click('#v-training .folds [data-k="ex"]'); await page.waitForTimeout(250);
   P.enthaelt('Blatt der Übung: Höchstgewicht 44, bestes Maximum 58,7, 6 Einheiten', await text(page, '#x-stats .fig'), ['44', '58,7', '6']);
   P.enthaelt('Recap der Übung im Vormonat: +14,3 %, 53,3 kg, 5 Einheiten', await text(page, '#x-recap .figs .fig'), ['+14,3 %', '53,3', '5']);
   P.ok('Einheiten des Monats als Karten', (await page.$$('#x-recap .lastx')).length === 5);
@@ -144,11 +144,11 @@ lauf(async () => {
   const g = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K3, W: { entries: { [vm + '-10']: 90, [heute]: 91.2 } } } }), q = g.page;
   await bereich(q, 'training'); await q.click('#v-training .subtabs [data-v="kraft"]'); await q.click('#v-training [data-fold="uebungen"]');
   await q.click('#v-training [data-fold="uebungenAlt"]');   // seit v99 stehen oben nur die Übungen aus den Plänen (Voll, Stufen, Steht), die übrigen hinter „Weitere Übungen“
-  const punkte = await q.$$eval('#v-training [data-k="ex"]', l => l.map(b => b.querySelector('.l > span').textContent + ':' + ((b.querySelector('.td') || {}).className || 'ohne')).sort().join(' '));
+  const punkte = await q.$$eval('#v-training .folds [data-k="ex"]', l => l.map(b => b.querySelector('.l > span').textContent + ':' + ((b.querySelector('.td') || {}).className || 'ohne')).sort().join(' '));
   P.ok('Punkte in der Übungsliste: fällt rot, steht gelb (trotz einer schlechten Einheit), steigt grün, unter vier Einheiten keiner', punkte === 'Fällt:td down Neu:ohne Steht:td flat Steigt:td up Stufen:ohne Voll:ohne', punkte);
   const farbe = await q.evaluate(() => { const f = c => getComputedStyle(document.querySelector('#v-training .td' + c)).backgroundColor; return [f('.up'), f('.flat'), f('.down')]; });
   P.ok('drei verschiedene Farben', new Set(farbe).size === 3, farbe.join(' · '));
-  const trend = async name => { await q.click('#v-training [data-k="ex"]:has-text("' + name + '")'); await q.waitForTimeout(150); const t = await text(q, '#x-stats .trend'); await q.click('#xs-close'); return t; };
+  const trend = async name => { await q.click('#v-training .folds [data-k="ex"]:has-text("' + name + '")'); await q.waitForTimeout(150); const t = await text(q, '#x-stats .trend'); await q.click('#xs-close'); return t; };
   const tr = [await trend('Steigt'), await trend('Fällt'), await trend('Steht'), await trend('Neu')];
   P.ok('Blatt der Übung nennt den Trend: „Steigt +10,0 %“, „Fällt −8,3 %“, „Steht“, bei drei Einheiten nichts', tr.join('|') === 'Steigt +10,0 %|Fällt −8,3 %|Steht|', tr.join('|'));
 
@@ -197,7 +197,7 @@ lauf(async () => {
   P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2“, „Zweiter“ ist als Nächstes dran', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2') && (await text(q, '#v-training .rows.one .row.is-idle .name')) === 'Zweiter', await text(q, '#v-training h2.sec'));
   P.enthaelt('Körpergewicht im selben Monat: +1,2 kg', await text(q, '#v-training .kw'), ['Körpergewicht', '+1,2 kg']);
   // Blatt der Übung: Die Einheit von heute ist der Rekord, 60 / 53,33 − 1 = +12,5 %
-  await q.click('#v-training [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
+  await q.click('#v-training .folds [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
   P.enthaelt('Blatt der Übung: „Rekord · +12,5 %“ an der Einheit von heute', await text(q, '#x-recap .lastx .note'), ['Rekord · +12,5 %']);
   await q.click('#xs-close'); await q.reload(); await q.waitForTimeout(300);
   P.ok('nach neuem Laden: Das Ziel 12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12);
@@ -213,11 +213,11 @@ lauf(async () => {
   const r = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K4 } }), s = r.page;
   await bereich(s, 'training');
   const plaene = () => s.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + ':' + z.querySelector('.glyph').textContent).join(' | '));
-  P.ok('Pläne in ihrer Reihenfolge; Torso A und Extremitäten erledigt, Torso B als Nächstes', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-idle:3' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
+  P.ok('Torso B ist als Nächstes dran und steht oben (v106), danach die erledigten Torso A und Extremitäten; die Zahl im Ring bleibt sein Platz 3', (await plaene()) === 'Torso B:is-idle:3 | Torso A:is-done: | Extremitäten:is-done:' && (await text(s, '#v-training h2.sec')).includes('2 von 3'), await plaene());
   /* Übungen (v90, v97): „Rudern“ war in den vier Wochen bis zur jüngsten Einheit dran (vor 4 Tagen), „Uralt“ zuletzt vor 60 Tagen → liegt in derselben Liste hinter der letzten Zeile
      „Weitere Übungen“ (bis v96 eine eigene, dritte Klappzeile unter „Einheiten“; seit v99 steht oben, was in einem Plan steht: „Rudern“, und „Uralt“ steht in keinem). Zu sind nur „Übungen“ und „Einheiten“ zu sehen; die Zeilen entstehen erst beim Aufklappen.
      Mit der Liste geht auch ihr älterer Teil wieder zu. Kein Plan trägt mehr ein Play-Zeichen: Jeder Kreis ist ein Ring mit Haken oder Zahl. */
-  const kl = async () => [await text(s, '#v-training .folds [data-fold]'), await text(s, '#v-training [data-k="ex"] .l > span')].join(' # ');
+  const kl = async () => [await text(s, '#v-training .folds [data-fold]'), await text(s, '#v-training .folds [data-k="ex"] .l > span')].join(' # ');
   /* „Einheiten“ gibt es nur, wenn im laufenden Monat trainiert wurde: Die Einheiten liegen 9, 6 und 4 Tage zurück, am Monatsanfang also im Vormonat (dann fehlt die Zeile) */
   const nE = [9, 6, 4].filter(n => tag(n).slice(0, 7) === heute.slice(0, 7)).length, eT = nE ? ' | Einheiten ' + nE : '';
   const zuerst = await kl(); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
@@ -238,7 +238,7 @@ lauf(async () => {
   // Neuer Plan: hängt sich hinten an (Platz 4), obwohl „Arme“ nach Namen vorn stünde. Mit vier Plänen ist die Runde wieder offen: Die drei anderen waren dran, „Arme“ kommt als Nächstes.
   await s.click('#v-training h2.sec [data-k="plan"]'); await s.fill('#p-name', 'Arme'); await s.fill('#p-new', 'Rudern'); await s.click('#p-new-add'); await s.click('#psheet button[type="submit"]'); await s.waitForTimeout(200);
   const neuerPlan = Object.values((await gespeichert(s)).K.plans).find(p => p && p.n === 'Arme');
-  P.ok('neuer Plan steht hinten, trägt Platz 4 und ist als Nächstes dran', (await plaene()) === 'Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done: | Arme:is-idle:4' && neuerPlan.o === 4, await plaene());
+  P.ok('neuer Plan trägt Platz 4, ist als Nächstes dran und steht deshalb oben', (await plaene()) === 'Arme:is-idle:4 | Torso A:is-done: | Extremitäten:is-done: | Torso B:is-done:' && neuerPlan.o === 4, await plaene());
 
   /* Einlesen: Die Datei führt „RUDERN“ unter der Kennung q1 und einen Plan „Torso A“ unter pp. Beides gibt es schon (x, a): Die Einheit hängt sich an x, der Plan ersetzt a, nichts steht doppelt da.
      Ein Name mit 50 Zeichen bleibt ganz (bis v86 wurden Namen nach 40 abgeschnitten). */
@@ -258,7 +258,7 @@ lauf(async () => {
     '"Torso · Tag 1 · Woche 2 · Plan X";"2026-03-02 10:00 Uhr";"1:00 Std."', '"1. Dips · Körpergewicht · 8 Wdh"', '#;KG;WDH', '1;+15;9', '2;+0;7', '"2. Sauna · Körpergewicht · 10 Wdh"', '#;KG;WDH', '1;+16;50',
     '"3. Laufen · Körpergewicht · 5 cm · 30 Min."', '#;KM;MIN.', '1;5.55;32:44', '', '"Alt · Einzelnes Workout";"2026-02-20 9:00 Uhr";"24 Std."', '"1. Curls · Langhantel · 10 Wdh"', '#;KG;WDH', '1;30;8', ''].join('\n');
   const e = await oeffnen(), wahl = (name, inhalt) => e.page.setInputFiles('#bk-file', { name, mimeType: 'text/csv', buffer: Buffer.from(inhalt) });
-  await e.page.click('#v-heute [data-fold="sicherung"]');
+  await einstellungen(e.page);
   await wahl('Plaene.csv', '"Plan X · 52 Wochen";2026-01-01\n"Tag 1 · Torso"\n"1. Dips · Körpergewicht";"3 Sätze";"8 Wdh"\n'); await e.page.waitForTimeout(200);
   P.ok('Datei mit den Plänen: Hinweis auf die Datei „Workouts“, nichts eingelesen', (await text(e.page, '#bk-msg')).includes('„Workouts“') && !Object.keys(((await gespeichert(e.page)).K || {}).log || {}).length, await text(e.page, '#bk-msg'));
   await wahl('Workouts.csv', csv); await e.page.waitForTimeout(300);
@@ -267,7 +267,7 @@ lauf(async () => {
   P.ok('Übernahme: Übungen mit Namen wie selbst eingetippt und Ziel, ohne Sauna und Laufen; Dips mit Körpergewicht, die Einheit trägt ihren Namen', an === 'Curls Kurzhanteln | Curls Langhantel | Dips z8' && aus.ex[dips].bw === 1 && aus.meta['2026-02-20'].n === 'Alt', an + ' · ' + JSON.stringify(aus.meta['2026-02-20']));
   P.ok('Übernahme: ein Tag, eine Einheit mit 90 min; Zusatzgewicht und Satz ohne Gewicht; 24 Std. zählt nicht', Object.keys(aus.log).sort().join() === '2026-02-20,2026-03-02' && aus.meta['2026-03-02'].dur === 5400 && JSON.stringify(aus.log['2026-03-02'][dips]) === '[[15,9],[0,7]]' && aus.meta['2026-02-20'].dur === 0, JSON.stringify(aus.meta));
   P.ok('Übernahme: Pläne „Torso A“ (Platz 1, Dips 2 Sätze) und „Torso B“ (Platz 2, Curls 1 Satz), die Einheit nennt Torso A', Object.values(aus.plans).map(p => p.n + ':' + p.o + ':' + p.items.map(i => aus.ex[i.id].n + ' ' + i.sets).join()).join(' | ') === 'Torso A:1:Dips 2 | Torso B:2:Curls Kurzhanteln 1' && aus.plans[aus.meta['2026-03-02'].plan].n === 'Torso A', JSON.stringify(aus.plans));
-  await bereich(e.page, 'training');
+  await e.page.click('#es-close'); await bereich(e.page, 'training');
   P.enthaelt('beide Pläne stehen im Gym', await text(e.page, '#v-training .rows.one .name'), ['Torso A', 'Torso B']);
   await e.browser.close();
 
@@ -283,7 +283,7 @@ lauf(async () => {
   const b5 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K5, W: { entries: { [tag(30)]: 90 } } } }), t = b5.page;
   await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]'); await t.click('#v-training [data-fold="uebungenAlt"]');   // Klimmzüge stehen in keinem Plan: seit v99 hinter „Weitere Übungen“
   P.enthaelt('Einheit ohne Plan zeigt ihren Namen', await text(t, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Pull A', '1 Rekord']);
-  const blattVon = async name => { await t.click('#v-training [data-k="ex"]:has-text("' + name + '")'); await t.waitForTimeout(150); const x = [await text(t, '#x-stats .fig'), await text(t, '#x-recap .lastx:first-child .note'), await text(t, '#x-recap .lastx:first-child .lt-r')].join(' # '); await t.click('#xs-close'); return x; };
+  const blattVon = async name => { await t.click('#v-training .folds [data-k="ex"]:has-text("' + name + '")'); await t.waitForTimeout(150); const x = [await text(t, '#x-stats .fig'), await text(t, '#x-recap .lastx:first-child .note'), await text(t, '#x-recap .lastx:first-child .lt-r')].join(' # '); await t.click('#xs-close'); return x; };
   const dipsK = await blattVon('Dips'), klimm = await blattVon('Klimmzüge');
   P.ok('Dips mit Körpergewicht: Zusatzgewicht 15 kg, 1RM 143,5, „Rekord · +5,0 %“', dipsK.includes('15kg Zusatzgewicht') && dipsK.includes('143,5kg 1RM geschätzt') && dipsK.includes('Pull A Rekord · +5,0 %') && dipsK.endsWith('1 15 11 143,5'), dipsK);
   P.ok('Klimmzüge: Einheit ohne Gewicht ist mit der mit Zusatzgewicht vergleichbar (−3,1 %, 1RM 126)', klimm.includes('−3,1 %') && klimm.endsWith('1 – 12 126'), klimm);
@@ -298,7 +298,10 @@ lauf(async () => {
   P.ok('erster Start: 304 Einheiten und 61 Übungen sind da, der Merker trägt den Stand', Object.keys(K6.log).length === 304 && Object.values(K6.ex).filter(Boolean).length === 61 && stand === '2026-11-20' && (await u.evaluate(() => localStorage.getItem('takt.start'))) === stand, Object.keys(K6.log).length + ' · ' + stand);
   P.ok('alte Einheit trägt ihren Namen, Dips und Klimmzüge rechnen mit Körpergewicht, Namen ohne Klammern', K6.meta['2026-07-06'].n === 'Pull A' && Object.values(K6.ex).filter(x => x.bw).map(x => x.n).sort().join() === 'Dips,Klimmzüge eng mit Neutralgriff,Klimmzüge weit mit Obergriff' && !Object.values(K6.ex).some(x => /[()]/.test(x.n)), JSON.stringify(K6.meta['2026-07-06']));
   await bereich(u, 'training');
-  P.ok('seine drei Pläne stehen in seiner Reihenfolge im Gym', (await text(u, '#v-training .rows.one .name')) === 'Torso A | Extremitäten | Torso B', await text(u, '#v-training .rows.one .name'));
+  /* Seine Reihenfolge steht in den Plänen (o); im Gym steht seit v106 der Plan oben, der gerade dran ist (hängt vom Tag ab), die Zahl im Ring nennt seinen Platz */
+  const reihe6 = Object.values((await gespeichert(u)).K.plans).filter(Boolean).sort((a, b) => a.o - b.o).map(x => x.n).join(' | ');
+  const ringe6 = await u.$$eval('#v-training .rows.one .row', l => l.map(r => r.querySelector('.name').textContent + (r.classList.contains('is-done') ? '' : ':' + r.querySelector('.glyph').textContent)).sort().join(' | '));
+  P.ok('seine drei Pläne in seiner Reihenfolge (Torso A, Extremitäten, Torso B), die Ringe nennen den Platz', reihe6 === 'Torso A | Extremitäten | Torso B' && ['Extremitäten', 'Torso A', 'Torso B'].every(n => ringe6.includes(n)) && !/Torso A:[^1]|Extremitäten:[^2]|Torso B:[^3]/.test(ringe6), reihe6 + ' · ' + ringe6);
   await u.evaluate(() => { const d = JSON.parse(localStorage.getItem('takt.v1')); delete d.K.log['2022-05-15']; delete d.K.meta['2022-05-15']; localStorage.setItem('takt.v1', JSON.stringify(d)); });
   await u.reload(); await u.waitForTimeout(300);
   P.ok('zweiter Start: nichts wird noch einmal eingelesen, Gelöschtes bleibt weg', Object.keys((await gespeichert(u)).K.log).length === 303);
@@ -314,11 +317,11 @@ lauf(async () => {
   const o7 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: mit(K7(), [[9, 'a'], [8, 'e']]) } }), v = o7.page;
   await bereich(v, 'training');
   const reihe = () => v.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
-  P.ok('letzte Woche zwei von drei: Torso B ist dran und trägt als einziger den Knopf zum Überspringen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
+  P.ok('letzte Woche zwei von drei: Torso B ist dran und trägt als einziger den Knopf zum Überspringen', (await reihe()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-done', await reihe());
   await v.click('#v-training [data-k="skip"]'); await v.waitForTimeout(150);
   P.ok('übersprungen ohne Einheit in dieser Woche: sofort neue Runde, Torso A ist dran', (await reihe()) === 'Torso A:is-idle:Knopf | Extremitäten:is-wait | Torso B:is-wait' && !(await text(v, '#v-training h2.sec')).includes(' von ') && (await text(v, '#toast')).includes('Übersprungen'), await reihe() + ' · ' + await text(v, '#toast'));
   await v.click('#toast button'); await v.waitForTimeout(150);
-  P.ok('„Rückgängig“: Torso B ist wieder offen', (await reihe()) === 'Torso A:is-done | Extremitäten:is-done | Torso B:is-idle:Knopf', await reihe());
+  P.ok('„Rückgängig“: Torso B ist wieder offen', (await reihe()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-done', await reihe());
   await o7.browser.close();
   /* Diese Woche trainiert: Torso A heute. Extremitäten überspringen → Torso B ist dran. Auch Torso B überspringen → die Runde ist voll, bleibt aber bis Montag stehen,
      weil in ihr diese Woche trainiert wurde („1 von 3“, kein Knopf mehr). Gespeichert ist je übersprungenem Plan ein Eintrag unter dem heutigen Tag. */
@@ -326,7 +329,7 @@ lauf(async () => {
   await bereich(y8, 'training');
   const reihe8 = () => y8.$$eval('#v-training .rows.one .row', l => l.map(z => z.querySelector('.name').textContent + ':' + z.className.replace('row ', '') + (z.querySelector('[data-k="skip"]') ? ':Knopf' : '')).join(' | '));
   await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
-  P.ok('diese Woche trainiert, Extremitäten übersprungen: Torso B ist dran', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-idle:Knopf' && (await text(y8, '#v-training .is-skip .meta')) === 'übersprungen', await reihe8());
+  P.ok('diese Woche trainiert, Extremitäten übersprungen: Torso B ist dran', (await reihe8()) === 'Torso B:is-idle:Knopf | Torso A:is-done | Extremitäten:is-skip' && (await text(y8, '#v-training .is-skip .meta')) === 'übersprungen', await reihe8());
   await y8.click('#v-training [data-k="skip"]'); await y8.waitForTimeout(100);
   const aus8 = (await gespeichert(y8)).K.aus;
   P.ok('auch Torso B übersprungen: Die Runde bleibt bis Montag stehen, „1 von 3“, kein Knopf', (await reihe8()) === 'Torso A:is-done | Extremitäten:is-skip | Torso B:is-skip' && (await text(y8, '#v-training h2.sec')).includes('1 von 3') && JSON.stringify(aus8) === JSON.stringify({ [heute]: { e: 1, b: 1 } }), await reihe8() + ' · ' + JSON.stringify(aus8));
@@ -385,43 +388,32 @@ lauf(async () => {
   await bereich(gp, 'training'); await gp.click('#v-training [data-fold="uebungen"]'); await gp.waitForTimeout(100);
   const gListe = () => gp.evaluate(() => [...document.querySelector('#v-training [data-fold="uebungen"]').closest('ul').children].slice(1).map(li => li.classList.contains('grp') ? '[' + li.textContent + ']' : li.querySelector('[data-fold]') ? li.textContent.trim() : li.querySelector('.l > span').textContent).join(' '));
   P.ok('Übungen: nur die aus den Plänen, in der Reihenfolge der Pläne, unterteilt nach Gruppe; der Rest hinter „Weitere Übungen“', (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Dips [Arme] Curls [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1' && (await text(gp, '#v-training [data-fold="uebungen"]')) === 'Übungen 7', await gListe());
-  await gp.click('#v-training [data-k="ex"]:has-text("Curls")'); await gp.waitForTimeout(150);
+  await gp.click('#v-training .folds [data-k="ex"]:has-text("Curls")'); await gp.waitForTimeout(150);
   P.ok('Blatt der Übung: Gruppe aus dem Namen vorgewählt (Arme)', (await text(gp, '#x-grp [aria-pressed="true"]')) === 'Arme' && (await text(gp, '#x-grp .chip')) === 'Rücken | Brust | Arme | Beine');
   await gp.click('#x-grp [data-g="brust"]'); await gp.click('#x-save'); await gp.waitForTimeout(150);
   const gex = (await gespeichert(gp)).K.ex;
   P.ok('Gruppe gewählt und gespeichert: Curls stehen unter Brust, „Arme“ entfällt', gex.c.g === 'brust' && (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Curls Dips [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1', await gListe());
   P.ok('gespeicherte Gruppe bleibt beim Laden, eine unbekannte wird verworfen', gex.g.g === 'brust' && !gex.h.g, JSON.stringify(gex));
   await o11.browser.close();
-  /* Pausen-Uhr (v103). Die Uhr der Seite steht auf dem 15. des laufenden Monats, 12 Uhr, und läuft nur, wenn der Test sie vorstellt; die iPhone-Hülle ist nachgestellt und sammelt, was hinausgeht.
-     Plan mit einer Übung „Rudern“ und drei Sätzen. Ohne eingestellte Länge heißt die Kapsel „Pause“ und die Pause zählt hoch. Erster Satz abgehakt, 5 s später 1:30 gewählt:
-     Es bleiben 90 − 5 = 85 s → die Kapsel zeigt 1:25, oben steht „Pause noch 01:25“, an die iPhone-App geht { art: 'pause', sek: 85, text: 'Rudern · Satz 2' }.
-     86 s später ist die Pause vorbei: „Los“, „Pause vorbei“, genau ein Impuls „erfolg“ (auch nach weiteren Sekunden nur einer). Zweiter Satz abgehakt: neue Pause mit sek 90.
-     „Aus“ gewählt: K.rest ist weg, sek 0. Wieder 1:00 gewählt und das Training beendet: Die letzte Nachricht streicht die Mitteilung (sek 0), die Länge bleibt gespeichert. */
+  /* Pausen-Uhr (seit v106 nur ein laufender Timer, sein Wunsch: „nur als laufender Timer ohne Grenze oder Signal“). Die Uhr der Seite steht auf dem 15. des laufenden Monats, 12 Uhr,
+     und läuft nur, wenn der Test sie vorstellt; die iPhone-Hülle ist nachgestellt und sammelt, was hinausgeht. Plan mit einer Übung „Rudern“ und drei Sätzen.
+     Vor dem ersten Satz steht „Pause“. Erster Satz abgehakt, 5 s später „0:05“, 90 s später „1:35“, nach 10 Minuten „10:35“ (keine Grenze). Zweiter Satz abgehakt: wieder „0:00“.
+     Die Kapsel ist kein Knopf, oben neben der Gesamtzeit steht keine Pause (die Angabe steht nur einmal), an die iPhone-App geht nie eine Nachricht „pause“, und es gibt keinen Impuls „erfolg“. */
   const hStub = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
   const mitte = new Date(+heute.slice(0, 4), +heute.slice(5, 7) - 1, 15, 12);
   const o12 = await oeffnen({ uhr: mitte, skript: hStub, daten: { S: { routines: [], running: null }, LY: {}, K: { ex: { a: { n: 'Rudern' } }, log: {}, meta: {}, live: null, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }], o: 1 } } } } }), z = o12.page;
   const vor = async ms => { await z.clock.fastForward(ms); await z.waitForTimeout(60); };
-  const kapsel = () => z.evaluate(() => document.querySelector('#l-rest-t').textContent + ' | ' + document.querySelector('#lv-rest').textContent.trim() + ' | ' + document.querySelector('#l-rest').className.replace('l-rest', '').replace('gong', '').trim()).then(t => t.trim());
-  const pausen = () => z.evaluate(() => window.__post.filter(m => m.art === 'pause').map(m => m.sek + ':' + m.text).join(' # '));
-  const waehle = async v => { await z.click('#l-rest'); await z.waitForTimeout(80); await z.click('#z-list [data-zv="' + v + '"]'); await z.waitForTimeout(80); };
+  const kapsel = () => z.evaluate(() => document.querySelector('#l-rest-t').textContent + ' | ' + document.querySelector('.ls-t').textContent.replace(/[\d:]/g, '').trim());
   await bereich(z, 'training'); await z.click('#v-training [data-k="start"]'); await z.waitForTimeout(200);
   await zahlWahl(z, '#l-w', '40'); await zahlWahl(z, '#l-r', '10');
-  const ohne = await kapsel(); await z.click('#l-items .chk'); await vor(5000);
-  P.ok('ohne eingestellte Pause: Kapsel „Pause“, die Pause zählt hoch', ohne === 'Pause |  |' && (await kapsel()) === 'Pause | · Pause 00:05 |', ohne + ' → ' + await kapsel());
-  await z.click('#l-rest'); await z.waitForTimeout(80);
-  P.ok('Tipp auf die Kapsel: nur die Liste der Längen, keine Tasten; „Aus“ ist gewählt', await z.evaluate(() => document.querySelector('#zsheet').open && document.querySelector('#z-pad').hidden && getComputedStyle(document.querySelector('#z-pad')).display === 'none' && document.querySelector('#z-list [aria-pressed="true"]').textContent === 'Aus' && document.querySelectorAll('#z-list button').length === 13));
-  await z.click('#z-list [data-zv="90"]'); await z.waitForTimeout(80);
-  P.ok('1:30 gewählt, 5 s nach dem Satz: Kapsel 1:25, oben „Pause noch 01:25“, gespeichert', (await kapsel()) === '1:25 | · Pause noch 01:25 | laeuft' && (await gespeichert(z)).K.rest === 90, await kapsel());
-  P.ok('an die iPhone-App: Mitteilung in 85 s mit dem nächsten Satz', (await pausen()).endsWith('85:Rudern · Satz 2'), await pausen());
-  const impulse = () => z.evaluate(() => window.__post.filter(m => m.art === 'haptik' && m.w === 'erfolg').length), vorher = await impulse();
-  await vor(86000); const los = await kapsel(), einer = (await impulse()) - vorher; await vor(5000);
-  P.ok('86 s später: „Los“, „Pause vorbei“, genau ein Impuls', los === 'Los | · Pause vorbei | los' && einer === 1 && (await impulse()) - vorher === 1, los + ' · ' + einer + ' · ' + ((await impulse()) - vorher));
+  const vor1 = await kapsel(); await z.click('#l-items .chk'); await vor(5000); const fuenf = await kapsel();
+  await vor(90000); const p95 = await kapsel(); await vor(540000); const zehn = await kapsel();
+  P.ok('Pause zählt nach dem Satz hoch, ohne Grenze: „Pause“, dann 0:05, 1:35, 10:35; oben steht nur die Gesamtzeit', vor1 === 'Pause | ' && fuenf === '0:05 | ' && p95 === '1:35 | ' && zehn === '10:35 | ', [vor1, fuenf, p95, zehn].join(' · '));
   await z.click('#l-items .chk'); await z.waitForTimeout(80);
-  P.ok('zweiter Satz abgehakt: neue Pause, Mitteilung in 90 s für Satz 3', (await kapsel()) === '1:30 | · Pause noch 01:30 | laeuft' && (await pausen()).endsWith('90:Rudern · Satz 3'), (await kapsel()) + ' · ' + await pausen());
-  await waehle(0);
-  P.ok('„Aus“ gewählt: keine Länge mehr gespeichert, Mitteilung gestrichen, die Pause zählt wieder hoch', (await gespeichert(z)).K.rest === undefined && (await pausen()).endsWith('0:Rudern · Satz 3') && (await kapsel()).startsWith('Pause | · Pause 00:0'), JSON.stringify((await gespeichert(z)).K.rest) + ' · ' + await kapsel());
-  await waehle(60); await z.click('#l-save'); await z.waitForTimeout(200); await z.click('#rs-ok');
-  P.ok('Training beendet: Mitteilung gestrichen, die Länge bleibt für das nächste Mal', /(^| # )0:$/.test(await pausen()) && (await gespeichert(z)).K.rest === 60, await pausen());
+  P.ok('nächster Satz abgehakt: die Pause beginnt wieder bei 0:00', (await kapsel()) === '0:00 | ', await kapsel());
+  const art = await z.evaluate(() => ({ knopf: document.querySelector('#l-rest').tagName, pause: window.__post.filter(m => m.art === 'pause').length, erfolg: window.__post.filter(m => m.art === 'haptik' && m.w === 'erfolg').length }));
+  P.ok('kein Knopf, kein Signal: keine Nachricht „pause“ an die iPhone-App, kein Impuls am Ende einer Pause', art.knopf === 'SPAN' && art.pause === 0 && art.erfolg === 0, JSON.stringify(art));
+  await z.click('#l-save'); await z.waitForTimeout(200); await z.click('#rs-ok');
   /* Training von der Apple Watch (v103): Die iPhone-App übergibt es wie einen Lauf über den Eingang. Heute (15., 18 Uhr) 3720 s mit Puls 120, 130, 140 → 62 min, Ø Puls 130.
      Dieselbe Kennung noch einmal mit Puls 140 und 150 bessert nach (145). Ein zweites, kürzeres Training am selben Tag (600 s) verdrängt das erste nicht.
      Im Blatt der Einheit von heute steht „Apple Watch · 62 min · Ø Puls 145“. Meldet die iPhone-App für einen anderen Tag (den 14.) nur ein Training ohne Puls (45 min),

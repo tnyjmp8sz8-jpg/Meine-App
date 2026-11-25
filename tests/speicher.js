@@ -1,6 +1,6 @@
 // Speichern: Daten über die Oberfläche anlegen, oft neu laden, Sicherung speichern und in eine leere App einlesen.
 const fs = require('fs'), os = require('os'), path = require('path');
-const { oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
+const { oeffnen, text, bereich, gespeichert, einstellungen, pruefer, lauf } = require('./lib');
 
 lauf(async () => {
   const P = pruefer('Speichern'), { browser, page, fehler } = await oeffnen();
@@ -20,9 +20,9 @@ lauf(async () => {
   P.enthaelt('Anzeige nach dem Neuladen: Vermögen 5.500 €', await text(page, '#v-haushalt .subtabs [aria-pressed="true"], #v-haushalt .hero h1'), ['Vermögen', '5.500']);
 
   // Sicherung speichern und in eine leere App einlesen
-  // über die Zeile „Sicherung“ am Ende von Heute: Die Erinnerung oben mit demselben Knopf gibt es nicht an jedem Tag (hier erst ab dem 8. des Monats)
-  await bereich(page, 'heute'); await page.click('#v-heute [data-fold="sicherung"]');
-  const laden = page.waitForEvent('download'); await page.click('#v-heute .act[data-h="export"]');
+  // über die Einstellungen hinter dem Zahnrad auf Heute (v106): Die Erinnerung oben mit demselben Knopf gibt es nicht an jedem Tag (hier erst ab dem 8. des Monats)
+  await einstellungen(page);
+  const laden = page.waitForEvent('download'); await page.click('#esheet .act[data-h="export"]');
   const datei = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'track-')), 'sicherung.json'); const dl = await laden; await dl.saveAs(datei);
   P.ok('Sicherungsdatei heißt track-sicherung-….json', /^track-sicherung-\d{4}-\d\d-\d\d\.json$/.test(dl.suggestedFilename()), dl.suggestedFilename());
   P.ok('Datei trägt die alte Kennung, damit alte Sicherungen lesbar bleiben', JSON.parse(fs.readFileSync(datei, 'utf8')).app === 'takt');
@@ -31,8 +31,9 @@ lauf(async () => {
   const a = JSON.parse(stand), b = await gespeichert(B.page);
   P.ok('eingelesen: Konten, Stände und Sparziele gleich', JSON.stringify([a.MF.acc, a.MF.bal, a.MF.goals]) === JSON.stringify([b.MF.acc, b.MF.bal, b.MF.goals]));
   P.ok('eingelesen: Buchungen und Gewicht gleich', JSON.stringify([a.MY, a.W.entries]) === JSON.stringify([b.MY, b.W.entries]));
-  P.enthaelt('das Einlesen wird bestätigt', await text(B.page, '#bk-msg'), ['Sicherung eingelesen']);
   P.ok('nach dem Einlesen erscheint keine Erinnerung an die Sicherung', !(await B.page.$('.remind')));
+  await einstellungen(B.page);
+  P.enthaelt('das Einlesen wird in den Einstellungen bestätigt', await text(B.page, '#bk-msg'), ['Sicherung eingelesen']);
   await B.browser.close();
   await P.ende(browser, fehler.concat(B.fehler));
 });

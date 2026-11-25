@@ -16,7 +16,7 @@ lauf(async () => {
   await page.click('#v-gewicht [data-w="goal"]');
   P.ok('Blatt zeigt das Ziel', (await wert('#w-val')) === '75,0');
   await page.click('#w-save'); await kurz();
-  P.ok('unverändert gespeichert: Startwert bleibt 80, weiter 50 %', (await gw()).goalFrom === 80 && (await ziel()).includes('50 %'), JSON.stringify(await gw()) + ' · ' + await ziel());
+  P.ok('unverändert gespeichert: Startwert bleibt 80, weiter 50 % (klein in der Zeile, v106)', (await gw()).goalFrom === 80 && (await ziel()).includes('50 %') && await page.evaluate(() => parseFloat(getComputedStyle(document.querySelector('#v-gewicht .goal .pz')).fontSize) <= 16), JSON.stringify(await gw()) + ' · ' + await ziel());
   // Das Feld zeigt eine Nachkommastelle: Ein Ziel von 74,75 steht als „74,8“ da und gilt beim Speichern als gleich
   await page.evaluate(() => { const o = JSON.parse(localStorage.getItem('takt.v1')); o.W.goal = 74.75; localStorage.setItem('takt.v1', JSON.stringify(o)); });
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'gewicht');

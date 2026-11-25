@@ -81,9 +81,9 @@ lauf(async () => {
   const tx = Object.values(d.MY[jahr].tx), monate = l => new Set(l.filter(imJahr).map(k => k.slice(0, 7))).size;
 
   // --- Teil 1: jede Klappzeile ist zu, geht auf und wieder zu; die Zahl rechts stimmt ---
-  /* Gezeichnet sind nach dem Start mindestens: Sicherung (Heute), Einträge (Gewicht), Umbuchungen (Vermögen), Übungen (Gym: seit v86 der erste Teil im Training) */
+  /* Gezeichnet sind nach dem Start mindestens: Einträge (Gewicht), Umbuchungen (Vermögen), Übungen (Gym: seit v86 der erste Teil im Training). Die Sicherung ist seit v106 keine Klappzeile mehr (Einstellungen). */
   const start = await page.$$eval('[data-fold]', l => l.map(b => b.dataset.fold + (b.getAttribute('aria-expanded') === 'true' ? ' offen' : '')));
-  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['sicherung', 'eintraege', 'umbuchungen', 'uebungen'].every(k => start.includes(k)) && !start.some(k => k.includes('offen')), start.join(', '));
+  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['eintraege', 'umbuchungen', 'uebungen'].every(k => start.includes(k)) && !start.includes('sicherung') && !start.some(k => k.includes('offen')), start.join(', '));
 
   /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind. */
   await bereich(page, 'gewicht');
@@ -163,7 +163,7 @@ lauf(async () => {
   await page.click('#v-training .mnav button:first-child'); await kurz();
   P.ok('Gym: „Übungen“ bleibt beim Blättern zum Vormonat offen', await ueb() && (await text(page, '#v-training .mnav b')).indexOf(MON[+monat(1).slice(5) - 1]) === 0);
   await page.click('#v-training .mnav button:last-child'); await kurz();
-  await page.click('#v-training [data-k="ex"]'); await kurz();
+  await page.click('#v-training .folds [data-k="ex"]'); await kurz();
   const xAuf = await page.isVisible('#xsheet[open]');
   await page.click('#xs-close'); await kurz();
   P.ok('Gym: … und nach dem Blatt der Übung', xAuf && await ueb());
@@ -180,9 +180,9 @@ lauf(async () => {
   await bereich(page, 'training'); await bereich(page, 'gewicht'); await kurz();
   const zu = await stand('eintraege'); await tipp('eintraege');
   P.ok('Gewicht: nach dem Wechsel des Bereichs zu, beim Aufklappen ist der jüngste Monat wieder offen', !zu.auf && (await page.getAttribute(juengster, 'aria-expanded')) === 'true');
-  /* Auch der Weg über die Übersicht auf Heute ist ein Wechsel des Bereichs */
-  await bereich(page, 'heute'); await tipp('sicherung'); await page.click('#v-heute .ov[data-v="gewicht"]'); await kurz(); await bereich(page, 'heute'); await kurz();
-  P.ok('Heute: „Sicherung“ ist nach dem Sprung in einen Bereich und zurück zu', (await stand('sicherung')).auf === false);
+  /* Auch der Weg über die Übersicht auf Heute ist ein Wechsel des Bereichs: Einträge aufklappen, über Heute zurück ins Gewicht, dann ist die Zeile zu */
+  await tipp('eintraege'); await bereich(page, 'heute'); await page.click('#v-heute .ov[data-v="gewicht"]'); await kurz();
+  P.ok('Gewicht: „Einträge“ ist nach dem Weg über die Übersicht auf Heute zu', (await stand('eintraege')).auf === false);
 
   // --- Teil 3: die verlegten Aktionen öffnen das richtige Blatt ---
   const blatt = async (name, sel, dlg, titelSel, titel, kopf) => {
@@ -230,7 +230,7 @@ lauf(async () => {
         await k(); const m = await p.evaluate(breiten);
         P.ok('320 px, ' + wo + ': alles aufgeklappt, nichts ragt seitlich hinaus', m.auf >= min && m.zu === 0 && passtHinein(m), JSON.stringify(m));
       };
-      await bereich(p, 'heute'); await passt('Heute', 1);
+      await bereich(p, 'heute'); await passt('Heute', 0);   // seit v106 ohne Klappzeile (die Sicherung liegt in den Einstellungen)
       await bereich(p, 'routinen'); await passt('Notizen', 0);
       await bereich(p, 'gewicht'); await passt('Gewicht', 3);
       await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await passt('Vermögen', 1);
@@ -254,26 +254,30 @@ lauf(async () => {
   await page.click('#v-heute .sec-a[data-n="allnotes"]'); await kurz();
   P.ok('„Alle 7“ führt in den Planer zu den Notizen: alle sieben, dort mit zweiter Zeile', (await page.isVisible('#v-routinen')) && (await text(page, '#r-subs [aria-pressed="true"]')) === 'Notizen' && (await z('#n-main .nrow')) === 7 && (await z('#n-main .nrow .l small')) === 7, await text(page, '#r-subs [aria-pressed="true"]'));
 
-  // --- Teil 6: Sicherung ---
-  /* Ohne gespeicherte Sicherung und mit Einträgen, die älter als 7 Tage sind, ist die Sicherung fällig: Der Satz steht in der Erinnerung oben, nicht noch einmal in der Zeile. */
+  // --- Teil 6: Sicherung (seit v106 hinter dem Zahnrad auf Heute, sein Wunsch: „diesen Button Sicherung ausblenden, nur einblenden, wenn lange keine Sicherung“) ---
+  /* Ohne gespeicherte Sicherung und mit Einträgen, die älter als 7 Tage sind, ist die Sicherung fällig: Dann steht die Erinnerung oben auf Heute. Sonst steht auf Heute nichts zur Sicherung.
+     Im Blatt „Einstellungen“: Stand, „Sicherung speichern“, „Sicherung einlesen“ und unten die Version. */
   await bereich(page, 'heute');
-  const sich = async () => ({ s: await stand('sicherung'), oben: await text(page, '#v-heute .remind[data-h="export"]'), zeile: await text(page, '#v-heute [data-fold="sicherung"]'), msg: await text(page, '#bk-msg') });
+  const sich = async () => ({ oben: await text(page, '#v-heute .remind[data-h="export"]'), offen: await page.evaluate(() => document.querySelector('#esheet').open), msg: await text(page, '#bk-msg'),
+    akt: await page.$$eval('#esheet .act', l => l.map(b => b.textContent.trim()).join(' | ')), aufHeute: await page.evaluate(() => !!document.querySelector('#v-heute [data-fold="sicherung"], #v-heute .act')) });
   let s = await sich();
-  P.ok('Sicherung: die Zeile ist zu und steht am Ende von Heute', !s.s.auf && s.s.aktionen.length === 0 && await page.evaluate(() => document.querySelector('#v-heute').lastElementChild.contains(document.querySelector('[data-fold="sicherung"]'))), JSON.stringify(s));
-  P.ok('Sicherung fällig: der Satz steht nur in der Erinnerung oben', s.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && s.zeile === 'Sicherung' && s.msg === '', JSON.stringify(s));
-  await tipp('sicherung'); s = await sich();
-  P.ok('Sicherung: aufgeklappt stehen „Sicherung speichern“ und „Sicherung einlesen“', s.s.auf && s.s.aktionen.join(' | ') === 'Sicherung speichern | Sicherung einlesen', JSON.stringify(s.s));
-  const [wahl] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null), page.click('#v-heute .act[data-h="import"]')]);
+  P.ok('Sicherung fällig: die Erinnerung steht oben auf Heute, sonst nichts zur Sicherung; das Zahnrad steht oben rechts statt des Plus', s.oben === 'Noch keine Sicherung gespeichert Jetzt sichern' && !s.aufHeute && await page.evaluate(() => !document.querySelector('#gear').hidden && document.querySelector('#add').hidden), JSON.stringify(s));
+  await page.click('#gear'); await kurz(); s = await sich();
+  P.ok('Zahnrad: Einstellungen mit Stand, „Sicherung speichern“, „Sicherung einlesen“ und der Version', s.offen && s.msg === 'Noch keine Sicherung gespeichert.' && s.akt === 'Sicherung speichern | Sicherung einlesen' && /^v\d+$/.test(await text(page, '#esheet .ver:not(#h-line)')), JSON.stringify(s));
+  const [wahl] = await Promise.all([page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null), page.click('#esheet .act[data-h="import"]')]);
   P.ok('„Sicherung einlesen“ öffnet die Dateiauswahl', !!wahl);
-  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 5000 }).catch(() => null), page.click('#v-heute .act[data-h="export"]')]);
+  const [dl] = await Promise.all([page.waitForEvent('download', { timeout: 5000 }).catch(() => null), page.click('#esheet .act[data-h="export"]')]);
   await kurz(); s = await sich();
-  P.ok('„Sicherung speichern“ speichert die Datei; die Erinnerung ist weg, die Zeile bleibt offen und nennt die Datei', !!dl && dl.suggestedFilename() === 'track-sicherung-' + tag(0) + '.json' && s.oben === '' && s.s.auf && s.msg === 'Sicherung gespeichert: track-sicherung-' + tag(0) + '.json', JSON.stringify(s));
+  P.ok('„Sicherung speichern“ speichert die Datei; die Erinnerung ist weg, das Blatt bleibt offen und nennt die Datei', !!dl && dl.suggestedFilename() === 'track-sicherung-' + tag(0) + '.json' && s.oben === '' && s.offen && s.msg === 'Sicherung gespeichert: track-sicherung-' + tag(0) + '.json', JSON.stringify(s));
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'heute'); s = await sich();
-  P.ok('nach dem Neuladen: Zeile zu, darin „Letzte Sicherung: …“, keine Erinnerung', !s.s.auf && s.oben === '' && s.msg.indexOf('Letzte Sicherung: ') === 0 && s.zeile.indexOf('Sicherung Letzte Sicherung: ') === 0, JSON.stringify(s));
-  /* Letzte Sicherung vor 8 Tagen: 8 ≥ 7, also fällig. Oben steht „Letzte Sicherung vor 8 Tagen“, die Zeile nennt das Datum dann nicht noch einmal. */
+  P.ok('nach dem Neuladen: keine Erinnerung, auf Heute nichts zur Sicherung', s.oben === '' && !s.aufHeute, JSON.stringify(s));
+  await page.click('#gear'); await kurz(); s = await sich();
+  P.ok('in den Einstellungen steht „Letzte Sicherung: …“', s.msg.indexOf('Letzte Sicherung: ') === 0, JSON.stringify(s));
+  await page.click('#es-close'); await kurz();
+  /* Letzte Sicherung vor 8 Tagen: 8 ≥ 7, also fällig. Oben steht „Letzte Sicherung vor 8 Tagen“, in den Einstellungen das Datum. */
   await page.evaluate(() => { const t = new Date(); t.setHours(12, 0, 0, 0); t.setDate(t.getDate() - 8); localStorage.setItem('takt.backup', String(t.getTime())); });
   await page.reload(); await page.waitForTimeout(300); await bereich(page, 'heute'); s = await sich();
-  P.ok('Sicherung 8 Tage alt: Erinnerung oben, die Zeile ohne Satz', s.oben === 'Letzte Sicherung vor 8 Tagen Jetzt sichern' && s.zeile === 'Sicherung' && s.msg === '', JSON.stringify(s));
+  P.ok('Sicherung 8 Tage alt: Erinnerung oben', s.oben === 'Letzte Sicherung vor 8 Tagen Jetzt sichern', JSON.stringify(s));
 
   // --- Teil 7: Erklärungen erst nach Tipp auf das „i“; Farbe nur an der Veränderung ---
   /* Eine offene Erklärung bleibt stehen, wenn man die Klappzeile darunter antippt: Vorher verschwand sie beim Zeichnen, und die angetippte Zeile sprang um ihre Höhe nach oben.
@@ -414,14 +418,14 @@ lauf(async () => {
   P.ok('Gewicht, ein Eintrag je Monat: die drei jüngsten Monate sind offen, die zwei älteren zu', gw.monate === 'auf auf auf zu zu' && gw.zeilen === w5Tage.slice(0, 3).join(' '), JSON.stringify(gw));
 
   /* Die Liste der Einträge entsteht nur aufgeklappt, sonst würde jeder Tipp auf eine Klappzeile mit jedem Eintrag langsamer.
-     Gezählt wird, wie oft die Seite bei einem Tipp auf „Sicherung“ (zeichnet alles neu) eine Zahl formatiert (toLocaleString): mit den 56 Einträgen der Beispieldaten
+     Gezählt wird, wie oft die Seite bei einem Tipp auf „Übungen“ im Gym (zeichnet alles neu) eine Zahl formatiert (toLocaleString): mit den 56 Einträgen der Beispieldaten
      und mit 300 älteren dazu. Jede Zeile eines Eintrags formatiert ihr Gewicht zweimal; mit dem Fehler wären es 2 × 300 = 600 Aufrufe mehr. Zugeklappt kommt nichts dazu; verlangt wird weniger als ein Aufruf je zusätzlichem Eintrag. */
   const viele = daten(); for (let i = 100; i < 400; i++) viele.W.entries[tag(i)] = 81;
   const formatiert = async dat => {
-    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'heute');
+    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'training');
     const n = await o.page.evaluate(() => { const echt = Number.prototype.toLocaleString; let k = 0; Number.prototype.toLocaleString = function (...a) { k++; return echt.apply(this, a); };
-      document.querySelector('#v-heute [data-fold="sicherung"]').click(); Number.prototype.toLocaleString = echt; return k; });
-    const offen = await o.page.getAttribute('#v-heute [data-fold="sicherung"]', 'aria-expanded'), eintr = await o.page.$eval('#v-gewicht [data-fold="eintraege"] .fold', e => e.textContent.trim());
+      document.querySelector('#v-training [data-fold="uebungen"]').click(); Number.prototype.toLocaleString = echt; return k; });
+    const offen = await o.page.getAttribute('#v-training [data-fold="uebungen"]', 'aria-expanded'), eintr = await o.page.$eval('#v-gewicht [data-fold="eintraege"] .fold', e => e.textContent.trim());
     await o.browser.close(); o.fehler.forEach(f => P.ok(f, false));
     return { n, offen, eintr };
   };
@@ -489,7 +493,9 @@ lauf(async () => {
   const kacheln = await gwi.page.$$eval('#v-gewicht .figs .fig', l => l.map(f => f.innerText.replace(/\s+/g, ' ').trim()));
   P.ok('Gewicht: Kachel „0,0 kg seit …“ ohne Vorzeichen', kacheln.length === 1 && /^0,0 ?kg seit /.test(kacheln[0]), JSON.stringify(kacheln));
   P.ok('Gewicht: keine Kachel „bis zum Ziel“, das Ziel steht einmal in der Karte darunter', !kacheln.join().includes('Ziel') && (await text(gwi.page, '#v-gewicht .row.goal')).includes('Ziel 93,0 kg') && (await text(gwi.page, '#v-gewicht .row.goal')).includes('noch 3,0 kg'), await text(gwi.page, '#v-gewicht .row.goal'));
-  P.ok('Gewicht: das Symbol der Zielkarte ist getönt, nicht voll blau', await gwi.page.evaluate(() => { const p = document.createElement('i'); p.style.background = 'var(--accent)'; document.body.appendChild(p); const voll = getComputedStyle(p).backgroundColor; p.remove(); return getComputedStyle(document.querySelector('#v-gewicht .row.goal .glyph')).backgroundColor !== voll; }));
+  /* Zielkarte ruhiger (v106): kein Symbol mehr, die Prozentzahl klein in einer Zeile („… %“), der Tag kurz; der Fortschritt bleibt die Linie unten */
+  const zk = await gwi.page.evaluate(() => { const r = document.querySelector('#v-gewicht .row.goal'), pz = r.querySelector('.pz'); return { symbol: !!r.querySelector('.glyph'), pz: pz ? pz.textContent : '', gross: pz ? parseFloat(getComputedStyle(pz).fontSize) : 0, linie: !!r.querySelector('.fill') }; });
+  P.ok('Gewicht: Zielkarte ohne Symbol, Prozent klein in einer Zeile (hier noch 0 %, dann steht keine Zahl), Fortschritt als Linie', !zk.symbol && (zk.pz === '' || /^\d+ %$/.test(zk.pz) && zk.gross <= 16) && zk.linie, JSON.stringify(zk));
   // Heute: Nur Gewicht ist eingetragen → eine Zeile in der Übersicht, keine für Finanzen und Training, kein „Tippe, um …“
   await bereich(gwi.page, 'heute');
   const ov = await gwi.page.$$eval('#v-heute .ov', l => l.map(b => b.dataset.v).join());

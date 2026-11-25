@@ -38,6 +38,8 @@ const gespeichert = page => page.evaluate(() => JSON.parse(localStorage.getItem(
 const blaetterZu = page => page.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
 /* Zahl im Blatt „Zahl wählen“ (Gewicht, Wiederholungen, Ziel im laufenden Training): Knopf antippen, Ziffern über die Tastatur des Rechners, Enter übernimmt */
 async function zahlWahl(page, sel, wert) { await page.click(sel); await page.keyboard.type(String(wert)); await page.keyboard.press('Enter'); await page.waitForTimeout(80); }
+/* Einstellungen öffnen (v106): Sicherung und Version liegen hinter dem Zahnrad oben auf Heute. Ist das Blatt schon offen, bleibt es so. */
+async function einstellungen(page) { if (await page.evaluate(() => document.querySelector('#esheet').open)) return; await page.click('.tab[data-view="heute"]'); await page.click('#gear'); await page.waitForTimeout(80); }
 const nachOben = page => page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; });
 const nachUnten = page => page.evaluate(() => { const s = document.querySelector('#scroll'); s.scrollTop = s.scrollHeight; });
 
@@ -68,4 +70,4 @@ function pruefer(name) {
 /* Fängt Abbrüche ab (z. B. Knopf nicht gefunden), damit der Test eine lesbare Meldung liefert */
 function lauf(fn) { fn().catch(e => { console.log('  ABBRUCH ' + String(e.message).split('\n')[0]); process.exit(1); }); }
 
-module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, zahlWahl, nachOben, nachUnten, wischen, pruefer, lauf };
+module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, zahlWahl, einstellungen, nachOben, nachUnten, wischen, pruefer, lauf };
