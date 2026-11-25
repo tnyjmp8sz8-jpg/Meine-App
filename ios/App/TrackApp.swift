@@ -197,9 +197,6 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             Sicherung.shared.ordnerVergessen()
         } else if art == "haptik" {
             Haptik.gib(inhalt["w"] as? String ?? "")
-        } else if art == "pause" {
-            // Pausen-Uhr im Training: Mitteilung „Pause vorbei“ planen oder streichen (sek 0). Im Selbsttest nicht: Dort darf iOS nichts fragen.
-            if !still { Mitteilungen.pause(sekunden: (inhalt["sek"] as? NSNumber)?.doubleValue ?? 0, text: inhalt["text"] as? String ?? "") }
         }
     }
 
@@ -256,7 +253,6 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
 
     @objc func zurueck() {
         guard bereit else { return }
-        if !still { Mitteilungen.pauseGesehen() }
         zeigen()
         auskunft(); eingangHolen(); laeufeHolen()
         Sicherung.shared.nachholen()
@@ -302,8 +298,20 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             guard let id = eins["id"] as? String, let n = eins["n"] as? String else { return nil }
             return ["id": id, "n": n]
         }
+        // Kategorien und Händler für die Frage beim Bezahlen (ab 0.9). Bis 1.1 fehlten sie hier: Die Frage kam deshalb nie (gefunden am 25.11.).
+        let kats: [[String: String]] = (inhalt["kats"] as? [[String: Any]] ?? []).compactMap { eins in
+            guard let id = eins["id"] as? String, let n = eins["n"] as? String else { return nil }
+            return ["id": id, "n": n]
+        }
+        let haendler: [String] = (inhalt["haendler"] as? [Any] ?? []).compactMap { $0 as? String }
+        // Zahlen für das Widget „Überblick“ (ab 1.2): nur vollständige Einträge, höchstens vier
+        let zahlen: [[String: String]] = (inhalt["zahlen"] as? [[String: Any]] ?? []).compactMap { eins in
+            guard let b = eins["b"] as? String, let t = eins["t"] as? String, let w = eins["w"] as? String, let s = eins["s"] as? String else { return nil }
+            return ["b": b, "t": t, "w": w, "s": s]
+        }
         let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? [],
-                                     "konten": konten, "konto": inhalt["konto"] as? String ?? ""]
+                                     "konten": konten, "konto": inhalt["konto"] as? String ?? "",
+                                     "kats": kats, "haendler": haendler, "zahlen": Array(zahlen.prefix(4))]
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
             // Ist gerade die Schnelleingabe offen, liest sie die Konten neu: Nach einem Kaltstart aus dem Widget kommt der Stand erst jetzt
@@ -365,6 +373,9 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             alles["widgetTage"] = Ablage.lesen()?.tage.count ?? -1
             // Eingang: Jeder Start merkt eine Notiz vor, der dritte hakt vorher eine ab (siehe probeEingang). Nach dem dritten Start: 2 Notizen, nichts mehr vorgemerkt.
             alles["notizenZahl"] = Ablage.lesen()?.nz?.count ?? -1
+            // Für die Frage beim Bezahlen und das Widget „Überblick“ (ab 1.2): Kategorien gibt es immer, Zahlen mindestens für Gym und den Lauf der Probe
+            alles["kats"] = Ablage.lesen()?.kats?.count ?? -1
+            alles["zahlen"] = Ablage.lesen()?.zahlen?.count ?? -1
             alles["eingangRest"] = Ablage.eingang().count
             // Sicherung von selbst: Spätestens beim Verlassen nach dem ersten Start schickt die Web-App ihre Sicherung (dann ist eine Notiz da).
             // Je Tag gibt es eine Datei: Nach dem dritten Start liegt genau eine in „Dokumente“, lesbar und von Track.

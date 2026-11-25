@@ -15,6 +15,13 @@ struct Stand: Codable {
         var id: String      // Kennung in der Web-App
         var n: String       // Name
     }
+    /// Eine Zahl für das Widget „Überblick“ (ab v106 der Web-App, höchstens vier, in dieser Reihenfolge)
+    struct Zahl: Codable {
+        var b: String       // Bereich: training, gewicht, cardio, haushalt (bestimmt die Farbe)
+        var t: String       // Titel, z. B. „Gewicht“
+        var w: String       // Wert, z. B. „91,7 kg“
+        var s: String       // Zeile darunter, z. B. „+0,5 kg pro Woche“
+    }
     var tage: [Tag]
     var notizen: [String]   // nur Text, für die Fassung 0.2
     var nz: [Notiz]?        // die neuesten zehn Notizen mit Kennung
@@ -24,11 +31,14 @@ struct Stand: Codable {
     // Für die Nachfrage nach der Kategorie beim Bezahlen (ab v82 der Web-App, wahlfrei)
     var kats: [Konto]?      // alle Kategorien mit Kennung und Name, die meistbenutzten zuerst
     var haendler: [String]? // Händler (klein geschrieben), die schon einsortiert sind: Bei ihnen wird nicht gefragt
+    var zahlen: [Zahl]?     // für das Widget „Überblick“ (ab 1.2)
 
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]
         return Stand(tage: [Tag(d: Ablage.tag(Date()))], notizen: Array(texte.prefix(4)),
-                     nz: texte.enumerated().map { Notiz(id: "b\($0.offset)", x: $0.element) })
+                     nz: texte.enumerated().map { Notiz(id: "b\($0.offset)", x: $0.element) },
+                     zahlen: [Zahl(b: "training", t: "Gym", w: "Torso B", s: "heute dran"), Zahl(b: "gewicht", t: "Gewicht", w: "91,7 kg", s: "+0,5 kg pro Woche"),
+                              Zahl(b: "cardio", t: "Laufen", w: "12,4 km", s: "3 Läufe im November"), Zahl(b: "haushalt", t: "Vermögen", w: "8.420 €", s: "+310 € im November")])
     }
 }
 

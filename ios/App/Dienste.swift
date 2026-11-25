@@ -16,7 +16,7 @@ enum Profil {
     static func darf(_ recht: String) -> Bool { (inhalt?["Entitlements"] as? [String: Any])?[recht] != nil }
 }
 
-/// Lokale Mitteilungen: Sicherung fällig, App läuft ab (beide ohne Ton), seit 1.0 dazu „Pause vorbei“ aus dem Training (nur Vibration, siehe pause).
+/// Lokale Mitteilungen: Sicherung fällig, App läuft ab (beide ohne Ton). „Pause vorbei“ gab es nur in 1.0 und 1.1 (seit v106 ist die Pause ein Timer ohne Signal).
 enum Mitteilungen {
     struct Termin {
         let id: String
@@ -48,14 +48,13 @@ enum Mitteilungen {
         return liste
     }
 
-    /// Kennungen, die der Plan vergibt (siehe plan): Nur sie werden beim Neuplanen gestrichen, die Mitteilung „Pause vorbei“ bleibt stehen
-    static let planKennungen = (0..<5).map { "sicherung-\($0)" } + ["ablauf"]
+    /// Kennungen, die beim Neuplanen gestrichen werden: die des Plans und eine noch geplante „Pause vorbei“ aus 1.0 oder 1.1
+    static let planKennungen = (0..<5).map { "sicherung-\($0)" } + ["ablauf", "pause"]
 
     /// Fragt beim ersten Mal nach der Erlaubnis und ersetzt die geplanten Mitteilungen des Plans durch den neuen Plan.
-    /// Die Erlaubnis schließt seit 1.0 Töne ein: Nur so vibriert das iPhone bei „Pause vorbei“ (die Tondatei selbst ist still).
     static func planen(sicherung: String, ablauf: Date?) {
         let zentrale = UNUserNotificationCenter.current()
-        zentrale.requestAuthorization(options: [.alert, .sound]) { erlaubt, _ in
+        zentrale.requestAuthorization(options: [.alert]) { erlaubt, _ in
             zentrale.removePendingNotificationRequests(withIdentifiers: planKennungen)
             guard erlaubt else { return }
             for termin in plan(sicherung: sicherung, ablauf: ablauf) {
@@ -66,35 +65,6 @@ enum Mitteilungen {
                 zentrale.add(UNNotificationRequest(identifier: termin.id, content: inhalt, trigger: UNCalendarNotificationTrigger(dateMatching: zeit, repeats: false)))
             }
         }
-    }
-
-    private static var pauseLauf = 0   // zählt die Aufrufe von pause: Eine Erlaubnis, die verspätet antwortet, plant nichts Überholtes
-
-    /// Pausen-Uhr im Training (ab 1.0): eine Mitteilung „Pause vorbei“ in so vielen Sekunden. Sie erscheint nur, wenn die App dann nicht vorn ist
-    /// (vorn meldet sich die Web-App selbst mit einem Impuls). Ohne hörbaren Ton: Die Tondatei stille.wav ist still, das iPhone vibriert nur.
-    /// sekunden 0 streicht sie (neuer Satz, Pause aus, Training beendet). Wird immer vom Hauptfaden aus gerufen.
-    static func pause(sekunden: Double, text: String) {
-        pauseLauf += 1
-        let lauf = pauseLauf
-        let zentrale = UNUserNotificationCenter.current()
-        zentrale.removePendingNotificationRequests(withIdentifiers: ["pause"])
-        zentrale.removeDeliveredNotifications(withIdentifiers: ["pause"])
-        guard sekunden >= 1, sekunden <= 3600 else { return }
-        zentrale.requestAuthorization(options: [.alert, .sound]) { erlaubt, _ in
-            DispatchQueue.main.async {
-                guard erlaubt, lauf == pauseLauf else { return }
-                let inhalt = UNMutableNotificationContent()
-                inhalt.title = "Pause vorbei"
-                inhalt.body = text
-                inhalt.sound = UNNotificationSound(named: UNNotificationSoundName(rawValue: "stille.wav"))
-                zentrale.add(UNNotificationRequest(identifier: "pause", content: inhalt, trigger: UNTimeIntervalNotificationTrigger(timeInterval: sekunden, repeats: false)))
-            }
-        }
-    }
-
-    /// Zurück in der App: Eine gezeigte Mitteilung „Pause vorbei“ hat sich erledigt
-    static func pauseGesehen() {
-        UNUserNotificationCenter.current().removeDeliveredNotifications(withIdentifiers: ["pause"])
     }
 }
 
@@ -146,10 +116,11 @@ struct WidgetVorschau: View {
         let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel
         ZStack {
             LinearGradient(colors: [Color(0x27324A), Color(0x0B0D14)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
-            VStack(spacing: 16) {
+            VStack(spacing: 12) {
                 kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: dunkel), dunkel, 338)
                 HStack(spacing: 22) { kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: dunkel), dunkel, 158); kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: false, f: hell), hell, 158) }
-                kachel(NotizenAnsicht(notizen: stand.nz ?? [], zeilen: 3, knoepfe: true, f: hell), hell, 338)
+                HStack(spacing: 22) { kachel(UeberblickAnsicht(zahlen: stand.zahlen ?? [], klein: true, f: dunkel), dunkel, 158); kachel(UeberblickAnsicht(zahlen: stand.zahlen ?? [], klein: true, f: hell), hell, 158) }
+                kachel(UeberblickAnsicht(zahlen: stand.zahlen ?? [], klein: false, f: dunkel), dunkel, 338)
             }
         }
     }

@@ -1,7 +1,7 @@
 import AppIntents
 import SwiftUI
 
-// Inhalt des Widgets „Notizen“ (das Widget „Heute“ mit Routinen und Aufgaben gibt es seit 0.7 nicht mehr: Beides ist aus der App ausgebaut). Liegt in beiden Zielen: im Widget selbst und in der App, die ihn mit „-widgetbild“ für das Bild aus dem Simulator zeigt.
+// Inhalt der Widgets „Notizen“ und seit 1.2 „Überblick“ (das Widget „Heute“ mit Routinen und Aufgaben gibt es seit 0.7 nicht mehr: Beides ist aus der App ausgebaut). Liegt in beiden Zielen: im Widget selbst und in der App, die ihn mit „-widgetbild“ für das Bild aus dem Simulator zeigt.
 
 extension Color {
     init(_ hex: UInt32) { self.init(red: Double((hex >> 16) & 255) / 255, green: Double((hex >> 8) & 255) / 255, blue: Double(hex & 255) / 255) }
@@ -9,7 +9,7 @@ extension Color {
 
 /// Farben wie in der Web-App (dunkel und hell). Dunkel seit 1.0 schwarz mit neutralem Grau, wie die Web-App seit v87.
 struct Farben {
-    let seite, grund, widget, schrift, blass, blau, gruen, orange, spur: Color
+    let seite, grund, widget, schrift, blass, blau, gruen, orange, lila, spur: Color
     init(dunkel: Bool) {
         seite = Color(dunkel ? 0x000000 : 0xF2F2F7)
         grund = Color(dunkel ? 0x1C1C1E : 0xFFFFFF)
@@ -21,6 +21,7 @@ struct Farben {
         blau = Color(dunkel ? 0x0A84FF : 0x007AFF)
         gruen = Color(dunkel ? 0x30D158 : 0x248A3D)
         orange = Color(dunkel ? 0xFF9F0A : 0xF08C00)
+        lila = Color(dunkel ? 0xBF5AF2 : 0xAF52DE)
         spur = Color(dunkel ? 0x2C2C2E : 0xE9E9EE)
     }
 }
@@ -97,6 +98,54 @@ struct NotizenAnsicht: View {
                 Text(titel).font(.system(size: 12, weight: .medium)).foregroundColor(f.schrift)
             }
             .padding(.horizontal, 9).frame(height: 26).background(f.spur).clipShape(Capsule())
+        }
+    }
+}
+
+/// Widget „Überblick“ (ab 1.2): bis zu vier Zahlen aus der App (Gym, Gewicht, Laufen, Vermögen oder Budget), je mit der Kennfarbe des Bereichs.
+/// Klein zwei, mittel vier im Raster. Ein Tipp öffnet die App.
+struct UeberblickAnsicht: View {
+    let zahlen: [Stand.Zahl]
+    let klein: Bool
+    let f: Farben
+
+    var body: some View {
+        let liste = Array(zahlen.prefix(klein ? 2 : 4))
+        if liste.isEmpty {
+            Text("Öffne Track., um deine Zahlen zu laden.").font(.system(size: 13)).foregroundColor(f.blass)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        } else if klein {
+            VStack(alignment: .leading, spacing: 10) {
+                ForEach(Array(liste.enumerated()), id: \.offset) { feld($0.element) }
+                Spacer(minLength: 0)
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        } else {
+            let spalten = [GridItem(.flexible(), spacing: 14, alignment: .topLeading), GridItem(.flexible(), spacing: 14, alignment: .topLeading)]
+            LazyVGrid(columns: spalten, alignment: .leading, spacing: 12) {
+                ForEach(Array(liste.enumerated()), id: \.offset) { feld($0.element) }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        }
+    }
+
+    private func farbe(_ bereich: String) -> Color {
+        switch bereich {
+        case "gewicht": return f.lila
+        case "haushalt": return f.orange
+        case "training", "cardio": return f.gruen
+        default: return f.blau
+        }
+    }
+
+    private func feld(_ z: Stand.Zahl) -> some View {
+        VStack(alignment: .leading, spacing: 1) {
+            HStack(spacing: 5) {
+                Circle().fill(farbe(z.b)).frame(width: 6, height: 6)
+                Text(z.t).font(.system(size: 11, weight: .medium)).foregroundColor(f.blass).lineLimit(1)
+            }
+            Text(z.w).font(.system(size: 17, weight: .semibold, design: .rounded)).foregroundColor(f.schrift).lineLimit(1).minimumScaleFactor(0.7)
+            Text(z.s).font(.system(size: 11)).foregroundColor(f.blass).lineLimit(1).minimumScaleFactor(0.8)
         }
     }
 }

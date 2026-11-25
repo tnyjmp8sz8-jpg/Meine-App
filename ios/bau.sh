@@ -120,8 +120,9 @@ grep -q '"lauf":"1|850|300|145"' pruefung-3.json
 # Ganzer Weg: Start 1 liefert Puls 120 und 130, Start 2 dieselbe Lesung mit 130 und 140, Start 3 nichts Neues → für heute ein Training mit 1800 s, Puls (130 + 140) / 2 = 135
 grep -q '"gymRechnung":"1|3600|g30000000|true"' pruefung-3.json
 grep -q '"gym":"1|1800|135"' pruefung-3.json
-# Die stille Tondatei für „Pause vorbei“ muss in der App liegen, sonst käme die Mitteilung ohne Vibration
-test -f Payload/Track.app/stille.wav
+# Frage beim Bezahlen und Widget „Überblick“ (1.2): Der Stand im gemeinsamen Ordner trägt die Kategorien und mindestens eine Zahl
+grep -q '"kats":[1-9]' pruefung-3.json
+grep -q '"zahlen":[1-4][,}]' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa
