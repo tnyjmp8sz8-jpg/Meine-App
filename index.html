@@ -1337,7 +1337,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v126</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v127</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4623,6 +4623,13 @@ async function exportData() {
 }
 const stripNull = o => { if (Array.isArray(o) || !o || typeof o !== 'object') return o; const out = {}; for (const k in o) if (o[k] != null) out[k] = stripNull(o[k]); return out; };
 /* Einlesen ergänzt: vorhandene Einträge bleiben, gleiche Einträge werden überschrieben */
+/* Einlesen von Arbeitszeiten (v127): Ein Eintrag mit demselben Tag, Beginn und Ende wie ein vorhandener ist derselbe, auch unter anderer Kennung
+   (er bekam seine Zeiten aus einer Notiz als Datei und hatte einzelne Tage schon von Hand eingetragen). Der vorhandene bleibt, nichts steht doppelt da. */
+function gleicheZeiten(nn) {
+  const da = {}, key = x => x.d + '|' + x.a + '|' + x.b;
+  for (const id in N.work.e) if (N.work.e[id]) da[key(N.work.e[id])] = id;
+  for (const id in nn.work.e) { const alt = nn.work.e[id] && da[key(nn.work.e[id])]; if (alt && alt !== id) delete nn.work.e[id]; }
+}
 /* Einlesen von Gym-Daten: Eine Übung oder ein Plan mit einem Namen, den es schon gibt, ist dieselbe Übung und derselbe Plan, auch unter einer anderen Kennung
    (Übernahme aus einer anderen App, v87). Ihre Einheiten und Pläne hängen sich an das Vorhandene, statt dass der Name zweimal dasteht. */
 function gleicheNamen(kk) {
@@ -4656,7 +4663,8 @@ function importData(d) {
   const kk = stripNull(normK(d.K)); delete kk.live;
   gleicheNamen(kk);
   kdoc.patch(kk);
-  ndoc.patch(stripNull(normN(d.N)));
+  const nn = stripNull(normN(d.N)); gleicheZeiten(nn);
+  ndoc.patch(nn);
   if (d.E && typeof d.E === 'object') setE(d.E);   // Einstellungen aus der Sicherung gelten, wo sie etwas sagen
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
   const ex = Date.parse(d.exported);

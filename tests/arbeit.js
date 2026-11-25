@@ -132,5 +132,14 @@ lauf(async () => {
   P.ok('im Speicher: ein Eintrag mit 240 Minuten und 12,50 €, Lohn gemerkt', zahl(datei.work.e) === 1 && Object.values(datei.work.e)[0].b - Object.values(datei.work.e)[0].a === 240 && datei.work.rate === 1250, JSON.stringify(datei.work));
   await l.browser.close();
 
-  await P.ende(browser, fehler.concat(l.fehler));
+  /* Einlesen ohne Doppelte (v127): In der App steht der 10.11. von 10:00 bis 14:00 (Kennung x, 15 €). Die Datei bringt denselben Tag mit denselben Zeiten unter anderer Kennung (y, 20 €)
+     und einen weiteren Tag (z). Der vorhandene bleibt mit seinem Lohn, y kommt nicht dazu, z schon: zwei Einträge. Ein zweites Einlesen ändert nichts. */
+  const g = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, tasks: {}, notes: {}, work: { rate: 1500, e: { x: { d: '2026-11-10', a: 600, b: 840, p: 0, r: 1500 } } }, uni: { e: {} } } } });
+  const dat = { name: 'zeiten.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify({ app: 'takt', v: 1, N: { work: { e: { y: { d: '2026-11-10', a: 600, b: 840, p: 0, r: 2000 }, z: { d: '2026-11-12', a: 600, b: 840, p: 0, r: 2000 } } } } })) };
+  for (let i = 0; i < 2; i++) { await g.page.setInputFiles('#bk-file', dat); await g.page.waitForTimeout(200); }
+  const we = (await gespeichert(g.page)).N.work.e;
+  P.ok('Einlesen: gleicher Tag mit gleichen Zeiten ist derselbe Eintrag (der vorhandene bleibt), der neue Tag kommt dazu, zweimal Einlesen verdoppelt nichts', zahl(we) === 2 && we.x.r === 1500 && !we.y && we.z.r === 2000, JSON.stringify(we));
+  await g.browser.close();
+
+  await P.ende(browser, fehler.concat(l.fehler, g.fehler));
 });

@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v126 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v126): alle 17 Reihen stimmen (Gym 232, Hülle 169, Klappzeilen 159, Aufbau 78, Bereiche 25, Gesten 25). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v127 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v127): alle 17 Reihen stimmen (Gym 232, Hülle 169, Klappzeilen 159, Aufbau 78, Arbeit 45, Bereiche 25, Gesten 25). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114).
+- v127 (25.11., sein Auftrag zu fünf Bildern seiner Notiz „Arbeit“: „trage alle Arbeitszeiten genau ein, Stundenlohn vor Oktober 20 €, ab Oktober 25 €, keine Pausen“): Seine Daten liegen nur auf seinem iPhone, und ins öffentliche Repository gehören sie nicht. Deshalb eine Datei im Format der Sicherung mit 31 Arbeitszeiten (Juli bis November 2026) gebaut, in der App im Test-Browser eingelesen und gegen die Monatssummen seiner Notiz geprüft (alle vier stimmen), ihm im Chat geschickt: Zahnrad → „Sicherung einlesen“. Dazu in der App: Beim Einlesen kommt eine Arbeitszeit mit gleichem Tag, Beginn und Ende nicht doppelt dazu. Offen: seine Rückmeldung, ob das Einlesen am iPhone ging. Die Codes aus dem Abschnitt „Infos“ seiner Notiz stehen nirgends.
 - v126 (25.11., sein Auftrag: „ich will, dass meine Pläne nicht die Reihenfolge tauschen, und ich will durch Ziehen mit Finger selbst Folge tauschen können bzw. meinen Plan mit meinen Einheiten anpassen und da die Reihenfolge ändern etc., also wie Einstellungen des Plans. Da steht 1/3 Plänen, aber es ist ja ein Plan mit 3 Einheiten“): Die Liste im Gym steht fest in seiner Reihenfolge (mein Umsortieren aus v106 ist weg). Überschrift „Plan“ mit „1 von 3 Einheiten“; „Anpassen“ öffnet das neue Blatt „Plan“: Einheiten am Griff ziehen (speichert sofort), antippen zum Bearbeiten, „Einheit hinzufügen“. Wortwahl nachgezogen („Einheit im Plan“, „Aus dem Plan löschen“). Ohne Bild vorab gebaut, weil der Wunsch eindeutig war; Bild danach geschickt. Geprüft mit Maus und mit echter Berührung im Test-Browser; am iPhone ungeprüft.
 - v125 (25.11., sein Auftrag: „füge Einstellung hinzu, dass ich selbst wählen kann, welche Bereiche unten überhaupt angezeigt werden, also dass ich theoretisch zu einer Gym-App (auch ohne Cardio) alleine machen kann, alles ein aus machen können. Und noch eine Stufe die Streifen des Glas dunkler machen, Übergang und Rest ist echt gut“): Neuer Abschnitt „Bereiche“ in den Einstellungen mit sechs Schaltern (Heute, Planer, Gewicht, Finanzen, Gym, Cardio). Aus heißt: weg aus der Leiste, aus der Wahl des Starts und von Heute; die Daten bleiben. Mit weniger Bereichen wird die Leiste schmaler, mit einem einzigen gibt es keine; ist Heute aus, steht das Zahnrad im ersten Bereich neben dem Plus; der letzte Bereich lässt sich nicht abschalten. Glas: nur das Licht oben und unten mal 0,78 (oben 58, 55, 42 statt 65, 63, 49), Linie, Übergang und Aufbau unverändert; nur in Chromium gemessen (WebKit war in der Sitzung nicht eingerichtet, geändert sind allein Deckkräfte). Von mir so entschieden, ihm gesagt: Die Teile des Planers (Notizen, Arbeit, Uni) und der Finanzen (Vermögen, Budget) haben noch keine eigenen Schalter. Am iPhone ungeprüft.
 - v124 (25.11.): Erst sein „noch mehr Übergang von dunkel zu hell und noch eine Stufe dunkler“, dann ein Bild der Fassung vor v113 (Blatt einer Übung, feine Linie rundum): „ich fand es in der Version besser, also mehr so, aber Mischung aus beiden“. Gebaut: feine Linie rundum wie damals, dazu das weiche Licht oben (stärker) und unten; Karten in Blättern tragen wieder die volle Stufe. Im Bild neben sein altes gelegt, in Chromium und WebKit gemessen (oben 65, 63, 49, 46 …, Seite 30). Am iPhone ungeprüft.
@@ -21,6 +22,7 @@
 - Zurzeit keiner.
 
 ## Offene Vorschläge (nichts davon gebaut; nur auf Zuruf)
+- Zu v127: Verdienst im Monat aus den Minuten je Lohn rechnen statt je Tag zu runden (14 Std zu 25 € zeigen sonst 350,01 € statt 350,00 €).
 - Zu v126: im Blatt „Plan“ dem Plan einen Namen geben (z. B. „Torso / Extremitäten“), der dann als Überschrift im Gym steht.
 - Zu v125: eigene Schalter für die Teile des Planers (Notizen, Arbeit, Uni) und der Finanzen (Vermögen, Budget), nach demselben Muster wie Gym und Cardio.
 Auf seine Frage vom 25.11. („was noch hinzufügen alles?“) vorgeschlagen, die Einstellungen sind mit v110 gebaut, offen sind:
@@ -67,6 +69,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v124: Kante als Mischung: feine Linie rundum wie vor v113, dazu weiches Licht oben und unten.
 - v125: Bereiche in den Einstellungen an- und abschaltbar (auch Gym und Cardio einzeln); Licht der Glas-Kante eine Stufe dunkler.
 - v126: Gym: ein Plan mit Einheiten in fester Reihenfolge; Blatt „Plan“ zum Umsortieren durch Ziehen.
+- v127: Beim Einlesen kommen gleiche Arbeitszeiten nicht doppelt dazu (seine Zeiten aus der Notiz als Datei).
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -84,6 +87,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - Die Reihe „Speichern“ schlug am 24.11. einmal in einem vollen Lauf fehl („25-mal neu geladen“, 1 Abweichung) und danach nicht mehr. Kommt es wieder, die Abweichung ausgeben lassen: Seit v96 öffnet die App beim Laden mit laufendem Training das Vollbild.
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
+- v127: Hat er die Datei „Track-Arbeitszeiten“ eingelesen, stehen unter Planer → Arbeit die fünf Monate mit seinen Summen?
 - v126: Gym → „Anpassen“ neben „Plan“: Lässt sich eine Einheit am Griff (drei Striche links) ziehen, ohne dass das Blatt mitgeht? Passt die Wortwahl „Plan“ mit „Einheiten“?
 - v125: Bereiche abschalten (Zahnrad → „Bereiche“): Sieht die schmalere Leiste gut aus? Gym allein ohne Leiste: Findet er das Zahnrad neben dem Plus? Sind die Streifen im Glas jetzt dunkel genug?
 - v123: Steht im Zahnrad unten v123? Lässt sich die Dauer jetzt ändern („55 min“ antippen, Wert wählen oder tippen, Haken, „Speichern“)? Wenn nicht: Bildschirmaufnahme erbitten.
