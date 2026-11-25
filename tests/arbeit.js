@@ -44,13 +44,14 @@ lauf(async () => {
   await page.click('#add'); await kurz();
   P.ok('Plus oben: Blatt „Arbeitszeit eintragen“', await page.evaluate(() => document.querySelector('#bsheet').open && document.querySelector('#add').getAttribute('aria-label') === 'Arbeitszeit eintragen'));
   await page.keyboard.press('Escape'); await kurz();
-  // Neuer Eintrag: Zeiten, Pause und Lohn stehen wie beim jüngsten Eintrag da (14.11.). 12.11. 09:00–13:00 ohne Pause mit 15,00 € = 4 Std → 60,00 €
+  /* Neuer Eintrag (v128): heute, Beginn = jetzt (die Uhr steht auf 12:00), Ende 2,5 Stunden später (14:30), keine Pause, der gemerkte Lohn (14,50 €).
+     2,5 Std × 14,50 € = 36,25 €. Danach von Hand: 12.11. 09:00–13:00 ohne Pause mit 15,00 € = 4 Std → 60,00 € */
   await page.click('#n-main [data-n="newwork"]'); await kurz();
   const vor = await page.evaluate(() => ['b-date', 'b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|'));
-  P.ok('Blatt: heute, Zeiten, Pause und Lohn wie zuletzt', vor === '2026-11-15|14:00|20:30|30|14,50', vor);
-  P.ok('Blatt zeigt vorab „6 Std · 87,00 €“', (await text(page, '#b-calc')) === '6 Std · 87,00 €', await text(page, '#b-calc'));
+  P.ok('Blatt: heute, Beginn jetzt, Ende 2,5 Stunden später, keine Pause, gemerkter Lohn', vor === '2026-11-15|12:00|14:30||14,50', vor);
+  P.ok('Blatt zeigt vorab „2,5 Std · 36,25 €“', (await text(page, '#b-calc')) === '2,5 Std · 36,25 €', await text(page, '#b-calc'));
   const roh0 = await page.evaluate(() => localStorage.getItem('takt.v1'));
-  await page.fill('#b-bis', '14:00'); await page.click('#b-save'); await kurz();
+  await page.fill('#b-bis', '12:00'); await page.click('#b-save'); await kurz();
   P.ok('Beginn gleich Ende: Meldung, nichts gespeichert', (await text(page, '#b-err')) === 'Beginn und Ende sind gleich.' && (await page.evaluate(() => localStorage.getItem('takt.v1'))) === roh0);
   await page.fill('#b-date', '2026-11-12'); await page.fill('#b-von', '09:00'); await page.fill('#b-bis', '13:00'); await page.fill('#b-pause', ''); await page.fill('#b-rate', '15');
   P.ok('Blatt rechnet beim Tippen mit: „4 Std · 60,00 €“', (await text(page, '#b-calc')) === '4 Std · 60,00 €', await text(page, '#b-calc'));
@@ -121,8 +122,10 @@ lauf(async () => {
   await l.page.click('#r-subs [data-r="sub"][data-v="work"]'); await l.page.waitForTimeout(150);
   P.enthaelt('leere App, Arbeit: 0,00 € und Hinweis', await text(l.page, '#n-main .hero'), ['0,00', 'Noch keine Arbeitszeit eingetragen']);
   await l.page.click('#n-main [data-n="newwork"]'); await l.page.waitForTimeout(150);
-  P.ok('erster Eintrag: Lohn hat sofort den Fokus', (await l.page.evaluate(() => document.activeElement.id)) === 'b-rate');
-  await l.page.fill('#b-von', '08:00'); await l.page.fill('#b-bis', '12:00'); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
+  /* Erster Eintrag ohne gemerkten Lohn (v128): 25,00 € stehen da, 12:00 bis 14:30 → „2,5 Std · 62,50 €“; kein Feld hat den Fokus (keine Tastatur, ein Tipp auf „Speichern“ genügt) */
+  const erst = await l.page.evaluate(() => ['b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|') + ' · ' + document.querySelector('#b-calc').textContent + ' · ' + document.activeElement.tagName);
+  P.ok('erster Eintrag: jetzt bis 2,5 Stunden später mit 25,00 €, kein Feld im Fokus', erst === '12:00|14:30||25,00 · 2,5 Std · 62,50 € · DIALOG', erst);
+  await l.page.fill('#b-von', '08:00'); await l.page.fill('#b-bis', '12:00'); await l.page.fill('#b-rate', ''); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
   P.ok('ohne Lohn: Meldung', (await text(l.page, '#b-err')) === 'Trag deinen Stundenlohn ein.');
   // 08:00–12:00 = 4 Std mit 12,50 € → 50,00 €
   await l.page.fill('#b-rate', '12,5'); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
