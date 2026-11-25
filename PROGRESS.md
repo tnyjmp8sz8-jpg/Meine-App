@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v116 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v116): alle 16 Reihen stimmen (Gym 212, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- App-Inhalt (`index.html`): v117 (25.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v117): alle 16 Reihen stimmen (Gym 219, Hülle 169, Klappzeilen 159, Aufbau 78). Mit gestellter Uhr zuletzt geprüft (Gym): 1.1.2027 (v114).
+- v117 (25.11., seine Meldung: „wenn ich Trainingszeit ändern will, stürzt es ab, geht nicht“; auf Nachfrage: im Blatt „Einheit ändern“, „Blatt geht zu, nichts geändert“): Im Test-Browser ging es auf allen Wegen (Liste, Kalender, Rückblick; auch mit nachgebildeter iPhone-App). Erklärung, sehr wahrscheinlich, am Gerät nicht belegt: Die Zahlentastatur hat keine Taste zum Schließen; ein Tipp neben das Blatt oder das Wegziehen schloss das Blatt samt Eingabe. Jetzt bleiben „Einheit ändern“ und „Plan bearbeiten“ bei ungespeicherten Änderungen offen und sagen „Noch nicht gespeichert“. Ihn um Rückmeldung bitten, ob es damit geht; wenn nicht, Bildschirmaufnahme erbitten.
 - Die Sitzung vom 25.11. hat v106 bis v116 und die iPhone-App 1.2 gebracht (je Version eine Zeile unter „Erledigt“; die Regeln dazu stehen in `CLAUDE.md` und `BEREICHE.md`). Sie war sehr lang: Für das nächste Thema eine neue Sitzung beginnen.
 - v116 (25.11., sein Auftrag zu zwei Bildschirmfotos von Dock und Kalender-Widget in iOS 26: „das Glas sieht immer noch nicht gleich aus … bei Bars ist Hintergrund gleiche Farbe, oben und unten heller Streifen gleich hell, an Seite dunkel; beim Widget Streifen gleich, aber Hintergrund mit Verlauf … genauso wie iOS, zur Not google … danach alles vermerken, für nächsten Chat bereit machen“): Seine Bilder ausgemessen und im Test-Browser in dreifacher Schärfe nachgemessen. Leiste jetzt 123, 95, 68, 38 an der Kante gegen Apples 125, 93, 69, 38, Fläche 17 wie bei Apple, an der Seite kein Streifen. Karten tragen den Verlauf des Widgets (oben heller, unten dunkler) und dieselben Streifen. Apples Richtlinien dazu gesucht und gefunden (Zusammenfassung in `CLAUDE.md`, „Design-Regeln“): Sie nennen keine Maße. Hell und dunkel im Bild geprüft. Am iPhone ungeprüft.
 - Gym, Stand in Kürze: Empfehlung je Satz (Bereich 8–12 je Übung, erster Satz führt, Gewicht steigt bei 12 für alle Sätze, Abfall von Satz zu Satz wird aus seinen Einheiten gelernt, Reserve 0 bis 4+ nach jedem Satz), Drop- und Supersätze im Plan, Schritt je Übung, Einheit nachträglich ändern (mit Dauer) und am selben Tag weiter trainieren, Übung hinzufügen nach Gruppen. Neuanfang: nur Einheiten ab 23.11.2026 (v112; Kopie der alten auf seinem iPhone in `takt.gymAlt`).
@@ -60,6 +61,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v114: Steigern nach seinem Muster (erster Satz führt, Abfall gelernt); Glas mit Bogen oben und unten; Knopf mit Schein rundum; Dropsatz rot im Ring, Supersatz mit Kette.
 - v115: Training nachträglich ändern (mit Dauer) und weiter trainieren; Übung hinzufügen nach Gruppen.
 - v116: Glas und Flächen nach Messung an iOS 26 (Leiste einfarbig mit gleichem Streifen oben und unten, Karten mit Verlauf wie das Widget).
+- v117: „Einheit ändern“ und „Plan bearbeiten“ verlieren Ungespeichertes nicht mehr durch einen Tipp neben das Blatt.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.
@@ -77,6 +79,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - Die Reihe „Speichern“ schlug am 24.11. einmal in einem vollen Lauf fehl („25-mal neu geladen“, 1 Abweichung) und danach nicht mehr. Kommt es wieder, die Abweichung ausgeben lassen: Seit v96 öffnet die App beim Laden mit laufendem Training das Vollbild.
 
 ## Am iPhone noch zu prüfen (Rückmeldung steht aus)
+- v117: Lässt sich die Dauer in „Einheit ändern“ jetzt ändern (tippen, daneben tippen, „Speichern“)?
 - v116: Sieht das Glas jetzt aus wie bei iOS (Leiste einfarbig mit gleichem Streifen oben und unten, Karten mit Verlauf)? Zu viel Glanz an den vielen Karten und Chips, oder passt es?
 - v115: „Weiter trainieren“ nach dem Beenden; „Einheit ändern“ mit Dauer; Wahl der Übung nach Gruppen.
 - v114: Passen die Empfehlungen jetzt zu seinem Muster (nach 12 kommen 10, Erhöhen bei 12/10/8 für alle Sätze)? Blauer Knopf mit Schein rundum: gut oder wieder zu viel? Rote Zahl im Ring am Dropsatz, Kette am Supersatz.

@@ -1,4 +1,4 @@
-# Track. – Projektwissen (App-Stand v116)
+# Track. – Projektwissen (App-Stand v117)
 
 ## Regeln für dieses Dokument (immer befolgen)
 Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer darum bittet:
@@ -130,7 +130,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 ## iPhone-Besonderheiten (im Test-Browser nicht sichtbar)
 - Eingabefelder unter 16 px Schrift lassen iOS hineinzoomen.
 - Datumsfelder brauchen `appearance:none` und eine Höchstbreite, sonst ragen sie hinaus.
-- Die Zahlentastatur hat kein Minus.
+- Die Zahlentastatur hat kein Minus und keine Taste zum Schließen: Wer sie loswerden will, tippt neben das Blatt oder zieht es nach unten. In langen Blättern mit „Speichern“ weit unten ging so die Eingabe verloren (seine Meldung vom 25.11.: Dauer in „Einheit ändern“, „Blatt geht zu, nichts geändert“; im Test-Browser nicht zu sehen). Seit v117 schützt `daneben()` „Einheit ändern“ und „Plan bearbeiten“: Ist etwas geändert, bleibt das Blatt beim ersten Tipp daneben offen und sagt „Noch nicht gespeichert“, erst der zweite verwirft. Neue lange Blätter mit Eingaben bekommen denselben Schutz; kurze Blätter (Gewicht, Ausgabe, Notiz) schließen weiter mit einem Tipp.
 - Die App auf dem Home-Bildschirm hat einen eigenen Speicher; ihr Name wird beim Hinzufügen festgelegt. Löschen des Symbols löscht die Daten: vorher Sicherung speichern.
 - Solange ein Blatt offen ist, aktualisiert sich die App nicht.
 - Kurzbefehle öffnen https-Adressen in Safari, und Safari hat einen anderen Speicher als die App auf dem Home-Bildschirm: Einträge dort landen nicht in der App. Laut Forenberichten öffnet die Adresse mit `webapp://` statt `https://` die installierte App (ab iOS 16.4, in iOS 26 ausgebaut); ein Bericht sagt, der Zusatz hinter der Adresse gehe dabei verloren. Nicht von Apple dokumentiert und am Gerät des Nutzers noch nicht bestätigt (Stand v59).
@@ -188,7 +188,7 @@ Halte diese Datei und `PROGRESS.md` selbstständig aktuell, ohne dass der Nutzer
 - Bei Ansichten, die neu aussehen, ein Bild mit Beispieldaten mitschicken.
 
 ## Veröffentlichen
-- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v116` → `takt-v117`), `<span class="ver">v116</span>` im Blatt Einstellungen (`#esheet`) und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
+- Bei jeder Änderung an `index.html`: Cache-Name in `sw.js` (`takt-v117` → `takt-v118`), `<span class="ver">v117</span>` im Blatt Einstellungen (`#esheet`) und die Nummer in dieser Datei gemeinsam hochzählen. Die Stelle in der Fußzeile muss Zeichen für Zeichen so bleiben (keine weitere Klasse, kein Leerzeichen): Die iPhone-App erkennt daran eine neuere Fassung (`Web.version()`). Ohne neuen Cache-Namen sehen installierte Geräte die Änderung nicht. Reine Änderungen an den beiden Markdown-Dateien brauchen keine neue Version.
 - Entwickelt wird auf dem Arbeitszweig der Sitzung. Was nach `main` geht, landet auf dem Handy des Nutzers. Alles Neue wird ohne Nachfrage direkt nach `main` veröffentlicht, sobald es fertig und getestet ist (sein Wunsch, 22.11.2026: „immer alles neues direkt veröffentlichen“; er kann es jederzeit zurücknehmen). Auch reine Änderungen an den Projektdateien gehen nach `main`: Eine neue Sitzung beginnt dort. Ausnahme bleibt, was er „erstmal nur merken“ nennt.
 - Standardzweig bei GitHub ist `main` (seit 19.11.2026): Eine neue Sitzung beginnt dort. Trotzdem zu Beginn jeder Sitzung prüfen, dass der Arbeitsordner auf dem Stand von `main` ist (`git fetch origin main`, Überschrift dieser Datei vergleichen); wenn nicht, zuerst `main` holen und nichts auf dem alten Stand bauen. Warum: Einmal begann eine Sitzung auf einem alten Zweig und meldete v63 statt v73.
 - Nach dem Hochladen warten, bis Pages die neue Version ausliefert (das `sw.js` der Adresse zeigt den neuen Cache-Namen), dann dem Nutzer die Version nennen.

@@ -1311,7 +1311,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v116</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v117</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3283,15 +3283,27 @@ function openK(date) {
   $('#k-date').max = tk; $('#k-date').value = kS.date;
   $('#k-new').value = ''; $('#k-err').hidden = true; $('#k-del').hidden = !d;
   paintK();
+  kS.snap = kStand();
   openDlg(kdlg);
   kdlg.scrollTop = 0;
 }
 function closeK() { closeDlg(kdlg); }
 $('#ks-close').addEventListener('click', closeK);
-kdlg.addEventListener('click', e => { if (e.target === kdlg) closeK(); });
+/* Ungespeichertes (v117, seine Meldung vom 25.11.: Dauer in „Einheit ändern“ eingetippt, „Blatt geht zu, nichts geändert“): Die Zahlentastatur des iPhones hat keine Taste zum Schließen.
+   Wer sie loswerden will, tippt neben das Blatt oder zieht nach unten, und das schloss das ganze Blatt samt Eingabe. In den langen Blättern (Einheit ändern, Plan bearbeiten) schließt ein Tipp
+   daneben oder das Wegziehen deshalb nicht gleich, wenn etwas geändert ist: Das Blatt bleibt, die Tastatur geht zu, unten steht „Noch nicht gespeichert“; erst der zweite Tipp verwirft.
+   Das Kreuz oben schließt wie immer sofort. Die kurzen Blätter (Gewicht, Ausgabe, Notiz) schließen weiter mit einem Tipp daneben.
+   o = der Zustand des Blatts (kS, pS), stand() = seine Eingaben als Text, snap = der Stand beim Öffnen. */
+function daneben(dlg, o, stand, errSel, zu) {
+  if (o && o.snap !== stand() && !o.gewarnt) { o.gewarnt = true; const x = $(errSel); x.textContent = 'Noch nicht gespeichert. Tippe auf „Speichern“, oder noch einmal neben das Blatt, um die Änderungen zu verwerfen.'; x.hidden = false; dlg.scrollTop = dlg.scrollHeight; return; }
+  zu();
+}
+const kStand = () => JSON.stringify([$('#k-date').value, $('#k-dur').value.trim(), kS.items]);
+kdlg.addEventListener('click', e => { if (e.target === kdlg) daneben(kdlg, kS, kStand, '#k-err', closeK); });
 $('#kform').addEventListener('input', e => {
   const t = e.target, f = t.dataset ? t.dataset.f : null, box = f ? t.closest('.kx') : null;
   if (box) kS.items[+box.dataset.i].sets[+t.dataset.s][f] = t.value;
+  kS.gewarnt = false;
 });
 $('#kform').addEventListener('click', e => {
   const t = e.target.closest('[data-ka]'); if (!t) return;
@@ -3882,13 +3894,15 @@ function openP(id) {
   $('#p-name').value = pl ? pl.n : ''; $('#p-new').value = ''; $('#p-err').hidden = true;
   $('#p-del').hidden = !pl; $('#p-del').textContent = 'Plan löschen';
   paintP();
+  pS.snap = pStand();
   openDlg(pdlg);
   pdlg.scrollTop = 0;
   if (!pl) fokus($('#p-name'));
 }
 function closeP() { closeDlg(pdlg); }
 $('#ps-close').addEventListener('click', closeP);
-pdlg.addEventListener('click', e => { if (e.target === pdlg) closeP(); });
+const pStand = () => JSON.stringify([$('#p-name').value, pS.items]);
+pdlg.addEventListener('click', e => { if (e.target === pdlg) daneben(pdlg, pS, pStand, '#p-err', closeP); });
 $('#pform').addEventListener('click', e => {
   const t = e.target.closest('[data-pa]'); if (!t) return;
   const a = t.dataset.pa, row = t.closest('.prow'), i = row ? +row.dataset.i : -1;

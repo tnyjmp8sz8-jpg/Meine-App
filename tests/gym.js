@@ -775,6 +775,33 @@ lauf(async () => {
   await nb.click('#l-del'); await nb.click('#l-del'); await nb.waitForTimeout(200);
   const v19 = (await gespeichert(nb)).K;
   P.ok('„Änderungen verwerfen“: kein laufendes Training mehr, die Einheit ist unverändert', !v19.live && JSON.stringify(v19.log[heute]) === '{"a":[[90,11],[90,9]]}' && v19.meta[heute].dur === 2700, JSON.stringify(v19.log[heute]));
+  /* v117, seine Meldung vom 25.11. („wenn ich Trainingszeit ändern will … Blatt geht zu, nichts geändert“): Die Zahlentastatur des iPhones hat keine Taste zum Schließen;
+     wer daneben tippt, um sie loszuwerden, schloss bisher das ganze Blatt samt Eingabe. Jetzt bleibt das Blatt beim ersten Tipp daneben offen (die Tastatur geht zu, weil das Feld
+     den Fokus verliert) und sagt „Noch nicht gespeichert“; erst der zweite Tipp verwirft. „Speichern“ übernimmt 80 Minuten = 4800 s. Dasselbe gilt für „Plan bearbeiten“. */
+  const daneben = async () => { await nb.mouse.click(195, 6); await nb.waitForTimeout(120); };
+  const k19 = () => nb.evaluate(() => ({ offen: document.querySelector('#ksheet').open, feld: document.activeElement && document.activeElement.id, dauer: document.querySelector('#k-dur').value, hinweis: document.querySelector('#k-err').hidden ? '' : document.querySelector('#k-err').textContent }));
+  await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  await nb.click('#k-dur'); await nb.fill('#k-dur', '80');
+  await daneben(); const a19 = await k19();
+  P.ok('Dauer getippt, Tipp neben das Blatt: Das Blatt bleibt offen, das Feld gibt den Fokus ab (Tastatur zu), die Eingabe steht noch da, unten steht „Noch nicht gespeichert“', a19.offen && a19.feld !== 'k-dur' && a19.dauer === '80' && a19.hinweis.indexOf('Noch nicht gespeichert') === 0, JSON.stringify(a19));
+  await nb.click('#k-save'); await nb.waitForTimeout(250);
+  P.ok('„Speichern“ übernimmt die Dauer: 80 min = 4800 s', (await gespeichert(nb)).K.meta[heute].dur === 4800 && !(await nb.evaluate(() => document.querySelector('#ksheet').open)), JSON.stringify((await gespeichert(nb)).K.meta[heute]));
+  await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  await daneben();
+  P.ok('ohne Änderung schließt ein Tipp daneben das Blatt wie bisher', !(await nb.evaluate(() => document.querySelector('#ksheet').open)));
+  await nb.click('#v-training [data-k="day"][data-d="' + heute + '"]'); await nb.waitForTimeout(250);
+  await nb.fill('#k-dur', '5');
+  await daneben(); await daneben();
+  P.ok('geändert, zweimal daneben getippt: verworfen, es bleibt bei 4800 s', !(await nb.evaluate(() => document.querySelector('#ksheet').open)) && (await gespeichert(nb)).K.meta[heute].dur === 4800);
+  /* Plan bearbeiten: ein Satz mehr, Tipp daneben → bleibt offen mit Hinweis; zweiter Tipp verwirft (Latzug behält 3 Sätze). Ohne Änderung schließt der erste Tipp. */
+  await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(250);
+  await nb.click('#p-items .prow[data-i="0"] [data-pa="inc"]'); await daneben();
+  const p19 = await nb.evaluate(() => ({ offen: document.querySelector('#psheet').open, hinweis: document.querySelector('#p-err').hidden ? '' : document.querySelector('#p-err').textContent }));
+  P.ok('Plan geändert, Tipp daneben: Das Blatt bleibt und sagt „Noch nicht gespeichert“', p19.offen && p19.hinweis.indexOf('Noch nicht gespeichert') === 0, JSON.stringify(p19));
+  await daneben();
+  P.ok('zweiter Tipp daneben verwirft: Latzug behält 3 Sätze', !(await nb.evaluate(() => document.querySelector('#psheet').open)) && (await gespeichert(nb)).K.plans.p.items[0].sets === 3);
+  await nb.click('#v-training [data-k="plan"][data-id="p"]'); await nb.waitForTimeout(250); await daneben();
+  P.ok('Plan ohne Änderung: Ein Tipp daneben schließt wie bisher', !(await nb.evaluate(() => document.querySelector('#psheet').open)));
   await o19.browser.close();
   await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
