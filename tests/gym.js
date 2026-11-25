@@ -438,7 +438,7 @@ lauf(async () => {
   const uhr3 = [await zeileUhr(tag15), await zeileUhr(tag14), await zeileUhr(tag13)].join(' # ');
   P.ok('Blatt der Einheit nennt Dauer und Puls von der Uhr; ohne Puls „fehlt noch“; ohne Training auf der Uhr keine Zeile', uhr3 === 'Apple Watch · 62 min · Ø Puls 145 # Apple Watch · 45 min · Puls fehlt noch # (keine)', uhr3);
   await o12.browser.close();
-  /* v106: „Heute dran“, stärkste und schwächste Übung, Umsortieren im Plan per Ziehen, großer Titel, Zahlen für das Widget, Tippflächen.
+  /* v106: stärkste und schwächste Übung, Umsortieren im Plan per Ziehen, großer Titel, Zahlen für das Widget, Tippflächen.
      Uhr: 15. des laufenden Monats, 12 Uhr. Pläne: Torso (Rudern, Curls, Platz 1), Beine (Curls, Platz 2). Torso am 10. trainiert → Beine ist dran, heute noch nichts.
      Rudern: Vormonat 40 × 10 (1RM 40 · (1 + 10/30) = 53,33), am 10. 44 × 10 (58,67) → +10,0 %. Curls: 10 × 10 (13,33), dann 10 × 8 (12,67) → −5,0 %. */
   const ym13 = heute.slice(0, 7), mitte13 = new Date(+heute.slice(0, 4), +heute.slice(5, 7) - 1, 15, 12), MON13 = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'][+ym13.slice(5) - 1];
@@ -447,13 +447,10 @@ lauf(async () => {
     meta: { [vm + '-10']: { dur: 1800, plan: 'p1' }, [ym13 + '-10']: { dur: 1800, plan: 'p1' } }, plans: { p1: { n: 'Torso', items: [{ id: 'a', sets: 3 }, { id: 'b', sets: 3 }], o: 1 }, p2: { n: 'Beine', items: [{ id: 'b', sets: 3 }], o: 2 } } };
   const o13 = await oeffnen({ uhr: mitte13, skript: hStub13, daten: { S: { routines: [], running: null }, LY: {}, K: K13 } }), wp = o13.page;
   await wp.waitForTimeout(500);
-  const dran = await text(wp, '#v-heute .dran');
-  P.ok('Heute dran: Beine (Platz 2) mit „Heute dran · 1 Übung“', /^2 Beine Heute dran · 1 Übung/.test(dran), dran);
+  // v109 (sein Bildschirmfoto vom 25.11.: „ich will auf heute das nicht sehen mit gym“): Auf Heute steht kein Plan mehr, auch wenn einer dran ist
+  P.ok('auf Heute steht kein Plan und kein Knopf zum Starten', await wp.evaluate(() => !document.querySelector('#v-heute .dran, #v-heute [data-k="start"]') && !document.querySelector('#v-heute').textContent.includes('Heute dran')));
   const zahlen = await wp.evaluate(() => { const st = window.__post.filter(m => m.art === 'stand').pop(); return st ? st.zahlen.map(z => z.b + ':' + z.t + ':' + z.w + ':' + z.s).join(' | ') : 'kein Stand'; });
   P.ok('Widget „Überblick“: Gym mit dem Plan, der heute dran ist (keine Läufe, kein Gewicht, keine Finanzen → nur diese Kachel)', zahlen === 'training:Gym:Beine:heute dran', zahlen);
-  await wp.click('#v-heute .dran [data-k="start"]'); await wp.waitForTimeout(200);
-  P.ok('ein Tipp auf „Heute dran“ startet Beine im Vollbild', (await gespeichert(wp)).K.live.plan === 'p2' && await wp.evaluate(() => document.querySelector('#lsheet').open));
-  await wp.click('#l-del'); await wp.click('#l-del'); await wp.waitForTimeout(150);
   await bereich(wp, 'training');
   const best = await text(wp, '#v-training .best li');
   P.ok('stärkste und schwächste Übung im Monat: Rudern +10,0 %, Curls −5,0 %', best === 'Rudern Stärkste Übung im ' + MON13 + ' +10,0 % | Curls Schwächste Übung im ' + MON13 + ' −5,0 %', best);
