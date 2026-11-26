@@ -1361,7 +1361,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v132</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v133</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4171,7 +4171,9 @@ const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => 
 let rSub = 'note', nQuery = '', arbMode = 'zeit', arbJahr = 0;   // gewählter Teil des Planers, Suchtext der Notizen, Ansicht (zeit, jahr) und Jahr im Teil Arbeit
 const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
-const notesNew = () => noteList().sort((a, b) => b.m - a.m);
+/* Reihenfolge der Notizen (v133, sein Wort 26.11.: „neue Notizen nicht nach oben schieben, sondern runter, älteste immer oben“): nach dem Anlegen, die älteste zuerst.
+   Ändern verschiebt nichts (bis v132: zuletzt geänderte zuerst). Gilt im Planer und im Widget (nz im Stand). */
+const notesFolge = () => noteList().sort((a, b) => (a.c || a.m || 0) - (b.c || b.m || 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
 /* Abgehakt: Gelöscht ist sofort (auch „Rückgängig“ steht sofort da). Die Zeile füllt noch kurz ihren Kreis, wird blass und gibt dann ihren Platz frei, erst danach wird gezeichnet. */
 function raus(li, dann) {
@@ -4186,7 +4188,7 @@ function noteRow(x) {
 }
 /* Liste der Notizen, gefiltert nach dem Suchtext. Steht in #n-list, damit beim Tippen nur die Liste neu gezeichnet wird und das Suchfeld seinen Fokus behält. */
 function noteListHTML() {
-  const q = nQuery.trim().toLowerCase(), list = notesNew().filter(x => !q || x.x.toLowerCase().indexOf(q) >= 0);
+  const q = nQuery.trim().toLowerCase(), list = notesFolge().filter(x => !q || x.x.toLowerCase().indexOf(q) >= 0);
   return list.length ? '<ul class="entries">' + list.map(x => noteRow(x)).join('') + '</ul>' : '<p class="note">Keine Notiz gefunden.</p>';
 }
 /* Arbeit und Uni (Wunsch des Nutzers): zwei eigene Teile des Planers neben den Notizen (rSub 'work' und 'uni', seit v73; in v72 lagen sie im Ordner der Notizen).
@@ -4269,8 +4271,7 @@ function notesHTML() {
   return (n > 5 ? '<input type="text" id="n-q" class="n-q" inputmode="search" enterkeyhint="search" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Notizen durchsuchen" aria-label="Notizen durchsuchen" value="' + esc(nQuery) + '">' : '') +
     '<div id="n-list">' + noteListHTML() + '</div>';
 }
-/* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
-/* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
+/* Tipp in einer Liste im Planer. Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
   const b = e.target.closest('[data-n]'); if (!b) return false;
   const a = b.dataset.n, id = b.dataset.id;
@@ -5451,8 +5452,8 @@ function hStand() {
   for (let i = 0; i < 8; i++) {
     tage.push({ d: keyOf(addDays(parseKey(tk), i)), rn: 0, rd: 0, an: 0, auf: [] });
   }
-  /* nz: die neuesten zehn Notizen mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
-  const nz = notesNew().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
+  /* nz: die ersten zehn Notizen in der Reihenfolge des Planers (die älteste zuerst, seit v133) mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
+  const nz = notesFolge().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
   /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer.
      sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
   /* kats und haendler (v82, iPhone-App ab 0.9): Damit fragt „Ausgabe eintragen“ gleich beim Bezahlen nach der Kategorie, aber nur bei einem Händler, der noch nicht einsortiert ist.

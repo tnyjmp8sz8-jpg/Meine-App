@@ -44,15 +44,17 @@ lauf(async () => {
   await page.click('#toast button'); await kurz();
   P.ok('Rückgängig holt sie zurück', (await roh()) === vorN);
 
-  // Im Bereich: neueste zuerst; vorhandene Notiz ändern. Das Blatt hat nur den Text, „Fertig“ und „Notiz löschen“ (Ordner seit v77 weg, „Als Aufgabe“ seit v74)
+  // Im Bereich: älteste zuerst (seit v133); vorhandene Notiz ändern. Das Blatt hat nur den Text, „Fertig“ und „Notiz löschen“ (Ordner seit v77 weg, „Als Aufgabe“ seit v74)
   await bereich(page, 'routinen');
   const l2 = await liste();
-  P.ok('Bereich Notizen: beide, die neueste zuerst', l2.includes('Paket abholen') && l2.indexOf('Paket abholen') < l2.indexOf('Bib-Ausweis verlängern'), l2);
+  P.ok('Bereich Notizen: beide, die älteste oben, die neue unten', l2.includes('Paket abholen') && l2.indexOf('Bib-Ausweis verlängern') < l2.indexOf('Paket abholen'), l2);
   P.ok('bei wenigen Notizen gibt es kein Suchfeld und keine Reihe mit Ordnern', !(await page.$('#n-q')) && !(await page.$('#n-main .chips')) && !(await page.$('#n-main [data-n="folder"]')));
   await page.click('#n-main [data-n="note"]:has-text("Paket abholen")');
   P.ok('vorhandene Notiz: Löschen ist da; Ordner und „Als Aufgabe“ gibt es nicht', (await sichtbar('#n-text', '#n-done', '#n-del')) && !(await page.$('#n-folder-fld')) && !(await page.$('#nsheet .chips')) && !(await page.$('#n-task')));
   await page.fill('#n-text', 'Paket bei der Post abholen'); await page.click('#n-done'); await kurz();
   P.ok('Text geändert, weiter zwei Notizen', (await notizen()).length === 2 && (await notizen()).some(n => n.x === 'Paket bei der Post abholen'));
+  const lf = await liste();
+  P.ok('Ändern verschiebt nichts: die geänderte bleibt unten (v133)', lf.indexOf('Bib-Ausweis verlängern') < lf.indexOf('Paket bei der Post abholen'), lf);
   P.enthaelt('Zeile nennt nur den Tag', await liste(), ['Paket bei der Post abholen Heute']);
   await page.click('#n-main [data-n="note"]:has-text("Bib-Ausweis")'); await page.fill('#n-text', '   '); await page.click('#n-done'); await kurz();
   P.ok('geleerte Notiz ist weg', (await notizen()).length === 1);

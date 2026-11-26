@@ -442,7 +442,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     /// Selbsttest: stellt nach, was Widget und Kurzbefehle tun. Jeder Start merkt eine Notiz vor; gibt es schon zwei, wird vorher die älteste abgehakt.
     /// Läuft vor dem Laden der Seite, damit die Web-App alles beim Start übernimmt.
     static func probeEingang() {
-        if let notizen = Ablage.lesen()?.nz, notizen.count >= 2, let letzte = notizen.last { Ablage.notizWeg(letzte.id) }
+        if let notizen = Ablage.lesen()?.nz, notizen.count >= 2, let aelteste = notizen.first { Ablage.notizWeg(aelteste.id) }   // seit 1.5 steht die älteste vorn
         Ablage.notizDazu("Notiz aus dem Selbsttest")
     }
 

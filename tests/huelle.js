@@ -566,7 +566,7 @@ lauf(async () => {
   /* Routinen (seit v75) und Aufgaben (seit v74) gibt es nicht mehr. Die Felder rn, rd, an und auf bleiben stehen, weil die iPhone-App bis 0.6 sie beim Lesen erwartet, sind aber leer:
      auch mit drei gespeicherten Routinen, von denen heute eine erledigt ist */
   p.ok('Stand: an allen acht Tagen keine Routine und keine Aufgabe, die Felder sind da', st.tage.every(t => t.rn === 0 && t.rd === 0 && t.an === 0 && Array.isArray(t.auf) && t.auf.length === 0), JSON.stringify(st.tage[0]));
-  p.ok('Notizen: neueste zuerst, nur die erste Zeile', st.notizen.join('|') === 'Idee für Kapitel 3|Milch kaufen', st.notizen.join('|'));
+  p.ok('Notizen: älteste zuerst (seit v133; n1 vor 25 Tagen angelegt, n2 vor 3), nur die erste Zeile', st.notizen.join('|') === 'Milch kaufen|Idee für Kapitel 3', st.notizen.join('|'));
   /* ohne Sicherung zählt der älteste Eintrag, auch eine Notiz: hier die Notiz von vor 25 Tagen (älter als die Routinen), also fällig seit 25 − 7 = 18 Tagen */
   p.ok('Sicherung fällig: ältester Eintrag (eine Notiz) plus 7 Tage', st.sicherung === tag(18), st.sicherung);
   /* Kein Konto angelegt: Die Schnelleingabe der iPhone-App bekommt eine leere Liste und keine Vorbelegung */
@@ -579,7 +579,7 @@ lauf(async () => {
   await page.keyboard.type('Aus dem Kurzbefehl'); await page.keyboard.press('Enter'); await page.keyboard.press('Enter');
   await page.waitForTimeout(700);
   st = await letzter(page);
-  p.ok('nach dem Speichern: neuer Stand mit der Notiz', st.notizen[0] === 'Aus dem Kurzbefehl', st.notizen.join('|'));
+  p.ok('nach dem Speichern: neuer Stand mit der Notiz (seit v133 unten, die älteste steht oben)', st.notizen[st.notizen.length - 1] === 'Aus dem Kurzbefehl', st.notizen.join('|'));
   p.ok('Sicherung vor 2 Tagen: fällig in 5 Tagen', st.sicherung === tag(-5), st.sicherung);
 
   /* Läufe aus Health:
@@ -612,7 +612,7 @@ lauf(async () => {
 
   /* Stand: Notizen mit Kennung für das Widget */
   st = await letzter(page);
-  p.ok('Stand: Notizen mit Kennung (nz), neueste zuerst', st.nz.length === 3 && st.nz[0].x === 'Aus dem Kurzbefehl' && st.nz.some(n => n.id === 'n1' && n.x === 'Milch kaufen') && st.notizen.length === 3, JSON.stringify(st.nz));
+  p.ok('Stand: Notizen mit Kennung (nz), älteste zuerst, die aus dem Kurzbefehl unten', st.nz.length === 3 && st.nz[2].x === 'Aus dem Kurzbefehl' && st.nz[0].x === 'Milch kaufen' && st.nz.some(n => n.id === 'n1' && n.x === 'Milch kaufen') && st.notizen.length === 3, JSON.stringify(st.nz));
 
   /* Eingang (Widget und Kurzbefehle): eine Notiz, zwei Ausgaben, ein Lauf, eine abgehakte Notiz.
      Ausgabe 1: 12,50 € mit Wort „essen g“ → Kategorie „Essen gehen“ (aus). Ausgabe 2: 3 € ohne Wort → Sonstiges. Kein Konto angelegt → ohne Konto.
@@ -672,8 +672,9 @@ lauf(async () => {
     o.N.notes.hb = { x: 'Halb\ud83d', f: '', c: d.c, m: Date.now() - 1000 };
     localStorage.setItem('takt.v1', JSON.stringify(o)); }, { c: mittag(3) });
   await page.reload(); await page.waitForTimeout(700); st = await letzter(page);
-  p.ok('Stand: Notiz endet nach 80 Zeichen mit dem ganzen Emoji', st.nz[0].x === 'a'.repeat(79) + '😀', st.nz[0].x);
-  p.ok('Stand: das halbe Zeichen in der anderen Notiz ist weg', st.nz[1].x === 'Halb', JSON.stringify(st.nz[1]));
+  const em = st.nz.find(n => n.id === 'em'), hb = st.nz.find(n => n.id === 'hb');   // seit v133 nach dem Anlegen sortiert: gesucht wird über die Kennung
+  p.ok('Stand: Notiz endet nach 80 Zeichen mit dem ganzen Emoji', !!em && em.x === 'a'.repeat(79) + '😀', JSON.stringify(em));
+  p.ok('Stand: das halbe Zeichen in der anderen Notiz ist weg', !!hb && hb.x === 'Halb', JSON.stringify(hb));
   p.ok('Stand: kein Text mit halbem Zeichen', await page.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop();
     return s.nz.map(n => n.x).concat(s.notizen, ...s.tage.map(t => t.auf)).every(x => { try { encodeURIComponent(x); return true; } catch (e) { return false; } }); }));
 

@@ -24,7 +24,7 @@ struct Stand: Codable {
     }
     var tage: [Tag]
     var notizen: [String]   // nur Text, für die Fassung 0.2
-    var nz: [Notiz]?        // die neuesten zehn Notizen mit Kennung
+    var nz: [Notiz]?        // die ersten zehn Notizen mit Kennung (seit v133 die älteste zuerst)
     // Für die Schnelleingabe (ab v65 der Web-App; fehlt in einer älteren stand.json, deshalb wahlfrei)
     var konten: [Konto]?    // alle Konten, nach Name sortiert
     var konto: String?      // Kennung des Kontos, das die Web-App vorbelegen würde; leer = keines
@@ -129,7 +129,8 @@ enum Ablage {
     static func notizDazu(_ text: String) {
         let id = vormerken(["art": "notiz", "x": text])
         let zeile = String((text.split(whereSeparator: \.isNewline).first ?? "").prefix(80))
-        standAendern { $0.nz = [Stand.Notiz(id: "neu-" + id, x: zeile)] + ($0.nz ?? []) }
+        // Ab 1.5 unten anfügen: In der App steht die älteste Notiz oben, neue kommen unten dazu (v133)
+        standAendern { $0.nz = ($0.nz ?? []) + [Stand.Notiz(id: "neu-" + id, x: zeile)] }
     }
 
     /// Abhaken im Widget. Eine Notiz, die selbst erst vorgemerkt ist, wird einfach wieder gestrichen.
