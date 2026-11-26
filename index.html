@@ -204,7 +204,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:var(--rand-a),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform,#teform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh-head h2{margin:0;font-family:var(--display);font-size:18px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
@@ -590,6 +590,14 @@ body{font-size:14px}
 u.g{background:var(--good)}
 u.b{background:var(--accent)}
 u.w{background:var(--c-weight)}
+u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
+/* Termine (v130): Punkt in der Farbe des Kalenders vor dem Titel; das Blatt zeigt entweder die Felder oder den Hinweis auf die fehlende Erlaubnis */
+.kf{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1.5px;background:var(--accent)}
+.te-in{display:flex;flex-direction:column;gap:16px}
+.te-in[hidden],#teform .duo[hidden]{display:none}
+#te-tage.ein{grid-template-columns:1fr}
+.toast.nur{padding-right:16px}
+.toast.nur button{display:none}
 #csheet{height:92%;overflow:hidden}
 #csheet[open]{display:flex;flex-direction:column}
 .cs-top{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:14px 14px 2px}
@@ -1358,7 +1366,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v129</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v130</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1437,6 +1445,57 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </div>
 </dialog>
 
+<dialog tabindex="-1" id="tesheet" aria-labelledby="te-title">
+  <form id="teform" novalidate>
+    <div class="sh-head">
+      <h2 id="te-title">Termin eintragen</h2>
+      <button type="button" class="x" id="te-close" aria-label="Schließen">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
+      </button>
+    </div>
+    <div class="te-in" id="te-nein" hidden>
+      <p class="note">Track. darf deinen Kalender noch nicht lesen. Erlaube es in den Einstellungen des iPhones: „Track.“ › „Kalender“ › „Voller Zugriff“.</p>
+      <button type="button" class="primary" id="te-einst">Einstellungen öffnen</button>
+    </div>
+    <div class="te-in" id="te-in">
+      <label class="fld" for="te-text">
+        <span id="te-lab">Was und wann</span>
+        <input id="te-text" type="text" maxlength="200" autocomplete="off" enterkeyhint="done" placeholder="Zahnarzt morgen 15 Uhr">
+      </label>
+      <p class="note" id="te-les" hidden></p>
+      <div class="duo" id="te-tage">
+        <label class="fld" for="te-tag">
+          <span>Tag</span>
+          <input id="te-tag" type="date">
+        </label>
+        <label class="fld" for="te-bis-tag" id="te-bisf">
+          <span>Bis</span>
+          <input id="te-bis-tag" type="date">
+        </label>
+      </div>
+      <div class="duo" id="te-zeit">
+        <label class="fld" for="te-von">
+          <span>Von</span>
+          <input id="te-von" type="time">
+        </label>
+        <label class="fld" for="te-bis">
+          <span>Bis</span>
+          <input id="te-bis" type="time">
+        </label>
+      </div>
+      <ul class="entries"><li><button type="button" class="two sch" role="switch" aria-checked="true" id="te-ganz"><span class="l"><span>Ganztägig</span></span><span class="sw" aria-hidden="true"></span></button></li></ul>
+      <div class="fld">
+        <span id="te-erl">Erinnerung</span>
+        <div class="chips" id="te-er" role="group" aria-labelledby="te-erl"></div>
+      </div>
+      <p class="note" id="te-info" hidden></p>
+      <p class="err" id="te-err" role="alert" hidden></p>
+      <button class="primary" type="submit" id="te-save">Speichern</button>
+      <button type="button" class="ghost danger" id="te-weg" hidden>Termin löschen</button>
+    </div>
+  </form>
+</dialog>
+
 <dialog tabindex="-1" id="csheet" aria-labelledby="cs-title">
   <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button></div>
   <div class="cs-wd" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
@@ -1508,6 +1567,10 @@ function normE(o) {
     OV.forEach(q => { if (o.aus && o.aus[q[0]]) out.aus[q[0]] = 1; });
     BER.forEach(q => { if (o.weg && o.weg[q[0]]) out.weg[q[0]] = 1; });
     if (Object.keys(out.weg).length >= BER.length) out.weg = {};
+    /* Termine (v130): kal 0 = in den Einstellungen abgeschaltet; erZ und erG = zuletzt gewählte Erinnerung für Termine mit Uhrzeit (ohne Angabe 60 Minuten) und ganztägige (ohne Angabe keine) */
+    if (o.kal === 0) out.kal = 0;
+    if (o.erZ === 'aus' || (typeof o.erZ === 'number' && isFinite(o.erZ) && o.erZ !== 60)) out.erZ = o.erZ;
+    if (typeof o.erG === 'number' && isFinite(o.erG)) out.erG = o.erG;
   }
   return out;
 }
@@ -3188,16 +3251,16 @@ function calMarks(mode) {
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
-    return (istAn('gewicht') && typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '');
+    return (istAn('gewicht') && typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '') + (kalAm(k).length ? 't' : '');
   };
 }
 const dotsHTML = m => '<i>' + m.split('').map(c => '<u class="' + c + '"></u>').join('') + '</i>';
 function weekStripHTML(mode) {
-  const tk = todayKey(), now = new Date(), mon = addDays(now, -wd(now)), mark = calMarks(mode);
+  const tk = todayKey(), now = new Date(), mon = addDays(now, -wd(now)), mark = calMarks(mode), vor = mode === 'all' && kalDa();   // mit Terminen zählen auch die kommenden Tage
   let h = '';
   for (let i = 0; i < 7; i++) {
     const d = addDays(mon, i), k = keyOf(d);
-    h += '<button type="button" class="wd' + (k === tk ? ' now' : '') + '" data-d="' + (k > tk ? tk : k) + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '., Kalender öffnen"><small>' + DAYS[i] + '</small><b>' + d.getDate() + '</b>' + dotsHTML(k > tk ? '' : mark(k)) + '</button>';
+    h += '<button type="button" class="wd' + (k === tk ? ' now' : '') + '" data-d="' + (k > tk && !vor ? tk : k) + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '., Kalender öffnen"><small>' + DAYS[i] + '</small><b>' + d.getDate() + '</b>' + dotsHTML(k > tk && !vor ? '' : mark(k)) + '</button>';
   }
   return '<div class="wk" data-cal="' + mode + '" role="group" aria-label="Diese Woche, ' + CAL[mode] + '">' + h + '</div>';
 }
@@ -3210,32 +3273,33 @@ function calFirst(mode) {
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) take(MY[y].tx[id].d);
   return f;
 }
-function calSum(mode, ym, g, b, span) {
+function calSum(mode, ym, g, b, span, t) {
   const n = (c, one, many) => c + ' ' + (c === 1 ? one : many);
   if (mode === 'gym') return n(g, 'Einheit', 'Einheiten') + (g ? ' · ' + kg(g / span * 7) + ' pro Woche' : '');
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
-  return [g ? g + '× Training' : '', b ? b + '× gewogen' : ''].filter(Boolean).join(' · ') || 'Keine Einträge';
+  return [t ? t + (t === 1 ? ' Termin' : ' Termine') : '', g ? g + '× Training' : '', b ? b + '× gewogen' : ''].filter(Boolean).join(' · ') || 'Keine Einträge';
 }
 function calHTML() {
-  const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode);
+  const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode), vor = cMode === 'all' && kalDa() ? 12 : 0;   // mit Terminen reicht die Übersicht zwölf Monate voraus
   let i0 = curI - 2;
   if (first) i0 = Math.min(i0, ymIdx(first.slice(0, 7)));
   i0 = Math.max(i0, curI - 47);
   let h = '';
-  for (let i = i0; i <= curI; i++) {
+  for (let i = i0; i <= curI + vor; i++) {
     const ym = ymOfIdx(i), y = +ym.slice(0, 4), m = +ym.slice(5), len = new Date(y, m, 0).getDate(), off = wd(new Date(y, m - 1, 1, 12)), span = i === curI ? +tk.slice(8) : len;
-    let cells = '', g = 0, b = 0;
+    let cells = '', g = 0, b = 0, t = 0;
     for (let j = 0; j < off; j++) cells += '<span></span>';
     for (let d = 1; d <= len; d++) {
-      const k = ym + '-' + pad(d), mk = k > tk ? '' : mark(k);
+      const k = ym + '-' + pad(d), mk = k > tk && !vor ? '' : mark(k);
+      if (mk.indexOf('t') >= 0) t += kalAm(k).filter(x => kalVon(x) === k).length;   // ein Termin über mehrere Tage zählt einmal
       if (mk.indexOf('g') >= 0) g++;
       if ((mk.indexOf('b') >= 0 || mk.indexOf('w') >= 0) && !(cMode === 'gym')) b++;
-      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + '" data-d="' + k + '"' + (k > tk ? ' disabled' : '') +
+      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') +
         ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + dotsHTML(mk) + '</button>';
     }
-    h += '<section class="cm"><h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3><p>' + calSum(cMode, ym, g, b, span) + '</p><div class="cgrid">' + cells + '</div></section>';
+    h += '<section class="cm" data-ym="' + ym + '"><h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3><p>' + calSum(cMode, ym, g, b, span, t) + '</p><div class="cgrid">' + cells + '</div></section>';
   }
   return h;
 }
@@ -3269,20 +3333,24 @@ function calDayHTML() {
   }
   /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
   let rows = '';
+  kalAm(k).forEach(x => { rows += btn('data-c="termin" ' + kalAttr(x), kalName(x), x.o ? esc(x.o) : '', kalZeit(x, k)); });   // Termine zuerst: Sie haben eine Uhrzeit
+  if (istAn('routinen')) workList().filter(x => x.d === k).forEach(x => { rows += row('Arbeit', uhrT(x.a) + '–' + uhrT(x.b), stdT(workMin(x))); });
   const s = istAn('kraft') && gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
   if (istAn('cardio')) runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
   if (istAn('gewicht') && typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
   const out = istAn('haushalt') ? txOf().filter(x => x.t.k === 'out') : [];
   if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
-  return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.'));
+  return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.')) + (kalDa() ? add('termin', 'Termin') : '');
 }
 function paintCal(keep) {
   const b = $('#cs-body'), y = b.scrollTop;
   b.innerHTML = calHTML(); $('#cs-day').innerHTML = calDayHTML();
-  b.scrollTop = keep ? y : b.scrollHeight;
+  /* Neu geöffnet steht der Monat des gewählten Tags oben; ist er der letzte (ohne Termine immer der laufende), das Ende der Liste wie bisher */
+  const m = keep ? null : b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
+  b.scrollTop = keep ? y : m && m.nextElementSibling ? m.offsetTop - b.firstElementChild.offsetTop : b.scrollHeight;
 }
 function openCal(mode, sel) {
-  cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && sel <= todayKey() ? sel : todayKey();
+  cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && (sel <= todayKey() || (cMode === 'all' && kalDa())) ? sel : todayKey();
   $('#cs-title').textContent = CAL[cMode];
   openDlg(cdlg);
   paintCal(false);
@@ -3300,7 +3368,8 @@ cdlg.addEventListener('click', e => {
   else if (a === 'run') openT(c.dataset.id);
   else if (a === 'w') openW('entry', cSel);
   else if (a === 'tx') openM('tx', c.dataset.id);
-  else if (a === 'add') { if (v === 'run') openT(null, cSel); else if (v === 'w') openW('entry', cSel); else openM('tx', null, null, cSel); }
+  else if (a === 'termin') openTe(c.dataset.id, +c.dataset.s);
+  else if (a === 'add') { if (v === 'termin') openTe(null, 0, cSel); else if (v === 'run') openT(null, cSel); else if (v === 'w') openW('entry', cSel); else openM('tx', null, null, cSel); }
 });
 
 /* Übung hinzufügen (v115, sein Wunsch: „schlage direkt vor aus den Kategorien wählbar: Rücken, Brust usw. mit meinen Übungen, die gespeichert sind, oder eben neu erstellen“):
@@ -4370,6 +4439,247 @@ $('#n-del').addEventListener('click', () => {
   closeN();
 });
 
+/* ---------- Termine ---------- */
+/* Termine aus dem Kalender des iPhones (v130, iPhone-App ab 1.3; seine Frage vom 26.11.: „gibts möglichkeit apple kalender zu ersetzen und sogar besser?“, dann „baue das perfekt“).
+   Der Kalender von Apple bleibt der Speicher: Die iPhone-App liest dort und schreibt dorthin, Track. legt keine eigenen Termine ab. So bleiben iCloud, Einladungen,
+   abonnierte Kalender und vor allem Apples Erinnerungen, die auch kommen, wenn Track. abgelaufen ist. Im Browser und mit einer älteren iPhone-App gibt es von alledem nichts.
+   kal: was die iPhone-App zuletzt gemeldet hat. recht: „an“, „fehlt“ (iOS wurde noch nicht gefragt), „nein“. liste: je Termin id, s und e (Beginn und Ende in ms), t Titel,
+   g ganztägig, o Ort, w änderbar, r wiederholt sich, er Erinnerung in Minuten vor dem Beginn (negativ = danach), k und f Name und Farbe seines Kalenders.
+   Ein Ausschnitt liegt in takt.termine (nur auf dem Gerät, nicht in der Sicherung: Es sind Apples Daten), damit Heute beim Öffnen sofort stimmt. */
+const KAL_LS = 'takt.termine';
+let kal = { recht: '', liste: [] }, kalMap = null, kalWeg = null, kalWill = '';
+function kalNorm(o) {
+  const out = { recht: '', liste: [] };
+  if (!o || typeof o !== 'object') return out;
+  if (o.recht === 'an' || o.recht === 'fehlt' || o.recht === 'nein') out.recht = o.recht;
+  if (out.recht === 'an' && Array.isArray(o.liste)) o.liste.forEach(x => {
+    if (!x || typeof x !== 'object' || typeof x.id !== 'string' || !x.id || typeof x.s !== 'number' || typeof x.e !== 'number' || !isFinite(x.s) || !isFinite(x.e) || x.e < x.s) return;
+    const y = { id: x.id, s: x.s, e: x.e, t: typeof x.t === 'string' ? x.t : '' };
+    if (x.g) y.g = 1;
+    if (x.w) y.w = 1;
+    if (x.r) y.r = 1;
+    if (typeof x.o === 'string' && x.o) y.o = x.o;
+    if (typeof x.k === 'string' && x.k) y.k = x.k;
+    if (typeof x.er === 'number' && isFinite(x.er)) y.er = Math.round(x.er);
+    if (typeof x.f === 'string' && /^#[0-9a-f]{6}$/i.test(x.f)) y.f = x.f;
+    out.liste.push(y);
+  });
+  out.liste.sort((a, b) => a.s - b.s);
+  return out;
+}
+try { kal = kalNorm(JSON.parse(localStorage.getItem(KAL_LS) || 'null')); } catch (e) {}
+const kalKann = () => !!HUELLE && !!(hInfo.kalender || kal.recht);   // die iPhone-App kennt den Kalender (ab 1.3)
+const kalAn = () => kalKann() && E.kal !== 0;                         // und er ist in den Einstellungen nicht abgeschaltet
+const kalDa = () => kalAn() && kal.recht === 'an';                    // und iOS erlaubt den Zugriff
+/* Gemerkt wird nur, was Heute beim Öffnen braucht: eine Woche zurück bis gut drei Monate voraus */
+function kalMerk() {
+  const von = Date.now() - 7 * 864e5, bis = Date.now() + 92 * 864e5;
+  try { localStorage.setItem(KAL_LS, JSON.stringify({ recht: kal.recht, liste: kal.liste.filter(x => !x.neu && x.e >= von && x.s <= bis).slice(0, 600) })); } catch (e) {}
+}
+/* Ein gerade gelöschter Termin steht noch im Kalender, solange „Rückgängig“ angeboten wird (kalWeg); gezeigt wird er schon nicht mehr */
+const kalListe = () => kalWeg ? kal.liste.filter(x => !(x.id === kalWeg.x.id && x.s === kalWeg.x.s)) : kal.liste;
+const kalVon = x => keyOf(new Date(x.s));
+const kalBis = x => keyOf(new Date(x.g || x.e === x.s ? x.e : x.e - 1));   // endet ein Termin um Mitternacht, gehört der neue Tag nicht mehr dazu
+/* Termine je Tag (ein Termin über mehrere Tage steht an jedem davon, höchstens 62), ganztägige zuerst */
+function kalTage() {
+  if (kalMap) return kalMap;
+  kalMap = {};
+  kalListe().forEach(x => { const bis = kalBis(x); let d = parseKey(kalVon(x)); for (let i = 0; i < 62; i++) { const k = keyOf(d); if (k > bis) break; (kalMap[k] = kalMap[k] || []).push(x); d = addDays(d, 1); } });
+  for (const k in kalMap) kalMap[k].sort((a, b) => (b.g || 0) - (a.g || 0) || a.s - b.s);
+  return kalMap;
+}
+const kalAm = k => kalDa() ? kalTage()[k] || [] : [];
+const hm = t => { const d = new Date(t); return pad(d.getHours()) + ':' + pad(d.getMinutes()); };
+/* Zeit eines Termins am Tag k: „ganztägig“, „14:00–15:30“, über mehrere Tage „ab 14:00“ und „bis 15:30“ */
+function kalZeit(x, k) {
+  if (x.g) return 'ganztägig';
+  const a = kalVon(x) === k, b = kalBis(x) === k;
+  return a && b ? (x.e > x.s ? hm(x.s) + '–' + hm(x.e) : hm(x.s)) : a ? 'ab ' + hm(x.s) : b ? 'bis ' + hm(x.e) : 'ganztägig';
+}
+/* Der Punkt vor dem Titel trägt die Farbe, die der Kalender in iOS hat (geprüft in kalNorm: nur #RRGGBB) */
+const kalName = x => '<i class="kf"' + (x.f ? ' style="background:' + x.f + '"' : '') + '></i>' + esc(x.t || 'Ohne Titel');
+const kalAttr = x => (x.neu ? 'disabled ' : '') + 'data-id="' + esc(x.id) + '" data-s="' + x.s + '"';
+const tagKurz = k => { const d = parseKey(k); return DAYS[wd(d)] + ', ' + d.getDate() + '.' + (d.getMonth() + 1) + '.'; };
+/* Auf Heute: was heute noch nicht vorbei ist und die kommenden 14 Tage, höchstens vier Zeilen; rechts „Kalender ›“ (oder „Alle n ›“) öffnet den Monat. Ohne Termine keine Fläche. */
+function homeTermineHTML() {
+  if (!kalDa()) return '';
+  const now = Date.now(), tk = todayKey(), morgen = keyOf(addDays(parseKey(tk), 1)), bis = keyOf(addDays(parseKey(tk), 14));
+  const kommt = kalListe().filter(x => (x.g ? kalBis(x) >= tk : x.e > now) && kalVon(x) <= bis);
+  if (!kommt.length) return '';
+  const zeile = x => {
+    const k = kalVon(x) < tk ? tk : kalVon(x), jetzt = !x.g && x.s <= now;
+    return '<li><button type="button" class="two" data-h="termin" ' + kalAttr(x) + '><span class="l"><span>' + kalName(x) + '</span><small>' +
+      (jetzt ? 'Jetzt · bis ' + hm(x.e) : (k === tk ? 'Heute' : k === morgen ? 'Morgen' : tagKurz(k)) + (x.g ? ' · ganztägig' : '')) + (x.o ? ' · ' + esc(x.o) : '') + '</small></span>' + (x.g || jetzt ? '' : '<b>' + hm(x.s) + '</b>') + '</button></li>';
+  };
+  return secHTML('Termine', '', '<button type="button" class="sec-a go" data-h="kal">' + (kommt.length > 4 ? 'Alle ' + kommt.length : 'Kalender') + CHEV(1) + '</button>') + '<ul class="entries">' + kommt.slice(0, 4).map(zeile).join('') + '</ul>';
+}
+/* Liest Tag und Zeit aus einem Satz wie „Zahnarzt morgen 15 Uhr“ (nur bei einem neuen Termin): So ist er in einem Feld eingetragen.
+   Erkannt wird, was eindeutig ist; der Rest bleibt der Titel. Beispiele mit heute = Donnerstag, 26.11.2026:
+   „Zahnarzt morgen 15 Uhr“ → Zahnarzt, 27.11., 15:00–16:00 · „Lernen Mo 9-11 Uhr“ → Lernen, 30.11., 9:00–11:00 · „Abgabe 12.3.“ → Abgabe, 12.3.2027, ganztägig (der 12.3.2026 ist vorbei)
+   „Kino Freitag 20:15“ → Kino, 27.11., 20:15–21:15 · „Essen am 3. Dezember um 19“ → Essen, 3.12., 19:00–20:00 · „Party Sa 22-2 Uhr“ → 28.11., 22:00 bis 2:00 am Tag darauf.
+   Bewusst nicht erkannt: eine nackte Zahl („2 Pizzen“), „12.3“ ohne Punkt dahinter (könnte ein Preis sein), „Fr.“ mit Punkt (Frau), „Do“ und „So“ ohne „am“, „2h“ (eine Dauer).
+   Ohne Uhrzeit ist der Termin ganztägig, ohne Ende dauert er eine Stunde. Liefert { t Titel, d Tag oder null, a und b Beginn und Ende in Minuten oder null }. */
+const WTAG = { montag: 0, dienstag: 1, mittwoch: 2, donnerstag: 3, freitag: 4, samstag: 5, sonnabend: 5, sonntag: 6, mo: 0, di: 1, mi: 2, do: 3, fr: 4, sa: 5, so: 6 };
+const MON_K = ['jan', 'feb', 'mär', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dez'];
+function terminLesen(text, jetzt) {
+  const roh = String(text).replace(/\s+/g, ' ').trim();
+  let s = ' ' + roh + ' ', d = null, a = null, b = null;
+  const y0 = jetzt.getFullYear(), m0 = jetzt.getMonth(), heute = new Date(y0, m0, jetzt.getDate(), 12), tk = keyOf(heute);
+  /* nimm(re, f): Der erste Treffer, den f annimmt, verschwindet aus dem Satz. Jedes Muster beginnt hinter einem Leer- oder Satzzeichen (m[1], bleibt stehen) und endet vor einem (E). */
+  const nimm = (re, f) => { let da = false; s = s.replace(re, (...m) => { if (da || f(m) === false) return m[0]; da = true; return m[1] + ' '; }); return da; };
+  const A = '([ ,(])', E0 = '(?=[ ,;:!?)])', E = '(?=[ ,;:!?)]|\\.(?: |$))', T = '([01]?\\d|2[0-4])(?:[:.]([0-5]\\d))?', BIS = ' ?(?:-|–|bis) ?';
+  const min = (h, m) => { h = +h; m = +(m || 0); return h === 24 ? (m ? null : 0) : h * 60 + m; };
+  const zeit = (h1, m1, h2, m2) => { const x = min(h1, m1), y = h2 == null ? null : min(h2, m2); if (x == null || (h2 != null && y == null)) return false; a = x; b = y == null ? (x + 60) % 1440 : y; };
+  nimm(new RegExp(A + '(?:von |ab )?' + T + '(?: ?uhr)?' + BIS + T + ' ?uhr' + E, 'gi'), m => zeit(m[2], m[3], m[4], m[5])) ||       // 9-11 Uhr · 9 bis 11 Uhr · von 9.30 bis 11 Uhr
+  nimm(new RegExp(A + '(?:von |ab )?(\\d{1,2}):(\\d\\d)' + BIS + '(\\d{1,2})(?::(\\d\\d))?' + E, 'gi'), m => +m[2] < 25 && +m[3] < 60 && +m[4] < 25 && +(m[5] || 0) < 60 && zeit(m[2], m[3], m[4], m[5])) ||   // 9:30-11
+  nimm(new RegExp(A + '(?:von |ab )?(\\d{1,2})' + BIS + '(\\d{1,2}):(\\d\\d)' + E, 'gi'), m => +m[2] < 25 && +m[3] < 25 && +m[4] < 60 && zeit(m[2], 0, m[3], m[4])) ||   // 9-11:30
+  nimm(new RegExp(A + 'von ' + T + ' bis ' + T + E, 'gi'), m => zeit(m[2], m[3], m[4], m[5])) ||                                           // von 9 bis 11
+  nimm(new RegExp(A + '(?:um |ab |gegen )?' + T + ' ?uhr' + E, 'gi'), m => zeit(m[2], m[3])) ||                                             // 15 Uhr · um 15.30 Uhr
+  nimm(new RegExp(A + '(?:um |ab |gegen )?(\\d{1,2}):(\\d\\d)' + E, 'gi'), m => +m[2] < 25 && +m[3] < 60 && zeit(m[2], m[3])) ||            // 15:30
+  nimm(new RegExp(A + '(?:um|gegen) ' + T + E, 'gi'), m => zeit(m[2], m[3]));                                                               // um 15
+  /* Ein Datum ohne Jahr meint das nächste Mal: Liegt es in diesem Jahr schon zurück, gilt das kommende */
+  const datum = (tag, mon, jahr) => {
+    tag = +tag; mon = +mon;
+    let y = jahr == null ? y0 : +jahr < 100 ? 2000 + +jahr : +jahr;
+    const pass = () => mon >= 1 && mon <= 12 && tag >= 1 && tag <= new Date(y, mon, 0).getDate();
+    if (jahr == null && pass() && y + '-' + pad(mon) + '-' + pad(tag) < tk) y++;
+    if (!pass() || y < y0 - 1 || y > y0 + 5) return false;
+    d = y + '-' + pad(mon) + '-' + pad(tag);
+  };
+  const wtag = name => { const n = (WTAG[name.toLowerCase()] - wd(heute) + 7) % 7; d = keyOf(addDays(heute, n || 7)); };
+  nimm(new RegExp(A + '(?:am |den |ab )?(\\d{1,2})\\.(\\d{1,2})\\.(\\d{4}|\\d{2})?' + E, 'gi'), m => datum(m[2], m[3], m[4])) ||          // 12.3. · 12.03.2027
+  nimm(new RegExp(A + 'am (\\d{1,2})\\.(\\d{1,2})' + E, 'gi'), m => datum(m[2], m[3])) ||                                                   // am 12.3
+  nimm(new RegExp(A + '(?:am |den )?(\\d{1,2})\\.? ?(januar|februar|märz|maerz|april|mai|juni|juli|august|september|oktober|november|dezember|jan|feb|mär|apr|jun|jul|aug|sept|sep|okt|nov|dez)\\.?(?: (\\d{4}))?' + E, 'gi'),
+    m => { const k = m[3].toLowerCase().slice(0, 3); return datum(m[2], (k === 'mae' ? 2 : MON_K.indexOf(k)) + 1, m[4]); }) ||                // 3. Dezember · 3 dez 2027
+  nimm(new RegExp(A + 'am (\\d{1,2})\\.' + E, 'gi'), m => { const t = +m[2], x = new Date(y0, m0 + (t < heute.getDate() ? 1 : 0), 1); return datum(t, x.getMonth() + 1, x.getFullYear()); }) ||   // am 12.
+  nimm(new RegExp(A + '(heute(?: morgen| früh)?|übermorgen|uebermorgen|morgen)' + E, 'gi'), m => {                                          // „am Morgen“ und „guten Morgen“ sind kein Tag
+    const w = m[2].toLowerCase(), davor = m[m.length - 1].slice(0, m[m.length - 2] + 1);
+    if (w === 'morgen' && /(^| )(am|guten|jeden|früh) $/i.test(davor)) return false;
+    d = keyOf(addDays(heute, w === 'morgen' ? 1 : w[0] === 'h' ? 0 : 2));
+  }) ||
+  nimm(new RegExp(A + '(?:am |(?:nächste[nrs]?|kommende[nr]?) )?(montag|dienstag|mittwoch|donnerstag|freitag|samstag|sonnabend|sonntag)' + E, 'gi'), m => wtag(m[2])) ||
+  nimm(new RegExp(A + '(?:am )?(mo|di|mi|fr|sa)' + E0, 'gi'), m => wtag(m[2])) ||                                                           // Kürzel nur ohne Punkt: „Fr.“ ist Frau
+  nimm(new RegExp(A + 'am (do|so)' + E0, 'gi'), m => wtag(m[2]));
+  if (d == null && a == null) return { t: roh, d: null, a: null, b: null };
+  const t = s.replace(/\s+/g, ' ').replace(/ ([,.;:!?])/g, '$1').trim().replace(/^[,;:–-]+ ?| ?[,;:–-]+$/g, '').replace(/ (am|um|ab|von|bis|den|gegen)$/i, '').trim();
+  return { t, d, a, b };
+}
+/* Blatt „Termin“. Neu: ein Feld, das Tag und Zeit aus dem Satz liest (terminLesen), darunter dieselben Angaben zum Nachstellen; was er von Hand stellt (teE.hand), überschreibt der Satz nicht mehr.
+   Vorhanden: Titel, Tag, Zeit und Erinnerung ändern oder löschen. Nur ansehen lässt sich ein Termin aus einem Kalender ohne Schreibrecht (Geburtstage, abonnierte Kalender).
+   Ein Termin mit Uhrzeit über mehr als einen Tag behält Tag und Zeit (lang): Dafür hat das Blatt keine Felder. Bei einem, der sich wiederholt, gilt alles nur für dieses eine Mal.
+   Erinnerung: Minuten vor dem Beginn; ganztägig „Am Tag“ = 9 Uhr (−540) und „Am Vortag“ = 9 Uhr davor (900), wie in Apples Kalender. Die letzte Wahl gilt beim nächsten neuen Termin (E.erZ, E.erG). */
+const tedlg = $('#tesheet'); let teE = null;
+const ER_Z = [[15, '15 min'], [60, '1 Std'], [1440, '1 Tag']], ER_G = [[-540, 'Am Tag'], [900, 'Am Vortag']];
+function teMal() {
+  const g = teE.g, liste = (g ? ER_G : ER_Z).slice(), er = g ? teE.erG : teE.erZ;
+  if (typeof er === 'number' && !liste.some(q => q[0] === er)) liste.push([er, 'Wie bisher']);
+  $('#te-er').innerHTML = [['aus', 'Keine']].concat(liste).map(q => '<button type="button" class="chip" data-er="' + q[0] + '" aria-pressed="' + (er === q[0]) + '"' + (teE.fest ? ' disabled' : '') + '>' + q[1] + '</button>').join('');
+  $('#te-ganz').setAttribute('aria-checked', !!g);
+  $('#te-zeit').hidden = !!g; $('#te-bisf').hidden = !g; $('#te-tage').classList.toggle('ein', !g);
+}
+function openTe(id, s, tag) {
+  if (!kalAn()) return;
+  if (kal.recht !== 'an' && kal.recht !== 'nein') { kalWill = isKey(tag) ? tag : todayKey(); hPost({ art: 'terminAn' }); return; }   // iOS fragt jetzt; mit der Erlaubnis öffnet sich das Blatt (TrackHuelle.termine)
+  const nein = kal.recht !== 'an', x = id && !nein ? kalListe().find(y => y.id === id && y.s === s) : null;
+  if (id && !nein && (!x || x.neu)) return;
+  const tag0 = x ? kalVon(x) : isKey(tag) ? tag : todayKey(), er = x && typeof x.er === 'number' ? x.er : 'aus';
+  teE = { id: x ? x.id : null, s0: x ? x.s : 0, ev: x, tag0, g: x ? !!x.g : true, fest: !!x && !x.w, lang: !!x && !x.g && x.e - x.s > 864e5, er0: er, dauer: x && !x.g ? Math.round((x.e - x.s) / 6e4) : 60, hand: { tag: false, zeit: false, bis: false },
+    erZ: x && !x.g ? er : E.erZ != null ? E.erZ : 60, erG: x && x.g ? er : E.erG != null ? E.erG : 'aus' };
+  $('#te-lab').textContent = x ? 'Titel' : 'Was und wann';
+  $('#te-title').textContent = nein ? 'Termine' : x ? (teE.fest ? 'Termin' : 'Termin ändern') : 'Termin eintragen';
+  $('#te-nein').hidden = !nein; $('#te-in').hidden = nein;
+  $('#te-text').value = x ? x.t : ''; $('#te-tag').value = tag0; $('#te-bis-tag').value = x && x.g ? kalBis(x) : tag0;
+  $('#te-von').value = x && !x.g ? hm(x.s) : ''; $('#te-bis').value = x && !x.g ? hm(x.e) : '';
+  const zu = teE.fest || teE.lang;
+  $('#te-text').disabled = teE.fest; ['#te-tag', '#te-bis-tag', '#te-von', '#te-bis', '#te-ganz'].forEach(q => { $(q).disabled = zu; });
+  const info = !x ? [] : [teE.fest ? 'Aus dem Kalender „' + (x.k || 'ohne Namen') + '“. Er lässt sich hier nicht ändern.' : '', x.r && !teE.fest ? 'Wiederholt sich: Ändern und Löschen gilt nur für dieses eine Mal.' : '',
+    teE.lang && !teE.fest ? 'Geht über mehrere Tage: Tag und Zeit änderst du im Kalender von Apple.' : '', x.o ? 'Ort: ' + x.o : ''].filter(Boolean);
+  $('#te-info').textContent = info.join(' '); $('#te-info').hidden = !info.length;
+  $('#te-les').hidden = true; $('#te-err').hidden = true; $('#te-save').hidden = teE.fest; $('#te-weg').hidden = !x || teE.fest;
+  teMal(); openDlg(tedlg); tedlg.scrollTop = 0;
+  if (!x && !nein) fokus($('#te-text'));
+}
+/* Beim Tippen (nur neuer Termin): Was der Satz hergibt, steht sofort in den Feldern darunter; der Titel ohne die erkannten Wörter steht als Zeile unter dem Feld. */
+function teLes() {
+  if (teE.id) return;
+  const p = terminLesen($('#te-text').value, new Date()), les = $('#te-les'), zeigen = (p.d != null || p.a != null) && !!p.t;
+  if (!teE.hand.tag) { $('#te-tag').value = p.d || teE.tag0; if (!teE.hand.bis) $('#te-bis-tag').value = $('#te-tag').value; }
+  if (!teE.hand.zeit) {
+    const g = p.a == null;
+    if (!g) { $('#te-von').value = uhrT(p.a); $('#te-bis').value = uhrT(p.b); teE.dauer = (p.b - p.a + 1440) % 1440; }
+    if (g !== teE.g) { teE.g = g; teMal(); }
+  }
+  les.hidden = !zeigen; if (zeigen) les.textContent = 'Wird eingetragen als „' + p.t + '“';
+}
+function teRead() {
+  const roh = $('#te-text').value.trim(), t = teE.id ? roh : terminLesen(roh, new Date()).t, d = $('#te-tag').value;
+  if (!t) return 'Wie heißt der Termin?';
+  if (teE.lang) return { t, s: teE.ev.s, e: teE.ev.e, g: 0 };
+  if (!isKey(d)) return 'Wähle einen Tag.';
+  const p = d.split('-').map(Number);
+  if (teE.g) {
+    const bt = $('#te-bis-tag').value || d, q = bt.split('-').map(Number);
+    if (!isKey(bt) || bt < d) return 'Das Ende liegt vor dem Beginn.';
+    return { t, s: new Date(p[0], p[1] - 1, p[2]).getTime(), e: new Date(q[0], q[1] - 1, q[2], 23, 59).getTime(), g: 1 };
+  }
+  const a = minOf($('#te-von').value), b0 = minOf($('#te-bis').value);
+  if (!(a >= 0)) return 'Wann beginnt der Termin?';
+  const b = b0 >= 0 ? b0 : (a + 60) % 1440;   // ohne Ende eine Stunde; liegt das Ende vor dem Beginn, ist es am Tag darauf
+  return { t, s: new Date(p[0], p[1] - 1, p[2], 0, a).getTime(), e: new Date(p[0], p[1] - 1, p[2] + (b < a ? 1 : 0), 0, b).getTime(), g: 0 };
+}
+$('#te-close').addEventListener('click', () => closeDlg(tedlg));
+tedlg.addEventListener('click', e => { if (e.target === tedlg) closeDlg(tedlg); });
+$('#te-einst').addEventListener('click', () => { hPost({ art: 'einstellungen' }); closeDlg(tedlg); });
+$('#te-text').addEventListener('input', teLes);
+$('#teform').addEventListener('input', () => { $('#te-err').hidden = true; });
+$('#te-tag').addEventListener('input', () => { teE.hand.tag = true; const d = $('#te-tag').value, b = $('#te-bis-tag'); if (!teE.hand.bis || b.value < d) b.value = d; });
+$('#te-bis-tag').addEventListener('input', () => { teE.hand.bis = true; });
+/* Wird der Beginn verschoben, wandert das Ende mit (die Dauer bleibt), wie in Apples Kalender */
+$('#te-von').addEventListener('input', () => { teE.hand.zeit = true; const a = minOf($('#te-von').value); if (a >= 0) $('#te-bis').value = uhrT((a + teE.dauer) % 1440); });
+$('#te-bis').addEventListener('input', () => { teE.hand.zeit = true; const a = minOf($('#te-von').value), b = minOf($('#te-bis').value); if (a >= 0 && b >= 0) teE.dauer = (b - a + 1440) % 1440; });
+/* Ganztägig aus: Steht noch keine Zeit da, beginnt der Termin zur nächsten vollen Stunde und dauert eine */
+$('#te-ganz').addEventListener('click', () => {
+  teE.g = !teE.g; teE.hand.zeit = true;
+  if (!teE.g && !$('#te-von').value) { const a = (new Date().getHours() + 1) % 24 * 60; $('#te-von').value = uhrT(a); $('#te-bis').value = uhrT((a + 60) % 1440); teE.dauer = 60; }
+  teMal();
+});
+$('#te-er').addEventListener('click', e => { const c = e.target.closest('[data-er]'); if (!c) return; const v = c.dataset.er === 'aus' ? 'aus' : +c.dataset.er; if (teE.g) teE.erG = v; else teE.erZ = v; teMal(); });
+/* Speichern: Der Auftrag geht an die iPhone-App, die den Kalender schreibt und die Liste neu schickt. Bis dahin steht der Termin schon hier (ein neuer mit „neu“: noch nicht antippbar,
+   weil er seine Kennung erst vom Kalender bekommt). er geht nur mit, wenn sie neu ist oder geändert wurde: Sonst bleiben die Erinnerungen des Termins, wie sie sind. */
+$('#teform').addEventListener('submit', e => {
+  e.preventDefault();
+  if (teE.fest || kal.recht !== 'an') return;
+  const x = teRead(); if (typeof x === 'string') { const m = $('#te-err'); m.textContent = x; m.hidden = false; return; }
+  const er = x.g ? teE.erG : teE.erZ, o = { art: 'termin', t: x.t, s: x.s, e: x.e, g: x.g }, alt = teE.ev;
+  const y = Object.assign({}, alt, { id: teE.id || 'neu' + Date.now(), s: x.s, e: x.e, t: x.t, w: 1 });
+  if (x.g) y.g = 1; else delete y.g;
+  if (teE.id) { o.id = teE.id; o.s0 = teE.s0; if (er !== teE.er0 || !!alt.g !== !!x.g) o.er = er === 'aus' ? null : er; }
+  else { o.er = er === 'aus' ? null : er; y.neu = 1; if (E[x.g ? 'erG' : 'erZ'] !== er) setE(x.g ? { erG: er } : { erZ: er }); }
+  if ('er' in o) { if (o.er == null) delete y.er; else y.er = o.er; }
+  kal.liste = kal.liste.filter(z => !(alt && z.id === alt.id && z.s === alt.s)).concat(y).sort((p, q) => p.s - q.s); kalMap = null;
+  hPost(o); closeDlg(tedlg);
+});
+/* Löschen: Der Termin verschwindet sofort aus der Anzeige, im Kalender wird er erst gelöscht, wenn „Rückgängig“ verstrichen ist (7 s) oder die App verlassen wird.
+   So kommt er mit allem zurück, was Track. nicht kennt (Notizen, Gäste). Der eigene Weg statt des allgemeinen „Rückgängig“: Jenes spielt den Speicher der App zurück, der Termin liegt aber bei Apple. */
+function kalRaus() {
+  if (!kalWeg) return;
+  const x = kalWeg.x; clearTimeout(kalWeg.timer); kalWeg = null;
+  kal.liste = kal.liste.filter(y => !(y.id === x.id && y.s === x.s)); kalMap = null;
+  hPost({ art: 'terminWeg', id: x.id, s0: x.s });
+  if (!undo) toastOff();
+}
+function kalNeu() { kalMap = null; if (!document.querySelector('dialog[open]:not(.zu)')) renderHome(); if (cdlg.open) paintCal(true); }
+$('#te-weg').addEventListener('click', () => {
+  const x = teE.ev; if (!x || teE.fest) return;
+  kalRaus(); toastOff();
+  kalWeg = { x, timer: setTimeout(kalRaus, 7000) }; kalMap = null;
+  closeDlg(tedlg); haptik('mittel');
+  toastEl.firstElementChild.textContent = 'Termin gelöscht';
+  (cdlg.open ? cdlg : document.body).appendChild(toastEl); toastEl.hidden = false;
+});
+document.addEventListener('visibilitychange', () => { if (document.hidden) kalRaus(); });
+window.addEventListener('pagehide', kalRaus);
+
 /* ---------- Heute und Woche ---------- */
 const kvRow = (label, val, unit, delta, cls) => '<div class="kv"><span>' + label + '</span><b>' + val + (unit ? '<small>' + unit + '</small>' : '') + '</b>' + (delta ? '<span class="delta ' + (cls || '') + '">' + delta + '</span>' : '') + '</div>';
 const monOf = d => addDays(d, -wd(d));
@@ -4512,7 +4822,7 @@ const AREA = {
 /* teil: Zeile für einen Teil des Planers (work, uni); der Tipp öffnet den Planer gleich dort */
 const ovCard = (to, label, v, s, cls, teil) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"' + (teil ? ' data-teil="' + teil + '"' : '') + '><span class="ic ' + (teil || to) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[teil || to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
-const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); };
+const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); else if (v === 'termin') openTe(null, 0, todayKey()); };
 /* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
 let bkMsg = '', bkHand = false;
 function lastBackupText() {
@@ -4596,10 +4906,11 @@ function renderHome() {
   if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
   let h = seg + weekStripHTML('all');
-  const quick = [['notiz', 'Notiz', 'routinen'], ['gewicht', 'Gewicht', 'gewicht'], ['ausgabe', 'Ausgabe', 'haushalt']].filter(q => istAn(q[2]));   // nur für eingeschaltete Bereiche
+  const quick = [['notiz', 'Notiz', 'routinen'], ['gewicht', 'Gewicht', 'gewicht'], ['ausgabe', 'Ausgabe', 'haushalt'], ['termin', 'Termin', 'heute']].filter(q => istAn(q[2]) && (q[0] !== 'termin' || kalAn()));   // nur für eingeschaltete Bereiche
   if (quick.length) h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + quick.map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
+  h += homeTermineHTML();
   if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
   const rcYM = recapDue();
   if (rcYM) h += '<button type="button" class="remind" data-h="recap" data-v="' + rcYM + '"><span>' + MONTHS[+rcYM.slice(5) - 1] + ' ist abgeschlossen</span><b>Rückblick</b></button>';
@@ -4642,7 +4953,11 @@ function einstRestHTML() {
     (ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', q[0] === 'training' ? tName() : q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' : '') +
     (!istAn('kraft') ? '' : secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
       '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
-    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>');
+    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>') +
+    /* Kalender (v130, nur in der iPhone-App ab 1.3): Termine an oder aus; hat iOS den Zugriff abgelehnt, führt die zweite Zeile in die Einstellungen des iPhones */
+    (!kalKann() ? '' : secHTML('Kalender' + INFO('kal')) + '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
+      actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) + '</ul>' +
+    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft.</p>');
 }
 const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
@@ -4661,6 +4976,8 @@ function einstAct(t) {
     return;
   }
   else if (a === 'ov') { const aus = Object.assign({}, E.aus); if (an) delete aus[v]; else aus[v] = 1; setE({ aus }); renderHome(); }
+  else if (a === 'kal') { setE({ kal: an ? null : 0 }); if (an) hPost({ art: kal.recht === 'an' || kal.recht === 'nein' ? 'termine' : 'terminAn' }); $('#es-kaln').hidden = !(an && kal.recht === 'nein'); renderHome(); }
+  else if (a === 'kalEinst') return hPost({ art: 'einstellungen' });
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else return bkAct(a);
   t.setAttribute('aria-checked', an);
@@ -4680,6 +4997,8 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'recap') { try { localStorage.setItem('takt.recap', v); } catch (err) {} hMode = 'month'; hMonth = v; $('#scroll').scrollTop = 0; renderHome(); }
   else if (a === 'go') { if (t.dataset.teil) rSub = t.dataset.teil; show(v, true); }
   else if (a === 'q') quickOpen(v);
+  else if (a === 'termin') openTe(t.dataset.id, +t.dataset.s);
+  else if (a === 'kal') openCal('all', todayKey());
   else bkAct(a);   // die Erinnerung oben: Jetzt sichern, Ordner wählen
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
@@ -4904,9 +5223,9 @@ function render() { renderPlaner(); renderWeight(); renderMoney(); renderTrainin
 /* Nach jedem Löschen steht für einige Sekunden „Gelöscht · Rückgängig“ unten. Der Weg ist für alle Löschknöpfe derselbe (id endet auf -del, oder data-vdel):
    Vor dem Tipp wird der gespeicherte Stand gemerkt. Hat der Tipp die Daten verändert (und nicht nur „Wirklich löschen?“ scharf gestellt), erscheint der Hinweis.
    Rückgängig spielt den gemerkten Stand zurück. Jede weitere Änderung nimmt den Hinweis weg (toastOff() in saveLocal), damit nie etwas Neueres überschrieben wird. */
-let undo = null;
+let undo = null, meldT = 0;
 const toastEl = $('#toast');
-function toastOff() { if (undo) clearTimeout(undo.timer); undo = null; toastEl.hidden = true; }
+function toastOff() { if (undo) clearTimeout(undo.timer); clearTimeout(meldT); undo = null; toastEl.hidden = true; toastEl.classList.remove('nur'); }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[id$="-del"], [data-vdel], [data-undo]'); if (!b) return;
   let before = null; try { before = localStorage.getItem(LS); } catch (x) {}
@@ -4922,6 +5241,7 @@ document.addEventListener('click', e => {
   }, 0);
 }, true);
 toastEl.lastElementChild.addEventListener('click', () => {
+  if (kalWeg && !undo) { clearTimeout(kalWeg.timer); kalWeg = null; toastOff(); kalNeu(); return; }   // gelöschter Termin: Er wurde im Kalender noch gar nicht gelöscht
   const u = undo; toastOff(); if (!u) return;
   try { if (localStorage.getItem(LS) !== u.after) return; localStorage.setItem(LS, u.before); } catch (x) { return; }
   document.querySelectorAll('dialog[open]').forEach(d => d.close());
@@ -5343,6 +5663,9 @@ if (HUELLE) window.TrackHuelle = {
   info(o) {
     const vor = JSON.stringify(hInfo.sicherung || null);
     hInfo = Object.assign({}, o && typeof o === 'object' ? o : null); hInfo.sicherung = sNorm(hInfo.sicherung); hInfo.uhr = uhrNorm(hInfo.uhr); hInfo.gym = gymNorm(hInfo.gym);
+    /* Kalender (iPhone-App ab 1.3): Der Zustand kommt mit jeder Auskunft; ohne Erlaubnis gibt es keine Termine mehr zu zeigen */
+    const kr = hInfo.kalender;
+    if ((kr === 'an' || kr === 'fehlt' || kr === 'nein') && kr !== kal.recht) { kal.recht = kr; if (kr !== 'an') kal.liste = []; kalMerk(); kalNeu(); }
     sGemeldet(); hPaint(); renderTraining();
     if (JSON.stringify(hInfo.sicherung) !== vor) { renderHome(); if (edlg.open) paintE(); }   // offene Einstellungen zeigen den neuen Stand
     const s = hInfo.sicherung, tk = todayKey();
@@ -5359,6 +5682,21 @@ if (HUELLE) window.TrackHuelle = {
     if (edlg.open && (!alt || !alt.ordner !== !s.ordner)) paintE();   // Ordner kam dazu oder fiel weg: Die Zeilen der Einstellungen ändern sich
   },
   sichern() { sJetzt(); },
+  /* Termine aus dem Kalender (iPhone-App ab 1.3): beim Start, beim Zurückkommen und nach jeder Änderung dort. Gezeichnet wird nur, wenn sich etwas geändert hat.
+     Hat er „Termin“ angetippt, bevor iOS gefragt wurde (kalWill), öffnet sich das Blatt jetzt: mit der Erlaubnis zum Eintragen, ohne sie mit dem Weg in die Einstellungen. */
+  termine(o) {
+    const neu = kalNorm(o); if (!neu.recht) return;
+    const gleich = neu.recht === kal.recht && JSON.stringify(neu.liste) === JSON.stringify(kal.liste);
+    kal = neu; kalMerk();
+    if (!gleich) { kalNeu(); if (edlg.open) $('#es-rest').innerHTML = einstRestHTML(); }
+    const t = kalWill; kalWill = '';
+    if (t && neu.recht !== 'fehlt' && !document.querySelector('dialog[open]')) openTe(null, 0, t);
+  },
+  /* Der Kalender hat einen Termin nicht angenommen: Grund im Wortlaut, einige Sekunden lang */
+  terminFehler(t) {
+    toastOff(); toastEl.firstElementChild.textContent = 'Termin nicht gespeichert: ' + String(t).slice(0, 140); toastEl.classList.add('nur');
+    (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl); toastEl.hidden = false; meldT = setTimeout(toastOff, 6000);
+  },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },
   /* Das laufende Training im Vollbild weicht einer Schnelleingabe (es läuft weiter); jedes andere offene Blatt bleibt, wie es ist */

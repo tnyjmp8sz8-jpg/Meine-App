@@ -35,6 +35,8 @@ codesign -d --entitlements - Payload/Track.app/PlugIns/TrackWidget.appex 2>&1 | 
 plutil -p Payload/Track.app/Info.plist | grep -E "CFBundleURLSchemes|trackpunkt|NSHealthShare|CFBundleShortVersionString|CFBundleIdentifier|UILaunchScreen|UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace"
 # Beide Schlüssel müssen da sein, sonst erscheint der Ordner mit den Sicherungen nicht in „Dateien“ (Auf meinem iPhone › Track.)
 test "$(plutil -p Payload/Track.app/Info.plist | grep -c -E "UIFileSharingEnabled|LSSupportsOpeningDocumentsInPlace")" = 2
+# Kalender (1.3): Ohne diesen Text beendet iOS die App, sobald sie nach dem Zugriff fragt
+plutil -p Payload/Track.app/Info.plist | grep -q NSCalendarsFullAccessUsageDescription
 plutil -p Payload/Track.app/PlugIns/TrackWidget.appex/Info.plist | grep -E "NSExtensionPointIdentifier|CFBundleIdentifier|CFBundleShortVersionString"
 # Aktionen für Kurzbefehle (Notiz, Ausgabe, je drei für Läufe und Krafttraining von der Uhr) müssen in der App beschrieben sein, sonst erscheinen sie dort nicht
 ls Payload/Track.app/Metadata.appintents
@@ -51,6 +53,8 @@ xcrun simctl boot "$GERAET" || true
 xcrun simctl bootstatus "$GERAET" -b
 xcrun simctl ui "$GERAET" appearance dark
 xcrun simctl install "$GERAET" "$SIM"
+# Kalender (1.3): Der Selbsttest legt dort einen Termin an, liest, ändert und löscht ihn. Die Abfrage von iOS kann im Simulator niemand antippen, deshalb vorab erlaubt.
+xcrun simctl privacy "$GERAET" grant calendar de.trackapp.track
 # Dreimal starten: Der Zähler im Speicher der Web-App muss 1, 2, 3 zeigen, sonst überlebt der Speicher den Neustart nicht.
 # Vor dem Beenden geht die App in den Hintergrund (Einstellungen öffnen), wie auf einem echten iPhone.
 DATEN=$(xcrun simctl get_app_container "$GERAET" de.trackapp.track data)
@@ -123,6 +127,10 @@ grep -q '"gym":"1|1800|135"' pruefung-3.json
 # Frage beim Bezahlen und Widget „Überblick“ (1.2): Der Stand im gemeinsamen Ordner trägt die Kategorien und mindestens eine Zahl
 grep -q '"kats":[1-9]' pruefung-3.json
 grep -q '"zahlen":[1-4][,}]' pruefung-3.json
+# Kalender (1.3): ein Termin angelegt und gefunden, 60 Minuten, Erinnerung 30 Minuten vorher, nach dem Umbenennen einer, nach dem Löschen keiner;
+# und die Web-App hat Zustand und Liste bekommen
+grep -q '"kalender":"an|1|60|30|1|0"' pruefung-3.json
+grep -q '"kalenderWeb":"an|liste"' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa

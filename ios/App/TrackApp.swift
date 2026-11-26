@@ -148,6 +148,8 @@ struct WebView: UIViewRepresentable {
         // Sicherung von selbst: Das Ergebnis jedes Schreibversuchs geht an die Web-App zurück
         let halter = context.coordinator
         Sicherung.shared.melden = { [weak halter] in halter?.gesichert() }
+        // Kalender (ab 1.3): Ändert sich dort etwas, auch von außen, geht die Liste der Termine neu an die Web-App
+        Termine.shared.melden = { [weak halter] in halter?.termineSenden() }
         return view
     }
 
@@ -183,7 +185,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         guard let inhalt = nachricht.body as? [String: Any], let art = inhalt["art"] as? String else { return }
         if art == "bereit" {
             bereit = true
-            auskunft(); eingangHolen(); laeufeHolen(); adresse()
+            auskunft(); eingangHolen(); laeufeHolen(); adresse(); termineSenden()
             Sicherung.shared.nachholen()
         } else if art == "stand" {
             stand(inhalt)
@@ -197,6 +199,18 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             Sicherung.shared.ordnerVergessen()
         } else if art == "haptik" {
             Haptik.gib(inhalt["w"] as? String ?? "")
+        } else if art == "termine" {
+            termineSenden()
+        } else if art == "terminAn" {
+            // Der Nutzer hat in der Web-App „Termin“ angetippt oder den Kalender eingeschaltet: Jetzt fragt iOS (nur beim ersten Mal)
+            Termine.shared.fragen { self.auskunft(); self.termineSenden() }
+        } else if art == "termin" {
+            Termine.shared.speichern(inhalt) { fehler in self.terminFertig(fehler) }
+        } else if art == "terminWeg" {
+            Termine.shared.loeschen(inhalt) { fehler in self.terminFertig(fehler) }
+        } else if art == "einstellungen" {
+            // Seite von Track. in den Einstellungen des iPhones: Dort lässt sich ein abgelehnter Zugriff auf den Kalender erlauben
+            if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
         }
     }
 
@@ -204,7 +218,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     /// An „sicherung“ erkennt die Web-App, dass sie ihre Sicherung schicken darf (ab 0.5).
     private func auskunft() {
         var info: [String: Any] = ["app": Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "", "health": Gesundheit.shared.zustand,
-                                   "sicherung": Sicherung.shared.auskunft, "uhr": Laufbuch.auskunft, "gym": Gymbuch.auskunft]
+                                   "sicherung": Sicherung.shared.auskunft, "uhr": Laufbuch.auskunft, "gym": Gymbuch.auskunft,
+                                   "kalender": Termine.shared.zustand]
         if let ablauf = Profil.ablauf { info["ablauf"] = ablauf.timeIntervalSince1970 * 1000 }
         rufe("info", info)
     }
@@ -247,6 +262,19 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         aufschub = .invalid
     }
 
+    /// Termine aus dem Kalender an die Web-App (ab 1.3): beim Start, beim Zurückkommen, nach jeder Änderung dort und wenn die Web-App darum bittet.
+    /// Ohne Zugriff geht nur der Zustand hinüber.
+    func termineSenden() {
+        guard bereit else { return }
+        Termine.shared.lesen { antwort in self.rufe("termine", antwort) }
+    }
+
+    /// Nach dem Speichern oder Löschen eines Termins: einen Fehler im Wortlaut melden, dann die Liste, wie sie jetzt im Kalender steht
+    private func terminFertig(_ fehler: String) {
+        if !fehler.isEmpty { rufe("terminFehler", fehler) }
+        termineSenden()
+    }
+
     private func laeufeHolen() {
         Gesundheit.shared.laeufe { liste in if !liste.isEmpty { self.rufe("laeufe", liste) } }
     }
@@ -254,7 +282,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     @objc func zurueck() {
         guard bereit else { return }
         zeigen()
-        auskunft(); eingangHolen(); laeufeHolen()
+        auskunft(); eingangHolen(); laeufeHolen(); termineSenden()
         Sicherung.shared.nachholen()
     }
 
@@ -365,7 +393,7 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
     }
 
     /// Ergänzt das Ergebnis aus der Web-App um das, was die Hülle selbst weiß: Verbindung, Ablage für das Widget, Plan der Mitteilungen
-    private func pruefungSchreiben(_ ausWeb: String, lauf: String, gym: String) {
+    private func pruefungSchreiben(_ ausWeb: String, lauf: String, gym: String, kalender: String) {
         var text = ausWeb
         if var alles = (try? JSONSerialization.jsonObject(with: Data(ausWeb.utf8))) as? [String: Any] {
             alles["bruecke"] = standDa
@@ -390,6 +418,10 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             // nach dem dritten Start für heute genau ein Training mit 1800 s und Puls 135
             alles["gymRechnung"] = Gymbuch.pruefung()
             alles["gym"] = gym
+            // Kalender (Kalender.swift, ab 1.3): anlegen, lesen, ändern, löschen im Kalender des Simulators („an|1|60|30|1|0“),
+            // dazu, was davon in der Web-App angekommen ist (Zustand und ob eine Liste da ist: „an|liste“)
+            alles["kalender"] = Termine.shared.pruefung()
+            alles["kalenderWeb"] = kalender
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()
             let plan = Mitteilungen.plan(sicherung: "2026-11-20", ablauf: jetzt.addingTimeInterval(4 * 86400), jetzt: jetzt)
@@ -439,10 +471,14 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             let laeufe = "(function () { try { var r = (JSON.parse(localStorage.getItem('takt.v1') || '{}').T || {}).runs || {}, k = Object.keys(r).filter(function (i) { return r[i]; }); return k.length + '|' + (k.length ? r[k[0]].m + '|' + r[k[0]].s + '|' + r[k[0]].hr : ''); } catch (e) { return 'Fehler: ' + e; } })()"
             // Trainings von der Uhr: Anzahl der Tage mit Werten, dazu vom ersten Sekunden und Puls
             let trainings = "(function () { try { var u = (JSON.parse(localStorage.getItem('takt.v1') || '{}').K || {}).uhr || {}, k = Object.keys(u).filter(function (i) { return u[i]; }); return k.length + '|' + (k.length ? u[k[0]].s + '|' + u[k[0]].hr : ''); } catch (e) { return 'Fehler: ' + e; } })()"
+            // Termine: was die Web-App sich aus dem Kalender gemerkt hat (Zustand und ob eine Liste dabei war)
+            let termine = "(function () { try { var k = JSON.parse(localStorage.getItem('takt.termine') || '{}'); return (k.recht || '') + '|' + (Array.isArray(k.liste) ? 'liste' : ''); } catch (e) { return 'Fehler: ' + e; } })()"
             DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
                 webView.evaluateJavaScript(laeufe) { lauf, _ in
                     webView.evaluateJavaScript(trainings) { gym, _ in
-                        self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))", lauf: (lauf as? String) ?? "", gym: (gym as? String) ?? "")
+                        webView.evaluateJavaScript(termine) { kalender, _ in
+                            self.pruefungSchreiben((ergebnis as? String) ?? "Fehler: \(String(describing: fehler))", lauf: (lauf as? String) ?? "", gym: (gym as? String) ?? "", kalender: (kalender as? String) ?? "")
+                        }
                     }
                 }
             }
