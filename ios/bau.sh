@@ -71,7 +71,7 @@ for LAUF in 1 2 3; do
 done
 # Inhalt des Widgets (dunkel und hell) als Bild, dann die App selbst
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
-xcrun simctl launch "$GERAET" de.trackapp.track -widgetbild; sleep 6
+xcrun simctl launch "$GERAET" de.trackapp.track -widgetbild; sleep 10   # 1.4: nach 6 s war das Bild auf dem langsamen Mac noch schwarz
 xcrun simctl io "$GERAET" screenshot widget.png
 # Großes Widget „Notizen & Kalender“ (1.4): dunkel mit Notizen und Terminen, hell ohne Termine
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
