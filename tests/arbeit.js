@@ -33,12 +33,15 @@ lauf(async () => {
   P.ok('Arbeit: kein Suchfeld, keine Notizen darunter (seit v77)', !(await page.$('#n-q')) && !(await page.$('#n-main .nrow')) && !(await page.$('#n-main [data-n="newnote"]')) && !(await nm()).includes('Notizen') && !(await nm()).includes('Dienstplan'), await nm());
   P.enthaelt('Arbeit: Verdienst im November 148,63 €, 10,25 Std an 2 Tagen', await text(page, '#n-main .hero'), ['Verdienst im November', '148,63', '10,25 Std an 2 Tagen']);
   const falten = await text(page, '#n-main .folds [data-fold]');
-  P.enthaelt('je Monat eine Klappzeile mit Tagen, Stunden und Summe', falten, ['November 2026 2 Tage · 10,25 Std 148,63 €', 'Oktober 2026 1 Tag · 6 Std 78,00 €']);
+  /* Seit v136 zwei Zeilen: der laufende Monat und „Frühere Monate“ (darin je Monat eine Klappzeile wie bisher) */
+  P.enthaelt('zwei Klappzeilen: November mit Tagen, Stunden und Summe, dazu „Frühere Monate“', falten, ['November 2026 2 Tage · 10,25 Std 148,63 €', 'Frühere Monate 1 Monat 78,00 €']);
   const offen = () => page.evaluate(() => [...document.querySelectorAll('#n-main [data-fold]')].map(b => b.dataset.fold + '=' + b.getAttribute('aria-expanded')).join());
-  P.ok('der laufende Monat ist offen, der Vormonat zu', (await offen()) === 'arbeit-2026-11=true,arbeit-2026-10=false', await offen());
+  P.ok('der laufende Monat ist offen, „Frühere Monate“ zu', (await offen()) === 'arbeit-2026-11=true,arbeitAlt=false', await offen());
   P.enthaelt('Zeilen im November: Schicht mit Pause und Schicht über Mitternacht', await nm(), ['14:00–20:30 · 30 min Pause · 6 Std 87,00 €', '22:00–02:15 · 4,25 Std 61,63 €']);
-  await page.click('#n-main [data-fold="arbeit-2026-11"]'); await page.click('#n-main [data-fold="arbeit-2026-10"]'); await kurz();
-  P.ok('zu- und aufklappen: November zu, Oktober offen', (await offen()) === 'arbeit-2026-11=false,arbeit-2026-10=true', await offen());
+  await page.click('#n-main [data-fold="arbeit-2026-11"]'); await page.click('#n-main [data-fold="arbeitAlt"]'); await kurz();
+  P.ok('„Frühere Monate“ aufgeklappt: darin Oktober als eigene Zeile, zu', (await offen()) === 'arbeit-2026-11=false,arbeitAlt=true,arbeit-2026-10=false', await offen());
+  await page.click('#n-main [data-fold="arbeit-2026-10"]'); await kurz();
+  P.ok('zu- und aufklappen: November zu, Oktober offen', (await offen()) === 'arbeit-2026-11=false,arbeitAlt=true,arbeit-2026-10=true', await offen());
   P.enthaelt('Oktober rechnet mit dem Lohn von damals (13,00 €)', await nm(), ['10:00–16:00 · 6 Std 78,00 €']);
   // Das Plus oben rechts öffnet dasselbe Blatt
   await page.click('#add'); await kurz();
@@ -124,8 +127,8 @@ lauf(async () => {
   P.ok('leere App: kein Umschalter „Zeiten | Jahr“, solange nichts eingetragen ist', !(await l.page.$('#n-main .seg2')));
   await l.page.click('#n-main [data-n="newwork"]'); await l.page.waitForTimeout(150);
   /* Erster Eintrag ohne gemerkten Lohn (v128, Zeiten seit v134): 25,00 € stehen da, 09:30 bis 12:00 → „2,5 Std · 62,50 €“; kein Feld hat den Fokus (keine Tastatur, ein Tipp auf „Speichern“ genügt) */
-  const erst = await l.page.evaluate(() => ['b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|') + ' · ' + document.querySelector('#b-calc').textContent + ' · ' + document.activeElement.tagName);
-  P.ok('erster Eintrag: 2,5 Stunden vor jetzt bis jetzt mit 25,00 €, kein Feld im Fokus', erst === '09:30|12:00||25,00 · 2,5 Std · 62,50 € · DIALOG', erst);
+  const erst = await l.page.evaluate(() => ['b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|') + ' · ' + document.querySelector('#b-calc').textContent + ' · ' + document.activeElement.id);
+  P.ok('erster Eintrag: 2,5 Stunden vor jetzt bis jetzt mit 25,00 €, der Umsatz hat sofort den Fokus (v136)', erst === '09:30|12:00||25,00 · 2,5 Std · 62,50 € · b-ums', erst);
   await l.page.fill('#b-von', '08:00'); await l.page.fill('#b-bis', '12:00'); await l.page.fill('#b-rate', ''); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
   P.ok('ohne Lohn: Meldung', (await text(l.page, '#b-err')) === 'Trag deinen Stundenlohn ein.');
   // 08:00–12:00 = 4 Std mit 12,50 € → 50,00 €
@@ -208,5 +211,33 @@ lauf(async () => {
   P.ok('um 1:00 gespeichert: ein Eintrag am 14.11. von 1350 bis 60 Minuten', ge.length === 1 && ge[0].d === '2026-11-14' && ge[0].a === 1350 && ge[0].b === 60, JSON.stringify(ge));
   await m.browser.close();
 
-  await P.ende(browser, fehler.concat(l.fehler, g.fehler, j.fehler, m.fehler));
+  /* Umsatz (v136). November: u1 am 3.11. 10:00–14:00 (4 Std) mit 600 € Umsatz → 150 €/Std, u2 am 10.11. 10:00–12:00 (2 Std) mit 360 € → 180 €/Std, u3 ohne Umsatz (zählt nicht mit).
+     Monat: (600 + 360) / (4 + 2) = 160 €/Std, Summe 960 €. Oktober: u4 5 Std mit 500 € → 100 €/Std = Schnitt der übrigen Monate → +60 € zum Schnitt.
+     Jahr: (960 + 500) / 11 Std = 132,73 → 133 €/Std, 1.460 € Umsatz. Neuer Eintrag am 15.11. 09:30–12:00 (2,5 Std) mit 375 € → Vorschau 150 € pro Std. */
+  const ue = { u1: { d: '2026-11-03', a: 600, b: 840, p: 0, r: 2500, u: 60000 }, u2: { d: '2026-11-10', a: 600, b: 720, p: 0, r: 2500, u: 36000 }, u3: { d: '2026-11-11', a: 600, b: 660, p: 0, r: 2500 }, u4: { d: '2026-10-08', a: 600, b: 900, p: 0, r: 2500, u: 50000 } };
+  const uo = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, tasks: {}, notes: {}, work: { rate: 2500, e: ue }, uni: { e: {} } } } }), up = uo.page, uw = () => up.waitForTimeout(150);
+  await bereich(up, 'routinen'); await up.click('#r-subs [data-r="sub"][data-v="work"]'); await uw();
+  P.enthaelt('Umsatz im Monat: 160 € pro Stunde, Summe 960 €, +60 € zum Schnitt', await text(up, '#n-main .kv'), ['Umsatz pro Stunde', '160', 'Umsatz 960 € · +60 € zum Schnitt']);
+  P.ok('… nur der Vergleich grün, weil über dem Schnitt', await up.evaluate(() => { const d = document.querySelector('#n-main .kv .delta'); return !d.classList.contains('up') && d.querySelector('.up').textContent === '+60 € zum Schnitt'; }));
+  P.ok('Zeile des laufenden Monats ohne Umsatz (steht schon oben)', !(await text(up, '#n-main [data-fold="arbeit-2026-11"]')).includes('Umsatz'));
+  await up.click('#n-main [data-fold="arbeitAlt"]'); await uw();
+  P.enthaelt('Zeile eines früheren Monats nennt den Umsatz pro Stunde (Oktober 100 €/Std)', await text(up, '#n-main [data-fold="arbeit-2026-10"]'), ['Umsatz 100 €/Std']);
+  await up.click('#n-main [data-fold="arbeitAlt"]'); await uw();
+  P.enthaelt('Eintrag mit Umsatz zeigt ihn unter dem Verdienst', await text(up, '#n-main [data-n="work"][data-id="u1"]'), ['100,00 €', 'Umsatz 600 €']);
+  await up.click('#n-main [data-n="newwork"]'); await uw();
+  await up.keyboard.type('375');
+  P.ok('neuer Eintrag: Umsatz getippt, Vorschau mit 150 € pro Std', (await text(up, '#b-calc')) === '2,5 Std · 62,50 € · Umsatz 150 € pro Std', await text(up, '#b-calc'));
+  await up.click('#b-save'); await uw();
+  P.ok('gespeichert mit u = 37500 Cent', Object.values((await gespeichert(up)).N.work.e).some(x => x && x.d === '2026-11-15' && x.u === 37500));
+  await up.click('#n-main [data-n="wmode"][data-v="jahr"]'); await uw();
+  /* Jahr mit dem neuen Eintrag: (960 + 375 + 500) / (6 + 2,5 + 5) Std = 1.835 / 13,5 = 135,9 → 136 €/Std */
+  P.enthaelt('Jahr: Umsatz pro Stunde 136 €, 1.835 € im Jahr', await text(up, '#n-main .card'), ['Umsatz pro Stunde', '136', 'Umsatz 1.835 € im Jahr']);
+  await up.click('#n-main [data-n="wmode"][data-v="zeit"]'); await uw();
+  await up.click('#n-main [data-n="work"][data-id="u2"]'); await uw();
+  P.ok('Ändern: der Umsatz steht im Feld', (await up.inputValue('#b-ums')) === '360,00');
+  await up.fill('#b-ums', ''); await up.click('#b-save'); await uw();
+  P.ok('Umsatz geleert: Eintrag ohne u', !('u' in (await gespeichert(up)).N.work.e.u2));
+  await uo.browser.close();
+
+  await P.ende(browser, fehler.concat(l.fehler, g.fehler, j.fehler, m.fehler, uo.fehler));
 });

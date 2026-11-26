@@ -1051,6 +1051,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
+    <label class="fld" for="b-ums">
+      <span>Umsatz in €</span>
+      <input id="b-ums" type="text" inputmode="decimal" maxlength="10" autocomplete="off" placeholder="0,00">
+    </label>
     <label class="fld" for="b-date">
       <span>Tag</span>
       <input id="b-date" type="date">
@@ -1360,7 +1364,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v135</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v136</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -2912,6 +2916,7 @@ function normK(o) {
   out.uhr = {};
   if (o && o.uhr && typeof o.uhr === 'object') for (const d in o.uhr) { const u = o.uhr[d]; if (isKey(d) && u && typeof u === 'object' && u.s >= 60 && u.s <= 43200) out.uhr[d] = Object.assign({ s: Math.round(u.s) }, u.hr >= 30 && u.hr <= 250 ? { hr: Math.round(u.hr) } : {}, typeof u.h === 'string' && u.h ? { h: u.h.slice(0, 40) } : {}); }
   if (o && o.emp === 0) out.emp = 0;
+  if (o && isKey(o.ab)) out.ab = o.ab;   // Statistik ab (v136)
   if (o && o.res === 0) out.res = 0;
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? Object.assign(lv.re ? { re: 1 } : {}, {
@@ -2938,7 +2943,10 @@ function kBw(d) {
   return bwListe[a].w;
 }
 const exBw = (id, d) => K.ex[id] && K.ex[id].bw ? kBw(d) : 0;
-const kHist = id => Object.keys(K.log).filter(d => K.log[d][id]).sort().map(d => ({ d, sets: K.log[d][id], bw: exBw(id, d) }));
+/* Statistik ab (v136, sein Wort 26.11.: „alle Einheiten aus November in die App übernehmen, aber nicht zum Tracking dazuzählen, also erst ab der Einheit 25.11. die Statistik starten
+   mit Progression etc. wie neuer Start, aber für die App, wie viele Einheiten ich im November hatte“): K.ab ist der erste Tag, der für Fortschritt zählt. Einheiten davor stehen in Liste, Kalender
+   und Zahl der Einheiten (kDates, kDay), aber kHist (letztes Mal, Empfehlung, Punkt, Rekord, Verbesserung, Sätze besser, Graph der Übung) beginnt erst bei K.ab. Ohne K.ab zählt alles. */
+const kHist = id => Object.keys(K.log).filter(d => K.log[d][id] && (!K.ab || d >= K.ab)).sort().map(d => ({ d, sets: K.log[d][id], bw: exBw(id, d) }));
 /* Vergleichswert einer Übung: geschätztes Maximalgewicht (Gewicht x (1 + Wdh/30)), ohne Gewicht die meisten Wiederholungen. bw = Körpergewicht, das mitbewegt wird (sonst 0) */
 function kScore(sets, bw) {
   let e = 0, reps = 0;
@@ -4145,7 +4153,7 @@ function normN(o) {
     if (wo.got && typeof wo.got === 'object') for (const m in wo.got) { const g = wo.got[m]; out.work.got[m] = isYM(m) && typeof g === 'number' && isFinite(g) && g >= 0 && g <= 1e9 ? Math.round(g) : null; }
     if (wo.e && typeof wo.e === 'object') for (const id in wo.e) {
       const x = wo.e[id];
-      out.work.e[id] = x && typeof x === 'object' && isKey(x.d) && min(x.a) >= 0 && min(x.b) >= 0 && okCents(x.r) ? { d: x.d, a: min(x.a), b: min(x.b), p: Math.min(1439, Math.round(num(x.p))), r: Math.round(x.r) } : null;
+      out.work.e[id] = x && typeof x === 'object' && isKey(x.d) && min(x.a) >= 0 && min(x.b) >= 0 && okCents(x.r) ? Object.assign({ d: x.d, a: min(x.a), b: min(x.b), p: Math.min(1439, Math.round(num(x.p))), r: Math.round(x.r) }, okCents(x.u) ? { u: Math.round(x.u) } : {}) : null;   // u: Umsatz in Cent (v136)
     }
   }
   /* Termine der Uni (v72): d Tag, f Fach (siehe FACH), p Punkte in Hundertsteln (ganze Zahl, damit Summen nicht krumm werden), n was gemacht wurde */
@@ -4202,6 +4210,11 @@ const stdT = m => (m / 60).toLocaleString('de-DE', { maximumFractionDigits: 2 })
 const uhrT = m => pad(Math.floor(m / 60)) + ':' + pad(m % 60);
 const pktT = p => (p / 100).toLocaleString('de-DE', { maximumFractionDigits: 2 });
 const wMins = l => l.reduce((s, x) => s + workMin(x), 0);
+/* Umsatz (v136, sein Wort 26.11.: „Umsatz hinzufügen, daraus Stundenumsatz ausrechnen und immer schlau dazuschreiben, ohne dass es zu viel wird; will meinen Durchschnitt Umsatz pro Stunde mit tracken“):
+   je Eintrag optional u (Cent). Umsatz pro Stunde einer Liste = Summe der Umsätze / Stunden genau der Einträge mit Umsatz (Schichten ohne Angabe zählen nicht mit), in Cent. */
+const mitU = l => l.filter(x => x.u > 0);
+const uStd = l => { const m = mitU(l), min = wMins(m); return min ? Math.round(m.reduce((s, x) => s + x.u, 0) * 60 / min) : 0; };
+const uSum = l => mitU(l).reduce((s, x) => s + x.u, 0);
 const wTage = l => { const n = new Set(l.map(x => x.d)).size; return n + (n === 1 ? ' Tag' : ' Tage'); };
 /* Jahr im Teil „Arbeit“ (v129): Verdienst des Jahres, darunter Soll aufs Konto, Erhalten und Bilanz (die zwei erst, wenn etwas eingetragen ist; die Bilanz zählt nur Monate mit Eintrag),
    dann je Monat eine Zeile (Soll, rechts was ankam und der Unterschied; ein Tipp öffnet das Blatt „Abrechnung“) und der Satz der Rentenversicherung (Tipp: Zahl wählen). */
@@ -4216,6 +4229,7 @@ function workJahrHTML(list) {
     (l.length ? stdT(wMins(l)) + ' an ' + wTage(l).replace('Tage', 'Tagen') : 'In diesem Jahr nichts eingetragen') + '</p></section>';
   if (!ms.length) return h;
   h += '<div class="card last" style="padding-top:2px">' + kvRow('Soll aufs Konto', z(sS), '€', 'nach ' + rvT() + ' Rentenversicherung') +
+    (mitU(l).length ? kvRow('Umsatz pro Stunde', eur0(uStd(l)), '€', 'Umsatz ' + eur0(uSum(l)) + ' € im Jahr') : '') +
     (da.length ? kvRow('Erhalten', z(sG), '€', da.length + ' von ' + ms.length + (ms.length === 1 ? ' Monat' : ' Monaten')) +
       kvRow('Bilanz', (bil > 0 ? '+' : bil < 0 ? '−' : '') + z(bil), '€', bil === 0 ? 'passt genau' : bil < 0 ? 'zu wenig angekommen' : 'mehr als erwartet', bil < 0 ? 'down' : bil > 0 ? 'up' : '') : '') + '</div>';
   h += secHTML('Abrechnung' + INFO('rv')) + '<p class="note" id="info-rv" hidden>Vom Verdienst geht dein Anteil an der Rentenversicherung ab, der Rest sollte auf dem Konto ankommen. Üblich sind 9,3 %, im Minijob 3,6 %; bei wenig Verdienst kann es weniger sein. Steuern rechnet die App nicht. Weicht die Bilanz jeden Monat gleich ab, passe den Satz unten an deine Abrechnung an.</p>' +
@@ -4235,9 +4249,17 @@ function workHTML() {
   let h = seg + '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
     (c.length ? stdT(mins(c)) + ' an ' + tage(c).replace('Tage', 'Tagen') : list.length ? 'In diesem Monat noch nichts eingetragen' : 'Noch keine Arbeitszeit eingetragen') + '</p></section>' +
     '<button type="button" class="primary" data-n="newwork">Arbeitszeit eintragen</button>';
-  const row = x => '<li><button type="button" class="two" data-n="work" data-id="' + esc(x.id) + '" aria-label="Arbeitszeit ändern"><span class="l"><span>' + dRow(x.d) + '</span><small>' + uhrT(x.a) + '–' + uhrT(x.b) + (x.p ? ' · ' + x.p + ' min Pause' : '') + ' · ' + stdT(workMin(x)) + '</small></span><b>' + eur(workPay(x)) + '</b></button></li>';
-  const ms = Object.keys(by).sort().reverse();
-  if (ms.length) h += '<div class="folds">' + ms.map(m => foldHTML('arbeit-' + m, MONTHS[+m.slice(5) - 1] + ' ' + m.slice(0, 4), tage(by[m]) + ' · ' + stdT(mins(by[m])), eur(pay(by[m])), by[m].map(row).join(''), '', m === cur)).join('') + '</div>';
+  /* Eine Zeile zum Umsatz, nur wenn es in diesem Monat einen gibt: Schnitt pro Stunde, darunter Summe und der Abstand zum Schnitt der übrigen Monate (grün darüber, rot darunter) */
+  const rest = list.filter(x => x.d.slice(0, 7) !== cur);
+  if (mitU(c).length) { const um = uStd(c), ur = uStd(rest), dif = um - ur;
+    h += '<div class="card last" style="padding-top:2px">' + kvRow('Umsatz pro Stunde', eur0(um), '€', 'Umsatz ' + eur0(uSum(c)) + ' €' + (ur ? ' · ' + (Math.abs(dif) < 50 ? 'wie im Schnitt' : '<span class="' + (dif > 0 ? 'up' : 'down') + '">' + (dif > 0 ? '+' : '−') + eur0(dif) + ' € zum Schnitt</span>') : '')) + '</div>'; }   // nur der Vergleich trägt Farbe
+  const row = x => '<li><button type="button" class="two" data-n="work" data-id="' + esc(x.id) + '" aria-label="Arbeitszeit ändern"><span class="l"><span>' + dRow(x.d) + '</span><small>' + uhrT(x.a) + '–' + uhrT(x.b) + (x.p ? ' · ' + x.p + ' min Pause' : '') + ' · ' + stdT(workMin(x)) + '</small></span>' + (x.u ? '<span class="r"><b>' + eur(workPay(x)) + '</b><small>Umsatz ' + eur0(x.u) + ' €</small></span>' : '<b>' + eur(workPay(x)) + '</b>') + '</button></li>';
+  /* Monate (v136, sein Wort: „immer aktuellen Monat zeigen wie jetzt und die anderen einklappen zum Ausklappen, damit immer nur 2 Zeilen da sind“): der laufende Monat offen,
+     alle früheren in einer Zeile „Frühere Monate“, darin je Monat eine Klappzeile wie bisher. Mit Umsatz steht der Schnitt pro Stunde in der Zeile eines früheren Monats (im laufenden steht er schon oben). */
+  const mon = m => foldHTML('arbeit-' + m, MONTHS[+m.slice(5) - 1] + ' ' + m.slice(0, 4), tage(by[m]) + ' · ' + stdT(mins(by[m])) + (m !== cur && mitU(by[m]).length ? ' · Umsatz ' + eur0(uStd(by[m])) + ' €/Std' : ''), eur(pay(by[m])), by[m].map(row).join(''), '', m === cur);
+  const alt = Object.keys(by).sort().reverse().filter(m => m !== cur);
+  if (by[cur] || alt.length) h += '<div class="folds">' + (by[cur] ? mon(cur) : '') +
+    (alt.length ? foldHTML('arbeitAlt', 'Frühere Monate', alt.length + (alt.length === 1 ? ' Monat' : ' Monate'), eur(pay(rest)), '', '<div class="folds">' + alt.map(mon).join('') + '</div>') : '') + '</div>';
   return h;
 }
 /* Soll im Studium: 18 behandelte Termine (seine Angabe, 23.11.2026). Für Punkte gibt es kein Soll. */
@@ -4295,9 +4317,11 @@ function bRead() {
   if (!(p >= 0)) return 'Die Pause in Minuten, z. B. 30.';
   if (p >= (b - a + 1440) % 1440) return 'Die Pause ist so lang wie die Arbeitszeit.';
   if (!okCents(r)) return 'Trag deinen Stundenlohn ein.';
-  return { d, a, b, p, r };
+  const us = $('#b-ums').value.trim(), u = us ? parseEur(us) : 0;
+  if (us && !(u >= 0)) return 'Der Umsatz in Euro, z. B. 420.';
+  return Object.assign({ d, a, b, p, r }, u > 0 ? { u } : {});
 }
-function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 'string'; if (!c.hidden) c.textContent = stdT(workMin(x)) + ' · ' + eur(workPay(x)); }
+function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 'string'; if (!c.hidden) c.textContent = stdT(workMin(x)) + ' · ' + eur(workPay(x)) + (x.u ? ' · Umsatz ' + eur0(uStd([x])) + ' € pro Std' : ''); }
 /* Neuer Eintrag (v134, sein Wort 26.11.: „wenn ich tracke, ist Beginn die Zeit gerade, aber will Endzeit die Zeit gerade (trage ja am Ende ein) und die Beginnzeit einfach 2,5 h vor der jetzigen Endzeit“):
    Ende = jetzt, Beginn = zweieinhalb Stunden davor, keine Pause, Lohn 25 €. Ein Tipp auf „Speichern“ genügt. Vor 2:30 Uhr begann die Schicht am Vortag: Dann steht der Vortag da
    (der Tag eines Eintrags ist der seines Beginns, über Mitternacht rechnet workMin). Von v128 bis v133 war es umgekehrt: Beginn jetzt, Ende 2,5 Stunden später.
@@ -4311,8 +4335,10 @@ function openB(id) {
   $('#b-date').value = x ? x.d : b0 < SCHICHT ? keyOf(addDays(jetzt, -1)) : todayKey();
   $('#b-von').value = uhrT(v.a); $('#b-bis').value = uhrT(v.b); $('#b-pause').value = v.p || '';
   $('#b-rate').value = eur(r).replace(' €', '');
+  $('#b-ums').value = x && x.u ? eur(x.u).replace(' €', '') : '';
   $('#b-err').hidden = true; $('#b-del').hidden = !x;
   bCalc(); openDlg(bdlg); bdlg.scrollTop = 0;
+  if (!x) fokus($('#b-ums'));   // neu: Zeiten und Lohn stehen schon da, getippt wird nur der Umsatz (v136)
 }
 function closeB() { closeDlg(bdlg); }
 $('#bs-close').addEventListener('click', closeB);
@@ -4321,6 +4347,7 @@ $('#bform').addEventListener('input', bCalc);
 $('#bform').addEventListener('submit', e => {
   e.preventDefault();
   const x = bRead(); if (typeof x === 'string') { const m = $('#b-err'); m.textContent = x; m.hidden = false; return; }
+  if (bE.id && !x.u) x.u = null;   // geleerter Umsatz: Das Ändern führt Felder zusammen, ohne null bliebe der alte stehen
   const p = { work: { e: {} } }; if (!bE.id) p.work.rate = x.r; p.work.e[bE.id || newId()] = x;
   ndoc.patch(p); closeB(); render();
 });

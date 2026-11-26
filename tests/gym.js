@@ -861,5 +861,27 @@ lauf(async () => {
   await nb.click('#ps-close'); await nb.waitForTimeout(250);
   P.ok('Plan bearbeiten: „Speichern“ ist im Blatt zu sehen; geändert und Kreuz → Hinweis, zweites Kreuz verwirft (Latzug behält 3 Sätze)', s4.drin && p22.offen && p22.hinweis.indexOf('Noch nicht gespeichert') === 0 && !(await nb.evaluate(() => document.querySelector('#psheet').open)) && (await gespeichert(nb)).K.plans.p.items[0].sets === 3, JSON.stringify([s4, p22]));
   await o19.browser.close();
-  await P.ende(null, fehler.concat(o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+
+  /* Statistik ab (v136): K.ab = 25.11.2026. Bankdrücken am 18.11. (100 kg × 12, vor dem Start) und am 25.11. (80 kg × 8).
+     Gezählt werden beide Einheiten (Gym im November: 2), der Fortschritt beginnt am 25.11.: Im Blatt der Übung steht nur 80 kg, kein Rekord, keine 100 kg; die Liste der Einheiten zeigt beide Tage.
+     Ohne K.ab (Vergleich) zählt der 18.11. mit: Dann ist 100 kg im Blatt zu sehen. */
+  const abD = { S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, T: {}, N: { folders: {}, tasks: {}, notes: {} },
+    K: { ab: '2026-11-25', ex: { b: { n: 'Bankdrücken' } }, log: { '2026-11-18': { b: [[100, 12]] }, '2026-11-25': { b: [[80, 8]] } }, plans: {}, meta: {}, live: null } };
+  const o20 = await oeffnen({ uhr: new Date(2026, 10, 27, 12), daten: abD }), ab = o20.page;
+  await bereich(ab, 'training'); await ab.click('#v-training .subtabs [data-v="kraft"]'); await ab.waitForTimeout(200);
+  const abHero = await text(ab, '#v-training .hero');
+  P.ok('Statistik ab 25.11.: beide Einheiten zählen im November (2)', /2\s*Einheiten/.test(abHero), abHero);
+  await ab.click('#v-training [data-fold="uebungen"]'); await ab.waitForTimeout(150);
+  await ab.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab.waitForTimeout(200);
+  const abX = await text(ab, '#xsheet');
+  P.ok('Statistik ab 25.11.: im Blatt der Übung nur 80 kg, die 100 kg vom 18.11. zählen nicht', abX.includes('80') && !abX.includes('100'), abX.slice(0, 300));
+  P.ok('Statistik ab bleibt nach dem Speichern erhalten', (await gespeichert(ab)).K.ab === '2026-11-25');
+  await o20.browser.close();
+  const o21 = await oeffnen({ uhr: new Date(2026, 10, 27, 12), daten: Object.assign({}, abD, { K: Object.assign({}, abD.K, { ab: undefined }) }) }), ab2 = o21.page;
+  await bereich(ab2, 'training'); await ab2.click('#v-training .subtabs [data-v="kraft"]'); await ab2.waitForTimeout(200);
+  await ab2.click('#v-training [data-fold="uebungen"]'); await ab2.waitForTimeout(150);
+  await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
+  P.ok('ohne Statistik-Start zählt der 18.11. mit (100 kg im Blatt)', (await text(ab2, '#xsheet')).includes('100'));
+  await o21.browser.close();
+  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
