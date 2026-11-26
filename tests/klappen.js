@@ -515,8 +515,7 @@ lauf(async () => {
   const h8 = await oeffnen({ daten: hd, uhr: new Date(2026, 10, 15, 12) }), q8 = h8.page, w8 = () => q8.waitForTimeout(200);
   await bereich(q8, 'heute');
   const punkte = await q8.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(b => [...b.querySelectorAll('u')].map(u => u.className).join('')).join('|'));
-  P.ok('Heute, Wochenleiste: Donnerstag grün (Gym), Samstag lila (gewogen), Sonntag lila und grün (gewogen und gelaufen)', punkte === '|||g||w|wg', punkte);
-  P.ok('der Punkt fürs Wiegen trägt die Farbe des Bereichs Gewicht', await q8.evaluate(() => { const p = document.createElement('i'); p.style.background = 'var(--c-weight)'; document.body.appendChild(p); const soll = getComputedStyle(p).backgroundColor; p.remove(); return getComputedStyle(document.querySelector('#v-heute .wk u.w')).backgroundColor === soll; }));
+  P.ok('Heute, Wochenleiste: keine Punkte für Gym, Wiegen und Laufen (seit v135 nur Termine aus Apples Kalender)', punkte === '||||||', punkte);
   const ov8 = await q8.$$eval('#v-heute .ov', l => l.map(b => b.innerText.replace(/\s+/g, ' ').trim()));
   P.ok('Heute, Übersicht: Gewicht, Training, Arbeit (174,00 €, 12 Std an 2 Tagen im November), Uni (9,5 Punkte, 3 von 18 Terminen)', ov8.length === 4 && ov8[2] === 'Arbeit 174,00 € 12 Std an 2 Tagen im November' && ov8[3] === 'Uni 9,5 Punkte 3 von 18 Terminen', JSON.stringify(ov8));
   await q8.click('#v-heute .ov[data-teil="uni"]'); const neu8 = await q8.evaluate(() => document.querySelector('#v-routinen').classList.contains('neu')); await w8();

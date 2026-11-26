@@ -25,7 +25,7 @@ lauf(async () => {
 
   let s = await stand(), h = await heuteStand();
   P.ok('am Anfang: fünf Bereiche in der Leiste, Zahnrad auf Heute, kein Plus', s.tabs === 'Heute Planer Gewicht Finanzen Training' && s.n === '5' && s.i === '0' && s.gear && !s.plus && s.leiste, JSON.stringify(s));
-  P.ok('Heute am Anfang: keine Schnell-Knöpfe und keine Notizen (seit v131/v132), fünf Zeilen, Punkte für Wiegen und Training', h.quick === '' && !h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === 'wg', JSON.stringify(h));
+  P.ok('Heute am Anfang: keine Schnell-Knöpfe und keine Notizen (seit v131/v132), fünf Zeilen, keine Punkte für Wiegen und Training (seit v135 nur Termine)', h.quick === '' && !h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === '', JSON.stringify(h));
 
   await einstellungen(p);
   const es = () => p.evaluate(() => ({ ber: [...document.querySelectorAll('#es-ber .sch')].map(b => b.textContent.trim() + ':' + (b.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + (b.disabled ? '!' : '')).join(' '),
@@ -40,8 +40,8 @@ lauf(async () => {
   P.ok('Cardio aus: gespeichert (E.weg.cardio), Leiste hat weiter fünf Knöpfe, der letzte heißt Gym; Start und „Auf Heute zeigen“ nennen Gym',
     (await gespeichert(p)).E.weg.cardio === 1 && s.tabs === 'Heute Planer Gewicht Finanzen Gym' && s.n === '5' && e.start === 'Heute* Planer Gewicht Finanzen Gym' && e.ov === 'Gewicht Finanzen Gym Arbeit Uni', JSON.stringify([s, e]));
   await zu(); h = await heuteStand();
-  /* Übersicht: eine Einheit in diesem Monat → „1 Einheit“; der Punkt bleibt grün (Gym heute) */
-  P.ok('Heute ohne Cardio: Zeile heißt Gym und zeigt „1 Einheit“, kein „km“', h.ovs === 'Gewicht Finanzen Gym Arbeit Uni' && h.punkte === 'wg' && await p.evaluate(() => { const z = document.querySelector('#v-heute .ov[data-v="training"]'); return z.querySelector('.v').textContent === '1 Einheit' && !z.textContent.includes('km'); }), JSON.stringify(h));
+  /* Übersicht: eine Einheit in diesem Monat → „1 Einheit“; in der Wochenleiste auf Heute stehen seit v135 nur Termine */
+  P.ok('Heute ohne Cardio: Zeile heißt Gym und zeigt „1 Einheit“, kein „km“', h.ovs === 'Gewicht Finanzen Gym Arbeit Uni' && h.punkte === '' && await p.evaluate(() => { const z = document.querySelector('#v-heute .ov[data-v="training"]'); return z.querySelector('.v').textContent === '1 Einheit' && !z.textContent.includes('km'); }), JSON.stringify(h));
   await bereich(p, 'training'); s = await stand();
   P.ok('Training ohne Cardio: Titel „Gym.“, kein Umschalter Gym/Cardio, der Gym-Teil ist zu sehen', s.titel === 'Gym.' && await p.evaluate(() => !document.querySelector('#v-training .subtabs') && document.querySelector('#v-training').textContent.includes('Bankdrücken') === false && !!document.querySelector('#v-training [data-k]')), JSON.stringify(s));
 
@@ -51,7 +51,7 @@ lauf(async () => {
   /* Linse: Heute ist der erste von zwei Knöpfen → Platz 0 */
   P.ok('drei weitere aus: Leiste zeigt Heute und Gym (--n 2), Start bietet nur diese, „Auf Heute zeigen“ nur Gym', s.tabs === 'Heute Gym' && s.n === '2' && s.i === '0' && e.start === 'Heute* Gym' && e.ov === 'Gym' && e.ber === 'Heute:an Planer:aus Gewicht:aus Finanzen:aus Gym:an Cardio:aus', JSON.stringify([s, e]));
   await zu(); h = await heuteStand();
-  P.ok('Heute: kein Plus, keine Notiz, nur die Zeile Gym, nur der grüne Punkt', h.quick === '' && !h.notiz && h.ovs === 'Gym' && h.punkte === 'g', JSON.stringify(h));
+  P.ok('Heute: kein Plus, keine Notiz, nur die Zeile Gym, kein Punkt', h.quick === '' && !h.notiz && h.ovs === 'Gym' && h.punkte === '', JSON.stringify(h));
   await p.click('#v-heute [data-h="mode"][data-v="week"]');
   const woche = await text(p, '#v-heute .kv > span:first-child');
   P.ok('Woche auf Heute: nur die Zeile Gym', woche === 'Gym', woche);

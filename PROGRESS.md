@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v134 (26.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v134): alle 19 Reihen stimmen (Gym 232, Hülle 169, Klappzeilen 159, Termine 97, Aufbau 76, Finanzen 68, Händler 26). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine läuft immer mit fester Uhr.
+- App-Inhalt (`index.html`): v135 (26.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v135): alle 19 Reihen stimmen (Gym 232, Hülle 169, Klappzeilen 159, Termine 97, Aufbau 76, Finanzen 68, Händler 26). Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine läuft immer mit fester Uhr.
+- v135 (26.11., sein Wort: „nimm bei Heute alles aus dem Kalender, nur noch Apple-Kalender. Gym und Cardio bei Gym und Cardio, Gewicht bei Gewicht“): Der Kalender auf Heute (Wochenleiste und Blatt, jetzt „Kalender“ genannt) zeigt nur noch Termine aus Apples Kalender. Die Punkte für Gym, Läufe und Wiegen stehen nur noch in den Wochenleisten ihrer Bereiche. Ohne Kalender-Zugriff (Browser, abgeschaltet) bleibt die Wochenleiste auf Heute ohne Punkte.
 - v134 (26.11., sein Wort: „Endzeit die Zeit gerade (trage ja am Ende ein) und Beginnzeit 2,5 h vor der jetzigen Endzeit“): Arbeitszeit eintragen steht mit Ende = jetzt und Beginn 2,5 Stunden davor; vor 2:30 Uhr mit dem Vortag als Tag.
 - v133 (26.11., sein Wort: „neue Notizen nicht nach oben schieben, sondern runter, älteste immer oben“): Notizen stehen nach dem Anlegen, die älteste oben, im Planer und im Widget; Ändern verschiebt nichts. In 1.5 hängt auch das Widget eine schnell eingetragene Notiz unten an. Folge, ihm gesagt: Das Widget zeigt die ältesten (klein und mittel drei).
 - v132 mit iPhone-App 1.5 (26.11., sein Wort: „Notizen kann weg von Heute, Widget + in Planer-Sektion reicht, wenn ich auf Notizen im Widget tippe, komme ich ja eh dahin“): keine Notizen mehr auf Heute. Ihm gesagt: Bis 1.4 öffnete ein Tipp ins Widget nur die App (also Heute); seit 1.5 landet ein Tipp auf eine Notiz im Planer bei den Notizen. Darum 1.5 statt 1.4 installieren.
@@ -86,6 +87,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v132 mit iPhone-App 1.5: keine Notizen auf Heute; Tipp auf eine Notiz im Widget öffnet den Planer.
 - v133: Notizen in der Reihenfolge des Anlegens, die älteste oben (Planer und Widget).
 - v134: Arbeitszeit eintragen mit Ende jetzt, Beginn 2,5 Stunden davor.
+- v135: Kalender auf Heute nur mit Terminen aus Apples Kalender.
 
 ## Offene Probleme
 - Die Tests laufen im Test-Browser und im Simulator; am echten iPhone prüft nur der Nutzer. Dort bestätigt: Die iPhone-App startet, eine neue Installation ersetzt die alte ohne Datenverlust, neue Versionen des Inhalts kommen von selbst, die Sicherung lässt sich einlesen, die Automation zum Erneuern läuft durch, Schnelleingabe aus dem Widget geht (0.4), Health fehlt wie erwartet. Seine Läufe waren bis November 2026 Laufband-Läufe (mit v79 gelöscht), seitdem läuft er draußen.

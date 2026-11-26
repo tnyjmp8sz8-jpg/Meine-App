@@ -12,7 +12,7 @@ lauf(async () => {
     const b = ' (' + breite + ' px)';
 
     // Wochenleiste in jedem Bereich (der Planer hat seit v75 keine: Notizen, Arbeit und Uni hatten nie eine); ein Tipp auf einen Tag öffnet den Kalender dieses Bereichs
-    const bereiche = [['heute', null, 'Übersicht'], ['gewicht', null, 'Gewicht'], ['haushalt', '[data-m="sub"][data-v="budget"]', 'Ausgaben'],
+    const bereiche = [['heute', null, 'Kalender'], ['gewicht', null, 'Gewicht'], ['haushalt', '[data-m="sub"][data-v="budget"]', 'Ausgaben'],
       ['training', '.subtabs [data-v="cardio"]', 'Läufe'], ['training', '.subtabs [data-v="kraft"]', 'Gym']];
     for (const [name, sub, titel] of bereiche) {
       await bereich(page, name); if (sub) await page.click('#v-' + name + ' ' + sub); await page.waitForTimeout(200);

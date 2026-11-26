@@ -583,7 +583,6 @@ body{font-size:14px}
 .wk u,.cd u{display:block;width:6px;height:6px;border-radius:50%;text-decoration:none}
 u.g{background:var(--good)}
 u.b{background:var(--accent)}
-u.w{background:var(--c-weight)}
 u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 /* Termine (v130): Punkt in der Farbe des Kalenders vor dem Titel; das Blatt zeigt entweder die Felder oder den Hinweis auf die fehlende Erlaubnis */
 #te-kal .kf{margin-right:6px;vertical-align:.5px}
@@ -1361,7 +1360,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v134</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v135</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3235,23 +3234,24 @@ $('#v-training').addEventListener('click', e => {
 });
 
 /* Wochenleiste und Kalender gibt es in jedem Bereich, jeweils mit den Einträgen dieses Bereichs. Auf Heute: das Training (Läufe und Gym). */
-const CAL = { all: 'Übersicht', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
+const CAL = { all: 'Kalender', weight: 'Gewicht', money: 'Ausgaben', cardio: 'Läufe', gym: 'Gym' };
 const cdlg = $('#csheet');
 const DF_DAY = new Intl.DateTimeFormat('de-DE', { weekday: 'long', day: 'numeric', month: 'long' });
 let cSel = '', cMode = 'all';
 /* Punkte pro Tag als Buchstabenfolge: g = Training, b = eingetragen, w = gewogen (nur in der Übersicht auf Heute, in der Farbe des Bereichs Gewicht) */
 function calMarks(mode) {
   const gym = {}, run = {}, tx = {}, liveD = K.live ? K.live.date : '';
-  const alle = mode === 'all';   // auf Heute: nur eingeschaltete Bereiche
-  if (mode === 'gym' || alle && istAn('kraft')) kDates().forEach(d => { gym[d] = 1; });
-  if (mode === 'cardio' || alle && istAn('cardio')) for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
+  if (mode === 'gym') kDates().forEach(d => { gym[d] = 1; });
+  if (mode === 'cardio') for (const id in T.runs) { const r = T.runs[id]; if (r) run[r.d] = 1; }
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k === 'out') tx[t.d] = 1; }
   return k => {
     if (mode === 'gym') return gym[k] ? 'g' : liveD === k ? 'b' : '';
     if (mode === 'cardio') return run[k] ? 'g' : '';
     if (mode === 'weight') return typeof W.entries[k] === 'number' ? 'b' : '';
     if (mode === 'money') return tx[k] ? 'b' : '';
-    return (istAn('gewicht') && typeof W.entries[k] === 'number' ? 'w' : '') + (gym[k] || run[k] ? 'g' : '') + (kalAm(k).length ? 't' : '');
+    /* Auf Heute nur noch Termine aus Apples Kalender (v135, sein Wort 26.11.: „nimm bei Heute alles aus dem Kalender, nur noch Apple-Kalender. Gym und Cardio bei Gym und Cardio,
+       Gewicht bei Gewicht“). Gym, Läufe und Wiegen zeigen ihre Punkte in der Wochenleiste ihres Bereichs. */
+    return kalAm(k).length ? 't' : '';
   };
 }
 const dotsHTML = m => '<i>' + m.split('').map(c => '<u class="' + c + '"></u>').join('') + '</i>';
@@ -3267,8 +3267,8 @@ function weekStripHTML(mode) {
 function calFirst(mode) {
   let f = '';
   const take = d => { if (d && (!f || d < f)) f = d; };
-  if (mode === 'gym' || mode === 'all') take(kDates()[0]);
-  if (mode === 'cardio' || mode === 'all') for (const id in T.runs) if (T.runs[id]) take(T.runs[id].d);
+  if (mode === 'gym') take(kDates()[0]);
+  if (mode === 'cardio') for (const id in T.runs) if (T.runs[id]) take(T.runs[id].d);
   if (mode === 'weight') for (const k in W.entries) if (typeof W.entries[k] === 'number') take(k);
   if (mode === 'money') for (const y in MY) for (const id in MY[y].tx) if (MY[y].tx[id]) take(MY[y].tx[id].d);
   return f;
@@ -3279,7 +3279,7 @@ function calSum(mode, ym, g, b, span, t) {
   if (mode === 'cardio') { const rs = tRuns().filter(r => r.d.slice(0, 7) === ym), a = tAgg(rs); return n(a.n, 'Lauf', 'Läufe') + (a.n ? ' · ' + kg(a.m / 1000) + ' km' : ''); }
   if (mode === 'weight') return n(b, 'Eintrag', 'Einträge');
   if (mode === 'money') return eur0(mSum(ym).flex) + ' € flexible Ausgaben';
-  return [t ? t + (t === 1 ? ' Termin' : ' Termine') : '', g ? g + '× Training' : '', b ? b + '× gewogen' : ''].filter(Boolean).join(' · ') || 'Keine Einträge';
+  return t ? t + (t === 1 ? ' Termin' : ' Termine') : 'Keine Termine';
 }
 function calHTML() {
   const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode), vor = cMode === 'all' && kalDa() ? 12 : 0;   // mit Terminen reicht die Übersicht zwölf Monate voraus
@@ -3295,7 +3295,7 @@ function calHTML() {
       const k = ym + '-' + pad(d), mk = k > tk && !vor ? '' : mark(k);
       if (mk.indexOf('t') >= 0) t += kalAm(k).filter(x => kalVon(x) === k).length;   // ein Termin über mehrere Tage zählt einmal
       if (mk.indexOf('g') >= 0) g++;
-      if ((mk.indexOf('b') >= 0 || mk.indexOf('w') >= 0) && !(cMode === 'gym')) b++;
+      if (mk.indexOf('b') >= 0 && cMode !== 'gym') b++;
       cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') +
         ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + dotsHTML(mk) + '</button>';
     }
@@ -3307,7 +3307,6 @@ function calDayHTML() {
   const k = cSel, tk = todayKey(), h = '<h3>' + (k === tk ? 'Heute · ' : '') + DF_DAY.format(parseKey(k)) + '</h3>';
   const note = t => '<p class="note">' + t + '</p>';
   const btn = (attrs, title, sub, right) => '<li><button type="button" class="two" ' + attrs + '><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (right ? '<b>' + right + '</b>' : '') + '</button></li>';
-  const row = (title, sub, right, cls) => '<li><div class="xrow"><span class="l"><span>' + title + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span>' + (right ? '<b class="' + (cls || '') + '">' + right + '</b>' : '') + '</div></li>';
   const add = (v, label) => '<button type="button" class="linkbtn" data-c="add" data-v="' + v + '">+ ' + label + '</button>';
   const gymOf = () => { const day = kDay(k), m = (K.meta || {})[k]; return day.length ? { day, name: (m && (planName(m.plan) || m.n)) || 'Training', dur: m && m.dur >= 60 ? Math.round(m.dur / 60) + ' min' : day.length + (day.length === 1 ? ' Übung' : ' Übungen') } : null; };
   const runsOf = () => tRuns().filter(r => r.d === k);
@@ -3331,17 +3330,9 @@ function calDayHTML() {
     const tx = txOf();
     return h + (tx.length ? '<ul class="entries">' + tx.map(x => btn('data-c="tx" data-id="' + esc(x.id) + '" aria-label="Eintrag ändern"', (x.t.k === 'in' ? 'Einnahme' : catName(x.t.c)) + (x.t.n ? ' · ' + esc(x.t.n) : ''), '', (x.t.k === 'in' ? '+' : '−') + eur(x.t.a))).join('') + '</ul>' : note('Keine Ausgabe an diesem Tag.')) + add('tx', 'Ausgabe eintragen');
   }
-  /* Übersicht: eine Zeile pro Bereich, nur was es an dem Tag gibt */
-  let rows = '';
-  kalAm(k).forEach(x => { rows += btn('data-c="termin" ' + kalAttr(x), kalName(x), x.o ? esc(x.o) : '', kalZeit(x, k)); });   // Termine zuerst: Sie haben eine Uhrzeit
-  if (istAn('routinen')) workList().filter(x => x.d === k).forEach(x => { rows += row('Arbeit', uhrT(x.a) + '–' + uhrT(x.b), stdT(workMin(x))); });
-  if (istAn('routinen')) uniList().filter(x => x.d === k).forEach(x => { rows += row('Uni', esc((FACH.find(f => f[0] === x.f) || ['', ''])[1] + (x.n ? ' · ' + x.n : '')), pktT(x.p) + (x.p === 100 ? ' Punkt' : ' Punkte')); });
-  const s = istAn('kraft') && gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
-  if (istAn('cardio')) runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
-  if (istAn('gewicht') && typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
-  const out = istAn('haushalt') ? txOf().filter(x => x.t.k === 'out') : [];
-  if (out.length) rows += row('Ausgaben', out.map(x => catName(x.t.c)).filter((v, i, a) => a.indexOf(v) === i).join(', '), eur(out.reduce((n, x) => n + x.t.a, 0)));
-  return h + (rows ? '<ul class="entries">' + rows + '</ul>' : note('Keine Einträge an diesem Tag.')) + (kalDa() ? add('termin', 'Termin') : '');
+  /* Kalender auf Heute (seit v135): nur die Termine des Tages aus Apples Kalender */
+  const ts = kalAm(k);
+  return h + (ts.length ? '<ul class="entries">' + ts.map(x => btn('data-c="termin" ' + kalAttr(x), kalName(x), x.o ? esc(x.o) : '', kalZeit(x, k))).join('') + '</ul>' : note('Keine Termine an diesem Tag.')) + (kalDa() ? add('termin', 'Termin') : '');
 }
 function paintCal(keep) {
   const b = $('#cs-body'), y = b.scrollTop;

@@ -135,7 +135,7 @@ lauf(async () => {
   const monate = await page.evaluate(() => [...document.querySelectorAll('#cs-body .cm')].map(c => c.dataset.ym + ' ' + c.querySelector('p').textContent));
   /* September 2026 bis November 2027 = 15 Monate. November: Früh, Geburtstag, Zahnarzt, Seminar = 4. Dezember: Kurztrip (zählt einmal), Weit weg = 2. März 2027: 1. */
   p.ok('Übersicht: 15 Monate bis November 2027', monate.length === 15 && monate[0].startsWith('2026-09') && monate[14].startsWith('2027-11'), monate.length + ' ' + monate[0] + ' … ' + monate[monate.length - 1]);
-  p.ok('Übersicht: Termine je Monat gezählt', monate[2] === '2026-11 4 Termine' && monate[3] === '2026-12 2 Termine' && monate[6] === '2027-03 1 Termin' && monate[4] === '2027-01 Keine Einträge', JSON.stringify(monate.slice(2, 7)));
+  p.ok('Übersicht: Termine je Monat gezählt', monate[2] === '2026-11 4 Termine' && monate[3] === '2026-12 2 Termine' && monate[6] === '2027-03 1 Termin' && monate[4] === '2027-01 Keine Termine', JSON.stringify(monate.slice(2, 7)));
   const dez = await page.evaluate(() => ['2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-06'].map(k => { const c = document.querySelector('.cd[data-d="' + k + '"]'); return (c.disabled ? 'zu' : 'auf') + c.querySelectorAll('u.t').length; }).join());
   p.ok('Übersicht: Kurztrip steht am 3., 4. und 5.12., kommende Tage sind antippbar', dez === 'auf0,auf1,auf1,auf1,auf0', dez);
   p.ok('Übersicht: Der gewählte Monat steht im Blick', await page.evaluate(() => { const b = document.querySelector('#cs-body'), m = b.querySelector('.cm[data-ym="2026-11"]'); const r = m.getBoundingClientRect(), q = b.getBoundingClientRect(); return r.top >= q.top - 2 && r.top < q.bottom; }));
@@ -248,7 +248,7 @@ lauf(async () => {
     const daten = { S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, T: {}, K: {}, N: { folders: {}, tasks: {}, notes: {}, work: { e: { w1: { d: '2026-11-26', a: 840, b: 990, p: 0, r: 2500 } } } } };
     const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle, daten, breite: 320 });
     await page.click('#v-heute .wk .wd.now'); await page.waitForTimeout(80);
-    p.enthaelt('Übersicht des Tages zeigt die Arbeitszeit (14:00–16:30 = 2,5 Std)', await text(page, '#cs-day'), ['Arbeit', '14:00–16:30', '2,5 Std']);
+    p.ok('Kalender auf Heute zeigt keine Arbeitszeit (seit v135 nur Termine aus Apples Kalender)', !(await text(page, '#cs-day')).includes('Arbeit') && (await text(page, '#cs-day')).includes('Keine Termine an diesem Tag.'), await text(page, '#cs-day'));
     await zu(page);
     await ruf(page, 'info', { app: '1.3', kalender: 'an' }); await an(page);
     await page.click('#v-heute [data-h="termin"][data-id="a"]'); await page.waitForTimeout(80);
@@ -306,7 +306,7 @@ lauf(async () => {
     await page.click('.cd[data-d="2026-11-29"]'); await page.waitForTimeout(50);
     p.ok('Markt nicht am 29.11.', !(await text(page, '#cs-day')).includes('Markt'), await text(page, '#cs-day'));
     await page.click('.cd[data-d="2026-11-26"]'); await page.waitForTimeout(50);
-    p.enthaelt('Uni-Termin in der Tagesliste (150 Hundertstel = 1,5 Punkte)', await text(page, '#cs-day'), ['Uni', 'Kons · Füllung', '1,5 Punkte']);
+    p.ok('Kein Uni-Termin in der Tagesliste (seit v135 nur Termine)', !(await text(page, '#cs-day')).includes('Füllung'), await text(page, '#cs-day'));
     await zu(page);
     /* Tipp auf die Termine im großen Widget: trackpunkt://neu/kalender → TrackHuelle.neu('kalender') öffnet die Übersicht bei heute */
     await ruf(page, 'neu', 'kalender'); await page.waitForTimeout(80);
