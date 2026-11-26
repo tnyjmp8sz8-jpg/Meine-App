@@ -1361,7 +1361,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v133</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v134</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4307,16 +4307,17 @@ function bRead() {
   return { d, a, b, p, r };
 }
 function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 'string'; if (!c.hidden) c.textContent = stdT(workMin(x)) + ' · ' + eur(workPay(x)); }
-/* Neuer Eintrag (v128, sein Wort 25.11.: „immer automatisch die jetzige Zeit nehmen, immer automatisch 25 € Stundenlohn und die Zeit für Ende automatisch einfach 2,5 h nach jetziger Zeit“):
-   heute, Beginn = jetzt, Ende = zweieinhalb Stunden später (über Mitternacht rechnet workMin), keine Pause, Lohn 25 €. Ein Tipp auf „Speichern“ genügt, das Ende ändert er später.
+/* Neuer Eintrag (v134, sein Wort 26.11.: „wenn ich tracke, ist Beginn die Zeit gerade, aber will Endzeit die Zeit gerade (trage ja am Ende ein) und die Beginnzeit einfach 2,5 h vor der jetzigen Endzeit“):
+   Ende = jetzt, Beginn = zweieinhalb Stunden davor, keine Pause, Lohn 25 €. Ein Tipp auf „Speichern“ genügt. Vor 2:30 Uhr begann die Schicht am Vortag: Dann steht der Vortag da
+   (der Tag eines Eintrags ist der seines Beginns, über Mitternacht rechnet workMin). Von v128 bis v133 war es umgekehrt: Beginn jetzt, Ende 2,5 Stunden später.
    Trägt er bei einem neuen Eintrag einen anderen Lohn ein, gilt der ab dann (work.rate); das Ändern eines alten Eintrags mit altem Lohn merkt sich nichts.
    Bis v127 standen Zeiten, Pause und Lohn wie beim jüngsten Eintrag da. */
 const LOHN = 2500, SCHICHT = 150;
 function openB(id) {
-  const x = id ? N.work.e[id] : null, jetzt = new Date(), a0 = jetzt.getHours() * 60 + jetzt.getMinutes(), v = x || { a: a0, b: (a0 + SCHICHT) % 1440, p: 0 }, r = x ? x.r : N.work.rate || LOHN;
+  const x = id ? N.work.e[id] : null, jetzt = new Date(), b0 = jetzt.getHours() * 60 + jetzt.getMinutes(), v = x || { a: (b0 - SCHICHT + 1440) % 1440, b: b0, p: 0 }, r = x ? x.r : N.work.rate || LOHN;
   bE = { id: x ? id : null };
   $('#bs-title').textContent = x ? 'Arbeitszeit ändern' : 'Arbeitszeit eintragen';
-  $('#b-date').value = x ? x.d : todayKey();
+  $('#b-date').value = x ? x.d : b0 < SCHICHT ? keyOf(addDays(jetzt, -1)) : todayKey();
   $('#b-von').value = uhrT(v.a); $('#b-bis').value = uhrT(v.b); $('#b-pause').value = v.p || '';
   $('#b-rate').value = eur(r).replace(' €', '');
   $('#b-err').hidden = true; $('#b-del').hidden = !x;
