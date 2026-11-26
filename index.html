@@ -379,8 +379,8 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .kv b{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.01em;font-variant-numeric:tabular-nums;text-align:right}
 .kv b small{font-family:var(--body);font-size:13px;font-weight:600;color:var(--muted);letter-spacing:0;margin-left:3px}
 .delta{grid-column:1/-1;font-size:13px;font-weight:600;color:var(--muted);text-align:right}
-.up,.kv .delta.up{color:var(--good)}
-.down,.kv .delta.down{color:var(--danger)}
+.up,.kv .delta.up,.kv .delta .up{color:var(--good)}
+.down,.kv .delta.down,.kv .delta .down{color:var(--danger)}
 .entries .r{display:flex;flex-direction:column;align-items:flex-end;gap:1px;flex:none}
 .entries .r small{font-size:13px;font-weight:600;color:var(--muted)}
 .entries .r small.up{color:var(--good)}
@@ -1364,7 +1364,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v136</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v137</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4218,6 +4218,15 @@ const uSum = l => mitU(l).reduce((s, x) => s + x.u, 0);
 const wTage = l => { const n = new Set(l.map(x => x.d)).size; return n + (n === 1 ? ' Tag' : ' Tage'); };
 /* Jahr im Teil „Arbeit“ (v129): Verdienst des Jahres, darunter Soll aufs Konto, Erhalten und Bilanz (die zwei erst, wenn etwas eingetragen ist; die Bilanz zählt nur Monate mit Eintrag),
    dann je Monat eine Zeile (Soll, rechts was ankam und der Unterschied; ein Tipp öffnet das Blatt „Abrechnung“) und der Satz der Rentenversicherung (Tipp: Zahl wählen). */
+/* Monate der Abrechnung (v137, sein Wort 26.11.: „bei Jahr-Ansicht auch die Monate einklappen außer aktuellen“): der laufende Monat als Zeile, alle übrigen des Jahres in „Frühere Monate“. */
+function abrHTML(ms, soll, got) {
+  const cur = todayKey().slice(0, 7), zeile = m => { const d = got(m) != null ? got(m) - soll(m) : 0, name = MONTHS[+m.slice(5) - 1];
+    return '<li><button type="button" class="two" data-n="abr" data-id="' + m + '" aria-label="Abrechnung ' + name + '"><span class="l"><span>' + name + '</span><small>Soll ' + eur(soll(m)) + '</small></span>' +
+      (got(m) != null ? '<span class="r"><b>' + eur(got(m)) + '</b><small' + (d < 0 ? ' class="down"' : d > 0 ? ' class="up"' : '') + '>' + (d === 0 ? 'passt' : eurV(d)) + '</small></span>' : '<b class="dim">offen</b>') + '</button></li>'; };
+  const alt = ms.filter(m => m !== cur), offen = alt.filter(m => got(m) == null).length;
+  return (ms.indexOf(cur) >= 0 ? '<ul class="entries">' + zeile(cur) + '</ul>' : '') +
+    (alt.length ? '<div class="folds">' + foldHTML('abrAlt', 'Frühere Monate', alt.length + (alt.length === 1 ? ' Monat' : ' Monate') + (offen ? ' · ' + offen + ' offen' : ''), '', alt.map(zeile).join('')) + '</div>' : '');
+}
 function workJahrHTML(list) {
   const curY = +todayKey().slice(0, 4);
   if (!arbJahr || arbJahr > curY) arbJahr = Math.min(curY, +list[0].d.slice(0, 4));
@@ -4233,9 +4242,7 @@ function workJahrHTML(list) {
     (da.length ? kvRow('Erhalten', z(sG), '€', da.length + ' von ' + ms.length + (ms.length === 1 ? ' Monat' : ' Monaten')) +
       kvRow('Bilanz', (bil > 0 ? '+' : bil < 0 ? '−' : '') + z(bil), '€', bil === 0 ? 'passt genau' : bil < 0 ? 'zu wenig angekommen' : 'mehr als erwartet', bil < 0 ? 'down' : bil > 0 ? 'up' : '') : '') + '</div>';
   h += secHTML('Abrechnung' + INFO('rv')) + '<p class="note" id="info-rv" hidden>Vom Verdienst geht dein Anteil an der Rentenversicherung ab, der Rest sollte auf dem Konto ankommen. Üblich sind 9,3 %, im Minijob 3,6 %; bei wenig Verdienst kann es weniger sein. Steuern rechnet die App nicht. Weicht die Bilanz jeden Monat gleich ab, passe den Satz unten an deine Abrechnung an.</p>' +
-    '<ul class="entries">' + ms.map(m => { const d = got(m) != null ? got(m) - soll(m) : 0, name = MONTHS[+m.slice(5) - 1];
-      return '<li><button type="button" class="two" data-n="abr" data-id="' + m + '" aria-label="Abrechnung ' + name + '"><span class="l"><span>' + name + '</span><small>Soll ' + eur(soll(m)) + '</small></span>' +
-        (got(m) != null ? '<span class="r"><b>' + eur(got(m)) + '</b><small' + (d < 0 ? ' class="down"' : d > 0 ? ' class="up"' : '') + '>' + (d === 0 ? 'passt' : eurV(d)) + '</small></span>' : '<b class="dim">offen</b>') + '</button></li>'; }).join('') + '</ul>' +
+    abrHTML(ms, soll, got) +
     '<ul class="entries"><li><button type="button" class="two" data-n="rv" aria-label="Satz der Rentenversicherung ändern"><span class="l"><span>Rentenversicherung</span></span><b>' + rvT() + '</b></button></li></ul>';
   return h;
 }
@@ -4249,10 +4256,12 @@ function workHTML() {
   let h = seg + '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
     (c.length ? stdT(mins(c)) + ' an ' + tage(c).replace('Tage', 'Tagen') : list.length ? 'In diesem Monat noch nichts eingetragen' : 'Noch keine Arbeitszeit eingetragen') + '</p></section>' +
     '<button type="button" class="primary" data-n="newwork">Arbeitszeit eintragen</button>';
-  /* Eine Zeile zum Umsatz, nur wenn es in diesem Monat einen gibt: Schnitt pro Stunde, darunter Summe und der Abstand zum Schnitt der übrigen Monate (grün darüber, rot darunter) */
-  const rest = list.filter(x => x.d.slice(0, 7) !== cur);
-  if (mitU(c).length) { const um = uStd(c), ur = uStd(rest), dif = um - ur;
-    h += '<div class="card last" style="padding-top:2px">' + kvRow('Umsatz pro Stunde', eur0(um), '€', 'Umsatz ' + eur0(uSum(c)) + ' €' + (ur ? ' · ' + (Math.abs(dif) < 50 ? 'wie im Schnitt' : '<span class="' + (dif > 0 ? 'up' : 'down') + '">' + (dif > 0 ? '+' : '−') + eur0(dif) + ' € zum Schnitt</span>') : '')) + '</div>'; }   // nur der Vergleich trägt Farbe
+  /* Umsatz pro Stunde (v137, sein Wort 26.11.: „immer den durchschnittlichen Stundenumsatz ausrechnen von den letzten Monaten gesamt und diesen Monat aktuell“): zwei Zeilen in einer Karte,
+     der laufende Monat (darunter Summe und Abstand zum Schnitt, nur der Abstand farbig) und der Schnitt aller früheren Monate. Jede Zeile nur, wenn es dafür einen Umsatz gibt. */
+  const rest = list.filter(x => x.d.slice(0, 7) !== cur), um = uStd(c), ur = uStd(rest), dif = um - ur;
+  if (um || ur) h += '<div class="card last" style="padding-top:2px">' +
+    (um ? kvRow('Umsatz pro Stunde im ' + MONTHS[+cur.slice(5) - 1], eur0(um), '€', 'Umsatz ' + eur0(uSum(c)) + ' €' + (ur ? ' · ' + (Math.abs(dif) < 50 ? 'wie im Schnitt' : '<span class="' + (dif > 0 ? 'up' : 'down') + '">' + (dif > 0 ? '+' : '−') + eur0(dif) + ' € zum Schnitt</span>') : '')) : '') +
+    (ur ? kvRow('Schnitt der früheren Monate', eur0(ur), '€', 'Umsatz ' + eur0(uSum(rest)) + ' € in ' + stdT(wMins(mitU(rest)))) : '') + '</div>';
   const row = x => '<li><button type="button" class="two" data-n="work" data-id="' + esc(x.id) + '" aria-label="Arbeitszeit ändern"><span class="l"><span>' + dRow(x.d) + '</span><small>' + uhrT(x.a) + '–' + uhrT(x.b) + (x.p ? ' · ' + x.p + ' min Pause' : '') + ' · ' + stdT(workMin(x)) + '</small></span>' + (x.u ? '<span class="r"><b>' + eur(workPay(x)) + '</b><small>Umsatz ' + eur0(x.u) + ' €</small></span>' : '<b>' + eur(workPay(x)) + '</b>') + '</button></li>';
   /* Monate (v136, sein Wort: „immer aktuellen Monat zeigen wie jetzt und die anderen einklappen zum Ausklappen, damit immer nur 2 Zeilen da sind“): der laufende Monat offen,
      alle früheren in einer Zeile „Frühere Monate“, darin je Monat eine Klappzeile wie bisher. Mit Umsatz steht der Schnitt pro Stunde in der Zeile eines früheren Monats (im laufenden steht er schon oben). */
@@ -5360,6 +5369,14 @@ document.addEventListener('click', e => {
   if (!dx) return;
   neu.style.setProperty('--von', dx + 'px'); neu.classList.remove('gleit'); void neu.offsetWidth; neu.classList.add('gleit');
 });
+
+/* Ein Tipp in ein Feld darf ein Blatt nie schließen (v137, seine Meldung 26.11.: „wenn ich auf Umsatz eintragen gehe nachträglich, schließt Fenster wieder automatisch“;
+   dasselbe Bild wie am 25.11. in „Einheit ändern“: „Blatt geht zu, nichts geändert“). Vermutete Ursache, im Test-Browser nicht zu sehen: Der Fokus hebt das Blatt über die Tastatur (--kb),
+   und iOS schickt den Klick danach an die Stelle, an der vorher das Feld war; dort liegt jetzt der Rand neben dem Blatt, und das gilt als Tipp daneben.
+   Deshalb zählt ein echter Tipp daneben bis 0,8 s nach einem Fokus in einem Feld eines Blatts nicht. Das Wegziehen mit dem Finger (eigener, nicht echter Klick) bleibt davon unberührt. */
+let feldT = 0;
+document.addEventListener('focusin', e => { const t = e.target; if (t && t.matches && t.matches('input, textarea, select') && t.closest('dialog')) feldT = performance.now(); }, true);
+document.addEventListener('click', e => { if (e.isTrusted && e.target.tagName === 'DIALOG' && performance.now() - feldT < 800) e.stopImmediatePropagation(); }, true);
 
 /* ---------- Wischgesten ---------- */
 /* Blatt nach unten wegziehen. Nur wenn das Blatt und alles Scrollbare unter dem Finger ganz oben steht, sonst scrollt es wie gewohnt.

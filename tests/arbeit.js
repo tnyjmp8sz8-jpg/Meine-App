@@ -161,6 +161,9 @@ lauf(async () => {
   P.ok('Arbeit: Umschalter „Zeiten | Jahr“, Zeiten gewählt, Verdienst im November 350,00', (await text(jp, '#n-main .seg2 button')) === 'Zeiten | Jahr' && (await jp.getAttribute('#n-main [data-n="wmode"][data-v="zeit"]', 'aria-pressed')) === 'true' && (await text(jp, '#n-main .hero .num')) === '350,00', await text(jp, '#n-main .hero'));
   await jp.click('#n-main [data-n="wmode"][data-v="jahr"]'); await w();
   const jahr = async () => ({ nav: await text(jp, '#n-main .mnav b'), vor: await jp.evaluate(() => !document.querySelector('#n-main .mnav [data-m="next"]').disabled), hero: await text(jp, '#n-main .hero'), kv: await text(jp, '#n-main .card .kv'), zeilen: await text(jp, '#n-main [data-n="abr"]'), rv: await text(jp, '#n-main [data-n="rv"]') });
+  /* Seit v137 steht nur der laufende Monat offen da, die übrigen in „Frühere Monate“ (hier Oktober, offen = noch nichts angekommen) */
+  P.ok('Jahr: nur November als Zeile, Oktober in „Frühere Monate · 1 offen“', (await text(jp, '#n-main [data-n="abr"]')) === 'November Soll 317,45 € offen' && (await text(jp, '#n-main [data-fold="abrAlt"]')) === 'Frühere Monate 1 Monat · 1 offen', await text(jp, '#n-main [data-fold="abrAlt"]'));
+  await jp.click('#n-main [data-fold="abrAlt"]'); await w();
   let J = await jahr();
   P.ok('Jahr 2026: Verdienst 512,92 €, 20,52 Std an 6 Tagen; kein Jahr danach', J.nav === '2026' && !J.vor && J.hero === 'Verdienst 2026 512,92 € 20,52 Std an 6 Tagen', JSON.stringify(J));
   P.ok('ohne Eintrag: nur „Soll aufs Konto 465,22 €“, beide Monate „offen“, Rentenversicherung 9,3 %', J.kv === 'Soll aufs Konto 465,22€ nach 9,3 % Rentenversicherung' && J.zeilen === 'November Soll 317,45 € offen | Oktober Soll 147,77 € offen' && J.rv === 'Rentenversicherung 9,3 %', JSON.stringify(J));
@@ -217,8 +220,10 @@ lauf(async () => {
   const ue = { u1: { d: '2026-11-03', a: 600, b: 840, p: 0, r: 2500, u: 60000 }, u2: { d: '2026-11-10', a: 600, b: 720, p: 0, r: 2500, u: 36000 }, u3: { d: '2026-11-11', a: 600, b: 660, p: 0, r: 2500 }, u4: { d: '2026-10-08', a: 600, b: 900, p: 0, r: 2500, u: 50000 } };
   const uo = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, tasks: {}, notes: {}, work: { rate: 2500, e: ue }, uni: { e: {} } } } }), up = uo.page, uw = () => up.waitForTimeout(150);
   await bereich(up, 'routinen'); await up.click('#r-subs [data-r="sub"][data-v="work"]'); await uw();
-  P.enthaelt('Umsatz im Monat: 160 € pro Stunde, Summe 960 €, +60 € zum Schnitt', await text(up, '#n-main .kv'), ['Umsatz pro Stunde', '160', 'Umsatz 960 € · +60 € zum Schnitt']);
-  P.ok('… nur der Vergleich grün, weil über dem Schnitt', await up.evaluate(() => { const d = document.querySelector('#n-main .kv .delta'); return !d.classList.contains('up') && d.querySelector('.up').textContent === '+60 € zum Schnitt'; }));
+  P.ok('Umsatz: zwei Zeilen, November 160 € (Summe 960 €, +60 € zum Schnitt) und Schnitt der früheren Monate 100 € (500 € in 5 Std)', (await text(up, '#n-main .kv')) === 'Umsatz pro Stunde im November 160€ Umsatz 960 € · +60 € zum Schnitt | Schnitt der früheren Monate 100€ Umsatz 500 € in 5 Std', await text(up, '#n-main .kv'));
+  /* Geprüft wird die gezeichnete Farbe: Eine allgemeinere Regel (.kv span) überdeckte sie zuerst, die Klasse allein stimmte trotzdem */
+  P.ok('… nur der Vergleich grün, weil über dem Schnitt', await up.evaluate(() => { const d = document.querySelector('#n-main .kv .delta'), u = d.querySelector('.up'), m = document.createElement('i'); m.style.color = 'var(--good)'; document.body.appendChild(m); const gruen = getComputedStyle(m).color; m.remove();
+    return u.textContent === '+60 € zum Schnitt' && getComputedStyle(u).color === gruen && getComputedStyle(d).color !== gruen; }));
   P.ok('Zeile des laufenden Monats ohne Umsatz (steht schon oben)', !(await text(up, '#n-main [data-fold="arbeit-2026-11"]')).includes('Umsatz'));
   await up.click('#n-main [data-fold="arbeitAlt"]'); await uw();
   P.enthaelt('Zeile eines früheren Monats nennt den Umsatz pro Stunde (Oktober 100 €/Std)', await text(up, '#n-main [data-fold="arbeit-2026-10"]'), ['Umsatz 100 €/Std']);
@@ -237,7 +242,19 @@ lauf(async () => {
   P.ok('Ändern: der Umsatz steht im Feld', (await up.inputValue('#b-ums')) === '360,00');
   await up.fill('#b-ums', ''); await up.click('#b-save'); await uw();
   P.ok('Umsatz geleert: Eintrag ohne u', !('u' in (await gespeichert(up)).N.work.e.u2));
+  /* Ein Tipp in ein Feld schließt das Blatt nicht (v137): Fokus ins Feld „Umsatz“ eines vorhandenen Eintrags, gleich danach ein echter Tipp neben das Blatt → bleibt offen.
+     Nach einer Sekunde ist ein Tipp daneben wieder ein Tipp daneben → zu. */
+  await up.click('#n-main [data-n="work"][data-id="u1"]'); await uw();
+  await up.focus('#b-ums'); await up.mouse.click(8, 8); await up.waitForTimeout(50);
+  P.ok('Fokus ins Feld, gleich danach Tipp daneben: Blatt bleibt offen', await up.evaluate(() => document.querySelector('#bsheet').open));
+  await up.waitForTimeout(900); await up.mouse.click(8, 8); await uw();
+  P.ok('… eine Sekunde später schließt ein Tipp daneben wie gewohnt', !(await up.evaluate(() => document.querySelector('#bsheet').open)));
   await uo.browser.close();
+  /* Laufender Monat ohne Umsatz, Oktober mit (500 € in 5 Std): nur die Zeile „Schnitt der früheren Monate 100 €“ */
+  const vo = await oeffnen({ uhr: new Date(2026, 10, 15, 12), daten: { S: { routines: [], running: null }, LY: {}, N: { folders: {}, tasks: {}, notes: {}, work: { rate: 2500, e: { a: ue.u3, b: ue.u4 } }, uni: { e: {} } } } });
+  await bereich(vo.page, 'routinen'); await vo.page.click('#r-subs [data-r="sub"][data-v="work"]'); await vo.page.waitForTimeout(150);
+  P.ok('ohne Umsatz im November: nur der Schnitt der früheren Monate', (await text(vo.page, '#n-main .kv')) === 'Schnitt der früheren Monate 100€ Umsatz 500 € in 5 Std', await text(vo.page, '#n-main .kv'));
+  await vo.browser.close();
 
-  await P.ende(browser, fehler.concat(l.fehler, g.fehler, j.fehler, m.fehler, uo.fehler));
+  await P.ende(browser, fehler.concat(l.fehler, g.fehler, j.fehler, m.fehler, uo.fehler, vo.fehler));
 });
