@@ -412,13 +412,7 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .ov .v.neg{color:var(--danger)}
 .ov .s{grid-area:2/2/3/4;font-size:12px;color:var(--muted)}
 .ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
-.quick{display:flex;gap:6px;overflow-x:auto;margin:-6px -16px -2px;padding:6px 16px 2px;scrollbar-width:none}   /* Luft oben und unten: Die Reihe schneidet die größere Tippfläche der Chips sonst ab (unten nur 2 px, darunter beginnt die Tippfläche von „Alle n“) */
-.quick::-webkit-scrollbar{display:none}
-.quick .chip{flex:none;display:inline-flex;align-items:center;gap:5px}
-.quick svg{width:9px;height:9px;color:var(--at)}
-/* Das Plus trägt die Kennfarbe des Bereichs; die Notiz gehört zum Planer und bleibt blau */
-.quick .chip[data-v="gewicht"] svg{color:var(--c-weight)}
-.quick .chip[data-v="ausgabe"] svg{color:var(--c-money)}
+.sec-as{display:flex;align-items:center;gap:20px}   /* zwei Aktionen in einer Überschrift auf Heute: „Alle n ›“ oder „Kalender ›“, dahinter das Plus */
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
@@ -592,6 +586,7 @@ u.b{background:var(--accent)}
 u.w{background:var(--c-weight)}
 u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 /* Termine (v130): Punkt in der Farbe des Kalenders vor dem Titel; das Blatt zeigt entweder die Felder oder den Hinweis auf die fehlende Erlaubnis */
+#te-kal .kf{margin-right:6px;vertical-align:.5px}
 .kf{display:inline-block;width:7px;height:7px;border-radius:50%;margin-right:7px;vertical-align:1.5px;background:var(--accent)}
 .te-in{display:flex;flex-direction:column;gap:16px}
 .te-in[hidden],#teform .duo[hidden]{display:none}
@@ -1366,7 +1361,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v130</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v131</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1484,6 +1479,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         </label>
       </div>
       <ul class="entries"><li><button type="button" class="two sch" role="switch" aria-checked="true" id="te-ganz"><span class="l"><span>Ganztägig</span></span><span class="sw" aria-hidden="true"></span></button></li></ul>
+      <div class="fld" id="te-kalf" hidden>
+        <span id="te-kall">Kalender</span>
+        <div class="chips" id="te-kal" role="group" aria-labelledby="te-kall"></div>
+      </div>
       <div class="fld">
         <span id="te-erl">Erinnerung</span>
         <div class="chips" id="te-er" role="group" aria-labelledby="te-erl"></div>
@@ -1571,6 +1570,7 @@ function normE(o) {
     if (o.kal === 0) out.kal = 0;
     if (o.erZ === 'aus' || (typeof o.erZ === 'number' && isFinite(o.erZ) && o.erZ !== 60)) out.erZ = o.erZ;
     if (typeof o.erG === 'number' && isFinite(o.erG)) out.erG = o.erG;
+    if (typeof o.kalW === 'string' && o.kalW && o.kalW.length <= 200) out.kalW = o.kalW;   // zuletzt gewählter Kalender für neue Termine (v131)
   }
   return out;
 }
@@ -3335,6 +3335,7 @@ function calDayHTML() {
   let rows = '';
   kalAm(k).forEach(x => { rows += btn('data-c="termin" ' + kalAttr(x), kalName(x), x.o ? esc(x.o) : '', kalZeit(x, k)); });   // Termine zuerst: Sie haben eine Uhrzeit
   if (istAn('routinen')) workList().filter(x => x.d === k).forEach(x => { rows += row('Arbeit', uhrT(x.a) + '–' + uhrT(x.b), stdT(workMin(x))); });
+  if (istAn('routinen')) uniList().filter(x => x.d === k).forEach(x => { rows += row('Uni', esc((FACH.find(f => f[0] === x.f) || ['', ''])[1] + (x.n ? ' · ' + x.n : '')), pktT(x.p) + (x.p === 100 ? ' Punkt' : ' Punkte')); });
   const s = istAn('kraft') && gymOf(); if (s) rows += row('Gym', esc(s.name), s.dur);
   if (istAn('cardio')) runsOf().forEach(r => { rows += row('Lauf', fmt(r.s), kmf(r.m) + ' km'); });
   if (istAn('gewicht') && typeof W.entries[k] === 'number') rows += row('Gewicht', '', kg2(W.entries[k]) + ' kg');
@@ -4271,9 +4272,11 @@ function notesHTML() {
     '<div id="n-list">' + noteListHTML() + '</div>';
 }
 /* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
+/* Ohne Notizen steht nur eine Zeile mit Plus da (v131): Die Reihe der Schnell-Knöpfe gibt es nicht mehr, eintragen geht hier oder im Widget. */
 function homeNotesHTML() {
-  const list = istAn('routinen') ? notesNew() : []; if (!list.length) return '';
-  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), list.length > 5 ? allAct('allnotes', list.length) : '') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>';
+  if (!istAn('routinen')) return '';
+  const list = notesNew(); if (!list.length) return addFoldHTML('data-h="q" data-v="notiz"', 'Notizen');
+  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), '<span class="sec-as">' + (list.length > 5 ? allAct('allnotes', list.length) : '') + secAct('data-h="q" data-v="notiz"', '', 'Notiz hinzufügen') + '</span>') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>';
 }
 /* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
@@ -4462,8 +4465,12 @@ function kalNorm(o) {
     if (typeof x.k === 'string' && x.k) y.k = x.k;
     if (typeof x.er === 'number' && isFinite(x.er)) y.er = Math.round(x.er);
     if (typeof x.f === 'string' && /^#[0-9a-f]{6}$/i.test(x.f)) y.f = x.f;
+    if (typeof x.ki === 'string' && x.ki) y.ki = x.ki;
     out.liste.push(y);
   });
+  /* kals (iPhone-App ab 1.4): die Kalender, in die er schreiben darf (eigene und mit ihm geteilte), je id, n Name, f Farbe, std = der in iOS für neue Termine gewählte */
+  if (out.recht === 'an' && Array.isArray(o.kals)) out.kals = o.kals.filter(k => k && typeof k.id === 'string' && k.id && typeof k.n === 'string').slice(0, 40)
+    .map(k => Object.assign({ id: k.id, n: k.n }, typeof k.f === 'string' && /^#[0-9a-f]{6}$/i.test(k.f) ? { f: k.f } : {}, k.std ? { std: 1 } : {}));
   out.liste.sort((a, b) => a.s - b.s);
   return out;
 }
@@ -4474,12 +4481,12 @@ const kalDa = () => kalAn() && kal.recht === 'an';                    // und iOS
 /* Gemerkt wird nur, was Heute beim Öffnen braucht: eine Woche zurück bis gut drei Monate voraus */
 function kalMerk() {
   const von = Date.now() - 7 * 864e5, bis = Date.now() + 92 * 864e5;
-  try { localStorage.setItem(KAL_LS, JSON.stringify({ recht: kal.recht, liste: kal.liste.filter(x => !x.neu && x.e >= von && x.s <= bis).slice(0, 600) })); } catch (e) {}
+  try { localStorage.setItem(KAL_LS, JSON.stringify({ recht: kal.recht, kals: kal.kals, liste: kal.liste.filter(x => !x.neu && x.e >= von && x.s <= bis).slice(0, 600) })); } catch (e) {}
 }
 /* Ein gerade gelöschter Termin steht noch im Kalender, solange „Rückgängig“ angeboten wird (kalWeg); gezeigt wird er schon nicht mehr */
 const kalListe = () => kalWeg ? kal.liste.filter(x => !(x.id === kalWeg.x.id && x.s === kalWeg.x.s)) : kal.liste;
 const kalVon = x => keyOf(new Date(x.s));
-const kalBis = x => keyOf(new Date(x.g || x.e === x.s ? x.e : x.e - 1));   // endet ein Termin um Mitternacht, gehört der neue Tag nicht mehr dazu
+const kalBis = x => keyOf(new Date(x.e > x.s ? x.e - 1 : x.e));   // endet ein Termin um Mitternacht, gehört der neue Tag nicht mehr dazu (auch ganztägige: Je nach Kalender enden sie um 23:59:59 oder um 0:00 des Folgetags)
 /* Termine je Tag (ein Termin über mehrere Tage steht an jedem davon, höchstens 62), ganztägige zuerst */
 function kalTage() {
   if (kalMap) return kalMap;
@@ -4502,16 +4509,17 @@ const kalAttr = x => (x.neu ? 'disabled ' : '') + 'data-id="' + esc(x.id) + '" d
 const tagKurz = k => { const d = parseKey(k); return DAYS[wd(d)] + ', ' + d.getDate() + '.' + (d.getMonth() + 1) + '.'; };
 /* Auf Heute: was heute noch nicht vorbei ist und die kommenden 14 Tage, höchstens vier Zeilen; rechts „Kalender ›“ (oder „Alle n ›“) öffnet den Monat. Ohne Termine keine Fläche. */
 function homeTermineHTML() {
-  if (!kalDa()) return '';
+  if (!kalAn()) return '';
+  if (kal.recht !== 'an') return addFoldHTML('data-h="q" data-v="termin"', 'Termine');   // iOS noch nicht gefragt oder abgelehnt: Der Tipp fragt oder erklärt den Weg
   const now = Date.now(), tk = todayKey(), morgen = keyOf(addDays(parseKey(tk), 1)), bis = keyOf(addDays(parseKey(tk), 14));
   const kommt = kalListe().filter(x => (x.g ? kalBis(x) >= tk : x.e > now) && kalVon(x) <= bis);
-  if (!kommt.length) return '';
+  if (!kommt.length) return addFoldHTML('data-h="q" data-v="termin"', 'Termine');
   const zeile = x => {
     const k = kalVon(x) < tk ? tk : kalVon(x), jetzt = !x.g && x.s <= now;
     return '<li><button type="button" class="two" data-h="termin" ' + kalAttr(x) + '><span class="l"><span>' + kalName(x) + '</span><small>' +
       (jetzt ? 'Jetzt · bis ' + hm(x.e) : (k === tk ? 'Heute' : k === morgen ? 'Morgen' : tagKurz(k)) + (x.g ? ' · ganztägig' : '')) + (x.o ? ' · ' + esc(x.o) : '') + '</small></span>' + (x.g || jetzt ? '' : '<b>' + hm(x.s) + '</b>') + '</button></li>';
   };
-  return secHTML('Termine', '', '<button type="button" class="sec-a go" data-h="kal">' + (kommt.length > 4 ? 'Alle ' + kommt.length : 'Kalender') + CHEV(1) + '</button>') + '<ul class="entries">' + kommt.slice(0, 4).map(zeile).join('') + '</ul>';
+  return secHTML('Termine', '', '<span class="sec-as"><button type="button" class="sec-a go" data-h="kal">' + (kommt.length > 4 ? 'Alle ' + kommt.length : 'Kalender') + CHEV(1) + '</button>' + secAct('data-h="q" data-v="termin"', '', 'Termin hinzufügen') + '</span>') + '<ul class="entries">' + kommt.slice(0, 4).map(zeile).join('') + '</ul>';
 }
 /* Liest Tag und Zeit aus einem Satz wie „Zahnarzt morgen 15 Uhr“ (nur bei einem neuen Termin): So ist er in einem Feld eingetragen.
    Erkannt wird, was eindeutig ist; der Rest bleibt der Titel. Beispiele mit heute = Donnerstag, 26.11.2026:
@@ -4570,6 +4578,13 @@ function terminLesen(text, jetzt) {
    Erinnerung: Minuten vor dem Beginn; ganztägig „Am Tag“ = 9 Uhr (−540) und „Am Vortag“ = 9 Uhr davor (900), wie in Apples Kalender. Die letzte Wahl gilt beim nächsten neuen Termin (E.erZ, E.erG). */
 const tedlg = $('#tesheet'); let teE = null;
 const ER_Z = [[15, '15 min'], [60, '1 Std'], [1440, '1 Tag']], ER_G = [[-540, 'Am Tag'], [900, 'Am Vortag']];
+/* Kalender, in den der Termin kommt (v131, sein Wunsch: „beim Eintragen für geteilten Kalender auswählen oder meinen eigenen privaten“): nur mit mindestens zwei, in die er schreiben darf.
+   Neu: der zuletzt hier gewählte (E.kalW), sonst der, den iOS für neue Termine nimmt. Vorhanden: sein Kalender; bei einem, der sich wiederholt, keine Wahl (iOS verschiebt ein einzelnes Vorkommen nicht). */
+function teKals() {
+  const ks = kal.kals || [], zeig = ks.length > 1 && !teE.fest && !(teE.ev && teE.ev.r);
+  $('#te-kalf').hidden = !zeig; if (!zeig) return;
+  $('#te-kal').innerHTML = ks.map(k => '<button type="button" class="chip" data-kal="' + esc(k.id) + '" aria-pressed="' + (teE.kal === k.id) + '"><i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n) + '</button>').join('');
+}
 function teMal() {
   const g = teE.g, liste = (g ? ER_G : ER_Z).slice(), er = g ? teE.erG : teE.erZ;
   if (typeof er === 'number' && !liste.some(q => q[0] === er)) liste.push([er, 'Wie bisher']);
@@ -4585,6 +4600,8 @@ function openTe(id, s, tag) {
   const tag0 = x ? kalVon(x) : isKey(tag) ? tag : todayKey(), er = x && typeof x.er === 'number' ? x.er : 'aus';
   teE = { id: x ? x.id : null, s0: x ? x.s : 0, ev: x, tag0, g: x ? !!x.g : true, fest: !!x && !x.w, lang: !!x && !x.g && x.e - x.s > 864e5, er0: er, dauer: x && !x.g ? Math.round((x.e - x.s) / 6e4) : 60, hand: { tag: false, zeit: false, bis: false },
     erZ: x && !x.g ? er : E.erZ != null ? E.erZ : 60, erG: x && x.g ? er : E.erG != null ? E.erG : 'aus' };
+  const ks = kal.kals || [], gibt = id => ks.some(k => k.id === id);
+  teE.kal = teE.kal0 = x ? x.ki || '' : gibt(E.kalW) ? E.kalW : (ks.find(k => k.std) || ks[0] || {}).id || '';
   $('#te-lab').textContent = x ? 'Titel' : 'Was und wann';
   $('#te-title').textContent = nein ? 'Termine' : x ? (teE.fest ? 'Termin' : 'Termin ändern') : 'Termin eintragen';
   $('#te-nein').hidden = !nein; $('#te-in').hidden = nein;
@@ -4596,7 +4613,7 @@ function openTe(id, s, tag) {
     teE.lang && !teE.fest ? 'Geht über mehrere Tage: Tag und Zeit änderst du im Kalender von Apple.' : '', x.o ? 'Ort: ' + x.o : ''].filter(Boolean);
   $('#te-info').textContent = info.join(' '); $('#te-info').hidden = !info.length;
   $('#te-les').hidden = true; $('#te-err').hidden = true; $('#te-save').hidden = teE.fest; $('#te-weg').hidden = !x || teE.fest;
-  teMal(); openDlg(tedlg); tedlg.scrollTop = 0;
+  teMal(); teKals(); openDlg(tedlg); tedlg.scrollTop = 0;
   if (!x && !nein) fokus($('#te-text'));
 }
 /* Beim Tippen (nur neuer Termin): Was der Satz hergibt, steht sofort in den Feldern darunter; der Titel ohne die erkannten Wörter steht als Zeile unter dem Feld. */
@@ -4643,6 +4660,7 @@ $('#te-ganz').addEventListener('click', () => {
   if (!teE.g && !$('#te-von').value) { const a = (new Date().getHours() + 1) % 24 * 60; $('#te-von').value = uhrT(a); $('#te-bis').value = uhrT((a + 60) % 1440); teE.dauer = 60; }
   teMal();
 });
+$('#te-kal').addEventListener('click', e => { const c = e.target.closest('[data-kal]'); if (!c) return; teE.kal = c.dataset.kal; teKals(); });
 $('#te-er').addEventListener('click', e => { const c = e.target.closest('[data-er]'); if (!c) return; const v = c.dataset.er === 'aus' ? 'aus' : +c.dataset.er; if (teE.g) teE.erG = v; else teE.erZ = v; teMal(); });
 /* Speichern: Der Auftrag geht an die iPhone-App, die den Kalender schreibt und die Liste neu schickt. Bis dahin steht der Termin schon hier (ein neuer mit „neu“: noch nicht antippbar,
    weil er seine Kennung erst vom Kalender bekommt). er geht nur mit, wenn sie neu ist oder geändert wurde: Sonst bleiben die Erinnerungen des Termins, wie sie sind. */
@@ -4656,6 +4674,9 @@ $('#teform').addEventListener('submit', e => {
   if (teE.id) { o.id = teE.id; o.s0 = teE.s0; if (er !== teE.er0 || !!alt.g !== !!x.g) o.er = er === 'aus' ? null : er; }
   else { o.er = er === 'aus' ? null : er; y.neu = 1; if (E[x.g ? 'erG' : 'erZ'] !== er) setE(x.g ? { erG: er } : { erZ: er }); }
   if ('er' in o) { if (o.er == null) delete y.er; else y.er = o.er; }
+  /* Kalender: neu immer mit, wenn es eine Wahl gibt; beim Ändern nur, wenn er gewechselt wurde. Die Farbe folgt sofort, bis der Kalender die Liste neu schickt. */
+  const kz = (kal.kals || []).find(k => k.id === teE.kal);
+  if (kz && !$('#te-kalf').hidden && (!teE.id || teE.kal !== teE.kal0)) { o.kal = kz.id; y.ki = kz.id; y.k = kz.n; if (kz.f) y.f = kz.f; else delete y.f; if (!teE.id && E.kalW !== kz.id) setE({ kalW: kz.id }); }
   kal.liste = kal.liste.filter(z => !(alt && z.id === alt.id && z.s === alt.s)).concat(y).sort((p, q) => p.s - q.s); kalMap = null;
   hPost(o); closeDlg(tedlg);
 });
@@ -4822,7 +4843,7 @@ const AREA = {
 /* teil: Zeile für einen Teil des Planers (work, uni); der Tipp öffnet den Planer gleich dort */
 const ovCard = (to, label, v, s, cls, teil) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"' + (teil ? ' data-teil="' + teil + '"' : '') + '><span class="ic ' + (teil || to) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[teil || to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
-const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); else if (v === 'termin') openTe(null, 0, todayKey()); };
+const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); else if (v === 'termin') openTe(null, 0, todayKey()); else if (v === 'kalender') openCal('all', todayKey()); };   // „kalender“: Tipp auf die Termine im großen Widget
 /* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
 let bkMsg = '', bkHand = false;
 function lastBackupText() {
@@ -4906,8 +4927,8 @@ function renderHome() {
   if (hMode !== 'day') { el.innerHTML = seg + (hMode === 'week' ? weekHTML() : homeMonthHTML()); return; }
   const tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1];
   let h = seg + weekStripHTML('all');
-  const quick = [['notiz', 'Notiz', 'routinen'], ['gewicht', 'Gewicht', 'gewicht'], ['ausgabe', 'Ausgabe', 'haushalt'], ['termin', 'Termin', 'heute']].filter(q => istAn(q[2]) && (q[0] !== 'termin' || kalAn()));   // nur für eingeschaltete Bereiche
-  if (quick.length) h += '<div class="quick" role="group" aria-label="Schnell eintragen">' + quick.map(q => '<button type="button" class="chip" data-h="q" data-v="' + q[0] + '">' + PLUS + q[1] + '</button>').join('') + '</div>';
+  /* Keine Reihe mit Schnell-Knöpfen mehr (v131, sein Wort 26.11.: „die Leiste kann weg, mach einfach bei Heute hinter Termin und Notiz kleines Plus … rest brauche ich nicht,
+     nur im Widget dann Notiz, Ausgabe und Termin schnell hinzufügen“): Notiz und Termin tragen ihr Plus in der Überschrift, Gewicht und Ausgabe gehen über das Widget, die Kurzbefehle und ihren Bereich. */
   const bkDue = backupDue();
   h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
   h += homeTermineHTML();
@@ -5448,7 +5469,7 @@ function hStand() {
   for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c) zahl[t.c] = (zahl[t.c] || 0) + 1; } }
   const kats = allCats().map((k, i) => ({ id: k[0], n: hCut(MF.cats && MF.cats[k[0]] ? MF.cats[k[0]].n : k[1], 40), i })).sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || (zahl[b.id] || 0) - (zahl[a.id] || 0) || a.i - b.i).map(k => ({ id: k.id, n: k.n }));
   const haendler = [...hk.keys()].sort((a, b) => (hk.get(b).d > hk.get(a).d) - (hk.get(b).d < hk.get(a).d) || (hk.get(b).t || 0) - (hk.get(a).t || 0)).slice(0, 300);
-  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, zahlen: hZahlen() };
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, muster: katMuster(), zahlen: hZahlen() };
 }
 /* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
@@ -5544,6 +5565,31 @@ function haendlerKats() {
   return m;
 }
 function katVon(name) { const t = haendlerKats().get(String(name || '').trim().toLowerCase()); return t ? t.c : ''; }
+/* Händler, die jeder kennt (v131, seine Frage vom 26.11.: „beim Bezahlen mit Apple Pay wird der Betrag automatisch hinzugefügt, aber die Kategorie nicht, z. B. Lebensmittel“).
+   Kennt die App einen Händler noch nicht aus seinen eigenen Buchungen (katVon geht vor: seine Wahl gewinnt immer), sortiert sie ihn nach seinem Namen ein: „REWE Markt GmbH“ → Lebensmittel.
+   Ein Wort zählt nur am Anfang eines Worts im Namen („aral“ nicht in „Parallel“), kurze Wörter bis drei Zeichen nur als ganzes Wort („dm“ nicht in „Admiral“);
+   ein Wort mit * davor zählt überall („Stadtapotheke“, „Landbäckerei“). Dieselbe Regel steht in der iPhone-App (Ablage.passt).
+   Bewusst nicht dabei: Händler mit allem (Amazon, PayPal, Otto, Kaufhäuser), die passen in keine Kategorie sicher. Die Wörter gehen als muster im Stand an die iPhone-App:
+   Bei einem Händler, der hier passt, fragt „Ausgabe eintragen“ nicht nach der Kategorie (ab 1.4). */
+const KAT_MUSTER = {
+  essen: ['rewe', 'edeka', 'lidl', 'aldi', 'netto', 'penny', 'kaufland', 'norma', 'globus', 'tegut', 'nahkauf', 'marktkauf', 'famila', 'alnatura', 'denns', 'bio company', 'basic bio', 'hit markt', 'v-markt', 'combi', 'np-markt', 'mix markt', '*supermarkt', 'lebensmittel', '*getränke', '*bäckerei', '*baeckerei', '*metzgerei', 'flink', 'picnic', 'knuspr'],
+  drog: ['dm-drogerie', 'dm drogerie', 'dm', 'rossmann', 'müller drogerie', 'mueller drogerie', 'budni', '*drogerie', 'douglas'],
+  aus: ['mcdonald', 'burger king', 'kfc', 'subway', 'starbucks', 'lieferando', 'wolt', 'uber eats', 'vapiano', 'dean&david', 'dean & david', 'backwerk', 'ditsch', 'nordsee', 'five guys', 'hans im glück', 'l\'osteria', '*pizzeria', 'restaurant', 'ristorante', 'trattoria', 'café', 'cafe', 'bistro', 'imbiss', 'döner', 'doener', 'kebab', 'sushi', 'bar', 'mensa', 'cafeteria'],
+  shop: ['h&m', 'h & m', 'zara', 'primark', 'c&a', 'zalando', 'about you', 'uniqlo', 'nike', 'adidas', 'snipes', 'peek & cloppenburg', 'tk maxx', 'only', 'jack & jones', 'bershka', 'pull&bear', 'new yorker', 'deichmann', 'foot locker'],
+  frei: ['cinemaxx', 'cineplex', 'cinestar', 'uci kino', 'kino', 'spotify', 'netflix', 'disney plus', 'steam', 'playstation', 'nintendo', 'eventim', 'bowling'],
+  mobil: ['aral', 'shell', 'esso', 'jet', 'totalenergies', '*tankstelle', 'deutsche bahn', 'db vertrieb', 'db fernverkehr', 'db regio', 'bvg', 'mvg', 'hvv', 'kvb', 'rmv', 'vrr', 'vvs', 'uber', 'bolt', 'free now', 'freenow', 'tier mobility', 'lime', 'voi', 'share now', 'miles mobility', 'apcoa', 'parkhaus', 'parken', 'contipark', 'ionity', 'enbw'],
+  gesund: ['*apotheke', 'docmorris', 'shop apotheke', 'mcfit', 'fitx', 'clever fit', 'urban sports', 'john reed', 'fitness', 'physio', 'arztpraxis', 'zahnarzt'],
+  uni: ['thalia', 'hugendubel', 'copyshop', 'studierendenwerk'],
+  reise: ['flixbus', 'flixtrain', 'ryanair', 'lufthansa', 'eurowings', 'easyjet', 'condor', 'booking.com', 'airbnb', 'hotel', 'hostel', 'motel one', 'a&o']
+};
+const wortIn = (t, w) => { if (w[0] === '*') return t.includes(w.slice(1)); for (let i = t.indexOf(w); i >= 0; i = t.indexOf(w, i + 1)) { const a = i ? t[i - 1] : '', b = t[i + w.length] || ''; if (!/[\p{L}\p{N}]/u.test(a) && (w.length > 3 || !/[\p{L}\p{N}]/u.test(b))) return true; } return false; };
+function katRegel(name) {
+  const t = String(name || '').trim().toLowerCase(); if (!t) return '';
+  const gibt = new Set(allCats().map(k => k[0]));
+  for (const c in KAT_MUSTER) if (gibt.has(c) && KAT_MUSTER[c].some(w => wortIn(t, w))) return c;
+  return '';
+}
+const katMuster = () => [].concat(...Object.values(KAT_MUSTER));
 function hEingang(list) {
   let seen = []; try { seen = JSON.parse(localStorage.getItem('takt.eingang') || '[]'); } catch (e) {}
   if (!Array.isArray(seen)) seen = [];
@@ -5563,7 +5609,7 @@ function hEingang(list) {
       const hit = !ein && kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
       const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null, n = String(c.n || '').trim().slice(0, 60);
       /* Die Buchung trägt die Kennung des Auftrags: So findet ein Nachtrag ('kat') sie wieder */
-      if (okCents(a)) { p.tx[/^[\w-]{1,64}$/.test(c.id) ? c.id : newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+      if (okCents(a)) { p.tx[/^[\w-]{1,64}$/.test(c.id) ? c.id : newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || katRegel(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
     } else if (c.art === 'kat') {
       /* Nachtrag: Beim Bezahlen wurde nach der Kategorie gefragt, die Ausgabe (Auftrag zu) war da schon gebucht. Gilt nur für eine Ausgabe, die es noch gibt, und eine Kategorie, die es gibt. */
       for (const y in MY) { const alt = ((MY[y] || {}).tx || {})[c.zu];
@@ -5723,6 +5769,20 @@ loadLocal();
     gleicheNamen(kk); kdoc.patch(kk);
     localStorage.setItem('takt.start', stand);
   } catch (e) {}
+})();
+/* Nachsortieren (v131, einmal je Gerät, Merker takt.sortiert): Zahlungen, die von selbst kamen (Apple Pay über den Kurzbefehl; ihre Kennung ist die des Auftrags, eine UUID)
+   und unter „Sonstiges“ stehen, bekommen die Kategorie, unter der er denselben Händler inzwischen einsortiert hat, oder die aus seinem Namen (katRegel). Von Hand Gebuchtes bleibt unberührt. */
+(function nachsortieren() {
+  try { if (localStorage.getItem('takt.sortiert') === '1') return; } catch (e) { return; }
+  let gab = false;   // ohne eine einzige Buchung (neues Gerät, Sicherung kommt erst) bleibt der Merker offen
+  for (const y in MY) {
+    const tx = (MY[y] || {}).tx || {}, p = { tx: {} };
+    if (Object.keys(tx).some(id => tx[id])) gab = true;
+    for (const id in tx) { const t = tx[id]; if (!t || t.k !== 'out' || t.c !== 'sonst' || !/^[0-9A-F]{8}-[0-9A-F]{4}-/i.test(id)) continue;
+      const c = katVon(t.n) || katRegel(t.n); if (c && c !== 'sonst') p.tx[id] = Object.assign({}, t, { c }); }
+    if (Object.keys(p.tx).length) mdoc(y).patch(p);
+  }
+  if (gab) try { localStorage.setItem('takt.sortiert', '1'); } catch (e) {}
 })();
 /* Neu beginnen (v112, sein Auftrag vom 25.11.: „alle früheren Einheiten doch löschen. alles ab Montag diese Woche neu beginnen, damit ich cleanen Fortschritt sehe,
    sonst buggt es wegen Gewichtsänderungen und Ausführung anders“): einmal je Gerät (Merker takt.neu) gehen alle Einheiten vor Montag, 23.11.2026, samt Dauer, Übersprungenem und Werten der Uhr,

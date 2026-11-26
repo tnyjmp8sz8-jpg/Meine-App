@@ -61,7 +61,9 @@ struct AusgabeEintragen: AppIntent {
         var gewaehlt = ""
         let stand = Ablage.lesen(), kats = stand?.kats ?? []
         let haendler = (notiz ?? "").trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        if (kategorie ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !kats.isEmpty, !(stand?.haendler ?? []).contains(haendler) {
+        // Ab 1.4 auch nicht bei Händlern, die die App selbst nach ihrem Namen einsortiert (z. B. „REWE“ → Lebensmittel, siehe muster im Stand)
+        let bekannt = (stand?.haendler ?? []).contains(haendler) || (!haendler.isEmpty && (stand?.muster ?? []).contains { Ablage.passt(haendler, $0) })
+        if (kategorie ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty, !kats.isEmpty, !bekannt {
             let frage: IntentDialog = haendler.isEmpty ? "Welche Kategorie?" : "Welche Kategorie für \(notiz ?? "")?"
             let wahl: String? = try? await $kategorie.requestDisambiguation(among: kats.map { $0.n }, dialog: frage)
             if let wahl, let k = kats.first(where: { $0.n == wahl }) {

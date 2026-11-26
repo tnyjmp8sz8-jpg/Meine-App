@@ -1,6 +1,7 @@
 import CoreGraphics
 import EventKit
 import Foundation
+import WidgetKit
 
 /// Termine aus dem Kalender des iPhones (ab 1.3). Der Kalender von Apple bleibt der Speicher: Track. liest dort und schreibt dorthin,
 /// legt aber selbst keine Termine ab. So bleiben iCloud, Einladungen, abonnierte Kalender, die Apple Watch und vor allem die Erinnerungen von Apple
@@ -66,6 +67,8 @@ final class Termine {
         beobachten()
         reihe.async {
             let antwort = self.liste(Date())
+            // Für das große Widget (ab 1.4): heute bis übermorgen in die App-Gruppe; hat sich etwas geändert, zeichnet es neu
+            if Tagesblick.merken(Tagesblick.ausKalender(self.lager, Date())) { WidgetCenter.shared.reloadTimelines(ofKind: "tag") }
             DispatchQueue.main.async { dann(antwort) }
         }
     }
@@ -82,7 +85,21 @@ final class Termine {
             gefunden = gefunden.filter { ($0.endDate ?? .distantPast) >= grenze }
         }
         let eintraege: [[String: Any]] = gefunden.prefix(4000).compactMap { Termine.eintrag($0) }
-        return ["recht": "an", "von": Termine.ms(von), "bis": Termine.ms(bis), "liste": eintraege]
+        return ["recht": "an", "von": Termine.ms(von), "bis": Termine.ms(bis), "liste": eintraege, "kals": schreibbare()]
+    }
+
+    /// Die Kalender, in die neue Termine dürfen (eigene und geteilte mit Schreibrecht), der für neue Termine gewählte zuerst (ab 1.4).
+    /// Je id, n Name, f Farbe, std = der Kalender, den iOS für neue Termine nimmt.
+    private func schreibbare() -> [[String: Any]] {
+        let std = lager.defaultCalendarForNewEvents?.calendarIdentifier ?? ""
+        let alle = lager.calendars(for: .event).filter { $0.allowsContentModifications }
+            .sorted { ($0.calendarIdentifier == std ? 0 : 1, $0.title.lowercased()) < ($1.calendarIdentifier == std ? 0 : 1, $1.title.lowercased()) }
+        return alle.prefix(40).map { k in
+            var o: [String: Any] = ["id": k.calendarIdentifier, "n": String(k.title.prefix(60))]
+            if let f = Tagesblick.farbe(k.cgColor) { o["f"] = f }
+            if k.calendarIdentifier == std { o["std"] = 1 }
+            return o
+        }
     }
 
     private static func eintrag(_ termin: EKEvent) -> [String: Any]? {
@@ -95,17 +112,10 @@ final class Termine {
         if let kalender = termin.calendar {
             if kalender.allowsContentModifications { o["w"] = 1 }
             o["k"] = String(kalender.title.prefix(60))
-            if let f = farbe(kalender.cgColor) { o["f"] = f }
+            o["ki"] = kalender.calendarIdentifier
+            if let f = Tagesblick.farbe(kalender.cgColor) { o["f"] = f }
         }
         return o
-    }
-
-    /// Farbe des Kalenders als #RRGGBB
-    private static func farbe(_ farbe: CGColor?) -> String? {
-        guard let farbe = farbe, let raum = CGColorSpace(name: CGColorSpace.sRGB),
-              let rgb = farbe.converted(to: raum, intent: .defaultIntent, options: nil), let teile = rgb.components, teile.count >= 3 else { return nil }
-        let stufe = { (wert: CGFloat) -> Int in max(0, min(255, Int((wert * 255).rounded()))) }
-        return String(format: "#%02X%02X%02X", stufe(teile[0]), stufe(teile[1]), stufe(teile[2]))
     }
 
     /// Ein Termin, der sich wiederholt, hat für jedes Vorkommen dieselbe Kennung: Das richtige findet der Beginn (s0), wie ihn die Liste genannt hat.
@@ -120,7 +130,7 @@ final class Termine {
         return lager.event(withIdentifier: id)
     }
 
-    /// Auftrag der Web-App: { id und s0 (nur beim Ändern), t, s, e, g, o, er }. Ohne id entsteht ein neuer Termin im Kalender,
+    /// Auftrag der Web-App: { id und s0 (nur beim Ändern), t, s, e, g, o, er, kal }. kal (ab 1.4): Kennung des Kalenders, in den der Termin soll. Ohne id entsteht ein neuer Termin im Kalender,
     /// den der Nutzer in iOS für neue Termine gewählt hat. „er“ fehlt: Erinnerungen bleiben, wie sie sind; eine Zahl: Minuten vor dem Beginn; sonst: keine.
     /// Geändert wird bei einem Termin, der sich wiederholt, nur dieses eine Vorkommen. Ergebnis: leer oder der Grund, warum es nicht ging.
     func speichern(_ auftrag: [String: Any], _ dann: @escaping (String) -> Void) {
@@ -144,6 +154,10 @@ final class Termine {
             termin.calendar = kalender
         }
         guard termin.calendar?.allowsContentModifications == true else { return "Dieser Kalender lässt sich nicht ändern." }
+        // Anderer Kalender (ab 1.4): nur einer, in den er schreiben darf, und nicht für ein einzelnes Vorkommen eines Termins, der sich wiederholt
+        if let kid = a["kal"] as? String, !kid.isEmpty, let ziel = lager.calendar(withIdentifier: kid), ziel.allowsContentModifications, !termin.hasRecurrenceRules {
+            termin.calendar = ziel
+        }
         termin.title = String(titel.prefix(200))
         termin.isAllDay = (a["g"] as? NSNumber)?.boolValue ?? false
         termin.startDate = Date(timeIntervalSince1970: s / 1000)
@@ -174,7 +188,8 @@ final class Termine {
     }
 
     /// Selbsttest im Simulator (der Zugriff ist dort vorab erlaubt, siehe bau.sh): anlegen, lesen, ändern, löschen.
-    /// Erwartet „an|1|60|30|1|0“: ein Termin gefunden, 60 Minuten lang, Erinnerung 30 Minuten vorher, nach dem Umbenennen einer mit neuem Namen, nach dem Löschen keiner.
+    /// Erwartet „an|1|60|30|1|0|1|k“: ein Termin gefunden, 60 Minuten lang, Erinnerung 30 Minuten vorher, nach dem Umbenennen einer mit neuem Namen, nach dem Löschen keiner;
+    /// dazu (ab 1.4) fand ihn auch die Liste für das große Widget einmal, und es gibt mindestens einen Kalender zur Wahl (k).
     func pruefung() -> String {
         guard zustand == "an" else { return zustand }
         return reihe.sync { self.probe() }
@@ -186,8 +201,10 @@ final class Termine {
         let name = "Track Selbsttest \(Int(Date().timeIntervalSince1970))"
         let s = Termine.ms(beginn), e = Termine.ms(beginn.addingTimeInterval(3600))
         let mit = { (titel: String) -> [[String: Any]] in ((self.liste(Date())["liste"] as? [[String: Any]]) ?? []).filter { ($0["t"] as? String) == titel } }
-        let f1 = schreiben(["t": name, "s": s, "e": e, "er": 30])
+        let f1 = schreiben(["t": name, "s": s, "e": e, "er": 30, "kal": lager.defaultCalendarForNewEvents?.calendarIdentifier ?? ""])
         let l1 = mit(name)
+        let imWidget = Tagesblick.ausKalender(lager, Date()).filter { $0.t == name }.count
+        let wahl = schreibbare().isEmpty ? "-" : "k"
         guard f1.isEmpty, let erster = l1.first, let id = erster["id"] as? String else { return "an|anlegen|\(f1)" }
         let minuten = Int(((Termine.zahl(erster["e"]) ?? 0) - (Termine.zahl(erster["s"]) ?? 0)) / 60000)
         let erinnerung = Int(Termine.zahl(erster["er"]) ?? -1)
@@ -195,6 +212,6 @@ final class Termine {
         let l2 = mit(name + " neu")
         let f3 = entfernen(["id": id, "s0": s])
         let l3 = mit(name).count + mit(name + " neu").count
-        return "an|\(l1.count)|\(minuten)|\(erinnerung)|\(l2.count)|\(l3)" + (f2.isEmpty && f3.isEmpty ? "" : "|\(f2)|\(f3)")
+        return "an|\(l1.count)|\(minuten)|\(erinnerung)|\(l2.count)|\(l3)|\(imWidget)|\(wahl)" + (f2.isEmpty && f3.isEmpty ? "" : "|\(f2)|\(f3)")
     }
 }

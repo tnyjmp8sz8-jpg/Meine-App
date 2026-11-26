@@ -63,8 +63,7 @@ lauf(async () => {
       return a && a.id + (a.closest('dialog[open]') ? '' : ' (nicht im Blatt)');
     }, knopf);
   };
-  P.ok('Schnell-Knopf „Ausgabe“ auf Heute: Betrag hat sofort den Fokus', (await sofort('#v-heute .quick [data-v="ausgabe"]', 'heute')) === 'm-amt');
-  P.ok('Schnell-Knopf „Gewicht“ auf Heute: Feld hat sofort den Fokus', (await sofort('#v-heute .quick [data-v="gewicht"]', 'heute')) === 'w-val');
+  P.ok('Plus an „Notizen“ auf Heute: Textfeld hat sofort den Fokus', (await sofort('#v-heute [data-h="q"][data-v="notiz"]', 'heute')) === 'n-text');
   P.ok('Gewicht eintragen: Feld hat sofort den Fokus', (await sofort('#v-gewicht [data-w="add"]', 'gewicht')) === 'w-val');
   await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'haushalt'); await kurz();
   await page.evaluate(() => { const b = [...document.querySelectorAll('#v-haushalt [data-m="sub"]')].find(x => x.dataset.v === 'budget'); if (b) b.click(); });

@@ -4,7 +4,7 @@
 # Die IPA entsteht erst, wenn alle Prüfungen bestanden sind.
 set -eo pipefail
 cd "$(dirname "$0")"
-rm -rf web build Payload Track.ipa.neu Track.ipa simulator.png widget.png schnell-*.png pruefung-*.json
+rm -rf web build Payload Track.ipa.neu Track.ipa simulator.png widget.png widget-tag.png schnell-*.png pruefung-*.json
 
 echo "== Web-App in die Hülle legen, Projekt erzeugen =="
 mkdir -p web
@@ -73,6 +73,10 @@ done
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -widgetbild; sleep 6
 xcrun simctl io "$GERAET" screenshot widget.png
+# Großes Widget „Notizen & Kalender“ (1.4): dunkel mit Notizen und Terminen, hell ohne Termine
+xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+xcrun simctl launch "$GERAET" de.trackapp.track -tagbild; sleep 6
+xcrun simctl io "$GERAET" screenshot widget-tag.png
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen; sleep 6
 xcrun simctl io "$GERAET" screenshot simulator.png
@@ -129,7 +133,10 @@ grep -q '"kats":[1-9]' pruefung-3.json
 grep -q '"zahlen":[1-4][,}]' pruefung-3.json
 # Kalender (1.3): ein Termin angelegt und gefunden, 60 Minuten, Erinnerung 30 Minuten vorher, nach dem Umbenennen einer, nach dem Löschen keiner;
 # und die Web-App hat Zustand und Liste bekommen
-grep -q '"kalender":"an|1|60|30|1|0"' pruefung-3.json
+# Ab 1.4 dazu: die Liste für das große Widget fand den Termin einmal, und es gibt Kalender zur Wahl (k)
+grep -q '"kalender":"an|1|60|30|1|0|1|k"' pruefung-3.json
+# Händler, die die App selbst einsortiert (1.4): Wörter im Stand, Regel wie in der App
+grep -q '"muster":true' pruefung-3.json
 grep -q '"kalenderWeb":"an|liste"' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json

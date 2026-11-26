@@ -15,6 +15,8 @@ struct TrackApp: App {
         WindowGroup {
             if CommandLine.arguments.contains("-widgetbild") {
                 WidgetVorschau()
+            } else if CommandLine.arguments.contains("-tagbild") {
+                TagVorschau()
             } else {
                 ZStack {
                     WebView()
@@ -337,9 +339,11 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             guard let b = eins["b"] as? String, let t = eins["t"] as? String, let w = eins["w"] as? String, let s = eins["s"] as? String else { return nil }
             return ["b": b, "t": t, "w": w, "s": s]
         }
+        // Wörter für Händler, die die Web-App selbst einsortiert (ab 1.4): Bei ihnen fragt „Ausgabe eintragen“ nicht nach
+        let muster: [String] = (inhalt["muster"] as? [Any] ?? []).compactMap { $0 as? String }
         let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? [],
                                      "konten": konten, "konto": inhalt["konto"] as? String ?? "",
-                                     "kats": kats, "haendler": haendler, "zahlen": Array(zahlen.prefix(4))]
+                                     "kats": kats, "haendler": haendler, "zahlen": Array(zahlen.prefix(4)), "muster": muster]
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
             // Ist gerade die Schnelleingabe offen, liest sie die Konten neu: Nach einem Kaltstart aus dem Widget kommt der Stand erst jetzt
@@ -403,6 +407,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             alles["notizenZahl"] = Ablage.lesen()?.nz?.count ?? -1
             // Für die Frage beim Bezahlen und das Widget „Überblick“ (ab 1.2): Kategorien gibt es immer, Zahlen mindestens für Gym und den Lauf der Probe
             alles["kats"] = Ablage.lesen()?.kats?.count ?? -1
+            // Händler, die die App selbst einsortiert (ab 1.4): Die Wörter liegen im Stand, und „REWE Markt GmbH“ passt, „Parallel“ nicht auf „aral“
+            alles["muster"] = (Ablage.lesen()?.muster?.count ?? 0) > 20 && Ablage.passt("rewe markt gmbh", "rewe") && !Ablage.passt("parallel", "aral") && Ablage.passt("stadtapotheke", "*apotheke") && !Ablage.passt("admiral", "dm")
             alles["zahlen"] = Ablage.lesen()?.zahlen?.count ?? -1
             alles["eingangRest"] = Ablage.eingang().count
             // Sicherung von selbst: Spätestens beim Verlassen nach dem ersten Start schickt die Web-App ihre Sicherung (dann ist eine Notiz da).

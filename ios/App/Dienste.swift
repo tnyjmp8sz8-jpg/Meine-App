@@ -111,6 +111,25 @@ final class Gesundheit {
 }
 
 /// Nur für das Bild aus dem Simulator (Start mit „-widgetbild“): zeigt den Inhalt des Widgets in den Größen des iPhones, dunkel und hell
+/// Bild des großen Widgets „Notizen & Kalender“ (ab 1.4) mit Beispielen, dunkel und hell (Start mit „-tagbild“). Die Uhr steht für die Termine auf 10 Uhr.
+struct TagVorschau: View {
+    var body: some View {
+        let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel
+        let jetzt = Calendar.current.startOfDay(for: Date()).addingTimeInterval(10 * 3600), termine = Tagesblick.beispiel(jetzt)
+        ZStack {
+            LinearGradient(colors: [Color(0x27324A), Color(0x0B0D14)], startPoint: .top, endPoint: .bottom).ignoresSafeArea()
+            VStack(spacing: 14) {
+                kachel(TagAnsicht(notizen: stand.nz ?? [], termine: termine, jetzt: jetzt, f: dunkel), dunkel)
+                kachel(TagAnsicht(notizen: Array((stand.nz ?? []).prefix(2)), termine: [], jetzt: jetzt, f: hell), hell)
+            }
+        }
+    }
+
+    private func kachel<Inhalt: View>(_ inhalt: Inhalt, _ f: Farben) -> some View {
+        inhalt.padding(16).frame(width: 338, height: 354).background(f.widget).clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+    }
+}
+
 struct WidgetVorschau: View {
     var body: some View {
         let dunkel = Farben(dunkel: true), hell = Farben(dunkel: false), stand = Stand.beispiel

@@ -32,6 +32,7 @@ struct Stand: Codable {
     var kats: [Konto]?      // alle Kategorien mit Kennung und Name, die meistbenutzten zuerst
     var haendler: [String]? // Händler (klein geschrieben), die schon einsortiert sind: Bei ihnen wird nicht gefragt
     var zahlen: [Zahl]?     // für das Widget „Überblick“ (ab 1.2)
+    var muster: [String]?   // Wörter für Händler, die die Web-App selbst einsortiert (ab 1.4, v131): Bei ihnen fragt „Ausgabe eintragen“ nicht nach der Kategorie
 
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]
@@ -59,6 +60,23 @@ enum Ablage {
     static func schreiben(_ daten: Data) -> Bool {
         guard let ort = datei, (try? JSONDecoder().decode(Stand.self, from: daten)) != nil, (try? Data(contentsOf: ort)) != daten else { return false }
         return (try? daten.write(to: ort, options: .atomic)) != nil
+    }
+
+    /// Passt ein Wort der Web-App (KAT_MUSTER) auf den Namen eines Händlers? Dieselbe Regel wie dort (wortIn): am Anfang eines Worts,
+    /// bis drei Zeichen nur als ganzes Wort, mit * davor überall. Beide klein geschrieben.
+    static func passt(_ name: String, _ wort: String) -> Bool {
+        if wort.hasPrefix("*") { return name.contains(wort.dropFirst()) }
+        guard !wort.isEmpty else { return false }
+        var ab = name.startIndex
+        while ab < name.endIndex, let fund = name.range(of: wort, options: [], range: ab..<name.endIndex) {
+            let davor: Character? = fund.lowerBound == name.startIndex ? nil : name[name.index(before: fund.lowerBound)]
+            let danach: Character? = fund.upperBound == name.endIndex ? nil : name[fund.upperBound]
+            let anfang = davor.map { !($0.isLetter || $0.isNumber) } ?? true
+            let ende = wort.count > 3 || (danach.map { !($0.isLetter || $0.isNumber) } ?? true)
+            if anfang && ende { return true }
+            ab = name.index(after: fund.lowerBound)
+        }
+        return false
     }
 
     static func tag(_ datum: Date) -> String {

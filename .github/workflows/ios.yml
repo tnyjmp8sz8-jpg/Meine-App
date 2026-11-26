@@ -37,7 +37,7 @@ jobs:
         run: |
           # Das Bild kommt auf einen eigenen Zweig (ios-bild), damit es sich ohne Anmeldung ansehen lässt
           mkdir "$RUNNER_TEMP/bild" && cd "$RUNNER_TEMP/bild" && git init -q
-          cp "$GITHUB_WORKSPACE/ios/simulator.png" "$GITHUB_WORKSPACE/ios/widget.png" "$GITHUB_WORKSPACE"/ios/schnell-*.png "$GITHUB_WORKSPACE"/ios/pruefung-*.json . 2>/dev/null || true
+          cp "$GITHUB_WORKSPACE/ios/simulator.png" "$GITHUB_WORKSPACE/ios/widget.png" "$GITHUB_WORKSPACE/ios/widget-tag.png" "$GITHUB_WORKSPACE"/ios/schnell-*.png "$GITHUB_WORKSPACE"/ios/pruefung-*.json . 2>/dev/null || true
           echo "Bau $GITHUB_SHA" > stand.txt
           git add . && git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -qm "Bild aus dem Simulator"
           git push -qf "https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" HEAD:refs/heads/ios-bild
@@ -58,5 +58,6 @@ jobs:
             ios/Track.ipa
             ios/simulator.png
             ios/widget.png
+            ios/widget-tag.png
             ios/schnell-*.png
             ios/pruefung-*.json

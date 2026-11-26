@@ -1,6 +1,6 @@
 // Finanzen: Konten, gerechneter Kontostand, Umbuchung, feste Posten, Vermögen über Monate, Sparziele, Sparquote.
 // Jede Zahl ist von Hand nachgerechnet und steht als Erwartung im Test.
-const { oeffnen, text, bereich, gespeichert, pruefer, lauf, monat, zahl, nachOben } = require('./lib');
+const { APP, oeffnen, text, bereich, gespeichert, pruefer, lauf, monat, zahl, nachOben } = require('./lib');
 
 /* Die Uhr der App steht für die ganze Reihe auf dem 15. des laufenden Monats, 12 Uhr, und läuft von dort weiter. So hängt kein Ergebnis vom Tag ab, an dem die Reihe läuft:
    Am 1. läge „gestern“ im Vormonat, und ab dem 28. zählen feste Posten vom 28. schon mit. Was am 28. gilt, prüft Teil 7 mit eigener Uhr.
@@ -30,6 +30,8 @@ lauf(async () => {
   const feld = name => '#vsheet .vrow:has(.vname[value="' + name + '"]) [data-acc]';
   const chip = (box, name) => page.click(box + ' .chip:has-text("' + name + '")');
   const speichern = async knopf => { await page.click(knopf); await page.waitForTimeout(150); };
+  /* Schnell eintragen wie aus dem Widget oder einem Kurzbefehl (seit v131 gibt es auf Heute keinen Knopf „Ausgabe“ mehr): die Adresse mit ?neu=ausgabe öffnet das Blatt */
+  const schnell = async () => { await page.goto(APP + '?neu=ausgabe'); await page.waitForTimeout(300); };
   const buchen = async (art, betrag, konto, datum) => {
     await sub('budget'); await page.click(art === 'in' ? '#v-haushalt [data-m="income"]' : '#v-haushalt [data-m="add"]'); await page.fill('#m-amt', betrag);
     if (konto) await chip('#m-acc', konto);
@@ -211,20 +213,19 @@ lauf(async () => {
   await page.click('#v-haushalt [data-m="add"]');
   P.ok('im Vormonat: Datum ist dessen letzter Tag (' + vmEnde + ')', (await page.inputValue('#m-date')) === vmEnde, await page.inputValue('#m-date'));
   await page.click('#ms-close');
-  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="ausgabe"]');
-  P.ok('Schnell-Knopf auf Heute: Datum ist heute', (await page.inputValue('#m-date')) === heute, await page.inputValue('#m-date'));
-  await page.click('#ms-close');
-  await bereich(page, 'haushalt'); await page.click('#v-haushalt .mnav button:last-child');
+  await schnell();
+  P.ok('Schnell eintragen (Widget, Kurzbefehl: ?neu=ausgabe): Datum ist heute', (await page.inputValue('#m-date')) === heute, await page.inputValue('#m-date'));
+  await page.click('#ms-close');   // nach dem Neuladen über die Adresse steht der laufende Monat schon wieder da
 
   // --- Ein Knopf für Ausgabe und Einnahme (v56): Das Blatt öffnet als Ausgabe, oben schaltet man auf Einnahme um ---
   const txAlle = async () => Object.values((await gespeichert(page)).MY).flatMap(y => Object.values(y.tx)).filter(Boolean);
-  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="ausgabe"]');
+  await schnell();
   P.ok('Blatt öffnet als Ausgabe, mit Kategorie', (await text(page, '#ms-title')) === 'Ausgabe eintragen' && await page.isVisible('#m-cat-fld') && (await page.getAttribute('#m-kind [data-k="out"]', 'aria-pressed')) === 'true');
   await page.click('#m-kind [data-k="in"]');
   P.ok('umgeschaltet auf Einnahme: Titel wechselt, keine Kategorie', (await text(page, '#ms-title')) === 'Einnahme eintragen' && !(await page.isVisible('#m-cat-fld')) && (await page.getAttribute('#m-kind [data-k="in"]', 'aria-pressed')) === 'true');
   await page.fill('#m-amt', '77,70'); await chip('#m-acc', 'Kein Konto'); await speichern('#m-save');
   P.ok('als Einnahme von 77,70 € gespeichert', (await txAlle()).some(t => t.a === 7770 && t.k === 'in'), JSON.stringify((await txAlle()).filter(t => t.a === 7770)));
-  await page.click('#v-heute [data-h="q"][data-v="ausgabe"]'); await page.click('#m-kind [data-k="in"]'); await page.click('#m-kind [data-k="out"]'); await page.fill('#m-amt', '8,80'); await chip('#m-acc', 'Kein Konto'); await speichern('#m-save');
+  await schnell(); await page.click('#m-kind [data-k="in"]'); await page.click('#m-kind [data-k="out"]'); await page.fill('#m-amt', '8,80'); await chip('#m-acc', 'Kein Konto'); await speichern('#m-save');
   P.ok('hin und zurück geschaltet: Ausgabe von 8,80 € mit Kategorie', (await txAlle()).some(t => t.a === 880 && t.k === 'out' && t.c === 'essen'));
   await bereich(page, 'haushalt'); await sub('budget'); await neuFix();
   P.ok('feste Posten: kein Umschalter', !(await page.isVisible('#m-kind')));

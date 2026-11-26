@@ -35,7 +35,7 @@ lauf(async () => {
   /* 1. Im Browser (ohne iPhone-App) gibt es von alledem nichts */
   {
     const { browser, page, fehler } = await oeffnen({ uhr: JETZT });
-    p.ok('Browser: kein Schnell-Knopf „Termin“', !(await page.$('#v-heute [data-v="termin"]')));
+    p.ok('Browser: kein Plus für Termine', !(await page.$('#v-heute [data-v="termin"]')));
     p.ok('Browser: keine Liste „Termine“', (await heute(page)).length === 0);
     p.ok('Browser: keine Fehler', !fehler.length, fehler.join());
     await browser.close();
@@ -44,12 +44,12 @@ lauf(async () => {
   const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle });
   /* 2. iPhone-App vor 1.3 (kein „kalender“ in der Auskunft): nichts */
   await ruf(page, 'info', { app: '1.2' });
-  p.ok('iPhone-App 1.2: kein Schnell-Knopf „Termin“', !(await page.$('#v-heute [data-v="termin"]')));
+  p.ok('iPhone-App 1.2: kein Plus für Termine', !(await page.$('#v-heute [data-v="termin"]')));
 
   /* 3. iPhone-App 1.3, iOS noch nicht gefragt: Knopf da, der Tipp bittet die iPhone-App zu fragen; mit der Erlaubnis öffnet sich das Blatt */
   await ruf(page, 'info', { app: '1.3', kalender: 'fehlt' });
-  p.ok('1.3: Schnell-Knopf „Termin“ steht da', !!(await page.$('#v-heute [data-v="termin"]')));
-  p.ok('1.3: Reihenfolge der Schnell-Knöpfe', (await text(page, '#v-heute .quick .chip')) === 'Notiz | Gewicht | Ausgabe | Termin', await text(page, '#v-heute .quick .chip'));
+  p.ok('1.3: Plus für Termine steht da', !!(await page.$('#v-heute [data-v="termin"]')));
+  p.ok('1.3: keine Schnell-Knöpfe, „Termine“ als Zeile mit Plus (iOS noch nicht gefragt)', !(await page.$('#v-heute .quick')) && (await text(page, '#v-heute .fo[data-v="termin"]')) === 'Termine', await text(page, '#v-heute .fo[data-v="termin"]'));
   await page.click('#v-heute [data-v="termin"]');
   p.ok('Ohne Erlaubnis: Bitte an die iPhone-App, kein Blatt', (await post(page, 'terminAn')).length === 1 && !(await blatt(page)).offen);
   await an(page, []);
@@ -255,6 +255,64 @@ lauf(async () => {
     const breit = await page.evaluate(() => { const d = document.querySelector('#tesheet'); return [...d.querySelectorAll('*')].filter(e => e.offsetParent && e.getBoundingClientRect().right > d.getBoundingClientRect().right + 0.5).length + (document.querySelector('#scroll').scrollWidth > document.querySelector('#scroll').clientWidth ? 100 : 0); });
     p.ok('320 px: Blatt „Termin“ und Heute stehen nicht hinaus', breit === 0, String(breit));
     p.ok('320 px: keine Fehler', !fehler.length, fehler.join());
+    await browser.close();
+  }
+  /* 15. Kalender wählen (v131): Liste der Kalender aus der iPhone-App (ab 1.4), Vorwahl, Merken, Ändern; ganztägig bis Mitternacht; Uni in der Tagesliste; Widget-Adresse „kalender“ */
+  {
+    const daten = { S: { routines: [], running: null }, LY: {}, W: {}, MF: {}, MY: {}, T: {}, K: {}, N: { folders: {}, tasks: {}, notes: {}, uni: { e: { u1: { d: '2026-11-26', f: 'kons', p: 150, n: 'Füllung' } } } } };
+    const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle, daten });
+    const KALS = [{ id: 'k1', n: 'Privat', f: '#FF3B30', std: 1 }, { id: 'k2', n: 'Familie', f: '#34C759' }];
+    /* Ganztägig vom 28.11. bis 0:00 am 29.11. (so liefern manche Kalender das Ende): steht nur am 28. */
+    const L2 = LISTE.map(x => Object.assign({}, x, { ki: x.k === 'Privat' ? 'k1' : x.k === 'Uni' ? 'k3' : 'k9' })).concat([{ id: 'm', s: um(2, 0), e: um(3, 0), t: 'Markt', g: 1, w: 1, ki: 'k2', k: 'Familie', f: '#34C759' }]);
+    const an2 = (kals, liste) => ruf(page, 'termine', { recht: 'an', liste: liste || L2, kals });
+    await ruf(page, 'info', { app: '1.4', kalender: 'an' }); await an2(KALS);
+    const wahl = () => page.evaluate(() => ({ zu: document.querySelector('#te-kalf').hidden, chips: [...document.querySelectorAll('#te-kal .chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join() }));
+    await page.click('#v-heute [data-v="termin"]');
+    let w = await wahl();
+    p.ok('Neu: Kalender zur Wahl, vorgewählt der für neue Termine (Privat)', !w.zu && w.chips === 'Privat*,Familie', JSON.stringify(w));
+    await page.fill('#te-text', 'Oma besuchen Sa 15 Uhr'); await page.click('#te-kal [data-kal="k2"]');
+    await leeren(page); await page.click('#te-save'); await page.waitForTimeout(80);
+    let m = await post(page, 'termin');
+    p.ok('Neu im Kalender „Familie“: kal k2 im Auftrag, gemerkt als E.kalW', m.length === 1 && m[0].kal === 'k2' && m[0].s === um(2, 15) && (await gespeichert(page)).E.kalW === 'k2', JSON.stringify(m));
+    await page.click('#v-heute .wk .wd[data-d="2026-11-28"]'); await page.waitForTimeout(80);
+    p.ok('Der neue Termin trägt sofort die Farbe von „Familie“', await page.evaluate(() => { const b = [...document.querySelectorAll('#cs-day [data-c="termin"]')].find(x => x.innerText.includes('Oma')); return !!b && getComputedStyle(b.querySelector('.kf')).backgroundColor === 'rgb(52, 199, 89)'; }));
+    await zu(page);
+    await an2(KALS);
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Beim nächsten neuen Termin ist „Familie“ vorgewählt', (await wahl()).chips === 'Privat,Familie*');
+    await zu(page);
+    /* Ändern: Zahnarzt (Privat) zeigt Privat; ohne Wechsel geht kein kal mit, mit Wechsel schon */
+    await page.click('#v-heute [data-h="termin"][data-id="a"]');
+    p.ok('Ändern: Kalender des Termins vorgewählt', (await wahl()).chips === 'Privat*,Familie');
+    await leeren(page); await page.click('#te-save'); await page.waitForTimeout(80);
+    m = await post(page, 'termin');
+    p.ok('Ändern ohne Wechsel: kein kal im Auftrag', m.length === 1 && !('kal' in m[0]), JSON.stringify(m));
+    await an2(KALS);
+    await page.click('#v-heute [data-h="termin"][data-id="a"]'); await page.click('#te-kal [data-kal="k2"]');
+    await leeren(page); await page.click('#te-save'); await page.waitForTimeout(80);
+    m = await post(page, 'termin');
+    p.ok('Ändern mit Wechsel: kal k2, die Vorgabe für neue Termine bleibt', m.length === 1 && m[0].kal === 'k2' && m[0].id === 'a' && (await gespeichert(page)).E.kalW === 'k2', JSON.stringify(m));
+    await an2(KALS);
+    await page.click('#v-heute [data-h="termin"][data-id="d"]');
+    p.ok('Wiederholt sich: keine Wahl des Kalenders', (await wahl()).zu);
+    await zu(page);
+    await an2([KALS[0]]);
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Nur ein Kalender: keine Wahl', (await wahl()).zu);
+    await zu(page);
+    /* Ganztägig bis 0:00 des Folgetags: nur am 28.11. */
+    await page.click('#v-heute .wk .wd[data-d="2026-11-28"]'); await page.waitForTimeout(80);
+    p.enthaelt('Markt am 28.11.', await text(page, '#cs-day'), ['Markt', 'ganztägig']);
+    await page.click('.cd[data-d="2026-11-29"]'); await page.waitForTimeout(50);
+    p.ok('Markt nicht am 29.11.', !(await text(page, '#cs-day')).includes('Markt'), await text(page, '#cs-day'));
+    await page.click('.cd[data-d="2026-11-26"]'); await page.waitForTimeout(50);
+    p.enthaelt('Uni-Termin in der Tagesliste (150 Hundertstel = 1,5 Punkte)', await text(page, '#cs-day'), ['Uni', 'Kons · Füllung', '1,5 Punkte']);
+    await zu(page);
+    /* Tipp auf die Termine im großen Widget: trackpunkt://neu/kalender → TrackHuelle.neu('kalender') öffnet die Übersicht bei heute */
+    await ruf(page, 'neu', 'kalender'); await page.waitForTimeout(80);
+    p.ok('neu(„kalender“) öffnet die Übersicht', await page.evaluate(() => document.querySelector('#csheet').open && document.querySelector('.cd.sel').dataset.d === '2026-11-26'));
+    p.ok('Gemerkt: auch die Kalender', (await page.evaluate(() => JSON.parse(localStorage.getItem('takt.termine')).kals.length)) === 1);
+    p.ok('Keine Fehler (Kalender wählen)', !fehler.length, fehler.join());
     await browser.close();
   }
   await p.ende();

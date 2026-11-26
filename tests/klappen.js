@@ -36,11 +36,11 @@ const flaechen = () => [...document.querySelectorAll('.view:not([hidden]) .sec-a
 });
 /* Läuft in der Seite. Ragt im sichtbaren Bereich etwas seitlich hinaus?
    scroll, seite: so viel ließe sich seitlich wischen (muss 0 sein). raus: Elemente, die über den Bereich hinausstehen, auch wenn eine Liste sie abschneidet (muss 0 sein);
-   die Reihe der Schnell-Knöpfe auf Heute reicht bewusst von Rand zu Rand und zählt nicht. view: Überstand des Bereichs samt unsichtbarer Tippflächen (::after),
+   view: Überstand des Bereichs samt unsichtbarer Tippflächen (::after),
    er darf in den Seitenrand (rand) reichen, aber nicht über den Bildschirm hinaus. */
 const breiten = () => {
   const s = document.querySelector('#scroll'), v = document.querySelector('.view:not([hidden])'), r = v.getBoundingClientRect();
-  const raus = [...v.querySelectorAll('*')].filter(el => { const q = el.getBoundingClientRect(); return q.width > 0 && !el.closest('.quick') && (q.right > r.right + 0.5 || q.left < r.left - 0.5); }).length;
+  const raus = [...v.querySelectorAll('*')].filter(el => { const q = el.getBoundingClientRect(); return q.width > 0 && (q.right > r.right + 0.5 || q.left < r.left - 0.5); }).length;
   return { auf: v.querySelectorAll('[data-fold][aria-expanded="true"]').length, zu: v.querySelectorAll('[data-fold][aria-expanded="false"]').length,
     scroll: s.scrollWidth - s.clientWidth, seite: document.documentElement.scrollWidth - innerWidth, view: v.scrollWidth - v.clientWidth, rand: Math.round(r.left), raus };
 };
@@ -218,7 +218,7 @@ lauf(async () => {
   };
   for (const breite of [390, 320]) {
     const o = await oeffnen({ daten: d, breite }), p = o.page, b = ' (' + breite + ' px)', k = () => p.waitForTimeout(100);
-    await bereich(p, 'heute'); await tippTest(p, 'Heute', 'Alle 7', b);
+    await bereich(p, 'heute'); await tippTest(p, 'Heute', 'Alle 7, Notiz hinzufügen', b);   // seit v131 dazu das Plus der Notizen
     await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await tippTest(p, 'Vermögen', 'Umbuchung, Sparziel anlegen', b);
     await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await tippTest(p, 'Budget', 'Budget', b);
     await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Anpassen', b);

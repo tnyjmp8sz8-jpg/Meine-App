@@ -103,13 +103,10 @@ lauf(async () => {
       return { imKopf: !!s.closest('.card-head'), rechts: r.left >= tr.right, ueberLeiste: r.bottom <= w.getBoundingClientRect().top + 1, inSeite: r.right <= innerWidth - 15, tipp: Math.round(h) }; });
     P.ok('Training: Monat/Jahr klein rechts neben Cardio/Gym, über der Wochenleiste' + b, !!mj && mj.imKopf && mj.rechts && mj.ueberLeiste && mj.inSeite && mj.tipp >= 28, JSON.stringify(mj));
 
-    // Kennfarben: Das Plus der Schnell-Knöpfe auf Heute trägt die Farbe seines Bereichs, dieselbe wie das Symbol in der Übersicht
+    // Seit v131 keine Reihe mit Schnell-Knöpfen mehr (sein Wunsch): Notizen tragen ihr Plus in der Überschrift, neben „Alle n“
     await bereich(page, 'heute');
-    const kf = await page.evaluate(() => { const f = q => getComputedStyle(document.querySelector(q)).color; const plus = v => f('.quick .chip[data-v="' + v + '"] svg');
-      return { notiz: plus('notiz'), gewicht: plus('gewicht'), ausgabe: plus('ausgabe'), icGewicht: f('.ov .ic.gewicht'), icFinanzen: f('.ov .ic.haushalt') }; });
-    P.ok('Plus in der Farbe des Bereichs' + b, kf.gewicht === kf.icGewicht && kf.ausgabe === kf.icFinanzen && kf.notiz !== kf.gewicht && kf.notiz !== kf.ausgabe && kf.gewicht !== kf.ausgabe, JSON.stringify(kf));
-    // Seit v56 nur noch drei Schnell-Knöpfe (Wunsch des Nutzers): Aufgabe und Lauf sind weg, Ausgabe und Einnahme teilen sich einen
-    P.ok('drei Schnell-Knöpfe: Notiz, Gewicht, Ausgabe' + b, (await text(page, '.quick .chip')) === 'Notiz | Gewicht | Ausgabe', await text(page, '.quick .chip'));
+    const hq = await page.evaluate(() => ({ reihe: !!document.querySelector('#v-heute .quick, #v-heute .chip[data-h="q"]'), plus: [...document.querySelectorAll('#v-heute .sec [data-h="q"]')].map(b => b.dataset.v).join(), ganz: [...document.querySelectorAll('#v-heute [data-h="q"]')].map(b => b.dataset.v).join() }));
+    P.ok('Heute: keine Schnell-Knöpfe, Plus an „Notizen“' + b, !hq.reihe && hq.ganz === 'notiz' && (hq.plus === 'notiz' || hq.plus === ''), JSON.stringify(hq));
     await bereich(page, 'training');
 
     // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar. Sie gehört zur Kachel „Verbesserung“, die es nur in einem Monat mit Einheiten gibt:

@@ -18,14 +18,14 @@ lauf(async () => {
   const stand = () => p.evaluate(() => { const l = document.querySelector('.tabs-in'), vis = e => !!e && getComputedStyle(e).display !== 'none' && !e.hidden; return {
     tabs: [...document.querySelectorAll('.tab')].filter(vis).map(b => b.textContent.trim()).join(' '), n: l.style.getPropertyValue('--n'), i: l.style.getPropertyValue('--i'),
     titel: document.querySelector('.mark').textContent, gear: vis(document.querySelector('#gear')), plus: vis(document.querySelector('#add')), leiste: vis(document.querySelector('.tabs')), v: document.body.dataset.v }; });
-  const heuteStand = () => p.evaluate(() => ({ quick: [...document.querySelectorAll('#v-heute .quick .chip')].map(b => b.textContent.trim()).join(' '), ovs: [...document.querySelectorAll('#v-heute .ovs .ov .k')].map(b => b.textContent).join(' '),
+  const heuteStand = () => p.evaluate(() => ({ quick: [...document.querySelectorAll('#v-heute [data-h="q"]')].map(b => b.dataset.v).join(' '), ovs: [...document.querySelectorAll('#v-heute .ovs .ov .k')].map(b => b.textContent).join(' '),
     notiz: document.querySelector('#v-heute').textContent.includes('Milch kaufen'), punkte: [...document.querySelectorAll('#v-heute .wd.now i u')].map(u => u.className).join('') }));
   const schalter = k => p.click('#esheet [data-h="ber"][data-v="' + k + '"]');
   const zu = async () => { await p.click('#es-close'); await p.waitForTimeout(60); };
 
   let s = await stand(), h = await heuteStand();
   P.ok('am Anfang: fünf Bereiche in der Leiste, Zahnrad auf Heute, kein Plus', s.tabs === 'Heute Planer Gewicht Finanzen Training' && s.n === '5' && s.i === '0' && s.gear && !s.plus && s.leiste, JSON.stringify(s));
-  P.ok('Heute am Anfang: drei Schnell-Knöpfe, Notiz, fünf Zeilen, Punkte für Wiegen und Training', h.quick === 'Notiz Gewicht Ausgabe' && h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === 'wg', JSON.stringify(h));
+  P.ok('Heute am Anfang: Plus an den Notizen (seit v131 keine Schnell-Knöpfe), Notiz, fünf Zeilen, Punkte für Wiegen und Training', h.quick === 'notiz' && h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === 'wg', JSON.stringify(h));
 
   await einstellungen(p);
   const es = () => p.evaluate(() => ({ ber: [...document.querySelectorAll('#es-ber .sch')].map(b => b.textContent.trim() + ':' + (b.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + (b.disabled ? '!' : '')).join(' '),
@@ -51,7 +51,7 @@ lauf(async () => {
   /* Linse: Heute ist der erste von zwei Knöpfen → Platz 0 */
   P.ok('drei weitere aus: Leiste zeigt Heute und Gym (--n 2), Start bietet nur diese, „Auf Heute zeigen“ nur Gym', s.tabs === 'Heute Gym' && s.n === '2' && s.i === '0' && e.start === 'Heute* Gym' && e.ov === 'Gym' && e.ber === 'Heute:an Planer:aus Gewicht:aus Finanzen:aus Gym:an Cardio:aus', JSON.stringify([s, e]));
   await zu(); h = await heuteStand();
-  P.ok('Heute: keine Schnell-Knöpfe, keine Notiz, nur die Zeile Gym, nur der grüne Punkt', h.quick === '' && !h.notiz && h.ovs === 'Gym' && h.punkte === 'g', JSON.stringify(h));
+  P.ok('Heute: kein Plus, keine Notiz, nur die Zeile Gym, nur der grüne Punkt', h.quick === '' && !h.notiz && h.ovs === 'Gym' && h.punkte === 'g', JSON.stringify(h));
   await p.click('#v-heute [data-h="mode"][data-v="week"]');
   const woche = await text(p, '#v-heute .kv > span:first-child');
   P.ok('Woche auf Heute: nur die Zeile Gym', woche === 'Gym', woche);

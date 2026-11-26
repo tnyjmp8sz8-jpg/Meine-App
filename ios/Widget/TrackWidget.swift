@@ -74,10 +74,60 @@ struct UeberblickWidget: Widget {
     }
 }
 
+struct TagEintrag: TimelineEntry {
+    let date: Date
+    let stand: Stand?
+    let termine: [WidgetTermin]?
+}
+
+/// Großes Widget „Notizen & Kalender“ (ab 1.4). Die Termine liest es selbst aus dem Kalender (Tagesblick), sonst aus der Ablage der App.
+/// Neu gezeichnet wird, sobald ein Termin von heute beginnt oder endet (dann rückt die Liste weiter), spätestens nach einer Stunde (Änderungen im Kalender
+/// von außen) und um Mitternacht; dazu, sobald die App einen neuen Stand oder neue Termine ablegt und wenn im Widget eine Notiz abgehakt wird.
+struct TagQuelle: TimelineProvider {
+    func placeholder(in context: Context) -> TagEintrag { TagEintrag(date: Date(), stand: .beispiel, termine: Tagesblick.beispiel(Date())) }
+
+    func getSnapshot(in context: Context, completion: @escaping (TagEintrag) -> Void) {
+        completion(context.isPreview ? placeholder(in: context) : TagEintrag(date: Date(), stand: Ablage.lesen(), termine: Tagesblick.lesen()))
+    }
+
+    func getTimeline(in context: Context, completion: @escaping (Timeline<TagEintrag>) -> Void) {
+        let jetzt = Date(), stand = Ablage.lesen(), termine = Tagesblick.lesen(jetzt)
+        let morgen = Calendar.current.startOfDay(for: jetzt.addingTimeInterval(86400))
+        let neu = min(morgen, jetzt.addingTimeInterval(3600))
+        var zeiten = Set<Double>()
+        for t in termine ?? [] where !t.g {
+            for z in [t.s, t.e] where z > jetzt.timeIntervalSince1970 && z < neu.timeIntervalSince1970 { zeiten.insert(z) }
+        }
+        let spaeter = zeiten.sorted().map { TagEintrag(date: Date(timeIntervalSince1970: $0), stand: stand, termine: termine) }
+        completion(Timeline(entries: [TagEintrag(date: jetzt, stand: stand, termine: termine)] + spaeter, policy: .after(neu)))
+    }
+}
+
+struct TagWidgetAnsicht: View {
+    @Environment(\.colorScheme) private var schema
+    let eintrag: TagEintrag
+
+    var body: some View {
+        let f = Farben(dunkel: schema == .dark)
+        TagAnsicht(notizen: eintrag.stand?.nz ?? [], termine: eintrag.termine, jetzt: eintrag.date, f: f)
+            .containerBackground(for: .widget) { f.widget }
+    }
+}
+
+struct TagWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "tag", provider: TagQuelle()) { TagWidgetAnsicht(eintrag: $0) }
+            .configurationDisplayName("Notizen & Kalender")
+            .description("Oben deine neuesten Notizen, darunter deine Termine von heute bis übermorgen.")
+            .supportedFamilies([.systemLarge])
+    }
+}
+
 @main
 struct TrackWidgets: WidgetBundle {
     var body: some Widget {
         NotizenWidget()
         UeberblickWidget()
+        TagWidget()
     }
 }
