@@ -103,10 +103,10 @@ lauf(async () => {
       return { imKopf: !!s.closest('.card-head'), rechts: r.left >= tr.right, ueberLeiste: r.bottom <= w.getBoundingClientRect().top + 1, inSeite: r.right <= innerWidth - 15, tipp: Math.round(h) }; });
     P.ok('Training: Monat/Jahr klein rechts neben Cardio/Gym, über der Wochenleiste' + b, !!mj && mj.imKopf && mj.rechts && mj.ueberLeiste && mj.inSeite && mj.tipp >= 28, JSON.stringify(mj));
 
-    // Seit v131 keine Reihe mit Schnell-Knöpfen mehr (sein Wunsch): Notizen tragen ihr Plus in der Überschrift, neben „Alle n“
+    // Seit v131 keine Reihe mit Schnell-Knöpfen mehr, seit v132 keine Notizen auf Heute (sein Wunsch): im Browser ohne Kalender also kein Plus auf Heute
     await bereich(page, 'heute');
     const hq = await page.evaluate(() => ({ reihe: !!document.querySelector('#v-heute .quick, #v-heute .chip[data-h="q"]'), plus: [...document.querySelectorAll('#v-heute .sec [data-h="q"]')].map(b => b.dataset.v).join(), ganz: [...document.querySelectorAll('#v-heute [data-h="q"]')].map(b => b.dataset.v).join() }));
-    P.ok('Heute: keine Schnell-Knöpfe, Plus an „Notizen“' + b, !hq.reihe && hq.ganz === 'notiz' && (hq.plus === 'notiz' || hq.plus === ''), JSON.stringify(hq));
+    P.ok('Heute: keine Schnell-Knöpfe und keine Notizen (seit v131/v132)' + b, !hq.reihe && hq.ganz === '', JSON.stringify(hq));
     await bereich(page, 'training');
 
     // Erklärung im Gym: erst nach Tipp auf das „i“ sichtbar. Sie gehört zur Kachel „Verbesserung“, die es nur in einem Monat mit Einheiten gibt:

@@ -63,7 +63,7 @@ lauf(async () => {
       return a && a.id + (a.closest('dialog[open]') ? '' : ' (nicht im Blatt)');
     }, knopf);
   };
-  P.ok('Plus an „Notizen“ auf Heute: Textfeld hat sofort den Fokus', (await sofort('#v-heute [data-h="q"][data-v="notiz"]', 'heute')) === 'n-text');
+  P.ok('Plus im Planer (Notizen): Textfeld hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'n-text');
   P.ok('Gewicht eintragen: Feld hat sofort den Fokus', (await sofort('#v-gewicht [data-w="add"]', 'gewicht')) === 'w-val');
   await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'haushalt'); await kurz();
   await page.evaluate(() => { const b = [...document.querySelectorAll('#v-haushalt [data-m="sub"]')].find(x => x.dataset.v === 'budget'); if (b) b.click(); });

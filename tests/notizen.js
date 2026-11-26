@@ -15,30 +15,31 @@ lauf(async () => {
 
   // --- Notizen: schnelle Aufnahme. Nur ein Textfeld, jede Notiz mit Kreis, Abhaken löscht sie ---
   const roh = () => page.evaluate(() => localStorage.getItem('takt.v1'));
+  const z = q => page.evaluate(s => document.querySelectorAll(s).length, q);
   const hinweis = () => page.evaluate(() => { const t = document.querySelector('#toast'); return t.hidden || !t.getClientRects().length ? '' : t.innerText.replace(/\s+/g, ' ').trim(); });
   const sichtbar = async (...ids) => { for (const id of ids) if (!(await page.isVisible(id))) return false; return true; };
   await bereich(page, 'routinen'); await sub('note');
   P.enthaelt('leerer Zustand', await liste(), ['Noch keine Notiz']);
-  await bereich(page, 'heute'); await page.click('#v-heute [data-h="q"][data-v="notiz"]');
-  P.ok('„+ Notiz“ auf Heute: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.$('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
+  await page.click('#add');
+  P.ok('Plus im Planer: nur das Textfeld, der Cursor steht sofort darin', (await page.evaluate(() => document.activeElement.id)) === 'n-text' && !(await page.$('#n-folder-fld')) && !(await page.isVisible('#n-del')) && !(await page.isVisible('#n-task')));
   await page.keyboard.type('Bib-Ausweis verlängern'); await page.keyboard.press('Enter'); await kurz();
   P.ok('Enter legt die Notiz an; das Blatt bleibt offen, leer und bereit für die nächste', (await page.evaluate(() => document.querySelector('#nsheet').open && document.activeElement.id === 'n-text' && document.querySelector('#n-text').value === '')) && (await notizen()).length === 1 && (await notizen())[0].x === 'Bib-Ausweis verlängern', JSON.stringify(await notizen()));
-  P.ok('die Notiz steht schon dahinter auf Heute', (await text(page, '#v-heute')).includes('Bib-Ausweis verlängern'));
+  P.ok('die Notiz steht schon dahinter im Planer', (await text(page, '#n-main')).includes('Bib-Ausweis verlängern'));
   await page.keyboard.type('Zweite gleich hinterher'); await page.keyboard.press('Enter'); await kurz();
   P.ok('die nächste Notiz ist eine eigene', (await notizen()).length === 2 && (await notizen()).some(n => n.x === 'Zweite gleich hinterher'));
   await page.keyboard.press('Enter'); await kurz();
   P.ok('Enter im leeren Feld schließt das Blatt', !(await page.evaluate(() => document.querySelector('#nsheet').open)) && (await notizen()).length === 2);
-  await page.click('#v-heute .nrow:has-text("Zweite gleich hinterher") .tk'); await kurz();
-  P.ok('sie steht auf Heute, mit Kreis zum Abhaken', (await text(page, '#v-heute')).includes('Notizen1') && !!(await page.$('#v-heute .nrow:has-text("Bib-Ausweis verlängern") .tk')));
-  await page.click('#v-heute [data-h="q"][data-v="notiz"]'); await page.click('#n-done'); await kurz();
+  await page.click('#n-main .nrow:has-text("Zweite gleich hinterher") .tk'); await kurz();
+  P.ok('sie steht im Planer, mit Kreis zum Abhaken; auf Heute stehen keine Notizen (seit v132)', (await z('#n-main .nrow')) === 1 && !!(await page.$('#n-main .nrow:has-text("Bib-Ausweis verlängern") .tk')) && !(await page.$('#v-heute .nrow')));
+  await page.click('#add'); await page.click('#n-done'); await kurz();
   P.ok('leere Notiz wird nicht angelegt', (await notizen()).length === 1);
-  await page.click('#v-heute [data-h="q"][data-v="notiz"]'); await page.keyboard.type('Paket abholen'); await page.evaluate(() => document.querySelector('#nsheet').close()); await kurz();
+  await page.click('#add'); await page.keyboard.type('Paket abholen'); await page.evaluate(() => document.querySelector('#nsheet').close()); await kurz();
   P.ok('auch beim bloßen Schließen ist die Notiz gespeichert', (await notizen()).some(n => n.x === 'Paket abholen'));
 
   // Abhaken löscht, „Rückgängig“ holt zurück
   const vorN = await roh();
-  await page.click('#v-heute .nrow:has-text("Paket abholen") .tk'); await kurz();
-  P.ok('Abhaken löscht die Notiz', (await notizen()).length === 1 && !(await text(page, '#v-heute')).includes('Paket abholen'));
+  await page.click('#n-main .nrow:has-text("Paket abholen") .tk'); await kurz();
+  P.ok('Abhaken löscht die Notiz', (await notizen()).length === 1 && !(await text(page, '#n-main')).includes('Paket abholen'));
   P.ok('Hinweis „Gelöscht · Rückgängig“ erscheint', (await hinweis()) === 'Gelöscht Rückgängig', await hinweis());
   await page.click('#toast button'); await kurz();
   P.ok('Rückgängig holt sie zurück', (await roh()) === vorN);
@@ -94,7 +95,7 @@ lauf(async () => {
   // --- Heute: Notizen stehen ganz oben; Routinen und Aufgaben stehen dort nicht mehr, auch wenn welche gespeichert sind (die Beispieldaten haben drei Routinen) ---
   await bereich(b.page, 'heute');
   const lagen = await b.page.evaluate(() => { const o = {}; document.querySelectorAll('#v-heute .sec').forEach(h => { o[h.firstChild.textContent.trim()] = Math.round(h.getBoundingClientRect().top); }); return o; });
-  P.ok('auf Heute gibt es den Abschnitt „Notizen“, aber weder „Routinen“ noch „Aufgaben“', 'Notizen' in lagen && !('Routinen' in lagen) && !('Aufgaben' in lagen) && !(await b.page.$('#v-heute .rows .row')) && !(await b.page.$('#v-heute [data-n="tog"]')), JSON.stringify(lagen));
+  P.ok('auf Heute gibt es seit v132 keinen Abschnitt „Notizen“ und weder „Routinen“ noch „Aufgaben“', !('Notizen' in lagen) && !('Routinen' in lagen) && !('Aufgaben' in lagen) && !(await b.page.$('#v-heute .rows .row')) && !(await b.page.$('#v-heute [data-n="tog"]')), JSON.stringify(lagen));
   await bereich(b.page, 'routinen');
 
   const q = b.page, warte = () => q.waitForTimeout(200);

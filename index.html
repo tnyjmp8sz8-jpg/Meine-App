@@ -412,7 +412,7 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .ov .v.neg{color:var(--danger)}
 .ov .s{grid-area:2/2/3/4;font-size:12px;color:var(--muted)}
 .ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
-.sec-as{display:flex;align-items:center;gap:20px}   /* zwei Aktionen in einer Überschrift auf Heute: „Alle n ›“ oder „Kalender ›“, dahinter das Plus */
+.sec-as{display:flex;align-items:center;gap:20px}   /* zwei Aktionen in der Überschrift „Termine“ auf Heute: „Alle n ›“ oder „Kalender ›“, dahinter das Plus */
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
@@ -1361,7 +1361,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v131</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v132</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4170,8 +4170,6 @@ const FACH = [['kons', 'Kons'], ['paro', 'Paro'], ['proth', 'Prothetik']];
 const noteList = () => Object.keys(N.notes).filter(id => N.notes[id]).map(id => Object.assign({ id }, N.notes[id]));
 let rSub = 'note', nQuery = '', arbMode = 'zeit', arbJahr = 0;   // gewählter Teil des Planers, Suchtext der Notizen, Ansicht (zeit, jahr) und Jahr im Teil Arbeit
 const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['note', 'Notizen'], ['work', 'Arbeit'], ['uni', 'Uni']].map(s => '<button type="button" data-r="sub" data-v="' + s[0] + '" aria-pressed="' + (rSub === s[0]) + '">' + s[1] + '</button>').join('') + '</div></div>';
-/* „Alle n“ rechts im Abschnittstitel auf Heute: führt in die ganze Liste im Planer */
-const allAct = (what, n) => '<button type="button" class="sec-a go" data-n="' + what + '">Alle ' + n + CHEV(1) + '</button>';
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 const notesNew = () => noteList().sort((a, b) => b.m - a.m);
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
@@ -4181,8 +4179,8 @@ function raus(li, dann) {
   li.style.height = li.offsetHeight + 'px'; li.classList.add('weg'); void li.offsetHeight; li.style.height = '0px';
   setTimeout(dann, 380);
 }
-function noteRow(x, slim) {
-  const sub = slim ? '' : dRow(keyOf(new Date(x.m || x.c || Date.now())));
+function noteRow(x) {
+  const sub = dRow(keyOf(new Date(x.m || x.c || Date.now())));
   return '<li class="trow nrow"><button type="button" class="tk" data-n="notedone" data-undo data-id="' + esc(x.id) + '" aria-label="Notiz abhaken und löschen"><i></i></button>' +
     '<button type="button" class="two" data-n="note" data-id="' + esc(x.id) + '" aria-label="Notiz ändern"><span class="l"><span class="ntxt">' + esc(x.x) + '</span>' + (sub ? '<small>' + sub + '</small>' : '') + '</span></button></li>';
 }
@@ -4272,12 +4270,6 @@ function notesHTML() {
     '<div id="n-list">' + noteListHTML() + '</div>';
 }
 /* Notizen auf der Seite Heute: die neuesten fünf, abhaken geht direkt dort */
-/* Ohne Notizen steht nur eine Zeile mit Plus da (v131): Die Reihe der Schnell-Knöpfe gibt es nicht mehr, eintragen geht hier oder im Widget. */
-function homeNotesHTML() {
-  if (!istAn('routinen')) return '';
-  const list = notesNew(); if (!list.length) return addFoldHTML('data-h="q" data-v="notiz"', 'Notizen');
-  return secHTML('Notizen', list.length > 5 ? '' : String(list.length), '<span class="sec-as">' + (list.length > 5 ? allAct('allnotes', list.length) : '') + secAct('data-h="q" data-v="notiz"', '', 'Notiz hinzufügen') + '</span>') + '<ul class="entries">' + list.slice(0, 5).map(x => noteRow(x, true)).join('') + '</ul>';
-}
 /* Tipp in einer Liste im Planer oder bei den Notizen auf Heute. Liefert true, wenn er hierher gehörte. */
 function nAct(e) {
   const b = e.target.closest('[data-n]'); if (!b) return false;
@@ -4292,7 +4284,6 @@ function nAct(e) {
   else if (a === 'newuni') openU(null);
   else if (a === 'uni') openU(id);
   else if (a === 'notedone') { if (N.notes[id]) { const p = { notes: {} }; p.notes[id] = null; ndoc.patch(p); raus(b.closest('.nrow'), render); } }
-  else if (a === 'allnotes') { rSub = 'note'; show('routinen', true); renderPlaner(); }
   return true;
 }
 $('#n-main').addEventListener('click', e => { const nav = e.target.closest('.mnav [data-m]'); if (nav) { arbJahr += nav.dataset.m === 'prev' ? -1 : 1; renderPlaner(); } else nAct(e); });   // die Pfeile gibt es im Planer nur im Jahr der Arbeit
@@ -4843,7 +4834,7 @@ const AREA = {
 /* teil: Zeile für einen Teil des Planers (work, uni); der Tipp öffnet den Planer gleich dort */
 const ovCard = (to, label, v, s, cls, teil) => '<button type="button" class="ov" data-h="go" data-v="' + to + '"' + (teil ? ' data-teil="' + teil + '"' : '') + '><span class="ic ' + (teil || to) + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + AREA[teil || to] + '</svg></span><span class="k">' + label + '</span><span class="v' + (cls ? ' ' + cls : '') + '">' + v + '</span><span class="s">' + s + '</span>' + CHEV(1).replace('<svg ', '<svg class="chev" ') + '</button>';
 
-const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); else if (v === 'termin') openTe(null, 0, todayKey()); else if (v === 'kalender') openCal('all', todayKey()); };   // „kalender“: Tipp auf die Termine im großen Widget
+const quickOpen = v => { if (v === 'notiz') openN(null); else if (v === 'gewicht') openW('entry'); else if (v === 'ausgabe') openM('tx', null, null, todayKey()); else if (v === 'termin') openTe(null, 0, todayKey()); else if (v === 'kalender') openCal('all', todayKey()); else if (v === 'notizen') { rSub = 'note'; show('routinen', true); renderPlaner(); } };   // „notizen“: Tipp auf eine Notiz im Widget (ab 1.5)   // „kalender“: Tipp auf die Termine im großen Widget
 /* bkMsg: Satz in der Zeile „Sicherung“ nach einem Tipp (gespeichert, eingelesen, abgebrochen). bkHand: Es ist der Satz „Sicherung gespeichert: …“ (siehe gesichert). */
 let bkMsg = '', bkHand = false;
 function lastBackupText() {
@@ -4930,7 +4921,8 @@ function renderHome() {
   /* Keine Reihe mit Schnell-Knöpfen mehr (v131, sein Wort 26.11.: „die Leiste kann weg, mach einfach bei Heute hinter Termin und Notiz kleines Plus … rest brauche ich nicht,
      nur im Widget dann Notiz, Ausgabe und Termin schnell hinzufügen“): Notiz und Termin tragen ihr Plus in der Überschrift, Gewicht und Ausgabe gehen über das Widget, die Kurzbefehle und ihren Bereich. */
   const bkDue = backupDue();
-  h += homeNotesHTML();   // schnell Notiertes zuerst: Der Nutzer will es beim Öffnen sofort sehen
+  /* Keine Notizen auf Heute (v132, sein Wort 26.11.: „Notizen kann weg von Heute, Widget + in Planer-Sektion reicht, wenn ich auf Notizen im Widget tippe, komme ich ja eh dahin“):
+     Sie stehen im Planer und im Widget; ein Tipp auf eine Notiz im Widget öffnet den Planer bei den Notizen (iPhone-App ab 1.5, quickOpen('notizen')). */
   h += homeTermineHTML();
   if (bkDue) h += '<button type="button" class="remind" id="bk-due" data-h="' + (sOhne() ? 'ordner' : 'export') + '"><span>' + bkDue + '</span><b>' + (sOhne() ? 'Ordner wählen' : 'Jetzt sichern') + '</b></button>';
   const rcYM = recapDue();

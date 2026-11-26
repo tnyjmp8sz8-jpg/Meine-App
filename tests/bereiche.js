@@ -25,7 +25,7 @@ lauf(async () => {
 
   let s = await stand(), h = await heuteStand();
   P.ok('am Anfang: fünf Bereiche in der Leiste, Zahnrad auf Heute, kein Plus', s.tabs === 'Heute Planer Gewicht Finanzen Training' && s.n === '5' && s.i === '0' && s.gear && !s.plus && s.leiste, JSON.stringify(s));
-  P.ok('Heute am Anfang: Plus an den Notizen (seit v131 keine Schnell-Knöpfe), Notiz, fünf Zeilen, Punkte für Wiegen und Training', h.quick === 'notiz' && h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === 'wg', JSON.stringify(h));
+  P.ok('Heute am Anfang: keine Schnell-Knöpfe und keine Notizen (seit v131/v132), fünf Zeilen, Punkte für Wiegen und Training', h.quick === '' && !h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === 'wg', JSON.stringify(h));
 
   await einstellungen(p);
   const es = () => p.evaluate(() => ({ ber: [...document.querySelectorAll('#es-ber .sch')].map(b => b.textContent.trim() + ':' + (b.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + (b.disabled ? '!' : '')).join(' '),

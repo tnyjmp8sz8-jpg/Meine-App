@@ -311,6 +311,10 @@ lauf(async () => {
     /* Tipp auf die Termine im großen Widget: trackpunkt://neu/kalender → TrackHuelle.neu('kalender') öffnet die Übersicht bei heute */
     await ruf(page, 'neu', 'kalender'); await page.waitForTimeout(80);
     p.ok('neu(„kalender“) öffnet die Übersicht', await page.evaluate(() => document.querySelector('#csheet').open && document.querySelector('.cd.sel').dataset.d === '2026-11-26'));
+    /* Tipp auf eine Notiz im Widget (ab 1.5): trackpunkt://neu/notizen öffnet den Planer bei den Notizen, auch wenn dort gerade Arbeit offen war */
+    await zu(page); await page.click('.tab[data-view="routinen"]'); await page.click('#r-subs [data-v="work"]'); await page.click('.tab[data-view="heute"]');
+    await ruf(page, 'neu', 'notizen'); await page.waitForTimeout(80);
+    p.ok('neu(„notizen“) öffnet den Planer bei den Notizen', await page.evaluate(() => !document.querySelector('#v-routinen').hidden && document.querySelector('#r-subs [aria-pressed="true"]').dataset.v === 'note'));
     p.ok('Gemerkt: auch die Kalender', (await page.evaluate(() => JSON.parse(localStorage.getItem('takt.termine')).kals.length)) === 1);
     p.ok('Keine Fehler (Kalender wählen)', !fehler.length, fehler.join());
     await browser.close();

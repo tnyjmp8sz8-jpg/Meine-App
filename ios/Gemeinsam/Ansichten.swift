@@ -190,7 +190,10 @@ struct TagAnsicht: View {
                                 Image(systemName: "circle").font(.system(size: 17, weight: .light)).foregroundColor(f.blass).frame(width: 24, height: 27)
                             }
                             .buttonStyle(.plain)
-                            Text(notiz.x).font(.system(size: 13)).foregroundColor(f.schrift).lineLimit(1)
+                            // Ab 1.5: Tipp auf den Text öffnet den Planer bei den Notizen
+                            Link(destination: URL(string: "trackpunkt://neu/notizen")!) {
+                                Text(notiz.x).font(.system(size: 13)).foregroundColor(f.schrift).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                            }
                         }
                         .frame(height: 27, alignment: .leading)
                     }

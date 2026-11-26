@@ -32,6 +32,8 @@ struct NotizenWidgetAnsicht: View {
             if let stand = eintrag.stand {
                 // Zeilen je Größe: klein und mittel 3, groß 9
                 NotizenAnsicht(notizen: stand.nz ?? [], zeilen: groesse == .systemLarge ? 9 : 3, knoepfe: groesse != .systemSmall, f: f)
+                    // Ab 1.5: Ein Tipp neben Kreis und Knöpfe öffnet den Planer bei den Notizen (auf Heute stehen seit v132 keine mehr)
+                    .widgetURL(URL(string: "trackpunkt://neu/notizen"))
             } else {
                 Leer(f: f)
             }

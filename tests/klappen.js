@@ -218,7 +218,6 @@ lauf(async () => {
   };
   for (const breite of [390, 320]) {
     const o = await oeffnen({ daten: d, breite }), p = o.page, b = ' (' + breite + ' px)', k = () => p.waitForTimeout(100);
-    await bereich(p, 'heute'); await tippTest(p, 'Heute', 'Alle 7, Notiz hinzufügen', b);   // seit v131 dazu das Plus der Notizen
     await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await tippTest(p, 'Vermögen', 'Umbuchung, Sparziel anlegen', b);
     await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await tippTest(p, 'Budget', 'Budget', b);
     await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Anpassen', b);
@@ -248,11 +247,10 @@ lauf(async () => {
   // --- Teil 5: Heute ist die Kurzfassung ---
   ({ browser, page, fehler } = await oeffnen({ daten: d }));
   await bereich(page, 'heute');
-  /* Sieben Notizen: Heute zeigt die neuesten fünf, je in einer Zeile (ohne das Datum darunter) */
-  P.ok('Heute: fünf von sieben Notizen, ohne zweite Zeile', (await z('#v-heute .nrow')) === 5 && (await z('#v-heute .nrow .l small')) === 0 && (await text(page, '#v-heute .nrow:first-child')) === 'Gliederung: Einleitung, Stand der Forschung, Methode', await text(page, '#v-heute .nrow'));
-  P.ok('Heute: „Alle 7“ steht bei den Notizen; Aufgaben aus dem Speicher stehen nicht da', (await text(page, '#v-heute h2:has([data-n="allnotes"])')) === 'Notizen Alle 7' && (await z('#v-heute .trow:not(.nrow)')) === 0 && !(await text(page, '#v-heute')).includes('Aufgaben'), await text(page, '#v-heute h2'));
-  await page.click('#v-heute .sec-a[data-n="allnotes"]'); await kurz();
-  P.ok('„Alle 7“ führt in den Planer zu den Notizen: alle sieben, dort mit zweiter Zeile', (await page.isVisible('#v-routinen')) && (await text(page, '#r-subs [aria-pressed="true"]')) === 'Notizen' && (await z('#n-main .nrow')) === 7 && (await z('#n-main .nrow .l small')) === 7, await text(page, '#r-subs [aria-pressed="true"]'));
+  /* Seit v132 stehen auf Heute keine Notizen mehr (sein Wunsch): Die sieben stehen im Planer, je mit dem Tag darunter */
+  P.ok('Heute: keine Notizen, keine Aufgaben aus dem Speicher', (await z('#v-heute .nrow')) === 0 && (await z('#v-heute .trow')) === 0);
+  await bereich(page, 'routinen'); await kurz();
+  P.ok('Planer: alle sieben Notizen, mit zweiter Zeile', (await z('#n-main .nrow')) === 7 && (await z('#n-main .nrow .l small')) === 7, (await z('#n-main .nrow')) + ' / ' + (await z('#n-main .nrow .l small')));
 
   // --- Teil 6: Sicherung (seit v106 hinter dem Zahnrad auf Heute, sein Wunsch: „diesen Button Sicherung ausblenden, nur einblenden, wenn lange keine Sicherung“) ---
   /* Ohne gespeicherte Sicherung und mit Einträgen, die älter als 7 Tage sind, ist die Sicherung fällig: Dann steht die Erinnerung oben auf Heute. Sonst steht auf Heute nichts zur Sicherung.
