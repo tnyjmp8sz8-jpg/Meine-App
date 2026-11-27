@@ -747,6 +747,10 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .lx-tab{flex:none;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border:1px solid var(--line);background:var(--surface);border-radius:12px;padding:6px 12px;font-size:12.5px;font-weight:600;color:var(--muted);min-height:32px}
 .lx-tab[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent-line);color:var(--ink)}
 .lx-tab.fin:not([aria-pressed="true"]){color:var(--good)}
+.lx-tab.sk{text-decoration:line-through;text-decoration-color:var(--muted)}
+.lx-skz{margin:0;color:var(--muted);font-size:13px}
+.lx-skz button{position:relative;border:0;background:none;padding:0;color:var(--at);font:inherit;font-weight:600}
+.lx-skz button::after{content:"";position:absolute;inset:-12px -8px}
 .lx-tab svg{width:11px;height:11px;margin-right:5px;vertical-align:-1px}
 .lx-tab.addx{width:36px;padding:0;font-size:17px;line-height:1;color:var(--at)}
 #l-add{display:flex;flex-direction:column;gap:8px}
@@ -2933,7 +2937,7 @@ function normK(o) {
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? Object.assign(lv.re ? { re: 1 } : {}, {
     plan: lv.plan ? String(lv.plan) : null, start: lv.start, last: Number.isFinite(lv.last) ? lv.last : null, date: lv.date,
-    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => Object.assign(it.dr ? { dr: 1 } : {}, it.su ? { su: 1 } : {}, { id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
+    items: lv.items.filter(it => it && it.id && Array.isArray(it.sets)).slice(0, 30).map(it => Object.assign(it.dr ? { dr: 1 } : {}, it.su ? { su: 1 } : {}, it.sk ? { sk: 1 } : {}, { id: String(it.id), sets: it.sets.slice(0, 20).map(s => Object.assign({ w: String(s && s.w != null ? s.w : '').slice(0, 8), r: String(s && s.r != null ? s.r : '').slice(0, 5), done: !!(s && s.done) }, s && s.er != null ? { ew: String(s.ew != null ? s.ew : '').slice(0, 8), er: String(s.er).slice(0, 5), eg: String(s.eg || '').slice(0, 60) } : {}, s && Number.isInteger(s.x) && s.x >= 0 && s.x <= 4 ? { x: s.x } : {})) }))
   }) : null;
   return out;
 }
@@ -3161,7 +3165,7 @@ const planName = id => id && K.plans && K.plans[id] ? K.plans[id].n : '';
 function planLast(id) { let last = null; for (const d in (K.meta || {})) if (K.meta[d].plan === id && kDay(d).length && (!last || d > last)) last = d; return last; }
 function liveCardHTML() {
   const L = K.live; if (!L) return '';
-  const done = L.items.reduce((n, it) => n + it.sets.filter(s => s.done).length, 0), tot = L.items.reduce((n, it) => n + it.sets.length, 0);
+  const done = L.items.reduce((n, it) => n + it.sets.filter(s => s.done).length, 0), tot = L.items.reduce((n, it) => n + (it.sk ? it.sets.filter(s => s.done).length : it.sets.length), 0);   // Übersprungenes zählt nur mit dem, was abgehakt ist
   return '<ul class="rows"><li class="row is-run"><div class="fill" style="width:' + (tot ? done / tot * 100 : 0).toFixed(1) + '%"></div>' +
     '<button type="button" class="go" data-k="live" aria-label="Laufendes Training öffnen"><span class="glyph"><i></i></span><span class="txt"><span class="name">' + esc(planName(L.plan) || 'Freies Training') + ' läuft</span><span class="meta">' + done + ' von ' + tot + ' Sätzen erledigt</span></span></button>' +
     '<div class="side"><span class="streak" style="padding-right:14px"><b class="lv-card-t">' + fmt((Date.now() - L.start) / 1000) + '</b><span>Gesamt</span></span></div></li></ul>';
@@ -3865,7 +3869,9 @@ function lRek(it) {
   const bw = exBw(it.id, Lw.date), sets = it.sets.filter(s => s.done).map(lNum).filter(q => q[1]), q = recOf(sets, kHist(it.id).filter(x => x.d < Lw.date), bw);
   return q ? { q, j: it.sets.findIndex(s => { const o = lNum(s); return s.done && Math.abs((q.w ? rm1(o[0] + bw, o[1]) : o[1]) - q.v) < 1e-9; }) } : null;
 }
-const undone = it => it.sets.findIndex(s => !s.done);
+/* Übung überspringen (v140, sein Wunsch 27.11.: „füge Option hinzu, Übung während Training zu skippen“): it.sk = 1 im laufenden Training. Sie zählt dann als fertig (nichts mehr offen),
+   die App geht zur nächsten offenen Übung, abgehakte Sätze bleiben und werden gespeichert, offene nicht. „Doch machen“ nimmt es zurück. */
+const undone = it => it.sk ? -1 : it.sets.findIndex(s => !s.done);
 function paintLPick() { if (Lw) paintPick('#l-pick', '#l-new', Lw.items.map(it => it.id), 'la'); }
 /* Eine Übung im Fokus: oben wechseln, darunter die Sätze. Der nächste offene Satz ist aktiv, ein Tipp auf eine andere Zeile macht sie aktiv. */
 function paintL() {
@@ -3873,8 +3879,8 @@ function paintL() {
   lI = clamp(lI, 0, Math.max(0, Lw.items.length - 1));
   const tabs = $('#l-tabs');
   tabs.innerHTML = Lw.items.map((it, i) => {
-    const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = undone(it) < 0;
-    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>' + (it.su && i < Lw.items.length - 1 ? '<span class="lx-plus" aria-hidden="true">' + KETTE + '</span>' : '');
+    const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = !it.sk && undone(it) < 0;
+    return '<button type="button" class="lx-tab' + (fin ? ' fin' : '') + (it.sk ? ' sk' : '') + '" data-la="tab" data-i="' + i + '" aria-pressed="' + (i === lI) + '">' + (fin ? CHECK : '') + esc(name) + '</button>' + (it.su && i < Lw.items.length - 1 ? '<span class="lx-plus" aria-hidden="true">' + KETTE + '</span>' : '');
   }).join('') + '<button type="button" class="lx-tab addx" data-la="addx" aria-expanded="' + (lAdd || !Lw.items.length) + '" aria-label="Übung hinzufügen">+</button>';
   $('#l-add').hidden = !lAdd && Lw.items.length > 0;
   paintLPick();
@@ -3896,8 +3902,10 @@ function paintL() {
     '<div class="lx-zr">' + (an ? '<button type="button" class="lx-z" data-la="ziel" aria-label="Ziel: ' + zv + ' bis ' + zb + ' Wiederholungen je Satz, ändern">Ziel ' + zv + '–' + zb + ' Wdh' + PEN + '</button>' : '') +
       '<button type="button" class="lx-z" data-la="schritt" aria-label="Schritt beim Gewicht: ' + schrittText(exStep(hist, it.id)) + ', ändern">Schritt ' + schrittText(exStep(hist, it.id)) + PEN + '</button></div>' +
     (gr ? '<p class="lx-su">' + KETTE + 'Supersatz mit ' + esc(Lw.items.slice(gr[0], gr[1] + 1).filter(o => o !== it).map(o => K.ex[o.id] ? K.ex[o.id].n : 'Übung').join(' + ')) + '</p>' : '') +
+    (it.sk ? '<p class="lx-skz">Übersprungen · <button type="button" data-la="skip">Doch machen</button></p>' : '') +
     (rek ? '<p class="rek-l">Neuer Rekord · ' + (rek.q.w ? '1RM ' + rmText(rek.q.v) + ' kg' : rek.q.v + ' Wdh') + '</p>' : '') + '</div>' +
     (lMenu ? '<div class="lx-akt"><button type="button" data-la="addset">+ Satz</button>' + (it.sets.length > 1 ? '<button type="button" data-la="rmset">− Satz</button>' : '') +
+      (it.sk ? '' : '<button type="button" data-la="skip">Überspringen</button>') +
       '<button type="button" class="danger" data-la="rm">' + (lRm ? 'Wirklich entfernen?' : 'Übung entfernen') + '</button></div>' : '') +
     '<div class="lt"><div class="lt-h"><span>#</span><span>kg</span><span>Wdh</span><span>' + (it.sets.some(s => lNum(s)[0] + bwL > 0) ? '1RM' : '') + '</span><span></span></div>' + it.sets.map((s, j) => j === act
     ? '<div class="lt-r act' + (s.done ? ' done' : '') + '"><span class="n">' + nr(j) + '</span>' + pv(s, j, 'w', 'Gewicht') + pv(s, j, 'r', 'Wiederholungen') + rm(s, j) +
@@ -3990,6 +3998,7 @@ $('#lform').addEventListener('click', e => {
       else if (undone(it) < 0 && !fragen) lWeiter();   // mit der Frage nach der Reserve erst nach der Antwort (lReserve)
     }
   }
+  else if (a === 'skip' && it) { lMenu = false; lJ = null; if (it.sk) delete it.sk; else { it.sk = 1; if (lR && lR.i === lI) lR = lVor = null; lWeiter(); } }
   else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, 3) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; lMenu = false; $('#l-new').value = ''; }
   else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; lMenu = false; lR = lVor = null; } else lRm = true; }
   else if (a === 'addset' && it) { const s = it.sets, l = s[s.length - 1]; s.push({ w: l.w, r: l.r, done: false }); }
@@ -5506,7 +5515,7 @@ let hapT = 0;
 function haptik(w) { if (!HUELLE) return; const t = performance.now(); if (t - hapT < 50) return; hapT = t; hPost({ art: 'haptik', w }); }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button'); if (!b) return;
-  if (b.matches('.tk, .chk, [data-k="skip"], .rv-b')) haptik('leicht');
+  if (b.matches('.tk, .chk, [data-k="skip"], [data-la="skip"], .rv-b')) haptik('leicht');
   else if (b.matches('[data-k="start"]')) haptik('mittel');
   else if (b.matches('[data-fold], .mnav button, .lx-tab, .lx-m, [data-zv]') || (b.matches('.tab') && !b.hasAttribute('aria-current')) || (b.matches('.seg button, .seg2 button, .subtabs button, .chip[aria-pressed]') && b.getAttribute('aria-pressed') !== 'true')) haptik('wahl');
 }, true);

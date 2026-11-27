@@ -717,6 +717,30 @@ lauf(async () => {
   P.ok('… ohne Wechsel des Gewichts bleibt die feste Formel: 42,5×9', (await reihenKu()) === '42,5×9', await reihenKu());
   await oKu.browser.close();
 
+  // --- v140: Übung im Training überspringen („…“ → „Überspringen“; „Doch machen“ nimmt es zurück) ---
+  /* Plan mit A, B, C zu je 2 Sätzen. A überspringen → weiter zu B; A ist im Reiter durchgestrichen und zählt nicht mehr als offen.
+     Auf der Karte des laufenden Trainings: Sätze gesamt 2 + 2 = 4 (A zählt nur mit Abgehaktem, also 0). Gespeichert wird nur, was abgehakt ist: B und C, A nicht. */
+  const KSk = { ex: { a: { n: 'Aa' }, b: { n: 'Bb' }, c: { n: 'Cc' } }, log: {}, plans: { p: { n: 'Probe', items: [{ id: 'a', sets: 2 }, { id: 'b', sets: 2 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
+  const oSk = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: KSk } }), sk = oSk.page;
+  await bereich(sk, 'training'); await sk.click('#v-training [data-k="start"]'); await sk.waitForTimeout(300);
+  const reiter = () => sk.$$eval('#l-tabs .lx-tab:not(.addx)', l => l.map(b => b.textContent + (b.classList.contains('sk') ? '~' : '') + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '));
+  await sk.click('#l-items [data-la="menu"]'); await sk.click('#l-items .lx-akt [data-la="skip"]'); await sk.waitForTimeout(60);
+  P.ok('Überspringen: weiter zur nächsten Übung, die übersprungene ist durchgestrichen', (await reiter()) === 'Aa~ Bb* Cc' && (await gespeichert(sk)).K.live.items[0].sk === 1, await reiter());
+  await sk.click('#l-tabs .lx-tab:has-text("Aa")');
+  P.ok('… in der übersprungenen Übung steht „Übersprungen · Doch machen“', (await text(sk, '#l-items .lx-skz')) === 'Übersprungen · Doch machen');
+  await sk.click('#l-items .lx-skz [data-la="skip"]'); await sk.waitForTimeout(60);
+  P.ok('„Doch machen“: wieder offen, die Ansicht bleibt bei der Übung', (await reiter()) === 'Aa* Bb Cc' && !(await sk.$('#l-items .lx-skz')) && (await gespeichert(sk)).K.live.items[0].sk == null, await reiter());
+  await sk.click('#l-items [data-la="menu"]'); await sk.click('#l-items .lx-akt [data-la="skip"]'); await sk.waitForTimeout(60);
+  const satz = async () => { await zahlWahl(sk, '#l-r', '10'); await sk.click('.lt-r.act .chk'); await sk.waitForTimeout(60); };
+  await satz(); await satz(); await sk.click('#l-tabs .lx-tab:has-text("Cc")'); await satz();
+  const karte = await sk.evaluate(() => [...document.querySelectorAll('.is-run .meta')].map(m => m.textContent).join(' | '));
+  P.ok('Karte des laufenden Trainings zählt 4 Sätze, nicht 6 (die übersprungene Übung zählt nicht mit)', /^\d von 4 Sätzen/.test(karte), karte);
+  await satz();
+  await sk.click('#l-save'); await sk.waitForTimeout(250); await sk.click('#rs-ok');
+  const logSk = (await gespeichert(sk)).K.log[heute];
+  P.ok('gespeichert: nur B und C, die übersprungene Übung nicht', JSON.stringify(Object.keys(logSk).sort()) === '["b","c"]', JSON.stringify(logSk));
+  await oSk.browser.close();
+
   // --- Drop- und Supersätze (v113): einmal im Plan eingestellt, im Training läuft es von selbst ---
   /* Letztes Mal (vor 3 Tagen), Bereich 8–12, Schritt 2,5 kg. Plan: Latzug 4 Sätze, Bank 2, Curls 2, Rudern 3 (Dropsatz schon in den Daten).
      Latzug 90×10, 90×9, 90×8 → 90×11, 90×10, 90×9; der vierte Satz hat keine eigenen Werte und wird als Dropsatz ein Viertel leichter: 90 × 0,75 = 67,5 kg mit den 9 des Satzes davor.
@@ -900,5 +924,5 @@ lauf(async () => {
   await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
   P.ok('ohne Statistik-Start zählt der 18.11. mit (100 kg im Blatt)', (await text(ab2, '#xsheet')).includes('100'));
   await o21.browser.close();
-  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, oSk.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
