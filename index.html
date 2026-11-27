@@ -202,7 +202,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 /* Blätter (v94): Sie schweben wie in iOS 26 mit 8 px Abstand zum Rand, sind rundum gerundet und aus Glas (halb durchsichtig mit Milchglas); dahinter wird die Seite dunkler und unscharf.
    Mit offener Tastatur (--kb) sitzen sie 8 px über ihr. */
 dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:var(--rand-a),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
-dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px) saturate(1);backdrop-filter:blur(6px) saturate(1)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
 #form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform,#teform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
@@ -531,7 +531,10 @@ body{font-size:14px}
 .info[aria-expanded="true"]{color:var(--accent)}
 .sec .info{vertical-align:-1px;margin-left:6px}
 .sec .info svg{width:15px;height:15px}
-.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:var(--rand),0 6px 24px rgba(0,0,0,.3);animation:fade .2s ease}
+.toast{position:fixed;left:0;right:0;bottom:calc(70px + var(--unten));margin:0 auto;width:max-content;max-width:calc(100% - 32px);z-index:20;display:flex;align-items:center;gap:10px;padding:8px 8px 8px 16px;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.8);backdrop-filter:blur(24px) saturate(1.8);color:var(--ink);font-size:13.5px;font-weight:500;box-shadow:var(--rand),0 6px 24px rgba(0,0,0,.3);animation:toastAn .32s cubic-bezier(.22,.8,.24,1) both}
+.toast>*{animation:glasInhalt .26s .04s cubic-bezier(.2,.9,.25,1) both}
+.toast.weg{animation:toastAus .18s cubic-bezier(.4,0,.6,1) forwards;pointer-events:none}
+.toast.weg>*{animation:glasInhaltAus .12s ease-in forwards}
 .toast[hidden]{display:none}
 .toast button{border:0;background:none;color:var(--accent);font-weight:600;font-size:13.5px;padding:6px 8px;position:relative}
 .toast button::after{content:"";position:absolute;inset:-8px}
@@ -705,8 +708,8 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
 #l-del{border:0;background:none;text-align:center;font-size:13px}
 /* Reserve nach einem Satz: eine Frage, fünf gleich breite Kapseln */
-.l-resv{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));background:rgba(242,242,247,.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);animation:rvAn .34s cubic-bezier(.22,.8,.24,1) both}
-.l-resv.weg{animation:rvAus .26s cubic-bezier(.4,0,.6,1) forwards;pointer-events:none}
+.l-resv{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));background:rgba(242,242,247,.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);animation:glasAn .34s cubic-bezier(.22,.8,.24,1) both}
+.l-resv.weg{animation:glasAus .26s cubic-bezier(.4,0,.6,1) forwards;pointer-events:none}
 @media (prefers-color-scheme:dark){.l-resv{background:rgba(0,0,0,.5)}}
 .l-resv-in{width:100%;max-width:300px;text-align:center;animation:rvInhalt .36s .04s cubic-bezier(.2,.9,.25,1) both}
 .l-resv.weg .l-resv-in{animation:rvInhaltAus .18s cubic-bezier(.4,0,1,1) forwards}
@@ -933,22 +936,25 @@ button:active{transition-duration:.04s}
 .tab:active svg{transform:scale(.88)}
 .tk:active i{transform:scale(.84)}
 .cd:not(.sel):active b{background:var(--fill)}
-@keyframes sheet{from{opacity:0;transform:translateY(34px) scale(.985)}to{opacity:1;transform:none}}
-@keyframes dim{from{opacity:0}to{opacity:1}}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-dialog[open]{animation:sheet .26s cubic-bezier(.16,1,.3,1)}
-dialog[open]::backdrop{animation:dim .2s ease}
-@keyframes sheetZu{to{opacity:0;transform:translateY(24px)}}
-@keyframes dimZu{to{opacity:0}}
-/* Ebene RIR (v143, sein Wort: „der Übergang beim Rein- und Rauskommen ist noch etwas unsmooth“): Wie in iOS wächst die Unschärfe selbst auf und nimmt wieder ab,
-   statt dass die ganze Ebene samt fertiger Unschärfe ein- und ausblendet (WebKit zeichnet Milchglas unter wechselnder Deckkraft unruhig). Der Inhalt kommt einen Hauch später,
-   leicht größer, und setzt sich; beim Gehen blendet er schneller aus als die Unschärfe. */
-@keyframes rvAn{from{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
-@keyframes rvAus{to{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+/* Milchglas kommt und geht überall gleich (v143 an der Ebene RIR, sein Wort: „der Übergang beim Rein- und Rauskommen ist noch etwas unsmooth“; seit v145 überall, sein Wort:
+   „GENAU diesen Unschärfe-Modus will ich überall in gleicher Qualität, wo das noch gebraucht wird“): Die Unschärfe selbst wächst von blur(0) auf und nimmt wieder ab, die Tönung mit ihr,
+   statt dass eine Fläche samt fertiger Unschärfe ein- und ausblendet (WebKit zeichnet Milchglas unter wechselnder Deckkraft unruhig). Gilt hinter jedem Blatt (::backdrop),
+   hinter dem Training im Vollbild, für das Glas der Blätter selbst, für die Ebene RIR und den Hinweis unten. Inhalt kommt einen Hauch später und setzt sich.
+   Alle Milchgläser tragen dafür dieselbe Liste blur() saturate() (dialog::backdrop mit saturate(1), das am Bild nichts ändert): Nur gleiche Listen lassen sich überall sicher stufenlos rechnen. */
+@keyframes glasAn{from{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes glasAus{to{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes glasInhalt{from{opacity:0}}
+@keyframes glasInhaltAus{to{opacity:0}}
+@keyframes sheet{from{opacity:0;transform:translateY(34px) scale(.985);-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes sheetZu{to{opacity:0;transform:translateY(24px);-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes toastAn{from{transform:translateY(8px) scale(.96);background-color:transparent;box-shadow:none;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes toastAus{to{transform:translateY(4px) scale(.98);background-color:transparent;box-shadow:none;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
 @keyframes rvInhalt{from{opacity:0;transform:scale(1.06)}}
 @keyframes rvInhaltAus{to{opacity:0;transform:scale(.97)}}
+dialog[open]{animation:sheet .3s cubic-bezier(.16,1,.3,1)}
+dialog[open]::backdrop{animation:glasAn .34s cubic-bezier(.22,.8,.24,1) both}
 dialog[open].zu{animation:sheetZu .15s ease-in forwards;pointer-events:none}
-dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
+dialog[open].zu::backdrop{animation:glasAus .15s cubic-bezier(.4,0,.6,1) forwards}
 @keyframes goN{from{opacity:.3;transform:translateX(26px)}to{opacity:1;transform:none}}
 @keyframes goP{from{opacity:.3;transform:translateX(-26px)}to{opacity:1;transform:none}}
 .view.go-n:not([hidden]){animation:goN .24s cubic-bezier(.16,1,.3,1)}
@@ -1049,7 +1055,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]),.tv.go-n,.tv.go-p{animation:none}
   button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
-  .l-resv,.l-resv-in{animation:none}
+  .l-resv,.l-resv-in,.toast,.toast>*{animation:none}
 }
 </style>
 </head>
@@ -1456,7 +1462,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v144</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v145</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -4973,7 +4979,7 @@ $('#te-weg').addEventListener('click', () => {
   kalWeg = { x, timer: setTimeout(kalRaus, 7000) }; kalMap = null;
   closeDlg(tedlg); haptik('mittel');
   toastEl.firstElementChild.textContent = 'Termin gelöscht';
-  (cdlg.open ? cdlg : document.body).appendChild(toastEl); toastEl.hidden = false;
+  (cdlg.open ? cdlg : document.body).appendChild(toastEl); toastZeig();
 });
 document.addEventListener('visibilitychange', () => { if (document.hidden) kalRaus(); });
 window.addEventListener('pagehide', kalRaus);
@@ -5523,7 +5529,16 @@ function render() { renderPlaner(); renderWeight(); renderMoney(); renderTrainin
    Rückgängig spielt den gemerkten Stand zurück. Jede weitere Änderung nimmt den Hinweis weg (toastOff() in saveLocal), damit nie etwas Neueres überschrieben wird. */
 let undo = null, meldT = 0;
 const toastEl = $('#toast');
-function toastOff() { if (undo) clearTimeout(undo.timer); clearTimeout(meldT); undo = null; toastEl.hidden = true; toastEl.classList.remove('nur'); }
+/* Der Hinweis geht weich (Unschärfe nimmt ab, 0,18 s), außer bei „Bewegung reduzieren“; kommt in der Zeit ein neuer, bleibt er (toastZeig) */
+let toastWegT = null;
+function toastOff() {
+  if (undo) clearTimeout(undo.timer); clearTimeout(meldT); undo = null;
+  clearTimeout(toastWegT);
+  const weg = () => { toastEl.hidden = true; toastEl.classList.remove('nur', 'weg'); };
+  if (toastEl.hidden || ruhig()) return weg();
+  toastEl.classList.add('weg'); toastWegT = setTimeout(weg, 180);
+}
+function toastZeig() { clearTimeout(toastWegT); toastEl.classList.remove('weg'); toastEl.hidden = false; }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('[id$="-del"], [data-vdel], [data-undo]'); if (!b) return;
   let before = null; try { before = localStorage.getItem(LS); } catch (x) {}
@@ -5533,7 +5548,7 @@ document.addEventListener('click', e => {
     toastEl.firstElementChild.textContent = b.id === 'l-del' ? 'Training verworfen' : b.dataset.k === 'skip' ? 'Übersprungen' : 'Gelöscht';
     /* Ein offenes Blatt sperrt alles außerhalb: Der Hinweis muss dann im Blatt liegen, sonst ließe er sich nicht antippen */
     (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl);
-    toastEl.hidden = false;
+    toastZeig();
     undo = { before, after, timer: setTimeout(toastOff, 7000) };
     haptik('mittel');
   }, 0);
@@ -5911,7 +5926,7 @@ function hEingang(list) {
   if (weg.length && before != null) {
     toastEl.firstElementChild.textContent = weg.length === 1 ? 'Im Widget abgehakt' : weg.length + ' Notizen im Widget abgehakt';
     (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl);
-    toastEl.hidden = false;
+    toastZeig();
     undo = { before, after: localStorage.getItem(LS), timer: setTimeout(toastOff, 7000) };
   }
   return all.map(c => c.id);
@@ -6026,7 +6041,7 @@ if (HUELLE) window.TrackHuelle = {
   /* Der Kalender hat einen Termin nicht angenommen: Grund im Wortlaut, einige Sekunden lang */
   terminFehler(t) {
     toastOff(); toastEl.firstElementChild.textContent = 'Termin nicht gespeichert: ' + String(t).slice(0, 140); toastEl.classList.add('nur');
-    (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl); toastEl.hidden = false; meldT = setTimeout(toastOff, 6000);
+    (document.querySelector('dialog[open]:not(.zu)') || document.body).appendChild(toastEl); toastZeig(); meldT = setTimeout(toastOff, 6000);
   },
   laeufe(list) { return healthRuns(list); },
   eingang(list) { return hEingang(list); },

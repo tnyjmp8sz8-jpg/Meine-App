@@ -127,5 +127,24 @@ lauf(async () => {
     await leer.browser.close();
     leer.fehler.forEach(f => P.ok(f + b, false));
   }
+  /* Milchglas kommt und geht überall gleich (v145, sein Wort: „GENAU diesen Unschärfe-Modus will ich überall in gleicher Qualität“): Die Unschärfe selbst wächst und nimmt ab,
+     hinter dem Blatt (0 → 6 px in 0,34 s), im Glas des Blatts (0 → 30 px) und im Hinweis unten (0 → 24 px); beim Schließen hinter dem Blatt wieder auf 0. Nach 0,1 s steht sie dazwischen. */
+  {
+    const g = await oeffnen({ bewegung: true, daten: beispiel() }), q = g.page;
+    const blur = (sel, pseudo, t) => q.evaluate(([sel, pseudo, t]) => { const e = document.querySelector(sel), as = document.getAnimations().filter(a => a.effect.target === e && (a.effect.pseudoElement || null) === pseudo);
+      as.forEach(a => { a.pause(); a.currentTime = t; }); const v = parseFloat(/blur\(([\d.]+)px\)/.exec(getComputedStyle(e, pseudo).backdropFilter)[1]); const n = as.map(a => a.animationName).join(); as.forEach(a => a.finish()); return n + ':' + Math.round(v * 10) / 10; }, [sel, pseudo, t]);
+    await q.click('#gear');
+    const auf = [await blur('#esheet', '::backdrop', 0), await blur('#esheet', '::backdrop', 100), await blur('#esheet', null, 0)];
+    const aufOk = auf[0] === 'glasAn:0' && /^glasAn:(\d|\.)+$/.test(auf[1]) && +auf[1].split(':')[1] > 1 && +auf[1].split(':')[1] < 6 && auf[2] === 'sheet:0';
+    await q.click('#es-close').catch(() => q.keyboard.press('Escape'));
+    const zu = await blur('#esheet', '::backdrop', 75);
+    P.ok('Milchglas: hinter dem Blatt wächst die Unschärfe (0 → 6 px), das Glas des Blatts auch; beim Schließen nimmt sie ab', aufOk && zu === 'glasAus:3', auf.join() + ' / ' + zu);
+    await q.waitForTimeout(300);
+    const hinweis = await q.evaluate(() => { const t = document.querySelector('.toast'); t.hidden = false; t.style.animation = 'none'; void t.offsetWidth; t.style.animation = ''; const a = t.getAnimations()[0]; a.pause(); a.currentTime = 100;
+      const v = parseFloat(/blur\(([\d.]+)px\)/.exec(getComputedStyle(t).backdropFilter)[1]); a.finish(); t.hidden = true; return a.animationName + ':' + (v > 5 && v < 24); });
+    P.ok('Milchglas: auch im Hinweis unten wächst die Unschärfe (toastAn)', hinweis === 'toastAn:true', hinweis);
+    await g.browser.close();
+    g.fehler.forEach(f => P.ok(f, false));
+  }
   await P.ende();
 });
