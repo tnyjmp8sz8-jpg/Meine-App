@@ -728,7 +728,7 @@ lauf(async () => {
     const as = document.getAnimations().filter(a => a.effect.target.closest && a.effect.target.closest('#l-resv')); as.forEach(a => { a.pause(); a.currentTime = 120; });
     const b = parseFloat(/blur\(([\d.]+)px\)/.exec(getComputedStyle(e).backdropFilter)[1]), o = +getComputedStyle(e.querySelector('.l-resv-in')).opacity;
     as.forEach(a => a.finish()); return as.map(a => a.animationName).sort().join(',') + ' · ' + (b > 5 && b < 24) + ' · ' + (o > 0 && o < 1) + ' · ' + !document.querySelector('#l-items #l-resv'); });
-  P.ok('rein: Unschärfe und Inhalt wachsen (nach 0,12 s Unschärfe zwischen 5 und 24 px, Inhalt halb da), Ebene in #l-ov', halb === 'rvAn,rvInhalt · true · true · true', halb);
+  P.ok('rein: Unschärfe und Inhalt wachsen (nach 0,12 s Unschärfe zwischen 5 und 24 px, Inhalt halb da), Ebene in #l-ov', halb === 'glasAn,rvInhalt · true · true · true', halb);
   await ue.click('#l-resv [data-v="2"]');
   const sofort = await ue.evaluate(() => { const e = document.querySelector('#l-resv'); return (e && e.classList.contains('weg')) + ' · ' + JSON.parse(localStorage.getItem('takt.v1')).K.live.items[0].sets[0].x; });
   await ue.waitForTimeout(450);
