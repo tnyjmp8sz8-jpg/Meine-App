@@ -574,50 +574,50 @@ lauf(async () => {
      Curls:  20×10 mit 3 in Reserve, 20×11 mit 2 → beide zählen wie 12 → der erste ist oben: 22,5 kg; 1RM 20 × (1 + 12/30) = 28 → (28 / 22,5 − 1) × 30 = 7,3 → 7; der führende mindestens 8 → 22,5×8, der zweite 22,5×7. */
   const K15 = { ex: { p: { n: 'Presse' }, c: { n: 'Curls' } }, log: { [tag(3)]: { p: [[40, 9, 3], [40, 9], [40, 8]], c: [[20, 10, 3], [20, 11, 2]] } },
     plans: { p: { n: 'Probe', items: [{ id: 'p', sets: 3 }, { id: 'c', sets: 2 }], o: 1 } }, meta: {}, live: null };
-  const o15 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K15 } }), rs = o15.page;
+  const o15 = await oeffnen({ reserve: true, daten: { S: { routines: [], running: null }, LY: {}, K: K15 } }), rs = o15.page;
   P.ok('die Reserve bleibt beim Laden am Satz stehen (drittes Feld)', JSON.stringify((await gespeichert(rs)).K.log[tag(3)].p) === '[[40,9,3],[40,9],[40,8]]', JSON.stringify((await gespeichert(rs)).K.log[tag(3)].p));
   await bereich(rs, 'training'); await rs.click('#v-training [data-k="start"]'); await rs.waitForTimeout(300);
   const reihen15 = () => rs.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
   const emp15 = async () => (await rs.$('#l-emp')) ? text(rs, '#l-emp') : '';
-  const frage = () => rs.evaluate(() => { const b = document.querySelector('#l-res'); return !b ? '' : b.querySelector('.note').textContent + ' # ' + [...b.querySelectorAll('.chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '); });
+  /* Seit v140 ist die Frage eine Ebene über dem ganzen Training (#l-resv, Milchglas): Kopfzeile mit dem Satz, Frage, fünf runde Knöpfe, „Überspringen“. Ein Tipp wählt und schließt. */
+  const frage = () => rs.evaluate(() => { const b = document.querySelector('#l-resv'); return !b ? '' : b.querySelector('.l-resv-k').textContent + ' # ' + b.querySelector('h3').textContent + ' # ' + [...b.querySelectorAll('.rv-b')].map(c => c.textContent).join(' '); });
   P.ok('Vorgabe mit Reserve vom letzten Mal: 40×11 (zwei mehr), 40×10, 40×9', (await reihen15()) === '40×11 40×10 40×9' && (await emp15()) === 'Empfehlung 40 kg × 11 · 2 Wdh mehr, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
   P.ok('vor dem ersten Satz gibt es keine Frage nach der Reserve', (await frage()) === '', await frage());
   /* Satz 1 wie empfohlen (11), ohne Angabe: Ermüdung letztes Mal 9 − 9 = 0 → Satz 2: 11; Satz 3: 11 − (9 − 8) = 10. */
   await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('nach dem Abhaken: Frage zu Satz 1 mit fünf Kapseln, nichts gewählt; die Sätze danach sind angepasst', (await frage()) === 'Satz 1: Wie viele wären noch gegangen? # 0 1 2 3 4+' && (await reihen15()) === '40×11 40×11 40×10', (await frage()) + ' # ' + (await reihen15()));
-  /* 3 in Reserve: Satz 1 zählt wie 11 + 2 = 13 → Satz 2: 13 − 0 = 13, höchstens 12; Satz 3: 13 − 1 = 12. Gerechnet wird vom Stand vor dem Abhaken, nicht auf der ersten Anpassung. */
-  await rs.click('#l-res [data-v="3"]'); await rs.waitForTimeout(60);
-  P.ok('3 in Reserve: die Sätze danach steigen auf 12', (await reihen15()) === '40×11 40×12 40×12' && (await emp15()) === 'Empfehlung 40 kg × 12 · mehr, du hattest Reserve' && (await frage()).endsWith('0 1 2 3* 4+'), (await reihen15()) + ' # ' + (await emp15()) + ' # ' + (await frage()));
+  P.ok('nach dem Abhaken: Die Frage liegt über dem ganzen Bildschirm, mit dem Satz darüber und fünf Knöpfen; die Sätze darunter sind schon angepasst', (await frage()) === 'Satz 1 · 40 kg × 11 Wdh # Wie viele wären noch gegangen? # 0 1 2 3 4+' && (await reihen15()) === '40×11 40×11 40×10', (await frage()) + ' # ' + (await reihen15()));
+  const deckt = await rs.evaluate(() => { const r = document.querySelector('#l-resv').getBoundingClientRect(), st = getComputedStyle(document.querySelector('#l-resv')); return r.top === 0 && r.left === 0 && r.width === innerWidth && r.height === innerHeight && st.position === 'fixed' && /blur/.test(st.backdropFilter || st.webkitBackdropFilter); });
+  P.ok('… sie deckt den ganzen Bildschirm, der Hintergrund ist unscharf', deckt);
   /* 4 oder mehr: zählt wie 11 + 3 = 14 = zwei über dem oberen Ende → 42,5 kg; 1RM 40 × (1 + 14/30) = 58,67 → (58,67 / 42,5 − 1) × 30 = 11,4 → 11; Satz 3: 11 − 1 = 10. */
-  await rs.click('#l-res [data-v="4"]'); await rs.waitForTimeout(60);
-  P.ok('4 oder mehr in Reserve: mehr Gewicht für die Sätze danach (42,5×11, 42,5×10)', (await reihen15()) === '40×11 42,5×11 42,5×10' && (await emp15()) === 'Empfehlung 42,5 kg × 11 · mehr Gewicht, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
-  await rs.click('#l-res [data-v="4"]'); await rs.waitForTimeout(60);
-  P.ok('zweiter Tipp nimmt die Angabe zurück: wieder wie ohne Reserve', (await reihen15()) === '40×11 40×11 40×10' && (await frage()).endsWith('0 1 2 3 4+'), (await reihen15()) + ' # ' + (await frage()));
-  await rs.click('#l-res [data-v="0"]'); await rs.waitForTimeout(60);
-  P.ok('0 in Reserve ändert die Empfehlung nicht, steht aber am Satz (x = 0)', (await reihen15()) === '40×11 40×11 40×10' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 0, (await reihen15()) + ' ' + JSON.stringify((await gespeichert(rs)).K.live.items[0].sets[0]));
+  await rs.click('#l-resv [data-v="4"]'); await rs.waitForTimeout(60);
+  P.ok('4 oder mehr gewählt: Die Ebene ist weg, mehr Gewicht für die Sätze danach (42,5×11, 42,5×10)', (await frage()) === '' && (await reihen15()) === '40×11 42,5×11 42,5×10' && (await emp15()) === 'Empfehlung 42,5 kg × 11 · mehr Gewicht, du hattest Reserve' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 4, (await reihen15()) + ' # ' + (await emp15()));
+  /* Tipp neben die Knöpfe: schließt ohne Angabe, die Sätze bleiben */
+  await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
+  P.ok('Satz 2 abgehakt: Frage zu Satz 2 mit seinem Gewicht', (await frage()).startsWith('Satz 2 · 42,5 kg × 11 Wdh'), await frage());
+  await rs.click('#l-resv', { position: { x: 12, y: 12 } }); await rs.waitForTimeout(60);
+  P.ok('Tipp daneben: Die Ebene ist weg, ohne Angabe am Satz', (await frage()) === '' && (await gespeichert(rs)).K.live.items[0].sets[1].x == null && (await reihen15()) === '40×11 42,5×11 42,5×10', (await reihen15()));
   /* Curls: Vorgabe 22,5×8. Satz 1 nur 7: unter dem Bereich → 20 kg; 1RM 22,5 × (1 + 7/30) = 27,75 → (27,75 / 20 − 1) × 30 = 11,6 → 11.
-     Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt; Satz 1 zählt wie 8, Satz 2 steigt von 7 auf 8 (Ermüdung letztes Mal 0).
-     v111 (sein Bild vom 25.11.): Bei einer anderen Übung steht die Frage zur vorigen nicht mehr da. */
+     Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt; Satz 1 zählt wie 8, Satz 2 steigt von 7 auf 8 (Ermüdung letztes Mal 0). */
   await rs.click('#l-tabs .lx-tab:has-text("Curls")');
-  P.ok('andere Übung geöffnet: Die Frage zur vorigen Übung ist weg', (await frage()) === '' && (await reihen15()) === '22,5×8 22,5×7', (await frage()) + ' # ' + (await reihen15()));
+  P.ok('andere Übung: keine Frage, Vorgabe 22,5×8, 22,5×7', (await frage()) === '' && (await reihen15()) === '22,5×8 22,5×7', (await frage()) + ' # ' + (await reihen15()));
   await zahlWahl(rs, '#l-r', '7'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('unter dem Bereich ohne Angabe: weniger Gewicht (20×11)', (await reihen15()) === '22,5×7 20×11' && (await frage()).startsWith('Satz 1: '), (await reihen15()) + ' # ' + (await frage()));
-  await rs.click('#l-res [data-v="2"]'); await rs.waitForTimeout(60);
+  P.ok('unter dem Bereich ohne Angabe: weniger Gewicht (20×11)', (await reihen15()) === '22,5×7 20×11' && (await frage()).startsWith('Satz 1 · '), (await reihen15()) + ' # ' + (await frage()));
+  await rs.click('#l-resv [data-v="2"]'); await rs.waitForTimeout(60);
   P.ok('mit 2 in Reserve hätte es gereicht: Das Gewicht bleibt (22,5×8)', (await reihen15()) === '22,5×7 22,5×8' && (await emp15()) === 'Empfehlung 22,5 kg × 8 · mehr, du hattest Reserve', (await reihen15()) + ' # ' + (await emp15()));
-  /* Haken zurücknehmen: Die Angabe und die Frage sind weg */
+  /* Haken zurücknehmen: Die Angabe ist weg; beim neuen Haken kommt die Frage wieder */
   await rs.click('.lt-r[data-s="0"]'); await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('Haken zurückgenommen: keine Frage mehr, die Reserve ist vom Satz weg', (await frage()) === '' && (await gespeichert(rs)).K.live.items[1].sets[0].x == null, await frage());
-  await rs.click('.lt-r.act .chk'); await rs.click('#l-res [data-v="2"]'); await rs.waitForTimeout(60);
+  P.ok('Haken zurückgenommen: keine Frage, die Reserve ist vom Satz weg', (await frage()) === '' && (await gespeichert(rs)).K.live.items[1].sets[0].x == null, await frage());
+  await rs.click('.lt-r.act .chk'); await rs.click('#l-resv [data-v="2"]'); await rs.waitForTimeout(60);
   /* Letzter Satz der Übung (v111): Die Ansicht bleibt bei Curls, bis die Frage beantwortet ist; erst dann geht es zur nächsten offenen Übung (Presse), dort ohne Frage. */
   const offen15 = () => rs.evaluate(() => document.querySelector('#l-tabs .lx-tab[aria-pressed="true"]').textContent);
   await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('letzter Satz abgehakt: Die Ansicht bleibt bei der Übung und fragt nach Satz 2', (await offen15()) === 'Curls' && (await frage()).startsWith('Satz 2: Wie viele wären noch gegangen?'), (await offen15()) + ' # ' + (await frage()));
-  await rs.click('#l-res [data-v="1"]'); await rs.waitForTimeout(60);
+  P.ok('letzter Satz abgehakt: Die Ansicht bleibt bei der Übung und fragt nach Satz 2', (await offen15()) === 'Curls' && (await frage()).startsWith('Satz 2 · '), (await offen15()) + ' # ' + (await frage()));
+  await rs.click('#l-resv [data-v="1"]'); await rs.waitForTimeout(60);
   P.ok('nach der Antwort: weiter zur nächsten offenen Übung, dort keine Frage', (await offen15()) === 'Presse' && (await frage()) === '', (await offen15()) + ' # ' + (await frage()));
   /* Speichern: Nur Sätze mit Angabe tragen das dritte Feld */
   await rs.click('#l-save'); await rs.waitForTimeout(250); await rs.click('#rs-ok');
   const log15 = (await gespeichert(rs)).K.log[heute];
-  P.ok('gespeichert: Presse 40×11 mit Reserve 0, Curls 22,5×7 mit Reserve 2 und 22,5×8 mit Reserve 1', JSON.stringify(log15) === '{"p":[[40,11,0]],"c":[[22.5,7,2],[22.5,8,1]]}', JSON.stringify(log15));
+  P.ok('gespeichert: Presse 40×11 mit Reserve 4 und 42,5×11 ohne, Curls 22,5×7 mit Reserve 2 und 22,5×8 mit Reserve 1', JSON.stringify(log15) === '{"p":[[40,11,4],[42.5,11]],"c":[[22.5,7,2],[22.5,8,1]]}', JSON.stringify(log15));
   await o15.browser.close();
 
   // --- Einstellungen (v110): Schritt je Übung, Frage nach der Reserve abschaltbar, Übersicht auf Heute, Start-Bereich ---
@@ -662,12 +662,12 @@ lauf(async () => {
   await ei.click('#z-x'); await ei.waitForTimeout(80);
   /* Frage nach der Reserve: an → nach dem Abhaken da; in den Einstellungen aus (K.res = 0) → nach dem nächsten Abhaken keine Frage; die Empfehlung bleibt */
   await ei.click('.lt-r.act .chk'); await ei.waitForTimeout(60);
-  P.ok('Reserve an: Frage nach dem ersten Satz', !!(await ei.$('#l-res')));
+  P.ok('Reserve an: Frage nach dem ersten Satz', !!(await ei.$('#l-resv')));
   await ei.click('#ls-close'); await ei.waitForTimeout(200); await einstellungen(ei); await ei.click('#esheet [data-h="res"]');
   P.ok('„Nach der Reserve fragen“ aus: gespeichert als K.res = 0', (await sw('[data-h="res"]')) === 'false' && (await gespeichert(ei)).K.res === 0);
   await ei.click('#es-close'); await ei.click('#v-heute [data-k="live"]'); await ei.waitForTimeout(300);
   await ei.click('.lt-r.act .chk'); await ei.waitForTimeout(60);
-  P.ok('Reserve aus: nach dem Abhaken keine Frage, die Zeile „Empfehlung“ bleibt', !(await ei.$('#l-res')) && !!(await ei.$('#l-emp')));
+  P.ok('Reserve aus: nach dem Abhaken keine Frage, die Zeile „Empfehlung“ bleibt', !(await ei.$('#l-resv')) && !!(await ei.$('#l-emp')));
   await ei.click('#l-del'); await ei.click('#l-del'); await ei.waitForTimeout(150);
   await o16.browser.close();
 
@@ -742,7 +742,7 @@ lauf(async () => {
   const reihen18 = () => ds.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
   const nummern18 = () => ds.$$eval('#l-items .lx > .lt .lt-r .n', l => l.map(n => n.textContent + (n.querySelector('.dz') ? '°' : '')).join(' '));   // ° = rote Zahl im roten Ring (Dropsatz, v114; bis v113 ein „D“)
   const offen18 = () => ds.evaluate(() => document.querySelector('#l-tabs .lx-tab[aria-pressed="true"]').textContent);
-  const frage18 = async () => !!(await ds.$('#l-res'));
+  const frage18 = async () => !!(await ds.$('#l-resv'));
   P.ok('Dropsatz ohne eigene Werte: ein Viertel leichter als der Satz davor (67,5×9), seine Nummer steht rot im Ring', (await reihen18()) === '90×11 90×10 90×9 67,5×9' && (await nummern18()) === '1 2 3 4°', (await reihen18()) + ' # ' + (await nummern18()));
   await ds.click('.lt-r[data-s="3"]');
   P.ok('… mit Grund in der Zeile „Empfehlung“', (await text(ds, '#l-emp')) === 'Empfehlung 67,5 kg × 9 · Dropsatz: ein Viertel leichter, ohne Pause', await text(ds, '#l-emp'));

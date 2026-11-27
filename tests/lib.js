@@ -25,6 +25,9 @@ async function oeffnen(o = {}) {
   const browser = await chromium.launch(o.start || (o.historie ? { args: ['--disable-blink-features=AutomationControlled'] } : {}));
   const ctx = await browser.newContext({ viewport: { width: o.breite || 390, height: 844 }, deviceScaleFactor: o.schaerfe || 1, colorScheme: o.hell ? 'light' : 'dark', acceptDownloads: true, hasTouch: !!o.finger, reducedMotion: o.bewegung ? 'no-preference' : 'reduce', timezoneId: o.zone });
   if (o.uhr) await ctx.clock.install({ time: o.uhr });
+  /* Die Frage nach der Reserve liegt seit v140 als Ebene über dem ganzen Training und fängt jeden Tipp ab. Tests, die nur Sätze abhaken, sehen sie deshalb nicht (wie bis v139 die Reihe unter den Sätzen,
+     die nichts verdeckte): Sie bleibt im Aufbau, nur unsichtbar. o.reserve zeigt sie (tests/gym.js, Reserve je Satz). */
+  if (!o.reserve) await ctx.addInitScript(() => addEventListener('DOMContentLoaded', () => { const st = document.createElement('style'); st.textContent = '.l-resv{display:none!important}'; document.head.appendChild(st); }));
   if (o.skript) await ctx.addInitScript(o.skript);   // läuft vor jedem Laden der Seite, z. B. um die iPhone-Hülle nachzustellen
   const page = await ctx.newPage(), fehler = [];
   page.on('pageerror', e => fehler.push('Seitenfehler: ' + e.message));
