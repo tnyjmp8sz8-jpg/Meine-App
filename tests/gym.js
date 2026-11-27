@@ -648,7 +648,9 @@ lauf(async () => {
   await einstellungen(ei); await ei.click('#esheet [data-h="start"][data-v="heute"]');
   P.ok('zurück auf Heute: Der Merker ist weg', (await gespeichert(ei)).E.start == null);
   await ei.click('#es-close'); await bereich(ei, 'training'); await ei.click('#v-training [data-k="start"]'); await ei.waitForTimeout(300);
-  P.ok('Schritt geraten aus den Gewichten (5 kg): erster Satz oben → 45×8, 45×7, 45×7', (await reihen16()) === '45×8 45×7 45×7' && (await text(ei, '#l-items [data-la="schritt"]')) === 'Schritt 5 kg', (await reihen16()) + ' ' + (await text(ei, '#l-items [data-la="schritt"]')));
+  /* Seit v139 mit gelernter Kurve: 45×5, dann 40×12 → k = (40·12 − 45·5) / (45 − 40) = 51, zur 30 gezogen (60 + 51) / 3 = 37.
+     40 × (1 + 12/37) = 52,97 → (52,97 / 45 − 1) × 37 = 6,6 → 6; der führende mindestens 8 (bis v138 mit 30: 45×8, 45×7, 45×7). */
+  P.ok('Schritt geraten aus den Gewichten (5 kg): erster Satz oben → 45×8, 45×6, 45×6', (await reihen16()) === '45×8 45×6 45×6' && (await text(ei, '#l-items [data-la="schritt"]')) === 'Schritt 5 kg', (await reihen16()) + ' ' + (await text(ei, '#l-items [data-la="schritt"]')));
   await ei.click('#l-items [data-la="schritt"]'); await ei.waitForTimeout(80);
   const sl = await ei.evaluate(() => ({ liste: [...document.querySelectorAll('#z-list button')].map(b => b.textContent).join(' | '), wahl: (document.querySelector('#z-list [aria-pressed="true"]') || {}).textContent }));
   P.ok('Schritt wählen: sieben Schritte, 5 kg markiert', sl.liste === '0,5 kg | 1 kg | 1,25 kg | 2 kg | 2,5 kg | 5 kg | 10 kg' && sl.wahl === '5 kg', JSON.stringify(sl));
@@ -699,6 +701,21 @@ lauf(async () => {
   P.ok('im Training nur 11 im ersten Satz: Die Sätze danach bleiben bei 10 und 8', (await reihen17()) === '40×11 40×10 40×8', await reihen17());
   await sf.click('#l-del'); await sf.click('#l-del'); await sf.waitForTimeout(150);
   await o17.browser.close();
+
+  // --- v139: Kurve je Übung, aus seinen Einheiten gelernt (exKurve) statt immer Epley mit 30 ---
+  /* „Kurve“: vor 12, 9, 6, 3 Tagen 100×12, 105×8, 100×12, 105×12 (Schritt 5 kg aus den Gewichten).
+     Wechsel 1: (105·8 − 100·12) / (100 − 105) = (840 − 1200) / −5 = 72; Wechsel 2: (100·12 − 105·8) / (105 − 100) = 360 / 5 = 72; Wechsel 3: (105·12 − 100·12) / −5 = −12 → zählt nicht.
+     Median 72, zur 30 gezogen: (2·30 + 2·72) / 4 = 51 → höchstens 50. Letztes Mal 105×12 = oben → 110 kg: 105 × (1 + 12/50) = 130,2 → (130,2 / 110 − 1) × 50 = 9,2 → 9.
+     Mit der festen Formel wären es 105 × 1,4 = 147 → (147 / 110 − 1) × 30 = 10,1 → 10. „Fest“: nur ein Gewicht, kein Wechsel → bleibt bei 30: 40×12 → 42,5×9 wie oben. */
+  const KKu = { ex: { c: { n: 'Kurve' }, f: { n: 'Fest' } }, log: { [tag(12)]: { c: [[100, 12]] }, [tag(9)]: { c: [[105, 8]] }, [tag(6)]: { c: [[100, 12]] }, [tag(3)]: { c: [[105, 12]], f: [[40, 12]] } },
+    plans: { p: { n: 'Probe', items: [{ id: 'c', sets: 1 }, { id: 'f', sets: 1 }], o: 1 } }, meta: {}, live: null };
+  const oKu = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: KKu } }), kv = oKu.page;
+  await bereich(kv, 'training'); await kv.click('#v-training [data-k="start"]'); await kv.waitForTimeout(300);
+  const reihenKu = () => kv.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
+  P.ok('gelernte Kurve: nach mehr Gewicht fallen bei ihm die Wdh stärker → 110×9 statt 110×10', (await reihenKu()) === '110×9', await reihenKu());
+  await kv.click('#l-tabs .lx-tab:has-text("Fest")');
+  P.ok('… ohne Wechsel des Gewichts bleibt die feste Formel: 42,5×9', (await reihenKu()) === '42,5×9', await reihenKu());
+  await oKu.browser.close();
 
   // --- Drop- und Supersätze (v113): einmal im Plan eingestellt, im Training läuft es von selbst ---
   /* Letztes Mal (vor 3 Tagen), Bereich 8–12, Schritt 2,5 kg. Plan: Latzug 4 Sätze, Bank 2, Curls 2, Rudern 3 (Dropsatz schon in den Daten).
@@ -883,5 +900,5 @@ lauf(async () => {
   await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
   P.ok('ohne Statistik-Start zählt der 18.11. mit (100 kg im Blatt)', (await text(ab2, '#xsheet')).includes('100'));
   await o21.browser.close();
-  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });
