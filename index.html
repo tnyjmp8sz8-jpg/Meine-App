@@ -640,13 +640,12 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .l-resv{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));background:rgba(242,242,247,.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);animation:dim .2s ease}
 .l-resv.weg{animation:dimZu .18s ease forwards;pointer-events:none}
 @media (prefers-color-scheme:dark){.l-resv{background:rgba(0,0,0,.5)}}
-.l-resv-in{width:100%;max-width:360px;text-align:center;animation:fade .28s cubic-bezier(.16,1,.3,1)}
+.l-resv-in{width:100%;max-width:300px;text-align:center;animation:fade .28s cubic-bezier(.16,1,.3,1)}
 .l-resv-k{margin:0 0 6px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
-.l-resv .l-resv-in h3{display:block;margin:0 0 26px;color:var(--ink);font-size:22px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
-.l-resv-c{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.l-resv .l-resv-in h3{display:block;margin:0 0 26px;color:var(--ink);font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
+.l-resv-c{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
 .rv-b{aspect-ratio:1;min-height:44px;border:0;border-radius:50%;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-family:var(--round);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums}
 .rv-b.an{background:var(--ink);color:var(--bg)}
-.l-resv-e{display:flex;justify-content:space-between;margin:8px 4px 0;color:var(--muted);font-size:12px}
 .l-resv-x{margin-top:20px;min-height:44px;padding:0 18px;border:0;background:none;color:var(--muted);font-size:15px}
 /* Pausen-Uhr (v103, seit v106 nur noch ein laufender Timer, sein Wunsch: „nur als laufender Timer ohne Grenze oder Signal“): eine Glas-Kapsel links neben „Training beenden“.
    Sie zählt ab dem letzten abgehakten Satz hoch; vor dem ersten Satz steht „Pause“. Sie ist kein Knopf. */
@@ -1380,7 +1379,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v140</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v141</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3122,14 +3121,6 @@ const kNote = (s, pre) => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesse
   ? 'dein Stand ' + (pre === todayKey().slice(0, 4) ? 'jetzt' : 'Ende ' + pre) + ' gegenüber Ende ' + (+pre - 1)
   : 'dein bester Wert im ' + MONTHS[+pre.slice(5) - 1] + ' gegenüber dem letzten Monat davor mit dieser Übung (meist ' + MONTHS[(+pre.slice(5) + 10) % 12] + ')') +
   '. Gemessen am geschätzten Maximum, im Schnitt über ' + s.np + (s.np === 1 ? ' Übung' : ' Übungen') + '; neue Übungen zählen ab ihrer ersten Einheit.</p>' : '';
-/* Körpergewicht im selben Zeitraum, eine Zeile unter den Kennzahlen (Kraft und Gewicht zusammen sehen): Schnitt der letzten 7 Tage am Ende gegenüber dem Stand davor,
-   im ersten Zeitraum gegenüber dem ersten Eintrag. Ohne Vergleich keine Zeile. */
-function kGewHTML(pre, wann) {
-  let vor = null, erst = null, end = null, n = 0;
-  withTrend(wList()).forEach(e => { const q = e.k.slice(0, pre.length); if (q < pre) vor = e.m; else if (q === pre) { if (!n) erst = e.m; end = e.m; n++; } });
-  const von = vor != null ? vor : n > 1 ? erst : null;
-  return von == null || end == null ? '' : '<p class="note kw">Körpergewicht ' + wann + ': <b>' + signed(Math.round((end - von) * 10) / 10) + ' kg</b></p>';
-}
 const kHero = (label, n, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1><span class="num">' + n + '</span><span class="unit">' + (n === 1 ? 'Einheit' : 'Einheiten') + '</span></h1><p class="sub">' + sub + '</p></section>';
 function setsText(sets) {
   const ws = sets.map(s => s[0]).filter((v, i, a) => a.indexOf(v) === i);
@@ -3216,22 +3207,16 @@ function kExFold() {
   return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
     '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
 }
-/* Stärkste und schwächste Übung im Zeitraum (v106): die größte und die kleinste Verbesserung, gerechnet wie in der Liste „Übungen“ (exDelta), erst ab zwei Übungen mit Vergleich.
-   Steht nach den Plänen, über den Klappzeilen; ein Tipp öffnet die Übung. */
-function kBestHTML(pre, wann) {
-  const l = kExs().map(x => ({ x, d: exDelta(kHist(x.id), pre) })).filter(o => o.d && isFinite(o.d.p)).sort((a, b) => b.d.p - a.d.p);
-  if (l.length < 2 || l[0].d.p === l[l.length - 1].d.p) return '';
-  const zeile = (o, titel) => '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + esc(o.x.n) + '</span><small>' + titel + '</small></span><b class="' + o.d.c + '">' + o.d.t + '</b></button></li>';
-  return '<ul class="entries best">' + zeile(l[0], 'Stärkste Übung ' + wann) + zeile(l[l.length - 1], 'Schwächste Übung ' + wann) + '</ul>';
-}
+/* Weniger unten (v141, sein Bild vom 27.11.: „auf dem Bild ist mir noch zu viel, vor allem der untere Teil“): Die Karte „Stärkste / Schwächste Übung“ (v106) und die Zeile
+   „Körpergewicht im …“ unter den Kennzahlen gibt es nicht mehr. Wie jede Übung steht, zeigen die Liste „Übungen“ und der Punkt an der Übung. */
 function kYearHTML(curYM) {
   const y = String(tYear), s = kPeriod(y), per = [];
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
-  h += kTiles(s) + kNote(s, y) + kGewHTML(y, y);
+  h += kTiles(s) + kNote(s, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
-  return h + kBestHTML(y, y) + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+  return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFold() + '</div>';
 }
 /* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
@@ -3245,7 +3230,7 @@ function kraftHTML(curYM) {
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
-  if (s.n) h += kTiles(s) + kNote(s, tYM) + kGewHTML(tYM, 'im ' + name);
+  if (s.n) h += kTiles(s) + kNote(s, tYM);
   /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, übersprungen grau mit dem Zeichen dafür, als Nächstes dran blau mit seinem Platz,
      die übrigen grau mit ihrem Platz. Nur der Plan, der dran ist, trägt rechts den Knopf zum Überspringen (v93): So bleibt die Reihenfolge der Runde eindeutig.
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
@@ -3263,7 +3248,7 @@ function kraftHTML(curYM) {
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
   /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
   const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  return h + kBestHTML(tYM, 'im ' + name) + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
+  return h + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -3748,6 +3733,7 @@ function lAnpassen(it, j) {
 }
 /* Reserve zum zuletzt abgehakten Satz (lR = { i, j }). Seit v140 (sein Bild vom 27.11.: „ich will, dass RIR nach dem Satz sofort aufploppt auf dem ganzen Bildschirm im Apple-Look,
    Hintergrund unscharf, ich wähle aus und es verschwindet“) eine Ebene über dem ganzen Training: Milchglas, oben was er gerade geschafft hat, darunter 0 bis 4+ als runde Knöpfe.
+   Seit v141 (sein Wort: „anstatt ‚wie viel wäre gegangen‘ einfach RIR und 0–3, mache nie weniger“) heißt sie „RIR“ und bietet 0 bis 3 (4+ gibt es nur noch in alten Sätzen).
    Ein Tipp wählt und lässt die Ebene weich verschwinden; „Überspringen“ oder ein Tipp daneben schließt sie ohne Wahl. Bis v139 eine Reihe unter den Sätzen, die stehen blieb.
    Nach dem letzten Satz einer Übung geht es erst nach der Antwort zur nächsten offenen Übung (v111). Nicht im Supersatz und nicht vor einem Dropsatz (dort geht es sofort weiter).
    Weil die Sätze danach beim Abhaken schon angepasst wurden, merkt lVor ihren Stand von davor: Die Wahl rechnet von dort neu, statt auf der ersten Anpassung aufzubauen. */
@@ -3757,10 +3743,10 @@ function resHTML() {
   if (!(s && s.done && s.x == null && lR.i === lI && empAn() && K.res !== 0)) return '';
   const q = lNum(s), was = (q[0] ? kgn(q[0]) + ' kg × ' : '') + q[1] + ' Wdh';
   return '<div class="l-resv" id="l-resv" data-la="resweg" role="dialog" aria-modal="true" aria-labelledby="l-resv-t"><div class="l-resv-in" data-la="resbleib">' +
-    '<p class="l-resv-k">Satz ' + (lR.j + 1) + ' · ' + esc(was) + '</p><h3 id="l-resv-t">Wie viele wären noch gegangen?</h3>' +
+    '<p class="l-resv-k">Satz ' + (lR.j + 1) + ' · ' + esc(was) + '</p><h3 id="l-resv-t">RIR</h3>' +
     '<div class="l-resv-c" role="group" aria-label="Wiederholungen in Reserve">' +
-    [0, 1, 2, 3, 4].map(v => '<button type="button" class="rv-b" data-la="res" data-v="' + v + '" aria-label="' + (v === 4 ? '4 oder mehr' : v) + ' in Reserve">' + v + (v === 4 ? '+' : '') + '</button>').join('') +
-    '</div><p class="l-resv-e" aria-hidden="true"><span>am Limit</span><span>locker</span></p><button type="button" class="l-resv-x" data-la="resweg">Überspringen</button></div></div>';
+    [0, 1, 2, 3].map(v => '<button type="button" class="rv-b" data-la="res" data-v="' + v + '" aria-label="' + v + ' in Reserve">' + v + '</button>').join('') +
+    '</div><button type="button" class="l-resv-x" data-la="resweg">Überspringen</button></div></div>';
 }
 function lReserve(v) {
   const it = lR && Lw.items[lR.i], s = it && it.sets[lR.j]; if (!s || !s.done) return;

@@ -200,7 +200,7 @@ lauf(async () => {
   await q.click('#v-training [data-fold="einheiten"]');
   P.enthaelt('Einheit von heute nennt den Rekord', await text(q, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Probe', '1 Rekord']);
   P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2“, „Zweiter“ ist als Nächstes dran', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2') && (await text(q, '#v-training .rows.one .row.is-idle .name')) === 'Zweiter', await text(q, '#v-training h2.sec'));
-  P.enthaelt('Körpergewicht im selben Monat: +1,2 kg', await text(q, '#v-training .kw'), ['Körpergewicht', '+1,2 kg']);
+  P.ok('seit v141 keine Zeile „Körpergewicht im …“ unter den Kennzahlen (sein Wort: „zu viel“)', !(await q.$('#v-training .kw')) && !(await text(q, '#v-training')).includes('Körpergewicht'));
   // Blatt der Übung: Die Einheit von heute ist der Rekord, 60 / 53,33 − 1 = +12,5 %
   await q.click('#v-training .folds [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
   P.enthaelt('Blatt der Übung: „Rekord · +12,5 %“ an der Einheit von heute', await text(q, '#x-recap .lastx .note'), ['Rekord · +12,5 %']);
@@ -480,7 +480,7 @@ lauf(async () => {
   /* v106: stärkste und schwächste Übung, Umsortieren im Plan per Ziehen, großer Titel, Zahlen für das Widget, Tippflächen.
      Uhr: 15. des laufenden Monats, 12 Uhr. Pläne: Torso (Rudern, Curls, Platz 1), Beine (Curls, Platz 2). Torso am 10. trainiert → Beine ist dran, heute noch nichts.
      Rudern: Vormonat 40 × 10 (1RM 40 · (1 + 10/30) = 53,33), am 10. 44 × 10 (58,67) → +10,0 %. Curls: 10 × 10 (13,33), dann 10 × 8 (12,67) → −5,0 %. */
-  const ym13 = heute.slice(0, 7), mitte13 = new Date(+heute.slice(0, 4), +heute.slice(5, 7) - 1, 15, 12), MON13 = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni', 'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'][+ym13.slice(5) - 1];
+  const ym13 = heute.slice(0, 7), mitte13 = new Date(+heute.slice(0, 4), +heute.slice(5, 7) - 1, 15, 12);
   const hStub13 = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
   const K13 = { ex: { a: { n: 'Rudern' }, b: { n: 'Curls' } }, live: null, log: { [vm + '-10']: { a: [[40, 10]], b: [[10, 10]] }, [ym13 + '-10']: { a: [[44, 10]], b: [[10, 8]] } },
     meta: { [vm + '-10']: { dur: 1800, plan: 'p1' }, [ym13 + '-10']: { dur: 1800, plan: 'p1' } }, plans: { p1: { n: 'Torso', items: [{ id: 'a', sets: 3 }, { id: 'b', sets: 3 }], o: 1 }, p2: { n: 'Beine', items: [{ id: 'b', sets: 3 }], o: 2 } } };
@@ -491,8 +491,7 @@ lauf(async () => {
   const zahlen = await wp.evaluate(() => { const st = window.__post.filter(m => m.art === 'stand').pop(); return st ? st.zahlen.map(z => z.b + ':' + z.t + ':' + z.w + ':' + z.s).join(' | ') : 'kein Stand'; });
   P.ok('Widget „Überblick“: Gym mit dem Plan, der heute dran ist (keine Läufe, kein Gewicht, keine Finanzen → nur diese Kachel)', zahlen === 'training:Gym:Beine:heute dran', zahlen);
   await bereich(wp, 'training');
-  const best = await text(wp, '#v-training .best li');
-  P.ok('stärkste und schwächste Übung im Monat: Rudern +10,0 %, Curls −5,0 %', best === 'Rudern Stärkste Übung im ' + MON13 + ' +10,0 % | Curls Schwächste Übung im ' + MON13 + ' −5,0 %', best);
+  P.ok('seit v141 keine Karte „Stärkste / Schwächste Übung“ (sein Wort: „unten zu viel“)', !(await wp.$('#v-training .best')) && !(await text(wp, '#v-training')).includes('Stärkste Übung'));
   await wp.click('#v-training [data-k="plan"][data-id="p1"]'); await wp.waitForTimeout(200);
   const g0 = await wp.$('#p-items .prow:first-child .griff'), b0 = await g0.boundingBox(), b1 = await (await wp.$('#p-items .prow:nth-child(2)')).boundingBox();
   await wp.mouse.move(b0.x + b0.width / 2, b0.y + b0.height / 2); await wp.mouse.down();
@@ -585,17 +584,18 @@ lauf(async () => {
   P.ok('vor dem ersten Satz gibt es keine Frage nach der Reserve', (await frage()) === '', await frage());
   /* Satz 1 wie empfohlen (11), ohne Angabe: Ermüdung letztes Mal 9 − 9 = 0 → Satz 2: 11; Satz 3: 11 − (9 − 8) = 10. */
   await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('nach dem Abhaken: Die Frage liegt über dem ganzen Bildschirm, mit dem Satz darüber und fünf Knöpfen; die Sätze darunter sind schon angepasst', (await frage()) === 'Satz 1 · 40 kg × 11 Wdh # Wie viele wären noch gegangen? # 0 1 2 3 4+' && (await reihen15()) === '40×11 40×11 40×10', (await frage()) + ' # ' + (await reihen15()));
+  P.ok('nach dem Abhaken: Die Frage liegt über dem ganzen Bildschirm, mit dem Satz darüber und fünf Knöpfen; die Sätze darunter sind schon angepasst', (await frage()) === 'Satz 1 · 40 kg × 11 Wdh # RIR # 0 1 2 3' && (await reihen15()) === '40×11 40×11 40×10', (await frage()) + ' # ' + (await reihen15()));
   const deckt = await rs.evaluate(() => { const r = document.querySelector('#l-resv').getBoundingClientRect(), st = getComputedStyle(document.querySelector('#l-resv')); return r.top === 0 && r.left === 0 && r.width === innerWidth && r.height === innerHeight && st.position === 'fixed' && /blur/.test(st.backdropFilter || st.webkitBackdropFilter); });
   P.ok('… sie deckt den ganzen Bildschirm, der Hintergrund ist unscharf', deckt);
-  /* 4 oder mehr: zählt wie 11 + 3 = 14 = zwei über dem oberen Ende → 42,5 kg; 1RM 40 × (1 + 14/30) = 58,67 → (58,67 / 42,5 − 1) × 30 = 11,4 → 11; Satz 3: 11 − 1 = 10. */
-  await rs.click('#l-resv [data-v="4"]'); await rs.waitForTimeout(60);
-  P.ok('4 oder mehr gewählt: Die Ebene ist weg, mehr Gewicht für die Sätze danach (42,5×11, 42,5×10)', (await frage()) === '' && (await reihen15()) === '40×11 42,5×11 42,5×10' && (await emp15()) === 'Empfehlung 42,5 kg × 11 · mehr Gewicht, du hattest Reserve' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 4, (await reihen15()) + ' # ' + (await emp15()));
+  /* RIR 3 (seit v141 das Höchste, sein „mache nie weniger“): Satz 1 zählt wie 11 + 2 = 13 → Satz 2: 13 − 0 = 13, höchstens 12; Satz 3: 13 − (9 − 8) = 12.
+     Gerechnet wird vom Stand vor dem Abhaken, nicht auf der ersten Anpassung. */
+  await rs.click('#l-resv [data-v="3"]'); await rs.waitForTimeout(60);
+  P.ok('RIR 3 gewählt: Die Ebene ist weg, die Sätze danach steigen auf 12', (await frage()) === '' && (await reihen15()) === '40×11 40×12 40×12' && (await emp15()) === 'Empfehlung 40 kg × 12 · mehr, du hattest Reserve' && (await gespeichert(rs)).K.live.items[0].sets[0].x === 3, (await reihen15()) + ' # ' + (await emp15()));
   /* Tipp neben die Knöpfe: schließt ohne Angabe, die Sätze bleiben */
   await rs.click('.lt-r.act .chk'); await rs.waitForTimeout(60);
-  P.ok('Satz 2 abgehakt: Frage zu Satz 2 mit seinem Gewicht', (await frage()).startsWith('Satz 2 · 42,5 kg × 11 Wdh'), await frage());
+  P.ok('Satz 2 abgehakt: Frage zu Satz 2 mit seinem Gewicht', (await frage()).startsWith('Satz 2 · 40 kg × 12 Wdh'), await frage());
   await rs.click('#l-resv', { position: { x: 12, y: 12 } }); await rs.waitForTimeout(60);
-  P.ok('Tipp daneben: Die Ebene ist weg, ohne Angabe am Satz', (await frage()) === '' && (await gespeichert(rs)).K.live.items[0].sets[1].x == null && (await reihen15()) === '40×11 42,5×11 42,5×10', (await reihen15()));
+  P.ok('Tipp daneben: Die Ebene ist weg, ohne Angabe am Satz', (await frage()) === '' && (await gespeichert(rs)).K.live.items[0].sets[1].x == null && (await reihen15()) === '40×11 40×12 40×12', (await reihen15()));
   /* Curls: Vorgabe 22,5×8. Satz 1 nur 7: unter dem Bereich → 20 kg; 1RM 22,5 × (1 + 7/30) = 27,75 → (27,75 / 20 − 1) × 30 = 11,6 → 11.
      Mit 2 in Reserve hätte es für 8 gereicht (7 + 2 = 9): Das Gewicht bleibt; Satz 1 zählt wie 8, Satz 2 steigt von 7 auf 8 (Ermüdung letztes Mal 0). */
   await rs.click('#l-tabs .lx-tab:has-text("Curls")');
@@ -617,7 +617,7 @@ lauf(async () => {
   /* Speichern: Nur Sätze mit Angabe tragen das dritte Feld */
   await rs.click('#l-save'); await rs.waitForTimeout(250); await rs.click('#rs-ok');
   const log15 = (await gespeichert(rs)).K.log[heute];
-  P.ok('gespeichert: Presse 40×11 mit Reserve 4 und 42,5×11 ohne, Curls 22,5×7 mit Reserve 2 und 22,5×8 mit Reserve 1', JSON.stringify(log15) === '{"p":[[40,11,4],[42.5,11]],"c":[[22.5,7,2],[22.5,8,1]]}', JSON.stringify(log15));
+  P.ok('gespeichert: Presse 40×11 mit RIR 3 und 40×12 ohne, Curls 22,5×7 mit RIR 2 und 22,5×8 mit RIR 1', JSON.stringify(log15) === '{"p":[[40,11,3],[40,12]],"c":[[22.5,7,2],[22.5,8,1]]}', JSON.stringify(log15));
   await o15.browser.close();
 
   // --- Einstellungen (v110): Schritt je Übung, Frage nach der Reserve abschaltbar, Übersicht auf Heute, Start-Bereich ---
