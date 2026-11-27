@@ -717,6 +717,24 @@ lauf(async () => {
   P.ok('… ohne Wechsel des Gewichts bleibt die feste Formel: 42,5×9', (await reihenKu()) === '42,5×9', await reihenKu());
   await oKu.browser.close();
 
+  // --- v143: Übergang der Ebene RIR (sein Wort: „der Übergang beim Rein- und Rauskommen ist noch etwas unsmooth“) ---
+  /* Die Unschärfe selbst wächst (blur 0 → 24 px in 0,34 s), statt dass die Ebene mit fertiger Unschärfe einblendet; der Inhalt kommt 0,04 s später und setzt sich von 1,06 auf 1.
+     Beim Wählen steht darunter sofort das Neue (RIR am Satz, Sätze angepasst); die Ebene blendet 0,26 s aus und ist danach aus dem Aufbau. Sie steht in #l-ov, nicht in #l-items. */
+  const KUe = { ex: { c: { n: 'Latzug' } }, log: { [tag(7)]: { c: [[90, 12], [90, 10], [90, 8]] } }, plans: { p: { n: 'Probe', items: [{ id: 'c', sets: 3 }], o: 1 } }, meta: {}, live: null };
+  const oUe = await oeffnen({ reserve: true, bewegung: true, daten: { S: { routines: [], running: null }, LY: {}, K: KUe } }), ue = oUe.page;
+  await bereich(ue, 'training'); await ue.click('#v-training [data-k="start"]'); await ue.waitForTimeout(600);
+  await ue.click('.lt-r.act .chk');
+  const halb = await ue.evaluate(() => { const e = document.querySelector('#l-ov > #l-resv'); if (!e) return 'nicht in #l-ov';
+    const as = document.getAnimations().filter(a => a.effect.target.closest && a.effect.target.closest('#l-resv')); as.forEach(a => { a.pause(); a.currentTime = 120; });
+    const b = parseFloat(/blur\(([\d.]+)px\)/.exec(getComputedStyle(e).backdropFilter)[1]), o = +getComputedStyle(e.querySelector('.l-resv-in')).opacity;
+    as.forEach(a => a.finish()); return as.map(a => a.animationName).sort().join(',') + ' · ' + (b > 5 && b < 24) + ' · ' + (o > 0 && o < 1) + ' · ' + !document.querySelector('#l-items #l-resv'); });
+  P.ok('rein: Unschärfe und Inhalt wachsen (nach 0,12 s Unschärfe zwischen 5 und 24 px, Inhalt halb da), Ebene in #l-ov', halb === 'rvAn,rvInhalt · true · true · true', halb);
+  await ue.click('#l-resv [data-v="2"]');
+  const sofort = await ue.evaluate(() => { const e = document.querySelector('#l-resv'); return (e && e.classList.contains('weg')) + ' · ' + JSON.parse(localStorage.getItem('takt.v1')).K.live.items[0].sets[0].x; });
+  await ue.waitForTimeout(450);
+  P.ok('raus: Die Ebene blendet aus, der RIR steht schon am Satz; nach 0,45 s ist sie weg', sofort === 'true · 2' && !(await ue.$('#l-resv')), sofort);
+  await oUe.browser.close();
+
   // --- v140: Übung im Training überspringen („…“ → „Überspringen“; „Doch machen“ nimmt es zurück) ---
   /* Plan mit A, B, C zu je 2 Sätzen. A überspringen → weiter zu B; A ist im Reiter durchgestrichen und zählt nicht mehr als offen.
      Auf der Karte des laufenden Trainings: Sätze gesamt 2 + 2 = 4 (A zählt nur mit Abgehaktem, also 0). Gespeichert wird nur, was abgehakt ist: B und C, A nicht. */
@@ -924,5 +942,5 @@ lauf(async () => {
   await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
   P.ok('ohne Statistik-Start zählt der 18.11. mit (100 kg im Blatt)', (await text(ab2, '#xsheet')).includes('100'));
   await o21.browser.close();
-  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, oSk.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, oSk.fehler, oUe.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });

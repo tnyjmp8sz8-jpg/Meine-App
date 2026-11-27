@@ -637,10 +637,11 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .l-fuss{margin-top:auto;padding-top:8px;display:flex;flex-direction:column;gap:4px}
 #l-del{border:0;background:none;text-align:center;font-size:13px}
 /* Reserve nach einem Satz: eine Frage, fünf gleich breite Kapseln */
-.l-resv{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));background:rgba(242,242,247,.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);animation:dim .2s ease}
-.l-resv.weg{animation:dimZu .18s ease forwards;pointer-events:none}
+.l-resv{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;padding:24px 20px calc(24px + env(safe-area-inset-bottom));background:rgba(242,242,247,.5);-webkit-backdrop-filter:blur(24px) saturate(1.5);backdrop-filter:blur(24px) saturate(1.5);animation:rvAn .34s cubic-bezier(.22,.8,.24,1) both}
+.l-resv.weg{animation:rvAus .26s cubic-bezier(.4,0,.6,1) forwards;pointer-events:none}
 @media (prefers-color-scheme:dark){.l-resv{background:rgba(0,0,0,.5)}}
-.l-resv-in{width:100%;max-width:300px;text-align:center;animation:fade .28s cubic-bezier(.16,1,.3,1)}
+.l-resv-in{width:100%;max-width:300px;text-align:center;animation:rvInhalt .36s .04s cubic-bezier(.2,.9,.25,1) both}
+.l-resv.weg .l-resv-in{animation:rvInhaltAus .18s cubic-bezier(.4,0,1,1) forwards}
 .l-resv-k{margin:0 0 14px;color:var(--muted);font-size:13px;font-variant-numeric:tabular-nums}
 .l-resv .l-resv-in h3{display:block;margin:0 0 15px;color:var(--ink);font-size:28px;font-weight:700;letter-spacing:-.01em;line-height:1.2}
 .l-resv-c{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
@@ -855,11 +856,11 @@ dialog{border-radius:32px}
 /* Druck: Jede Fläche antwortet sofort auf den Finger und lässt weich wieder los (wie in iOS). Zeilen dunkeln ab, Knöpfe geben nach, kleine Zeichen werden blasser. */
 button{transition:transform .12s ease,background-color .15s ease,border-color .15s ease,color .15s ease,opacity .15s ease}
 button:active{transition-duration:.04s}
-.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.lt-r .pv:active,.zk:active,.z-list button:active,.feldknopf:active{transform:scale(.97)}
+.primary:active,.ghost:active,.chip:active,.add:active,.lx-tab:active,.lx-m:active,.lx-akt button:active,.lt-r .chk:active,.rv-b:active,.lt-r .pv:active,.zk:active,.z-list button:active,.feldknopf:active{transform:scale(.97)}
 /* Die ganze Zeile dunkelt ab, auch der Teil neben dem Knopf (Notiz: der Kreis links gehört dazu, antwortet aber selbst nur mit seinem Kreis) */
 .entries li{transition:background-color .15s ease}
 .entries li:has(> button:not(.tk):not(.info):active){background:var(--fill);transition-duration:.04s}
-.x:active,.mnav button:active,.sec-a:active,.linkbtn:active,button.cat:active,.seg2 button:active,.subtabs button:active,.info:active{opacity:.5}
+.x:active,.mnav button:active,.sec-a:active,.linkbtn:active,button.cat:active,.seg2 button:active,.subtabs button:active,.info:active,.l-resv-x:active{opacity:.5}
 .tab svg,.tk i,.cd b{transition:transform .12s ease,background-color .15s ease}
 .tab:active svg{transform:scale(.88)}
 .tk:active i{transform:scale(.84)}
@@ -871,6 +872,13 @@ dialog[open]{animation:sheet .26s cubic-bezier(.16,1,.3,1)}
 dialog[open]::backdrop{animation:dim .2s ease}
 @keyframes sheetZu{to{opacity:0;transform:translateY(24px)}}
 @keyframes dimZu{to{opacity:0}}
+/* Ebene RIR (v143, sein Wort: „der Übergang beim Rein- und Rauskommen ist noch etwas unsmooth“): Wie in iOS wächst die Unschärfe selbst auf und nimmt wieder ab,
+   statt dass die ganze Ebene samt fertiger Unschärfe ein- und ausblendet (WebKit zeichnet Milchglas unter wechselnder Deckkraft unruhig). Der Inhalt kommt einen Hauch später,
+   leicht größer, und setzt sich; beim Gehen blendet er schneller aus als die Unschärfe. */
+@keyframes rvAn{from{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes rvAus{to{background-color:transparent;-webkit-backdrop-filter:blur(0) saturate(1);backdrop-filter:blur(0) saturate(1)}}
+@keyframes rvInhalt{from{opacity:0;transform:scale(1.06)}}
+@keyframes rvInhaltAus{to{opacity:0;transform:scale(.97)}}
 dialog[open].zu{animation:sheetZu .15s ease-in forwards;pointer-events:none}
 dialog[open].zu::backdrop{animation:dimZu .15s ease forwards}
 @keyframes goN{from{opacity:.3;transform:translateX(26px)}to{opacity:1;transform:none}}
@@ -1367,6 +1375,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </div>
       <button type="button" class="ghost danger" id="l-del">Training verwerfen</button>
     </div>
+    <div id="l-ov"></div>
   </form>
 </dialog>
 
@@ -1379,7 +1388,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v142</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v143</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3742,7 +3751,7 @@ function resHTML() {
   const it = lR && Lw && Lw.items[lR.i], s = it && it.sets[lR.j];
   if (!(s && s.done && s.x == null && lR.i === lI && empAn() && K.res !== 0)) return '';
   const q = lNum(s), was = (q[0] ? kgn(q[0]) + ' kg × ' : '') + q[1] + ' Wdh';
-  return '<div class="l-resv" id="l-resv" data-la="resweg" role="dialog" aria-modal="true" aria-labelledby="l-resv-t"><div class="l-resv-in" data-la="resbleib">' +
+  return '<div class="l-resv" id="l-resv" data-key="' + lR.i + ':' + lR.j + '" data-la="resweg" role="dialog" aria-modal="true" aria-labelledby="l-resv-t"><div class="l-resv-in" data-la="resbleib">' +
     '<p class="l-resv-k">Satz ' + (lR.j + 1) + ' · ' + esc(was) + '</p><h3 id="l-resv-t">RIR</h3>' +
     '<div class="l-resv-c" role="group" aria-label="Wiederholungen in Reserve">' +
     [0, 1, 2, 3].map(v => '<button type="button" class="rv-b" data-la="res" data-v="' + v + '" aria-label="' + v + ' in Reserve">' + v + '</button>').join('') +
@@ -3756,6 +3765,13 @@ function lReserve(v) {
     if (n.er == null) { delete n.ew; delete n.er; delete n.eg; } });
   lAnpassen(it, lR.j);
   lResZu(it);
+}
+/* Die Ebene steht in #l-ov, nicht in #l-items: paintL zeichnet die Übung bei jedem Tipp neu, die Ebene aber nur, wenn eine neue Frage kommt (sonst begänne ihr Einblenden von vorn).
+   Eine Ebene, die gerade weich ausblendet (.weg), bleibt stehen, bis sie weg ist; darunter steht dann schon das Neue. */
+function paintRes() {
+  const host = $('#l-ov'), h = resHTML(), ov = host.firstElementChild;
+  if (h) { if (!ov || ov.classList.contains('weg') || ov.dataset.key !== lR.i + ':' + lR.j) host.innerHTML = h; }
+  else if (ov && !ov.classList.contains('weg')) host.innerHTML = '';
 }
 /* Ebene zu, mit oder ohne Wahl: War es der letzte Satz der Übung, geht es jetzt zur nächsten offenen */
 function lResZu(it) { if (it && lR && lR.i === lI && undone(it) < 0) lWeiter(); lR = lVor = null; }
@@ -3863,6 +3879,7 @@ function paintLPick() { if (Lw) paintPick('#l-pick', '#l-new', Lw.items.map(it =
 function paintL() {
   $('#ls-title').textContent = planName(Lw.plan) || 'Freies Training';
   lI = clamp(lI, 0, Math.max(0, Lw.items.length - 1));
+  paintRes();
   const tabs = $('#l-tabs');
   tabs.innerHTML = Lw.items.map((it, i) => {
     const ex = K.ex[it.id], name = ex ? ex.n : 'Übung', fin = !it.sk && undone(it) < 0;
@@ -3899,7 +3916,6 @@ function paintL() {
     : '<button type="button" class="lt-r' + (s.done ? ' done' : '') + '" data-la="sel" data-s="' + j + '" aria-label="Satz ' + (j + 1) + (s.done ? ', erledigt' : '') + ', bearbeiten"><span class="n">' + nr(j) + '</span><span>' + val(s.w) + mehr(s, j)[0] + '</span><span>' + val(s.r) + mehr(s, j)[1] + '</span>' + rm(s, j) + '<span class="st">' + (s.done ? CHECK : '') + '</span></button>').join('') + '</div>';
   /* Empfehlung für den Satz, der dran ist: Gewicht × Wiederholungen und in wenigen Worten, warum */
   const es = an && act >= 0 && it.sets[act] && !it.sets[act].done && it.sets[act].er != null ? it.sets[act] : null;
-  h += resHTML();
   if (es) h += '<p class="lx-e" id="l-emp"><b>Empfehlung</b> ' + (es.ew ? esc(es.ew) + ' kg × ' + esc(es.er) : esc(es.er) + ' Wdh') + (es.eg ? '<span> · ' + esc(es.eg) + '</span>' : '') + '</p>';
   if (last) h += '<button type="button" class="card lastx" data-la="hist" aria-label="Verlauf von ' + esc(name) + ' öffnen"><span class="note"><span>Letztes Mal · ' + unitLabel(last.d) + '</span>' + CHEV(1) + '</span>' + setsTable(last.sets, last.bw) + '</button>' + exFigsHTML(hist);
   else h += '<p class="note">Noch keine frühere Einheit mit dieser Übung. Ab dem nächsten Mal stehen hier die letzten Werte.</p>';
@@ -3940,12 +3956,11 @@ $('#lform').addEventListener('click', e => {
   const a = t.dataset.la, it = Lw.items[lI];
   if (a === 'hist') { if (it) openX(it.id, true); return; }
   if (a === 'resbleib') return;
-  if (a === 'res' || a === 'resweg') {   // Ebene der Reserve: erst weich ausblenden (0,18 s), dann wählen und neu zeichnen
+  if (a === 'res' || a === 'resweg') {   // Ebene RIR: sofort wählen und darunter neu zeichnen, die Ebene blendet dabei weich aus (0,26 s) und geht dann
     const ov = $('#l-resv'); if (!ov || ov.classList.contains('weg')) return;
-    const tu = () => { if (a === 'res') lReserve(+t.dataset.v); else lResZu(Lw.items[lR ? lR.i : -1]); const y = ldlg.scrollTop; paintL(); ldlg.scrollTop = y; saveLive(); liveTick(); };
-    if (a === 'res') t.classList.add('an');
-    if (ruhig()) return tu();
-    ov.classList.add('weg'); setTimeout(tu, 180); return;
+    if (a === 'res') { t.classList.add('an'); lReserve(+t.dataset.v); } else lResZu(Lw.items[lR ? lR.i : -1]);
+    if (!ruhig()) { ov.classList.add('weg'); setTimeout(() => ov.remove(), 280); }
+    const y = ldlg.scrollTop; paintL(); ldlg.scrollTop = y; saveLive(); liveTick(); return;
   }
   $('#l-err').hidden = true;
   const wasRm = lRm; lRm = false;
