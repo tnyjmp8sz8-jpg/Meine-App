@@ -226,6 +226,7 @@ dialog{overscroll-behavior:contain}
 /* Feld, das ein Blatt zum Wählen öffnet statt der Tastatur (v123: Dauer in „Einheit ändern“). Sieht aus wie ein Eingabefeld. */
 .feldknopf{display:flex;align-items:center;width:100%;min-height:44px;padding:11px 14px;border:0;border-radius:22px;background:var(--surface);color:var(--ink);font:inherit;font-size:16px;text-align:left;box-shadow:var(--rand-s)}
 .feldknopf.leer{color:var(--muted)}
+.duo .feldknopf{justify-content:flex-start}   /* wie die Felder daneben linksbündig, nicht mittig wie Knöpfe in .duo */
 .stepper{display:flex;align-items:center;gap:8px}
 .stepper button{flex:none;width:44px;height:44px;border-radius:14px;border:1px solid var(--line);background:transparent;font-size:22px;line-height:1}
 .stepper input{text-align:center;font-family:var(--display);font-weight:700;font-size:20px;padding:9px 8px;font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield}
@@ -412,7 +413,9 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .ov .v.neg{color:var(--danger)}
 .ov .s{grid-area:2/2/3/4;font-size:12px;color:var(--muted)}
 .ov .chev{grid-area:1/4/3/5;width:12px;height:12px;color:var(--mid)}
-.sec-as{display:flex;align-items:center;gap:20px}   /* zwei Aktionen in der Überschrift „Termine“ auf Heute: „Alle n ›“ oder „Kalender ›“, dahinter das Plus */
+.rv-a{position:relative;border:0;background:none;padding:0;font:inherit;color:var(--at)}   /* Satz der Rentenversicherung im Jahr: antippbar, ohne eigene Zeile */
+.rv-a::after{content:"";position:absolute;inset:-14px -10px}
+.rv-a:active{opacity:.5}
 .remind{display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;min-height:36px;padding:7px 14px;border:0;border-radius:14px;background:var(--surface);font-size:12.5px;color:var(--muted);text-align:left}
 .remind b{flex:none;color:var(--at);font-weight:600}
 .remind:active{background:var(--fill)}
@@ -717,6 +720,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .z-top{flex:none;display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;padding:6px 16px 4px}
 .z-top h2{margin:0;font-size:14px;font-weight:600;color:var(--muted)}
 .z-top .linkbtn{justify-self:start}
+.z-list[hidden]{display:none}
 .z-list{flex:1 1 auto;min-height:100px;max-height:300px;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:none;display:flex;flex-direction:column;align-items:center;gap:6px;padding:6px 16px}
 .z-list::-webkit-scrollbar{display:none}
 .z-list button{flex:none;width:176px;height:44px;border:0;border-radius:14px;background:var(--surface);color:var(--ink);font-size:17px;font-weight:700}
@@ -1051,10 +1055,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
-    <label class="fld" for="b-ums">
-      <span>Umsatz in €</span>
-      <input id="b-ums" type="text" inputmode="decimal" maxlength="10" autocomplete="off" placeholder="0,00">
-    </label>
+    <div class="fld">
+      <span id="lbl-b-ums">Umsatz</span>
+      <button type="button" class="feldknopf" id="b-ums" aria-describedby="lbl-b-ums">–</button>
+    </div>
     <label class="fld" for="b-date">
       <span>Tag</span>
       <input id="b-date" type="date">
@@ -1070,14 +1074,14 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </label>
     </div>
     <div class="duo">
-      <label class="fld" for="b-pause">
-        <span>Pause in Minuten</span>
-        <input id="b-pause" type="text" inputmode="numeric" maxlength="3" autocomplete="off" placeholder="0">
-      </label>
-      <label class="fld" for="b-rate">
-        <span>Stundenlohn in €</span>
-        <input id="b-rate" type="text" inputmode="decimal" maxlength="8" autocomplete="off" placeholder="0,00">
-      </label>
+      <div class="fld">
+        <span id="lbl-b-pause">Pause</span>
+        <button type="button" class="feldknopf" id="b-pause" aria-describedby="lbl-b-pause">–</button>
+      </div>
+      <div class="fld">
+        <span id="lbl-b-rate">Stundenlohn</span>
+        <button type="button" class="feldknopf" id="b-rate" aria-describedby="lbl-b-rate">–</button>
+      </div>
     </div>
     <p class="note" id="b-calc" hidden></p>
     <p class="err" id="b-err" role="alert" hidden></p>
@@ -1364,7 +1368,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v137</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v138</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3741,6 +3745,7 @@ function openZ(o) {
   zO = o; zS = '';
   $('#zs-title').textContent = o.titel; $('#z-komma').disabled = !o.komma;
   const box = $('#z-list');
+  box.hidden = !o.liste.length;   // ohne Werte in der Nähe (Umsatz) nur die Tasten
   box.innerHTML = o.liste.map(v => '<button type="button" data-zv="' + v + '" aria-pressed="' + (v === o.wert) + '">' + (o.text ? o.text(v) : kgn(v) + ' ' + o.einheit) + '</button>').join('');
   $('#z-pad').hidden = !!o.nurListe;
   paintZ(); openDlg(zdlg);
@@ -3753,7 +3758,7 @@ function zTaste(c) {
   if (c === 'x') zS = zS.slice(0, -1);
   else if (c === ',') { if (zO.komma && zS.indexOf(',') < 0) zS = (zS || '0') + ','; }
   else if (zS === '0') zS = c;
-  else if (!/,\d\d$/.test(zS) && zS.replace(',', '').length < (zO.komma ? 5 : 3)) zS += c;
+  else if (!/,\d\d$/.test(zS) && zS.replace(',', '').length < (zO.stellen || (zO.komma ? 5 : 3))) zS += c;   // stellen: Ziffern höchstens (Umsatz bis 99.999,99)
   paintZ();
 }
 $('#z-pad').addEventListener('click', e => { const b = e.target.closest('[data-z]'); if (b) zTaste(b.dataset.z); });
@@ -4237,13 +4242,13 @@ function workJahrHTML(list) {
   let h = navHTML(String(arbJahr), arbJahr < curY, 'Ein Jahr') + '<section class="hero w-hero"><p class="date">Verdienst ' + arbJahr + '</p><h1><span class="num">' + z(sB) + '</span><span class="unit">€</span></h1><p class="sub">' +
     (l.length ? stdT(wMins(l)) + ' an ' + wTage(l).replace('Tage', 'Tagen') : 'In diesem Jahr nichts eingetragen') + '</p></section>';
   if (!ms.length) return h;
-  h += '<div class="card last" style="padding-top:2px">' + kvRow('Soll aufs Konto', z(sS), '€', 'nach ' + rvT() + ' Rentenversicherung') +
+  /* Der Satz steht nur hier und ist hier zu ändern (v138, sein Wort 27.11.: „9,3 unten kann weg, steht da oben schon“; bis v137 eine eigene Zeile unter der Abrechnung) */
+  h += '<div class="card last" style="padding-top:2px">' + kvRow('Soll aufs Konto', z(sS), '€', 'nach <button type="button" class="rv-a" data-n="rv" aria-label="Satz der Rentenversicherung ändern">' + rvT() + '</button> Rentenversicherung') +
     (mitU(l).length ? kvRow('Umsatz pro Stunde', eur0(uStd(l)), '€', 'Umsatz ' + eur0(uSum(l)) + ' € im Jahr') : '') +
     (da.length ? kvRow('Erhalten', z(sG), '€', da.length + ' von ' + ms.length + (ms.length === 1 ? ' Monat' : ' Monaten')) +
       kvRow('Bilanz', (bil > 0 ? '+' : bil < 0 ? '−' : '') + z(bil), '€', bil === 0 ? 'passt genau' : bil < 0 ? 'zu wenig angekommen' : 'mehr als erwartet', bil < 0 ? 'down' : bil > 0 ? 'up' : '') : '') + '</div>';
   h += secHTML('Abrechnung' + INFO('rv')) + '<p class="note" id="info-rv" hidden>Vom Verdienst geht dein Anteil an der Rentenversicherung ab, der Rest sollte auf dem Konto ankommen. Üblich sind 9,3 %, im Minijob 3,6 %; bei wenig Verdienst kann es weniger sein. Steuern rechnet die App nicht. Weicht die Bilanz jeden Monat gleich ab, passe den Satz unten an deine Abrechnung an.</p>' +
-    abrHTML(ms, soll, got) +
-    '<ul class="entries"><li><button type="button" class="two" data-n="rv" aria-label="Satz der Rentenversicherung ändern"><span class="l"><span>Rentenversicherung</span></span><b>' + rvT() + '</b></button></li></ul>';
+    abrHTML(ms, soll, got);
   return h;
 }
 function workHTML() {
@@ -4318,17 +4323,26 @@ $('#r-subs').addEventListener('click', e => { const b = e.target.closest('[data-
 const bdlg = $('#bsheet'); let bE = null;
 const minOf = v => { const m = /^(\d\d):(\d\d)/.exec(v || ''); return m && +m[1] < 24 && +m[2] < 60 ? +m[1] * 60 + +m[2] : -1; };
 /* Liest das Blatt: der Eintrag oder, wenn etwas fehlt, der Text der Meldung */
+/* Umsatz, Pause und Lohn (v138, seine Meldung 27.11. mit Bild: Beim Tipp auf „Umsatz“ öffnete sich das Blatt „sehr unsauber“, es sprang über die Tastatur bis unter die Uhrzeit):
+   keine Felder mit der Tastatur des iPhones mehr, sondern Knöpfe, die „Zahl wählen“ öffnen, wie seit v123 die Dauer in „Einheit ändern“ (Regel aus CLAUDE.md für längere Blätter).
+   Die Werte stehen in bE (u Umsatz in Cent, 0 = keiner; p Pause in Minuten; r Lohn in Cent). Tag und Zeiten bleiben die Räder des iPhones. */
+function paintB() {
+  const k = (id, t, leer) => { const b = $(id); b.textContent = t; b.classList.toggle('leer', !!leer); };
+  k('#b-ums', bE.u ? eur(bE.u) : 'Keiner', !bE.u); k('#b-pause', bE.p ? bE.p + ' min' : 'Keine', !bE.p); k('#b-rate', eur(bE.r));
+}
+const bZahl = o => openZ(Object.assign(o, { dann: v => { o.setze(v); $('#b-err').hidden = true; paintB(); bCalc(); } }));
+$('#b-ums').addEventListener('click', () => bZahl({ titel: 'Umsatz in €', wert: bE.u ? bE.u / 100 : null, einheit: '€', komma: true, stellen: 7, liste: [], setze: v => { bE.u = v > 0 ? Math.round(v * 100) : 0; } }));
+$('#b-pause').addEventListener('click', () => bZahl({ titel: 'Pause in Minuten', wert: bE.p, einheit: 'min', komma: false, liste: [0, 15, 30, 45, 60], setze: v => { bE.p = Math.max(0, Math.min(1439, Math.round(v))); } }));
+$('#b-rate').addEventListener('click', () => bZahl({ titel: 'Stundenlohn in €', wert: bE.r / 100, einheit: '€', komma: true, liste: [20, 22.5, 25, 27.5, 30], setze: v => { bE.r = Math.round(v * 100); } }));
 function bRead() {
-  const d = $('#b-date').value, a = minOf($('#b-von').value), b = minOf($('#b-bis').value), ps = $('#b-pause').value.trim(), p = ps ? Math.round(dec(ps)) : 0, r = parseEur($('#b-rate').value);
+  const d = $('#b-date').value, a = minOf($('#b-von').value), b = minOf($('#b-bis').value), p = bE.p, r = bE.r;
   if (!isKey(d)) return 'Wähle einen Tag.';
   if (a < 0 || b < 0) return 'Trag Beginn und Ende ein.';
   if (a === b) return 'Beginn und Ende sind gleich.';
   if (!(p >= 0)) return 'Die Pause in Minuten, z. B. 30.';
   if (p >= (b - a + 1440) % 1440) return 'Die Pause ist so lang wie die Arbeitszeit.';
   if (!okCents(r)) return 'Trag deinen Stundenlohn ein.';
-  const us = $('#b-ums').value.trim(), u = us ? parseEur(us) : 0;
-  if (us && !(u >= 0)) return 'Der Umsatz in Euro, z. B. 420.';
-  return Object.assign({ d, a, b, p, r }, u > 0 ? { u } : {});
+  return Object.assign({ d, a, b, p, r }, bE.u > 0 ? { u: bE.u } : {});
 }
 function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 'string'; if (!c.hidden) c.textContent = stdT(workMin(x)) + ' · ' + eur(workPay(x)) + (x.u ? ' · Umsatz ' + eur0(uStd([x])) + ' € pro Std' : ''); }
 /* Neuer Eintrag (v134, sein Wort 26.11.: „wenn ich tracke, ist Beginn die Zeit gerade, aber will Endzeit die Zeit gerade (trage ja am Ende ein) und die Beginnzeit einfach 2,5 h vor der jetzigen Endzeit“):
@@ -4339,15 +4353,12 @@ function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 
 const LOHN = 2500, SCHICHT = 150;
 function openB(id) {
   const x = id ? N.work.e[id] : null, jetzt = new Date(), b0 = jetzt.getHours() * 60 + jetzt.getMinutes(), v = x || { a: (b0 - SCHICHT + 1440) % 1440, b: b0, p: 0 }, r = x ? x.r : N.work.rate || LOHN;
-  bE = { id: x ? id : null };
+  bE = { id: x ? id : null, u: x && x.u ? x.u : 0, p: v.p || 0, r };
   $('#bs-title').textContent = x ? 'Arbeitszeit ändern' : 'Arbeitszeit eintragen';
   $('#b-date').value = x ? x.d : b0 < SCHICHT ? keyOf(addDays(jetzt, -1)) : todayKey();
-  $('#b-von').value = uhrT(v.a); $('#b-bis').value = uhrT(v.b); $('#b-pause').value = v.p || '';
-  $('#b-rate').value = eur(r).replace(' €', '');
-  $('#b-ums').value = x && x.u ? eur(x.u).replace(' €', '') : '';
+  $('#b-von').value = uhrT(v.a); $('#b-bis').value = uhrT(v.b);
   $('#b-err').hidden = true; $('#b-del').hidden = !x;
-  bCalc(); openDlg(bdlg); bdlg.scrollTop = 0;
-  if (!x) fokus($('#b-ums'));   // neu: Zeiten und Lohn stehen schon da, getippt wird nur der Umsatz (v136)
+  paintB(); bCalc(); openDlg(bdlg); bdlg.scrollTop = 0;
 }
 function closeB() { closeDlg(bdlg); }
 $('#bs-close').addEventListener('click', closeB);
@@ -4539,7 +4550,8 @@ function homeTermineHTML() {
     return '<li><button type="button" class="two" data-h="termin" ' + kalAttr(x) + '><span class="l"><span>' + kalName(x) + '</span><small>' +
       (jetzt ? 'Jetzt · bis ' + hm(x.e) : (k === tk ? 'Heute' : k === morgen ? 'Morgen' : tagKurz(k)) + (x.g ? ' · ganztägig' : '')) + (x.o ? ' · ' + esc(x.o) : '') + '</small></span>' + (x.g || jetzt ? '' : '<b>' + hm(x.s) + '</b>') + '</button></li>';
   };
-  return secHTML('Termine', '', '<span class="sec-as"><button type="button" class="sec-a go" data-h="kal">' + (kommt.length > 4 ? 'Alle ' + kommt.length : 'Kalender') + CHEV(1) + '</button>' + secAct('data-h="q" data-v="termin"', '', 'Termin hinzufügen') + '</span>') + '<ul class="entries">' + kommt.slice(0, 4).map(zeile).join('') + '</ul>';
+  /* Nur das Plus in der Überschrift (v138, sein Wort 27.11.: „dieses Alle 19 kann weg, sehe ja eh alles, wenn ich oben auf die Kalender-Leiste gehe“) */
+  return secHTML('Termine', '', secAct('data-h="q" data-v="termin"', '', 'Termin hinzufügen')) + '<ul class="entries">' + kommt.slice(0, 4).map(zeile).join('') + '</ul>';
 }
 /* Liest Tag und Zeit aus einem Satz wie „Zahnarzt morgen 15 Uhr“ (nur bei einem neuen Termin): So ist er in einem Feld eingetragen.
    Erkannt wird, was eindeutig ist; der Rest bleibt der Titel. Beispiele mit heute = Donnerstag, 26.11.2026:
@@ -5040,7 +5052,6 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'go') { if (t.dataset.teil) rSub = t.dataset.teil; show(v, true); }
   else if (a === 'q') quickOpen(v);
   else if (a === 'termin') openTe(t.dataset.id, +t.dataset.s);
-  else if (a === 'kal') openCal('all', todayKey());
   else bkAct(a);   // die Erinnerung oben: Jetzt sichern, Ordner wählen
 });
 document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));

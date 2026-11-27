@@ -114,12 +114,12 @@ lauf(async () => {
   let h = await heute(page);
   /* Heute um 10:00: Geburtstag (ganztägig), Zahnarzt 14:00, morgen Seminar 9:00, morgen Friseur 15:00; „Früh“ ist vorbei, der Kurztrip (3.12.) wäre die fünfte Zeile */
   p.ok('Heute: vier Zeilen in der richtigen Folge, der neue Termin schon dabei', JSON.stringify(h) === JSON.stringify(['Geburtstag Mama Heute · ganztägig', 'Zahnarzt Heute · Praxis Mitte 14:00', 'Seminar Morgen 09:00', 'Friseur Morgen 15:00']), JSON.stringify(h));
-  p.ok('Heute: „Alle 5“ in der Überschrift (mit dem neuen fünf in 14 Tagen)', (await text(page, '#v-heute [data-h="kal"]')) === 'Alle 5', await text(page, '#v-heute [data-h="kal"]'));
+  p.ok('Heute: in der Überschrift nur das Plus, kein „Alle n“ (seit v138)', !(await page.$('#v-heute [data-h="kal"]')) && !!(await page.$('#v-heute .sec [data-h="q"][data-v="termin"]')));
   p.ok('Der neue Termin ist noch nicht antippbar (Kennung kommt vom Kalender)', await page.evaluate(() => [...document.querySelectorAll('#v-heute [data-h="termin"]')].filter(b => b.disabled).length === 1));
   /* Die iPhone-App meldet den Kalender neu (jetzt ohne den Friseur): Die Liste gilt */
   await an(page);
   h = await heute(page);
-  p.ok('Heute: Liste aus dem Kalender, vier Zeilen, „Kalender“ in der Überschrift', h.length === 4 && h[3] === 'Kurztrip Do, 3.12. · ganztägig' && (await text(page, '#v-heute [data-h="kal"]')) === 'Kalender', JSON.stringify(h));
+  p.ok('Heute: Liste aus dem Kalender, vier Zeilen, nur das Plus in der Überschrift', h.length === 4 && h[3] === 'Kurztrip Do, 3.12. · ganztägig', JSON.stringify(h));
   p.ok('Punkt in der Farbe des Kalenders', await page.evaluate(() => getComputedStyle(document.querySelector('#v-heute [data-h="termin"][data-id="a"] .kf')).backgroundColor === 'rgb(255, 59, 48)'));
   /* Gemerkt für den nächsten Start: nur was bis in 92 Tagen liegt (ohne den 12.3.2027) */
   const merk = await page.evaluate(() => JSON.parse(localStorage.getItem('takt.termine')));

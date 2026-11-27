@@ -1,5 +1,5 @@
 // Arbeit und Uni: zwei eigene Teile des Planers neben den Notizen, mit Arbeitszeiten (Verdienst je Monat) und Terminen der Uni (Punkte je Fach).
-const { oeffnen, text, bereich, gespeichert, pruefer, lauf } = require('./lib');
+const { oeffnen, text, bereich, gespeichert, pruefer, lauf, zahlWahl } = require('./lib');
 
 lauf(async () => {
   const P = pruefer('Arbeit und Uni');
@@ -50,13 +50,15 @@ lauf(async () => {
   /* Neuer Eintrag (v134): heute, Ende = jetzt (die Uhr steht auf 12:00), Beginn 2,5 Stunden davor (09:30), keine Pause, der gemerkte Lohn (14,50 €).
      2,5 Std × 14,50 € = 36,25 €. Danach von Hand: 12.11. 09:00–13:00 ohne Pause mit 15,00 € = 4 Std → 60,00 € */
   await page.click('#n-main [data-n="newwork"]'); await kurz();
-  const vor = await page.evaluate(() => ['b-date', 'b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|'));
-  P.ok('Blatt: heute, Ende jetzt, Beginn 2,5 Stunden davor, keine Pause, gemerkter Lohn', vor === '2026-11-15|09:30|12:00||14,50', vor);
+  /* Seit v138 sind Umsatz, Pause und Lohn Knöpfe, die „Zahl wählen“ öffnen (keine Tastatur des iPhones im Blatt) */
+  const vor = await page.evaluate(() => ['b-date', 'b-von', 'b-bis'].map(i => document.getElementById(i).value).concat(['b-ums', 'b-pause', 'b-rate'].map(i => document.getElementById(i).textContent)).join('|'));
+  P.ok('Blatt: heute, Ende jetzt, Beginn 2,5 Stunden davor, kein Umsatz, keine Pause, gemerkter Lohn', vor === '2026-11-15|09:30|12:00|Keiner|Keine|14,50 €', vor);
+  P.ok('Blatt: kein Feld mit Tastatur außer Tag und Zeiten', await page.evaluate(() => [...document.querySelectorAll('#bsheet input')].every(i => ['date', 'time'].includes(i.type))));
   P.ok('Blatt zeigt vorab „2,5 Std · 36,25 €“', (await text(page, '#b-calc')) === '2,5 Std · 36,25 €', await text(page, '#b-calc'));
   const roh0 = await page.evaluate(() => localStorage.getItem('takt.v1'));
   await page.fill('#b-von', '12:00'); await page.click('#b-save'); await kurz();   // Ende steht seit v134 schon auf 12:00
   P.ok('Beginn gleich Ende: Meldung, nichts gespeichert', (await text(page, '#b-err')) === 'Beginn und Ende sind gleich.' && (await page.evaluate(() => localStorage.getItem('takt.v1'))) === roh0);
-  await page.fill('#b-date', '2026-11-12'); await page.fill('#b-von', '09:00'); await page.fill('#b-bis', '13:00'); await page.fill('#b-pause', ''); await page.fill('#b-rate', '15');
+  await page.fill('#b-date', '2026-11-12'); await page.fill('#b-von', '09:00'); await page.fill('#b-bis', '13:00'); await zahlWahl(page, '#b-rate', '15');
   P.ok('Blatt rechnet beim Tippen mit: „4 Std · 60,00 €“', (await text(page, '#b-calc')) === '4 Std · 60,00 €', await text(page, '#b-calc'));
   await page.click('#b-save'); await kurz();
   // 148,63 + 60,00 = 208,63 € · 10,25 + 4 = 14,25 Std an 3 Tagen
@@ -126,13 +128,13 @@ lauf(async () => {
   P.enthaelt('leere App, Arbeit: 0,00 € und Hinweis', await text(l.page, '#n-main .hero'), ['0,00', 'Noch keine Arbeitszeit eingetragen']);
   P.ok('leere App: kein Umschalter „Zeiten | Jahr“, solange nichts eingetragen ist', !(await l.page.$('#n-main .seg2')));
   await l.page.click('#n-main [data-n="newwork"]'); await l.page.waitForTimeout(150);
-  /* Erster Eintrag ohne gemerkten Lohn (v128, Zeiten seit v134): 25,00 € stehen da, 09:30 bis 12:00 → „2,5 Std · 62,50 €“; kein Feld hat den Fokus (keine Tastatur, ein Tipp auf „Speichern“ genügt) */
-  const erst = await l.page.evaluate(() => ['b-von', 'b-bis', 'b-pause', 'b-rate'].map(i => document.getElementById(i).value).join('|') + ' · ' + document.querySelector('#b-calc').textContent + ' · ' + document.activeElement.id);
-  P.ok('erster Eintrag: 2,5 Stunden vor jetzt bis jetzt mit 25,00 €, der Umsatz hat sofort den Fokus (v136)', erst === '09:30|12:00||25,00 · 2,5 Std · 62,50 € · b-ums', erst);
-  await l.page.fill('#b-von', '08:00'); await l.page.fill('#b-bis', '12:00'); await l.page.fill('#b-rate', ''); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
+  /* Erster Eintrag ohne gemerkten Lohn (v128, Zeiten seit v134): 25,00 € stehen da, 09:30 bis 12:00 → „2,5 Std · 62,50 €“; kein Feld hat den Fokus (keine Tastatur, ein Tipp auf „Speichern“ genügt; Umsatz seit v138 über „Zahl wählen“) */
+  const erst = await l.page.evaluate(() => ['b-von', 'b-bis'].map(i => document.getElementById(i).value).concat(['b-pause', 'b-rate'].map(i => document.getElementById(i).textContent)).join('|') + ' · ' + document.querySelector('#b-calc').textContent);
+  P.ok('erster Eintrag: 2,5 Stunden vor jetzt bis jetzt mit 25,00 €', erst === '09:30|12:00|Keine|25,00 € · 2,5 Std · 62,50 €', erst);
+  await l.page.fill('#b-von', '08:00'); await l.page.fill('#b-bis', '12:00'); await zahlWahl(l.page, '#b-rate', '0'); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
   P.ok('ohne Lohn: Meldung', (await text(l.page, '#b-err')) === 'Trag deinen Stundenlohn ein.');
   // 08:00–12:00 = 4 Std mit 12,50 € → 50,00 €
-  await l.page.fill('#b-rate', '12,5'); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
+  await zahlWahl(l.page, '#b-rate', '12,5'); await l.page.click('#b-save'); await l.page.waitForTimeout(150);
   P.enthaelt('gespeichert: 50,00 €, 4 Std an 1 Tag', await text(l.page, '#n-main .hero'), ['50,00', '4 Std an 1 Tag']);
   /* Was gespeichert wird (und damit in jeder Sicherung steht) */
   const datei = await l.page.evaluate(() => JSON.parse(localStorage.getItem('takt.v1')).N);
@@ -166,7 +168,7 @@ lauf(async () => {
   await jp.click('#n-main [data-fold="abrAlt"]'); await w();
   let J = await jahr();
   P.ok('Jahr 2026: Verdienst 512,92 €, 20,52 Std an 6 Tagen; kein Jahr danach', J.nav === '2026' && !J.vor && J.hero === 'Verdienst 2026 512,92 € 20,52 Std an 6 Tagen', JSON.stringify(J));
-  P.ok('ohne Eintrag: nur „Soll aufs Konto 465,22 €“, beide Monate „offen“, Rentenversicherung 9,3 %', J.kv === 'Soll aufs Konto 465,22€ nach 9,3 % Rentenversicherung' && J.zeilen === 'November Soll 317,45 € offen | Oktober Soll 147,77 € offen' && J.rv === 'Rentenversicherung 9,3 %', JSON.stringify(J));
+  P.ok('ohne Eintrag: nur „Soll aufs Konto 465,22 €“, beide Monate „offen“, Rentenversicherung 9,3 %', J.kv === 'Soll aufs Konto 465,22€ nach 9,3 % Rentenversicherung' && J.zeilen === 'November Soll 317,45 € offen | Oktober Soll 147,77 € offen' && J.rv === '9,3 %' && !(await jp.$('#n-main .entries [data-n="rv"]')), JSON.stringify(J));
   P.ok('Erklärung hinter dem „i“', await jp.evaluate(() => { const p = document.querySelector('#info-rv'); return p.hidden && !!document.querySelector('#n-main [data-info="rv"]'); }));
   // November: angekommen 317,00 € → 317,00 − 317,45 = −0,45 €
   await jp.click('#n-main [data-n="abr"][data-id="2026-11"]'); await w();
@@ -188,7 +190,7 @@ lauf(async () => {
   await jp.click('#n-main [data-n="rv"]'); await w();
   P.ok('Rentenversicherung: „Zahl wählen“ mit 0, 3,6 und 9,3 %, 9,3 % markiert', (await text(jp, '#z-list button')) === '0 % | 3,6 % | 9,3 %' && (await text(jp, '#z-list [aria-pressed="true"]')) === '9,3 %', await text(jp, '#z-list button'));
   await jp.click('#z-list [data-zv="3.6"]'); await w(); J = await jahr();
-  P.ok('3,6 % gewählt und gespeichert (360): Soll 494,45 €, Bilanz −27,45 €', (await gespeichert(jp)).N.work.rv === 360 && J.rv === 'Rentenversicherung 3,6 %' && J.kv === 'Soll aufs Konto 494,45€ nach 3,6 % Rentenversicherung | Erhalten 467,00€ 2 von 2 Monaten | Bilanz −27,45€ zu wenig angekommen', JSON.stringify(J));
+  P.ok('3,6 % gewählt und gespeichert (360): Soll 494,45 €, Bilanz −27,45 €', (await gespeichert(jp)).N.work.rv === 360 && J.rv === '3,6 %' && J.kv === 'Soll aufs Konto 494,45€ nach 3,6 % Rentenversicherung | Erhalten 467,00€ 2 von 2 Monaten | Bilanz −27,45€ zu wenig angekommen', JSON.stringify(J));
   // Eintrag löschen: November ist wieder offen
   await jp.click('#n-main [data-n="abr"][data-id="2026-11"]'); await w();
   P.ok('Blatt mit Eintrag: Feld zeigt 317,00, Löschen ist da', (await jp.inputValue('#a-got')) === '317,00' && await jp.evaluate(() => !document.querySelector('#a-del').hidden));
@@ -230,7 +232,7 @@ lauf(async () => {
   await up.click('#n-main [data-fold="arbeitAlt"]'); await uw();
   P.enthaelt('Eintrag mit Umsatz zeigt ihn unter dem Verdienst', await text(up, '#n-main [data-n="work"][data-id="u1"]'), ['100,00 €', 'Umsatz 600 €']);
   await up.click('#n-main [data-n="newwork"]'); await uw();
-  await up.keyboard.type('375');
+  await zahlWahl(up, '#b-ums', '375');   // seit v138 über „Zahl wählen“
   P.ok('neuer Eintrag: Umsatz getippt, Vorschau mit 150 € pro Std', (await text(up, '#b-calc')) === '2,5 Std · 62,50 € · Umsatz 150 € pro Std', await text(up, '#b-calc'));
   await up.click('#b-save'); await uw();
   P.ok('gespeichert mit u = 37500 Cent', Object.values((await gespeichert(up)).N.work.e).some(x => x && x.d === '2026-11-15' && x.u === 37500));
@@ -239,13 +241,15 @@ lauf(async () => {
   P.enthaelt('Jahr: Umsatz pro Stunde 136 €, 1.835 € im Jahr', await text(up, '#n-main .card'), ['Umsatz pro Stunde', '136', 'Umsatz 1.835 € im Jahr']);
   await up.click('#n-main [data-n="wmode"][data-v="zeit"]'); await uw();
   await up.click('#n-main [data-n="work"][data-id="u2"]'); await uw();
-  P.ok('Ändern: der Umsatz steht im Feld', (await up.inputValue('#b-ums')) === '360,00');
-  await up.fill('#b-ums', ''); await up.click('#b-save'); await uw();
+  P.ok('Ändern: der Umsatz steht auf dem Knopf', (await text(up, '#b-ums')) === '360,00 €', await text(up, '#b-ums'));
+  await zahlWahl(up, '#b-ums', '1234,5');   // vierstellig mit Komma (bis 7 Ziffern)
+  P.ok('Umsatz über 1.000 € lässt sich eintippen', (await text(up, '#b-ums')) === '1.234,50 €', await text(up, '#b-ums'));
+  await zahlWahl(up, '#b-ums', '0'); await up.click('#b-save'); await uw();   // 0 = kein Umsatz
   P.ok('Umsatz geleert: Eintrag ohne u', !('u' in (await gespeichert(up)).N.work.e.u2));
-  /* Ein Tipp in ein Feld schließt das Blatt nicht (v137): Fokus ins Feld „Umsatz“ eines vorhandenen Eintrags, gleich danach ein echter Tipp neben das Blatt → bleibt offen.
+  /* Ein Tipp in ein Feld schließt das Blatt nicht (v137): Fokus ins Feld „Tag“ eines vorhandenen Eintrags (Umsatz ist seit v138 ein Knopf), gleich danach ein echter Tipp neben das Blatt → bleibt offen.
      Nach einer Sekunde ist ein Tipp daneben wieder ein Tipp daneben → zu. */
   await up.click('#n-main [data-n="work"][data-id="u1"]'); await uw();
-  await up.focus('#b-ums'); await up.mouse.click(8, 8); await up.waitForTimeout(50);
+  await up.focus('#b-date'); await up.mouse.click(8, 8); await up.waitForTimeout(50);
   P.ok('Fokus ins Feld, gleich danach Tipp daneben: Blatt bleibt offen', await up.evaluate(() => document.querySelector('#bsheet').open));
   await up.waitForTimeout(900); await up.mouse.click(8, 8); await uw();
   P.ok('… eine Sekunde später schließt ein Tipp daneben wie gewohnt', !(await up.evaluate(() => document.querySelector('#bsheet').open)));
