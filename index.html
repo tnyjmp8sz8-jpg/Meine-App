@@ -618,6 +618,74 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .cs-day h3{margin:0;font-size:15px;font-weight:700}
 .cs-day .note{margin:0}
 .cs-day .entries .l small{line-height:1.45;margin-top:2px}
+/* Kalender auf Heute wie in iOS (v144, sein Bild aus Apples Kalender: „auf Tag klicken, dann gleiche Ansicht, auch die Farben übernehmen, basically wie Kalender-App von iOS“).
+   #csheet.ios: Monat (cs-body) mit Strichen und Punkten in den Farben der Kalender; .tag: Tagesansicht in cs-day; .such: Suche. Die anderen Bereiche behalten ihren Kalender. */
+.cs-akt{justify-self:end;display:flex;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s)}
+.cs-akt[hidden],.cs-sbar[hidden],.cs-such[hidden]{display:none}
+.cs-akt button{position:relative;width:46px;height:40px;border:0;background:none;color:var(--ink);display:grid;place-items:center}
+.cs-akt svg{width:19px;height:19px}
+#cs-today{justify-self:end}
+#csheet.ios .cs-top{grid-template-columns:auto 1fr auto;gap:8px;padding:12px 12px 8px}
+#csheet.ios #cs-today{display:none}
+#csheet.ios #cs-close{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-size:15px;font-weight:600}
+#csheet.ios #cs-close svg{width:8px;height:14px;margin-left:-3px}
+#csheet.ios #cs-title{visibility:hidden}
+.tl-h.weg span{visibility:hidden}
+.cs-sbar{display:flex;align-items:center;gap:10px;padding:12px 12px 8px}
+.cs-sbar .linkbtn{flex:none}
+.cs-q{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--muted)}
+.cs-q svg{flex:none;width:17px;height:17px}
+.cs-q input{flex:1;min-width:0;border:0;background:none;padding:0;color:var(--ink);font-size:16px;-webkit-appearance:none;appearance:none;outline:none;box-shadow:none}
+.cs-q input::-webkit-search-cancel-button{display:none}
+#csheet.such .cs-top,#csheet.such .cs-wd,#csheet.such .cs-body,#csheet.such .cs-day,#csheet.such .cs-heute{display:none}
+.cs-such{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 24px}
+.cs-such h4{margin:14px 2px 4px;font-size:13px;font-weight:600;color:var(--muted)}
+.cs-such .note{margin:16px 2px}
+.cs-heute{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:3;height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--rand-a);color:var(--ink);font-size:16px;font-weight:600}
+#csheet:not(.ios) .cs-heute{display:none}
+#csheet.ios .cs-body{padding-bottom:84px}
+#csheet.ios .cs-day{display:none}
+#csheet.ios .cm{padding-top:20px}
+#csheet.ios .cm h3{margin:0 8px 8px;font-size:22px}
+#csheet.ios .cgrid{row-gap:0}
+#csheet.ios .cgrid>*{border-top:.5px solid var(--line);min-height:60px;padding-top:6px}
+#csheet.ios .cd.we:not(.now):not(.sel) b{color:var(--muted)}
+.wk u.lang,.cd u.lang{width:14px;border-radius:3px}
+#csheet.ios.tag .cs-wd,#csheet.ios.tag .cs-body{display:none}
+#csheet.ios.tag .cs-day{display:flex;flex:1;min-height:0;max-height:none;flex-direction:column;gap:0;padding:0;border-top:0;overflow:hidden}
+.tv-wk{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px 8px;touch-action:pan-y}
+.tw{border:0;background:none;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--ink)}
+.tw small{font-size:11px;font-weight:600;color:var(--mid)}
+.tw b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--round);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;transition:background-color .15s ease}
+.tw.we b{color:var(--muted)}
+.tw.now b{color:var(--at);font-weight:700}
+.tw.sel b{background:var(--ink);color:var(--bg);font-weight:700}
+.tw:not(.sel):active b{background:var(--fill)}
+.tv-k{flex:none;touch-action:pan-y}
+.tv-t{margin:0;padding:10px 16px;border-top:.5px solid var(--line);text-align:center;font-size:16px;font-weight:600}
+.tv-g{display:flex;align-items:flex-start;gap:6px;padding:0 10px 8px 0;border-bottom:.5px solid var(--line)}
+.tv-g>span{flex:none;width:68px;padding:7px 0 0 14px;font-size:12px;color:var(--muted)}
+.tv-gl{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
+.tv-gp{flex:1 1 calc(50% - 4px);min-width:0;height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 6px;border:0;border-radius:9px;background:color-mix(in srgb,var(--c) 30%,transparent);color:color-mix(in srgb,var(--c) 78%,var(--ink));font:inherit;font-size:14px;font-weight:600;text-align:left}
+.tv-gp .kf{flex:none;width:18px;height:18px;margin:0;border-radius:50%}
+.tv-gp span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
+.tl-in{position:relative;height:calc(24 * 48px + 26px);margin-bottom:76px}
+.tl-h{position:absolute;left:62px;right:0;height:0;border-top:.5px solid var(--line)}
+.tl-h span{position:absolute;right:calc(100% + 8px);top:-8px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl-ev{position:absolute;top:0;bottom:0;left:64px;right:8px}
+.tl-e{position:absolute;overflow:hidden;display:flex;flex-direction:column;gap:1px;padding:3px 6px 3px 9px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) 28%,transparent);color:color-mix(in srgb,var(--c) 76%,var(--ink));font:inherit;font-size:12.5px;line-height:1.25;text-align:left}
+.tl-e .kf{position:absolute;left:0;top:0;bottom:0;width:3px;height:auto;margin:0;border-radius:0}
+.tl-e b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-e small{font-size:11.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-e.kurz{flex-direction:row;align-items:center;gap:6px;padding-top:0;padding-bottom:0}
+.tl-e:active,.tv-gp:active{opacity:.7}
+.tl-now{position:absolute;left:58px;right:0;height:0;border-top:1.5px solid var(--danger);z-index:2;pointer-events:none}
+.tl-now::before{content:"";position:absolute;left:0;top:-4.75px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+.tl-now span{position:absolute;right:100%;top:-8px;padding-right:6px;font-size:11.5px;font-weight:700;color:var(--danger);font-variant-numeric:tabular-nums}
+.tv{flex:1;min-height:0;display:flex;flex-direction:column;touch-action:pan-y}
+.tv.go-n{animation:goN .24s cubic-bezier(.16,1,.3,1)}
+.tv.go-p{animation:goP .24s cubic-bezier(.16,1,.3,1)}
 
 /* Laufendes Training: eine Übung im Fokus, im Vollbild (v96, sein Wunsch nach einem Bild aus Alpha Progression: „ganzer Bildschirm … will Fokus darauf“).
    Kein schwebendes Blatt, aber Glas wie die anderen (v101, sein „kannst du da doch auch so edel Glass transparent iOS-Look? überall anwenden“): Der Grund ist halb durchsichtig
@@ -978,7 +1046,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
-  dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
+  dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]),.tv.go-n,.tv.go-p{animation:none}
   button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
   .l-resv,.l-resv-in{animation:none}
@@ -1388,7 +1456,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v143</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v144</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1523,10 +1591,14 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 </dialog>
 
 <dialog tabindex="-1" id="csheet" aria-labelledby="cs-title">
-  <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button></div>
+  <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button>
+    <span class="cs-akt" id="cs-akt" hidden><button type="button" data-c="suche" aria-label="Termine suchen"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.6"/><path d="M12.8 12.8l4.2 4.2"/></svg></button><button type="button" id="cs-plus" data-c="add" data-v="termin" aria-label="Termin eintragen"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M10 3.5v13M3.5 10h13"/></svg></button></span></div>
+  <div class="cs-sbar" id="cs-sbar" hidden><label class="cs-q"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.6"/><path d="M12.8 12.8l4.2 4.2"/></svg><input id="cs-q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Suchen" aria-label="Termine suchen"></label><button type="button" class="linkbtn" data-c="sucheZu">Abbrechen</button></div>
   <div class="cs-wd" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
   <div class="cs-body" id="cs-body"></div>
   <div class="cs-day" id="cs-day"></div>
+  <div class="cs-such" id="cs-such" hidden></div>
+  <button type="button" class="cs-heute" data-c="heute">Heute</button>
 </dialog>
 
 <input type="file" id="bk-file" accept="application/json,.json,.csv,text/csv,text/comma-separated-values" hidden>
@@ -3298,7 +3370,7 @@ function weekStripHTML(mode) {
   let h = '';
   for (let i = 0; i < 7; i++) {
     const d = addDays(mon, i), k = keyOf(d);
-    h += '<button type="button" class="wd' + (k === tk ? ' now' : '') + '" data-d="' + (k > tk && !vor ? tk : k) + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '., Kalender öffnen"><small>' + DAYS[i] + '</small><b>' + d.getDate() + '</b>' + dotsHTML(k > tk && !vor ? '' : mark(k)) + '</button>';
+    h += '<button type="button" class="wd' + (k === tk ? ' now' : '') + '" data-d="' + (k > tk && !vor ? tk : k) + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '., Kalender öffnen"><small>' + DAYS[i] + '</small><b>' + d.getDate() + '</b>' + (vor ? kalMarken(k) : dotsHTML(k > tk && !vor ? '' : mark(k))) + '</button>';
   }
   return '<div class="wk" data-cal="' + mode + '" role="group" aria-label="Diese Woche, ' + CAL[mode] + '">' + h + '</div>';
 }
@@ -3320,8 +3392,8 @@ function calSum(mode, ym, g, b, span, t) {
   return t ? t + (t === 1 ? ' Termin' : ' Termine') : 'Keine Termine';
 }
 function calHTML() {
-  const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode), vor = cMode === 'all' && kalDa() ? 12 : 0;   // mit Terminen reicht die Übersicht zwölf Monate voraus
-  let i0 = curI - 2;
+  const tk = todayKey(), curI = ymIdx(tk.slice(0, 7)), mark = calMarks(cMode), first = calFirst(cMode), vor = cMode === 'all' && kalDa() ? 12 : 0, ios = kalIos();   // mit Terminen reicht die Übersicht zwölf Monate voraus
+  let i0 = ios ? curI - 12 : curI - 2;   // wie die Liste aus Apples Kalender: zwölf Monate zurück
   if (first) i0 = Math.min(i0, ymIdx(first.slice(0, 7)));
   i0 = Math.max(i0, curI - 47);
   let h = '';
@@ -3334,10 +3406,11 @@ function calHTML() {
       if (mk.indexOf('t') >= 0) t += kalAm(k).filter(x => kalVon(x) === k).length;   // ein Termin über mehrere Tage zählt einmal
       if (mk.indexOf('g') >= 0) g++;
       if (mk.indexOf('b') >= 0 && cMode !== 'gym') b++;
-      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') +
-        ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + dotsHTML(mk) + '</button>';
+      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + ((off + d - 1) % 7 > 4 ? ' we' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') +
+        ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + (ios ? kalMarken(k) : dotsHTML(mk)) + '</button>';
     }
-    h += '<section class="cm" data-ym="' + ym + '"><h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3><p>' + calSum(cMode, ym, g, b, span, t) + '</p><div class="cgrid">' + cells + '</div></section>';
+    if (ios) for (let j = (off + len) % 7; j && j < 7; j++) cells += '<span></span>';   // die letzte Woche voll, damit der Strich über die ganze Breite geht
+    h += '<section class="cm" data-ym="' + ym + '"><h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3>' + (ios ? '' : '<p>' + calSum(cMode, ym, g, b, span, t) + '</p>') + '<div class="cgrid">' + cells + '</div></section>';
   }
   return h;
 }
@@ -3372,29 +3445,146 @@ function calDayHTML() {
   const ts = kalAm(k);
   return h + (ts.length ? '<ul class="entries">' + ts.map(x => btn('data-c="termin" ' + kalAttr(x), kalName(x), x.o ? esc(x.o) : '', kalZeit(x, k))).join('') + '</ul>' : note('Keine Termine an diesem Tag.')) + (kalDa() ? add('termin', 'Termin') : '');
 }
+/* ---------- Kalender wie in iOS (v144) ---------- */
+/* Sein Auftrag vom 27.11. mit zwei Bildern aus Apples Kalender: „passe den Kalender noch an; will auch so drauf klicken können auf Tag, dann gleiche Ansicht, und auch die Farben übernehmen,
+   also basically wie Kalender-App von iOS, damit ich die nicht mehr nutzen muss, mit allen Features“. Gilt nur für den Kalender auf Heute mit Terminen (kalIos), die Bereiche behalten ihren.
+   Monat: Striche zwischen den Wochen, je Tag bis zu drei Zeichen in der Farbe des Kalenders (ganztägig und über mehrere Tage ein Strich, sonst ein Punkt), Wochenende grau.
+   Tag: oben die Woche (wischen = andere Woche), Titel, „Ganztägig“ mit Kapseln, darunter die Stunden mit den Terminen als Blöcken (überlappende nebeneinander), heute die rote Linie der Uhrzeit.
+   Wischen über die Stunden = Tag davor oder danach; Tipp auf eine freie Stelle = neuer Termin zu dieser halben Stunde; Tipp auf einen Termin = ansehen und ändern. Suche über Titel und Ort. */
+let cView = 'monat', cVor = 'monat', cQ = '', cJetztT = null, cWisch = false;
+const TL_H = 48, TL_OBEN = 13;   // Höhe einer Stunde, Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+const ZURUECK = '<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>';
+const kalIos = () => cMode === 'all' && kalDa();
+const kalF = x => x.f || 'var(--accent)';   // x.f ist in kalNorm geprüft (#RRGGBB)
+const kalLang = x => !!x.g || kalVon(x) !== kalBis(x);
+const DF_TT = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'short', year: 'numeric' });
+/* Zeichen eines Tags im Monat und in der Wochenleiste auf Heute: ganztägige und mehrtägige als ein Strich (zwei Kalender = zwei Farben), dazu Punkte, zusammen höchstens drei */
+function kalMarken(k) {
+  const ts = kalAm(k); if (!ts.length) return '<i></i>';
+  const lang = ts.filter(kalLang), kurz = ts.filter(x => !kalLang(x)), fs = [...new Set(lang.map(kalF))].slice(0, 2);
+  return '<i>' + (fs.length ? '<u class="t lang" style="background:' + (fs.length > 1 ? 'linear-gradient(90deg,' + fs[0] + ' 50%,' + fs[1] + ' 50%)' : fs[0]) + '"></u>' : '') +
+    kurz.slice(0, fs.length ? 2 : 3).map(x => '<u class="t" style="background:' + kalF(x) + '"></u>').join('') + '</i>';
+}
+const minVon = t => { const d = new Date(t); return d.getHours() * 60 + d.getMinutes(); };
+/* Teil eines Termins mit Uhrzeit an Tag k in Minuten: über Mitternacht von 0:00 bzw. bis 24:00 */
+const kalStrecke = (x, k) => { const a = kalVon(x) === k ? minVon(x.s) : 0, b = keyOf(new Date(x.e)) === k ? minVon(x.e) : 1440; return [a, Math.max(b, a + 15)]; };
+/* Überlappende Termine nebeneinander: Gruppen, die sich zeitlich berühren, in Spalten; jeder nimmt die erste freie Spalte */
+function kalSpalten(liste) {
+  const out = []; let grp = [], ende = -1;
+  const fertig = () => { const sp = []; grp.forEach(o => { let c = sp.findIndex(e => e <= o.a); if (c < 0) { c = sp.length; sp.push(0); } sp[c] = o.b; o.c = c; }); grp.forEach(o => { o.n = sp.length; out.push(o); }); grp = []; };
+  liste.forEach(o => { if (grp.length && o.a >= ende) fertig(); grp.push(o); ende = Math.max(ende, o.b); });
+  if (grp.length) fertig();
+  return out;
+}
+function kalTagHTML() {
+  const k = cSel, tk = todayKey(), d0 = parseKey(k), mon = addDays(d0, -wd(d0));
+  let wk = '';
+  for (let i = 0; i < 7; i++) {
+    const d = addDays(mon, i), kk = keyOf(d);
+    wk += '<button type="button" class="tw' + (kk === k ? ' sel' : '') + (kk === tk ? ' now' : '') + (i > 4 ? ' we' : '') + '" data-c="tag" data-d="' + kk + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '. ' + MONTHS[d.getMonth()] + '"' + (kk === k ? ' aria-current="date"' : '') + '><small>' + DAYS[i].charAt(0) + '</small><b>' + d.getDate() + '</b></button>';
+  }
+  const ts = kalAm(k), ganz = ts.filter(x => x.g || (kalVon(x) < k && kalBis(x) > k)), zeit = kalSpalten(ts.filter(x => ganz.indexOf(x) < 0).map(x => { const s = kalStrecke(x, k); return { x, a: s[0], b: s[1] }; }).sort((p, q) => p.a - q.a || q.b - p.b));
+  let tl = '';
+  for (let h = 0; h <= 24; h++) tl += '<div class="tl-h" style="top:' + (TL_OBEN + h * TL_H) + 'px"><span>' + pad(h % 24) + ':00</span></div>';
+  tl += '<div class="tl-ev">' + zeit.map(o => {
+    const x = o.x, hoch = Math.max(20, (o.b - o.a) * TL_H / 60 - 2), kurz = hoch < 36, w = 100 / o.n;
+    return '<button type="button" class="tl-e' + (kurz ? ' kurz' : '') + '" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + ';top:' + (TL_OBEN + o.a * TL_H / 60 + 1) + 'px;height:' + hoch + 'px;left:calc(' + (o.c * w) + '% + 1px);width:calc(' + w + '% - 2px)" aria-label="' + esc(x.t || 'Ohne Titel') + ', ' + kalZeit(x, k) + '">' +
+      '<i class="kf" style="background:' + kalF(x) + '"></i><b>' + esc(x.t || 'Ohne Titel') + '</b><small>' + kalZeit(x, k) + (x.o && !kurz ? ' · ' + esc(x.o) : '') + '</small></button>';
+  }).join('') + '</div>';
+  if (k === tk) tl += '<div class="tl-now" id="tl-now"></div>';
+  return '<div class="tv-k"><div class="tv-wk" role="group" aria-label="Woche">' + wk + '</div></div><div class="tv"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
+    (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '"></i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
+    '<div class="tl" id="tl"><div class="tl-in">' + tl + '</div></div></div>';
+}
+/* Rote Linie der Uhrzeit, jede halbe Minute nachgezogen, solange der Tag offen ist */
+function kalJetzt() {
+  const n = $('#tl-now'); if (!n) return;
+  const m = minVon(Date.now()); n.style.top = (TL_OBEN + m * TL_H / 60) + 'px'; n.innerHTML = '<span>' + uhrT(m) + '</span>';
+  document.querySelectorAll('#tl .tl-h').forEach((h, i) => h.classList.toggle('weg', Math.abs(m - i * 60) < 20));   // die volle Stunde gleich daneben weicht der Uhrzeit wie in iOS
+}
+/* Tag malen. keep: Scrollstand behalten (neu gemeldete Termine). anim: go-n / go-p beim Wechsel des Tags. Sonst steht der Blick eine Stunde vor jetzt (heute), vor dem ersten Termin oder bei 7:30. */
+function kalTagMalen(keep, anim) {
+  const box = $('#cs-day'), alt = $('#tl'), y = alt ? alt.scrollTop : 0;
+  box.innerHTML = kalTagHTML(); kalJetzt();
+  clearInterval(cJetztT); cJetztT = cSel === todayKey() ? setInterval(() => { if (!cdlg.open) { clearInterval(cJetztT); cJetztT = null; } else kalJetzt(); }, 30000) : null;
+  $('#cs-close').innerHTML = ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]);
+  const tl = $('#tl'), erst = kalAm(cSel).filter(x => !x.g && !(kalVon(x) < cSel && kalBis(x) > cSel)).map(x => kalStrecke(x, cSel)[0]).sort((a, b) => a - b)[0];
+  const ziel = cSel === todayKey() ? minVon(Date.now()) - 90 : erst != null ? erst - 30 : 450;
+  tl.scrollTop = keep ? y : Math.max(0, TL_OBEN + ziel * TL_H / 60);
+  const tv = box.querySelector('.tv'); if (anim && !ruhig()) tv.classList.add(anim);
+}
+/* Suche über Titel und Ort: erst was noch kommt (ab heute, aufsteigend), dann was war (absteigend), je Tag eine Überschrift. Höchstens 150 Treffer. */
+function kalSuchHTML() {
+  const q = cQ.trim().toLowerCase(); if (!q) return '';
+  const now = Date.now(), alle = kalListe().filter(x => ((x.t || '') + ' ' + (x.o || '')).toLowerCase().indexOf(q) >= 0);
+  if (!alle.length) return '<p class="note">Keine Termine mit „' + esc(cQ.trim()) + '“.</p>';
+  const kommt = alle.filter(x => x.e >= now).sort((a, b) => a.s - b.s), war = alle.filter(x => x.e < now).sort((a, b) => b.s - a.s), liste = kommt.concat(war).slice(0, 150);
+  let h = '', tag = '';
+  liste.forEach((x, i) => {
+    const k = kalVon(x);
+    if (k !== tag || i === kommt.length) { h += (h ? '</ul>' : '') + (i === kommt.length && i ? '<h4>Früher</h4>' : '') + '<h4>' + DAYS_LONG[wd(parseKey(k))] + ', ' + DF_TT.format(parseKey(k)) + '</h4><ul class="entries">'; tag = k; }
+    h += '<li><button type="button" class="two" data-c="termin" ' + kalAttr(x) + '><span class="l"><span>' + kalName(x) + '</span>' + (x.o ? '<small>' + esc(x.o) + '</small>' : '') + '</span><b>' + kalZeit(x, k) + '</b></button></li>';
+  });
+  return h + '</ul>';
+}
+/* Wischen im Tag: über die Woche = Woche davor oder danach, über die Stunden = Tag davor oder danach. Nur deutlich waagerecht, sonst scrollt es wie gewohnt. */
+(function () {
+  let x0 = 0, y0 = 0, auf = null;
+  const box = $('#cs-day');
+  cdlg.addEventListener('pointerdown', () => { cWisch = false; }, true);
+  box.addEventListener('pointerdown', e => { if (!kalIos() || cView !== 'tag') return; x0 = e.clientX; y0 = e.clientY; auf = e.target.closest('.tv-wk') ? 'woche' : e.target.closest('.tv') ? 'tag' : null; });
+  box.addEventListener('pointerup', e => {
+    if (!auf) return;
+    const dx = e.clientX - x0, dy = e.clientY - y0, wo = auf; auf = null;
+    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
+    cWisch = true; const vor = dx < 0;
+    cSel = keyOf(addDays(parseKey(cSel), (vor ? 1 : -1) * (wo === 'woche' ? 7 : 1))); kalTagMalen(false, vor ? 'go-n' : 'go-p');
+  });
+  box.addEventListener('pointercancel', () => { auf = null; });
+  box.addEventListener('animationend', e => e.target.classList.remove('go-n', 'go-p'));
+})();
 function paintCal(keep) {
-  const b = $('#cs-body'), y = b.scrollTop;
-  b.innerHTML = calHTML(); $('#cs-day').innerHTML = calDayHTML();
+  const b = $('#cs-body'), y = b.scrollTop, ios = kalIos();
+  cdlg.classList.toggle('ios', ios); cdlg.classList.toggle('tag', ios && cView === 'tag'); cdlg.classList.toggle('such', ios && cView === 'such');
+  $('#cs-akt').hidden = !ios; $('#cs-sbar').hidden = !(ios && cView === 'such'); $('#cs-such').hidden = !(ios && cView === 'such');
+  $('#cs-close').innerHTML = ios && cView === 'tag' ? ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]) : 'Schließen';
+  $('#cs-close').setAttribute('aria-label', ios && cView === 'tag' ? 'Zurück zum Monat' : 'Schließen');
+  clearInterval(cJetztT); cJetztT = null;
+  if (ios && cView === 'such') { $('#cs-such').innerHTML = kalSuchHTML(); return; }
+  if (ios && cView === 'tag') { kalTagMalen(keep); b.innerHTML = calHTML(); return; }
+  b.innerHTML = calHTML(); $('#cs-day').innerHTML = ios ? '' : calDayHTML();
   /* Neu geöffnet steht der Monat des gewählten Tags oben; ist er der letzte (ohne Termine immer der laufende), das Ende der Liste wie bisher */
   const m = keep ? null : b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
   b.scrollTop = keep ? y : m && m.nextElementSibling ? m.offsetTop - b.firstElementChild.offsetTop : b.scrollHeight;
 }
 function openCal(mode, sel) {
   cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && (sel <= todayKey() || (cMode === 'all' && kalDa())) ? sel : todayKey();
+  cView = kalIos() ? 'tag' : 'monat'; cQ = ''; $('#cs-q').value = '';   // Kalender auf Heute: Ein Tipp auf einen Tag zeigt diesen Tag (wie in iOS); zurück geht es zum Monat
   $('#cs-title').textContent = CAL[cMode];
   openDlg(cdlg);
   paintCal(false);
 }
 document.querySelector('.app').addEventListener('click', e => { const b = e.target.closest('.wk .wd'); if (b) openCal(b.parentNode.dataset.cal, b.dataset.d); });
-$('#cs-close').addEventListener('click', () => closeDlg(cdlg));
+$('#cs-close').addEventListener('click', () => { if (kalIos() && cView === 'tag') { cView = 'monat'; paintCal(false); } else closeDlg(cdlg); });
 $('#cs-today').addEventListener('click', () => { cSel = todayKey(); paintCal(false); });
+$('#cs-q').addEventListener('input', () => { cQ = $('#cs-q').value; $('#cs-such').innerHTML = kalSuchHTML(); });
 cdlg.addEventListener('click', e => {
   if (e.target === cdlg) return closeDlg(cdlg);
+  if (cWisch) { cWisch = false; return; }   // der Klick, den die Maus nach dem Wischen schickt, ist kein Tipp (der Finger schickt keinen)
   const d = e.target.closest('.cd');
-  if (d) { if (!d.disabled) { cSel = d.dataset.d; paintCal(true); } return; }
+  if (d) { if (!d.disabled) { cSel = d.dataset.d; if (kalIos()) cView = 'tag'; paintCal(!kalIos()); } return; }
+  const leer = e.target.closest('.tl-in');
+  if (leer && !e.target.closest('.tl-e')) {   // Tipp auf eine freie Stelle der Zeitleiste: neuer Termin zu dieser halben Stunde
+    const min = Math.max(0, Math.min(1410, Math.floor((e.clientY - leer.getBoundingClientRect().top - TL_OBEN) / TL_H * 2) * 30));
+    return openTe(null, 0, cSel, min);
+  }
   const c = e.target.closest('[data-c]'); if (!c) return;
   const a = c.dataset.c, v = c.dataset.v;
-  if (a === 'day') openK(cSel);
+  if (a === 'tag') { const alt = cSel; cSel = c.dataset.d; kalTagMalen(false, cSel > alt ? 'go-n' : cSel < alt ? 'go-p' : ''); }
+  else if (a === 'heute') { const alt = cSel; cSel = todayKey(); if (cView === 'tag') kalTagMalen(false, cSel > alt ? 'go-n' : cSel < alt ? 'go-p' : ''); else paintCal(false); }
+  else if (a === 'suche') { cVor = cView; cView = 'such'; paintCal(false); fokus($('#cs-q')); }
+  else if (a === 'sucheZu') { cView = cVor || 'monat'; cQ = ''; $('#cs-q').value = ''; $('#cs-q').blur(); paintCal(false); }
+  else if (a === 'day') openK(cSel);
   else if (a === 'run') openT(c.dataset.id);
   else if (a === 'w') openW('entry', cSel);
   else if (a === 'tx') openM('tx', c.dataset.id);
@@ -4677,7 +4867,7 @@ function teMal() {
   $('#te-ganz').setAttribute('aria-checked', !!g);
   $('#te-zeit').hidden = !!g; $('#te-bisf').hidden = !g; $('#te-tage').classList.toggle('ein', !g);
 }
-function openTe(id, s, tag) {
+function openTe(id, s, tag, min) {
   if (!kalAn()) return;
   if (kal.recht !== 'an' && kal.recht !== 'nein') { kalWill = isKey(tag) ? tag : todayKey(); hPost({ art: 'terminAn' }); return; }   // iOS fragt jetzt; mit der Erlaubnis öffnet sich das Blatt (TrackHuelle.termine)
   const nein = kal.recht !== 'an', x = id && !nein ? kalListe().find(y => y.id === id && y.s === s) : null;
@@ -4698,6 +4888,8 @@ function openTe(id, s, tag) {
     teE.lang && !teE.fest ? 'Geht über mehrere Tage: Tag und Zeit änderst du im Kalender von Apple.' : '', x.o ? 'Ort: ' + x.o : ''].filter(Boolean);
   $('#te-info').textContent = info.join(' '); $('#te-info').hidden = !info.length;
   $('#te-les').hidden = true; $('#te-err').hidden = true; $('#te-save').hidden = teE.fest; $('#te-weg').hidden = !x || teE.fest;
+  teE.slot = !x && !nein && typeof min === 'number';   // aus der Zeitleiste (v144): Zeit steht schon, ein Satz ohne Uhrzeit macht den Termin nicht ganztägig
+  if (teE.slot) { teE.g = false; teE.dauer = 60; $('#te-von').value = uhrT(min); $('#te-bis').value = uhrT((min + 60) % 1440); }
   teMal(); teKals(); openDlg(tedlg); tedlg.scrollTop = 0;
   if (!x && !nein) fokus($('#te-text'));
 }
@@ -4707,8 +4899,8 @@ function teLes() {
   const p = terminLesen($('#te-text').value, new Date()), les = $('#te-les'), zeigen = (p.d != null || p.a != null) && !!p.t;
   if (!teE.hand.tag) { $('#te-tag').value = p.d || teE.tag0; if (!teE.hand.bis) $('#te-bis-tag').value = $('#te-tag').value; }
   if (!teE.hand.zeit) {
-    const g = p.a == null;
-    if (!g) { $('#te-von').value = uhrT(p.a); $('#te-bis').value = uhrT(p.b); teE.dauer = (p.b - p.a + 1440) % 1440; }
+    const g = p.a == null && !teE.slot;
+    if (p.a != null) { $('#te-von').value = uhrT(p.a); $('#te-bis').value = uhrT(p.b); teE.dauer = (p.b - p.a + 1440) % 1440; }
     if (g !== teE.g) { teE.g = g; teMal(); }
   }
   les.hidden = !zeigen; if (zeigen) les.textContent = 'Wird eingetragen als „' + p.t + '“';

@@ -126,25 +126,54 @@ lauf(async () => {
   p.ok('Gemerkt: Zustand und sechs Termine', merk.recht === 'an' && merk.liste.length === 6, JSON.stringify(merk).slice(0, 200));
   p.ok('Nichts davon in der Sicherung der App', !JSON.stringify(await gespeichert(page)).includes('Zahnarzt'));
 
-  /* 6. Wochenleiste und Übersicht: Do 26. und Fr 27. tragen einen blauen Punkt, der Freitag (Zukunft) öffnet seinen eigenen Tag */
-  const leiste = await page.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(w => w.dataset.d + ':' + [...w.querySelectorAll('u')].map(u => u.className).join('')));
-  p.ok('Wochenleiste: Punkte am 26. und 27., kommende Tage mit eigenem Datum', JSON.stringify(leiste) === JSON.stringify(['2026-11-23:', '2026-11-24:', '2026-11-25:', '2026-11-26:t', '2026-11-27:t', '2026-11-28:', '2026-11-29:']), JSON.stringify(leiste));
+  /* 6. Wochenleiste und Kalender wie in iOS (v144): Zeichen in der Farbe des Kalenders (ganztägig und über mehrere Tage ein Strich, sonst ein Punkt), der Freitag (Zukunft) öffnet seinen eigenen Tag.
+     Do 26.: Geburtstag ganztägig (grau, #8E8E93), Früh (grün) und Zahnarzt (rot) → Strich und zwei Punkte. Fr 27.: Seminar (blau) → ein Punkt. */
+  const leiste = await page.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(w => w.dataset.d + ':' + [...w.querySelectorAll('u')].map(u => u.className + ' ' + getComputedStyle(u).backgroundColor).join('+')));
+  p.ok('Wochenleiste: Zeichen in den Farben der Kalender, kommende Tage mit eigenem Datum', JSON.stringify(leiste) === JSON.stringify(['2026-11-23:', '2026-11-24:', '2026-11-25:', '2026-11-26:t lang rgb(142, 142, 147)+t rgb(52, 199, 89)+t rgb(255, 59, 48)', '2026-11-27:t rgb(10, 132, 255)', '2026-11-28:', '2026-11-29:']), JSON.stringify(leiste));
   await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
-  let tagT = await text(page, '#cs-day');
-  p.enthaelt('Übersicht am Freitag: Seminar mit Zeit, „+ Termin“', tagT, ['Freitag, 27. November', 'Seminar', '09:00–11:00', '+ Termin']);
-  const monate = await page.evaluate(() => [...document.querySelectorAll('#cs-body .cm')].map(c => c.dataset.ym + ' ' + c.querySelector('p').textContent));
-  /* September 2026 bis November 2027 = 15 Monate. November: Früh, Geburtstag, Zahnarzt, Seminar = 4. Dezember: Kurztrip (zählt einmal), Weit weg = 2. März 2027: 1. */
-  p.ok('Übersicht: 15 Monate bis November 2027', monate.length === 15 && monate[0].startsWith('2026-09') && monate[14].startsWith('2027-11'), monate.length + ' ' + monate[0] + ' … ' + monate[monate.length - 1]);
-  p.ok('Übersicht: Termine je Monat gezählt', monate[2] === '2026-11 4 Termine' && monate[3] === '2026-12 2 Termine' && monate[6] === '2027-03 1 Termin' && monate[4] === '2027-01 Keine Termine', JSON.stringify(monate.slice(2, 7)));
-  const dez = await page.evaluate(() => ['2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-06'].map(k => { const c = document.querySelector('.cd[data-d="' + k + '"]'); return (c.disabled ? 'zu' : 'auf') + c.querySelectorAll('u.t').length; }).join());
-  p.ok('Übersicht: Kurztrip steht am 3., 4. und 5.12., kommende Tage sind antippbar', dez === 'auf0,auf1,auf1,auf1,auf0', dez);
-  p.ok('Übersicht: Der gewählte Monat steht im Blick', await page.evaluate(() => { const b = document.querySelector('#cs-body'), m = b.querySelector('.cm[data-ym="2026-11"]'); const r = m.getBoundingClientRect(), q = b.getBoundingClientRect(); return r.top >= q.top - 2 && r.top < q.bottom; }));
+  /* Tag: Woche oben, Titel, Seminar 9–11 Uhr als Block: oben 13 + 9 × 48 + 1 = 446 px, hoch 2 × 48 − 2 = 94 px, in der Farbe seines Kalenders */
+  const tag27 = await page.evaluate(() => { const c = document.querySelector('#csheet'), e = document.querySelector('#cs-day .tl-e[data-id="d"]');
+    return [c.classList.contains('tag'), document.querySelector('.tv-t').textContent, document.querySelector('.tw.sel').dataset.d, [...document.querySelectorAll('.tv-wk .tw')].length, e.style.top, e.style.height, e.innerText.replace(/\s+/g, ' '), getComputedStyle(e.querySelector('.kf')).backgroundColor].join(' | '); });
+  p.ok('Tipp auf Freitag: Tagesansicht mit Woche und Seminar als Block 9–11 Uhr', tag27 === 'true | Freitag – 27. Nov. 2026 | 2026-11-27 | 7 | 446px | 94px | Seminar 09:00–11:00 | rgb(10, 132, 255)', tag27);
+  p.ok('Tag: oben links zurück zum Monat („November“)', (await text(page, '#cs-close')) === 'November');
+  await page.click('#cs-close'); await page.waitForTimeout(50);
+  const monate = await page.evaluate(() => [...document.querySelectorAll('#cs-body .cm')].map(c => c.dataset.ym));
+  /* Zwölf Monate zurück (November 2025) bis zwölf voraus (November 2027) = 25 Monate, ohne Zahl je Monat (wie in iOS) */
+  p.ok('Monat: 25 Monate von November 2025 bis November 2027', monate.length === 25 && monate[0] === '2025-11' && monate[24] === '2027-11' && !(await page.$('#cs-body .cm p')), monate.length + ' ' + monate[0] + ' … ' + monate[monate.length - 1]);
+  const dez = await page.evaluate(() => ['2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-06'].map(k => { const c = document.querySelector('.cd[data-d="' + k + '"]'); return (c.disabled ? 'zu' : 'auf') + c.querySelectorAll('u.lang').length; }).join());
+  p.ok('Monat: Kurztrip als Strich am 3., 4. und 5.12., kommende Tage sind antippbar', dez === 'auf0,auf1,auf1,auf1,auf0', dez);
+  p.ok('Monat: Der Monat des gewählten Tags steht im Blick', await page.evaluate(() => { const b = document.querySelector('#cs-body'), m = b.querySelector('.cm[data-ym="2026-11"]'); const r = m.getBoundingClientRect(), q = b.getBoundingClientRect(); return r.top >= q.top - 2 && r.top < q.bottom; }));
   await page.click('.cd[data-d="2026-12-04"]'); await page.waitForTimeout(50);
-  p.enthaelt('Übersicht am 4.12.: Kurztrip ganztägig', await text(page, '#cs-day'), ['Kurztrip', 'ganztägig']);
-  /* „+ Termin“ in der Übersicht trägt für den gewählten Tag ein */
-  await page.click('#cs-day [data-c="add"][data-v="termin"]'); await page.waitForTimeout(50);
+  p.enthaelt('Tipp auf den 4.12.: Kurztrip unter „Ganztägig“', await text(page, '#cs-day'), ['Ganztägig', 'Kurztrip']);
+  /* Wischen über die Stunden: Tag danach und davor; über die Woche: Woche danach */
+  const wisch = async (sel, dx) => { const r = await page.evaluate(q => { const b = document.querySelector(q).getBoundingClientRect(); return [b.left + b.width / 2, b.top + Math.min(60, b.height / 2)]; }, sel);
+    await page.mouse.move(r[0], r[1]); await page.mouse.down(); await page.mouse.move(r[0] + dx, r[1] + 4, { steps: 4 }); await page.mouse.up(); await page.waitForTimeout(40);
+    return page.evaluate(() => document.querySelector('.tw.sel').dataset.d); };
+  p.ok('Wischen über die Stunden: nach links der 5.12., nach rechts wieder der 4.12.', (await wisch('#tl', -120)) === '2026-12-05' && (await wisch('#tl', 120)) === '2026-12-04');
+  p.ok('Wischen über die Woche: eine Woche weiter (11.12.)', (await wisch('.tv-wk', -150)) === '2026-12-11');
+  p.ok('… und zurück (4.12.)', (await wisch('.tv-wk', 150)) === '2026-12-04');
+  await page.click('.tw[data-d="2026-12-03"]');
+  p.ok('Tipp auf einen Tag der Woche: dieser Tag', await page.evaluate(() => document.querySelector('.tw.sel').dataset.d === '2026-12-03' && document.querySelector('.tv-t').textContent === 'Donnerstag – 3. Dez. 2026'));
+  await page.click('.tw[data-d="2026-12-04"]'); await page.waitForTimeout(30);
+  /* Tipp auf eine freie Stelle der Zeitleiste um 14:20 → neuer Termin 14:00–15:00; ein Satz ohne Uhrzeit macht ihn nicht ganztägig */
+  await page.evaluate(() => { document.querySelector('#tl').scrollTop = 13 + 13 * 48; });
+  const yy = await page.evaluate(() => document.querySelector('.tl-in').getBoundingClientRect().top + 13 + (14 * 60 + 20) * 48 / 60);
+  await page.mouse.click(200, yy); await page.waitForTimeout(50);
   b = await blatt(page);
-  p.ok('„+ Termin“ am 4.12.: Blatt mit diesem Tag', b.offen && b.tag === '2026-12-04' && b.bisTag === '2026-12-04', JSON.stringify(b));
+  p.ok('Tipp auf 14:20 in der Zeitleiste: neuer Termin am 4.12. von 14:00 bis 15:00', b.offen && b.titel === 'Termin eintragen' && b.tag === '2026-12-04' && b.von === '14:00' && b.bis === '15:00' && !b.ganz, JSON.stringify(b));
+  await page.fill('#te-text', 'Friseur');
+  b = await blatt(page);
+  p.ok('… „Friseur“ ohne Uhrzeit bleibt um 14:00', b.von === '14:00' && !b.ganz, JSON.stringify(b));
+  await page.evaluate(() => document.querySelector('#tesheet').close()); await page.waitForTimeout(30);
+  /* Suche über Titel und Ort: „mitte“ findet den Zahnarzt (Ort Praxis Mitte) */
+  await page.click('#cs-akt [data-c="suche"]'); await page.keyboard.type('mitte'); await page.waitForTimeout(30);
+  p.enthaelt('Suche „mitte“: Zahnarzt mit Ort und Zeit', await text(page, '#cs-such'), ['Donnerstag, 26. Nov. 2026', 'Zahnarzt', 'Praxis Mitte', '14:00–15:30']);
+  await page.click('#cs-sbar [data-c="sucheZu"]');
+  p.ok('Abbrechen: zurück zum Tag', await page.evaluate(() => document.querySelector('#csheet').classList.contains('tag') && !document.querySelector('#csheet').classList.contains('such')));
+  /* „+“ oben trägt für den gezeigten Tag ein */
+  await page.click('#cs-plus'); await page.waitForTimeout(50);
+  b = await blatt(page);
+  p.ok('„+“ am 4.12.: Blatt mit diesem Tag', b.offen && b.tag === '2026-12-04' && b.bisTag === '2026-12-04', JSON.stringify(b));
   /* Ganztägig über mehrere Tage: Bis-Tag stellen; ganztägig aus: nächste volle Stunde (11:00) und eine Stunde */
   await page.fill('#te-text', 'Skifahren'); await page.fill('#te-bis-tag', '2026-12-06');
   await page.click('#te-er [data-er="-540"]');
@@ -302,15 +331,15 @@ lauf(async () => {
     await zu(page);
     /* Ganztägig bis 0:00 des Folgetags: nur am 28.11. */
     await page.click('#v-heute .wk .wd[data-d="2026-11-28"]'); await page.waitForTimeout(80);
-    p.enthaelt('Markt am 28.11.', await text(page, '#cs-day'), ['Markt', 'ganztägig']);
-    await page.click('.cd[data-d="2026-11-29"]'); await page.waitForTimeout(50);
+    p.enthaelt('Markt am 28.11.', await text(page, '#cs-day'), ['Markt', 'Ganztägig']);
+    await page.click('.tw[data-d="2026-11-29"]'); await page.waitForTimeout(50);
     p.ok('Markt nicht am 29.11.', !(await text(page, '#cs-day')).includes('Markt'), await text(page, '#cs-day'));
-    await page.click('.cd[data-d="2026-11-26"]'); await page.waitForTimeout(50);
+    await page.click('.tw[data-d="2026-11-26"]'); await page.waitForTimeout(50);
     p.ok('Kein Uni-Termin in der Tagesliste (seit v135 nur Termine)', !(await text(page, '#cs-day')).includes('Füllung'), await text(page, '#cs-day'));
     await zu(page);
     /* Tipp auf die Termine im großen Widget: trackpunkt://neu/kalender → TrackHuelle.neu('kalender') öffnet die Übersicht bei heute */
     await ruf(page, 'neu', 'kalender'); await page.waitForTimeout(80);
-    p.ok('neu(„kalender“) öffnet die Übersicht', await page.evaluate(() => document.querySelector('#csheet').open && document.querySelector('.cd.sel').dataset.d === '2026-11-26'));
+    p.ok('neu(„kalender“) öffnet den Kalender beim heutigen Tag', await page.evaluate(() => document.querySelector('#csheet').open && document.querySelector('#csheet').classList.contains('tag') && document.querySelector('.tw.sel').dataset.d === '2026-11-26'));
     /* Tipp auf eine Notiz im Widget (ab 1.5): trackpunkt://neu/notizen öffnet den Planer bei den Notizen, auch wenn dort gerade Arbeit offen war */
     await zu(page); await page.click('.tab[data-view="routinen"]'); await page.click('#r-subs [data-v="work"]'); await page.click('.tab[data-view="heute"]');
     await ruf(page, 'neu', 'notizen'); await page.waitForTimeout(80);
