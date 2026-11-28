@@ -116,6 +116,7 @@ html,body{height:100%}
    Die Größen stehen in vw und px, nicht in Prozent: So zeichnet die Kopfzeile (.top) dasselbe Bild an derselben Stelle und deckt, was unter ihr durchscrollt.
    --amb steht an body und nicht an :root, weil es dort mit der Farbe des Bereichs ausgerechnet wird; @property lässt die Farbe beim Wechsel des Bereichs weich übergehen. */
 @property --amb-c{syntax:'<color>';inherits:true;initial-value:#0A84FF}
+body.ohne-licht{--amb-k:0%;--amb-w:transparent}   /* Licht hinter der Seite aus (v150, Einstellungen → Darstellung) */
 body{--amb-c:var(--accent);--amb:radial-gradient(130vw 400px at 50% -160px,color-mix(in srgb,var(--amb-c) var(--amb-k),transparent),transparent 72%),radial-gradient(90vw 300px at 0% -120px,var(--amb-w),transparent 70%);transition:--amb-c .6s ease}
 body[data-v="gewicht"]{--amb-c:var(--c-weight)}
 body[data-v="haushalt"]{--amb-c:var(--c-money)}
@@ -712,7 +713,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .tv-gp .kf svg{width:10px;height:10px}
 .tv-gp span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
-.tl-in{position:relative;height:calc(24 * 36px + 24px);margin-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.tl-in{position:relative;height:var(--tlh,888px);margin-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .tl-h{position:absolute;left:62px;right:0;height:0;border-top:.5px solid var(--line)}
 .tl-h span{position:absolute;right:calc(100% + 9px);top:-7.5px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tl-h.weg span{visibility:hidden}
@@ -837,7 +838,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .es-nav b svg,.es-wert b svg{width:13px;height:13px}
 #es-body .chip[aria-disabled="true"]{opacity:.38}
 .es-reihe{display:flex;flex-direction:column;gap:6px}
-#es-reihe .prow{transition:transform .18s ease}
+#es-reihe .prow,#es-ovr .prow{transition:transform .18s ease}
 #es-body .fld{margin:0}
 .es-body .sec{margin:4px 2px -2px}
 .es .foot{margin-top:4px}
@@ -1120,7 +1121,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,#es-reihe .prow,.sch .sw,.sch .sw::after{transition:none}
+  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,#es-reihe .prow,#es-ovr .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
   .l-resv,.l-resv-in,.toast,.toast>*{animation:none}
 }
@@ -1530,7 +1531,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v149</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v150</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1732,6 +1733,7 @@ let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
    aus = Zeilen der Übersicht auf Heute, die er nicht sehen will ({ gewicht: 1, … }). Was nur das Training betrifft, steht in K (emp, res). */
 let E = { aus: {}, weg: {} };
 const OV = [['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', 'Training'], ['arbeit', 'Arbeit'], ['uni', 'Uni']];
+const ovFolge = () => (E.ovReihe || []).map(k => OV.find(q => q[0] === k)).filter(Boolean).concat(OV.filter(q => (E.ovReihe || []).indexOf(q[0]) < 0));   // Reihenfolge der Übersicht auf Heute (v150)
 /* Bereiche zum Abschalten (v125, sein Wunsch: „selbst wählen, welche Bereiche unten überhaupt angezeigt werden … theoretisch zu einer Gym-App (auch ohne Cardio) alleine machen“).
    weg = abgeschaltete Bereiche ({ gewicht: 1, … }); Gym (kraft) und Cardio zählen einzeln, „Training“ steht in der Leiste, solange eines von beiden an ist.
    Ein abgeschalteter Bereich fehlt in der Leiste, in der Wahl des Starts und auf Heute (Zeile, Schnell-Knopf, Woche, Monat, Kalender); seine Daten bleiben und werden weiter gesichert.
@@ -1761,6 +1763,11 @@ function normE(o) {
     if (Number.isInteger(o.schicht) && o.schicht >= 30 && o.schicht <= 720) out.schicht = o.schicht;
     if (Number.isInteger(o.uniSoll) && o.uniSoll >= 1 && o.uniSoll <= 99) out.uniSoll = o.uniSoll;
     if (o.nNeu === 1) out.nNeu = 1;
+    /* v150: Licht hinter der Seite aus, Reihenfolge der Übersicht auf Heute, Stundenhöhe im Kalender */
+    if (o.licht === 0) out.licht = 0;
+    if (Array.isArray(o.ovReihe)) { const l = o.ovReihe.filter((k, i) => OV.some(q => q[0] === k) && o.ovReihe.indexOf(k) === i); if (l.length) out.ovReihe = l; }
+    if ([28, 48].indexOf(o.kalH) >= 0) out.kalH = o.kalH;
+    if ([306, 508, 610, 1015, 1220, 1520].indexOf(o.wdh) >= 0) out.wdh = o.wdh;   // Standardbereich der Wiederholungen (v150)
   }
   return out;
 }
@@ -3183,8 +3190,10 @@ function exStep(hist, id) {
 /* Empfehlung im Training (v107, sein Auftrag vom 25.11.: „was im nächsten Satz empfohlen ist … nach wissenschaftlich optimalem System“, dazu „mach 8–12“ und ein Schalter in den Einstellungen).
    Verfahren: doppelte Progression in einem Bereich von Wiederholungen. Erst Wiederholungen bis ans obere Ende, dann mehr Gewicht; dazu passt sich jeder weitere Satz an den gerade geschafften an.
    Bereich je Übung: z ist das obere Ende (ohne Angabe 12), zu das untere (ohne Angabe vier darunter, also 8). K.emp === 0 schaltet alles ab: Dann stehen die Werte vom letzten Mal da. */
-const exBis = id => (K.ex[id] && K.ex[id].z) || 12;
-const exVon = id => { const x = K.ex[id], bis = exBis(id); return x && x.zu >= 1 && x.zu < bis ? x.zu : Math.max(1, bis - 4); };
+/* Bereich der Wiederholungen: der eigene der Übung, sonst seit v150 der Standard aus den Einstellungen (E.wdh als von × 100 + bis, fehlt = 8–12) */
+const stdWdh = () => [306, 508, 610, 1015, 1220, 1520].indexOf(E.wdh) >= 0 ? E.wdh : 812;
+const exBis = id => (K.ex[id] && K.ex[id].z) || stdWdh() % 100;
+const exVon = id => { const x = K.ex[id], bis = exBis(id); return x && x.zu >= 1 && x.zu < bis ? x.zu : x && x.z ? Math.max(1, bis - 4) : Math.floor(stdWdh() / 100); };
 const empAn = () => K.emp !== 0;
 /* So viele Wiederholungen ergeben mit der Last „last“ dasselbe geschätzte Maximum rm (Umkehrung von rm1): 53,33 mit 42,5 kg → (53,33 / 42,5 − 1) × 30 = 7,6 → 7 */
 const wdhBei = (rm, last, k) => last > 0 ? Math.floor((rm / last - 1) * (k || 30) + 1e-9) : 0;
@@ -3575,7 +3584,7 @@ function calDayHTML() {
    Tag: oben die Woche (wischen = andere Woche), Titel, „Ganztägig“ mit Kapseln, darunter die Stunden mit den Terminen als Blöcken (überlappende nebeneinander), heute die rote Linie der Uhrzeit.
    Wischen über die Stunden = Tag davor oder danach; Tipp auf eine freie Stelle = neuer Termin zu dieser halben Stunde; Tipp auf einen Termin = ansehen und ändern. Suche über Titel und Ort. */
 let cView = 'monat', cVor = 'monat', cQ = '', cJetztT = null, cWisch = false, cLauf = null, cZieht = false, cSpaeter = false;   // cLauf: laufende Bewegung (Blättern, Monat ↔ Tag), cZieht: der Finger zieht gerade; solange wird nicht neu gezeichnet (cSpaeter: danach)
-const TL_H = 36, TL_OBEN = 12;   // Höhe einer Stunde (wie bei Apple rund 35 pt), Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+let TL_H = 36; const TL_OBEN = 12;   // Höhe einer Stunde (wie bei Apple rund 35 pt), Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
 /* Bewegung wie in iOS: eine Feder ohne Nachschwingen (kritisch gedämpft), ausgemessen an seinem Video aus Apples Kalender (60 Bilder je Sekunde, Monat → Tag):
    nach 0,1 s die Hälfte des Wegs, nach 0,2 s 85 %, nach 0,33 s 98 %. Das passt zu x(t) = 1 − (1 + ωt)·e^(−ωt) mit ω = 17 je Sekunde. Als linear()-Kurve mit 25 Punkten über 0,45 s,
    wo der Browser sie kennt (Safari ab 17.2), sonst eine ähnliche Bézierkurve. */
@@ -3643,7 +3652,7 @@ function kalSeiteHTML(k) {
       '<i class="kf" style="background:' + kalF(x) + '"></i><b>' + esc(x.t || 'Ohne Titel') + '</b><small>' + kalZeit(x, k) + (x.o && !kurz ? ' · ' + esc(x.o) : '') + '</small></button>';
   }).join('') + '</div>';
   if (k === tk) tl += '<div class="tl-now"></div>';
-  return '<div class="tv" data-d="' + k + '"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
+  return '<div class="tv" data-d="' + k + '" style="--tlh:' + (24 * TL_H + 24) + 'px"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
     (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '">' + KAL_ICON + '</i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
     '<div class="tl"><div class="tl-in">' + tl + '</div></div></div>';
 }
@@ -3682,13 +3691,14 @@ function kalAuswahl() {
 }
 /* Tag neu malen. keep: Scrollstand behalten (neu gemeldete Termine). Sonst steht der Blick eine Stunde vor jetzt (heute), vor dem ersten Termin oder bei 7:30. */
 function kalTagMalen(keep) {
-  const box = $('#cs-day'), alt = $('#tl'), y = alt ? alt.scrollTop : 0;
+  const box = $('#cs-day'), alt = $('#tl'), y = alt ? alt.scrollTop : 0, h0 = TL_H;
+  TL_H = [28, 36, 48].indexOf(E.kalH) >= 0 ? E.kalH : 36;   // Stundenhöhe aus den Einstellungen (v150): kompakt, normal, groß
   box.innerHTML = '<div class="tv-k"><div class="tv-wb"></div></div><div class="tv-b"></div>';
   kalOrdnen();
   clearInterval(cJetztT); cJetztT = setInterval(() => { if (!cdlg.open) { clearInterval(cJetztT); cJetztT = null; } else kalJetzt(); }, 30000);
   const erst = kalAm(cSel).filter(x => !x.g && !(kalVon(x) < cSel && kalBis(x) > cSel)).map(x => kalStrecke(x, cSel)[0]).sort((a, b) => a - b)[0];
   const ziel = cSel === todayKey() ? minVon(Date.now()) - 90 : erst != null ? erst - 30 : 450, top = keep ? y : Math.max(0, TL_OBEN + ziel * TL_H / 60);
-  box.querySelectorAll('.tl').forEach(t => { t.scrollTop = top; });
+  box.querySelectorAll('.tl').forEach(t => { t.scrollTop = keep ? Math.round(top * TL_H / h0) : top; });
 }
 /* Der Knopf oben links wechselt seinen Inhalt (Pfeil nach unten ↔ „‹ Monat“): Er wächst oder schrumpft dabei weich und kommt aus der Unschärfe, wie in Apples Kalender.
    w0: Breite vorher (gemessen, bevor sich die Klassen geändert haben). */
@@ -5554,8 +5564,10 @@ function renderHome() {
   const wk = workList(), wc = wk.filter(x => x.d.slice(0, 7) === curYM), un = uniList(), pkt = un.reduce((n, x) => n + x.p, 0), wTage = new Set(wc.map(x => x.d)).size;
   const av = wk.length ? eur(workSum(wc)) : '', as = wc.length ? stdT(wc.reduce((n, x) => n + workMin(x), 0)) + ' an ' + wTage + (wTage === 1 ? ' Tag' : ' Tagen') + ' im ' + mName : 'Im ' + mName + ' noch nichts eingetragen';
   const zeig = k => !E.aus[k] && anV(k === 'arbeit' || k === 'uni' ? 'routinen' : k);   // in den Einstellungen abgewählte Zeilen fehlen, ebenso die abgeschalteter Bereiche
-  const ovs = (wv && zeig('gewicht') ? ovCard('gewicht', 'Gewicht', wv, ws) : '') + (mv && zeig('haushalt') ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '') + (tv && zeig('training') ? ovCard('training', tName(), tv, ts) : '') +
-    (av && zeig('arbeit') ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '') + (un.length && zeig('uni') ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '');
+  /* seit v150 in seiner Reihenfolge (Einstellungen → Heute) */
+  const ovZeile = { gewicht: () => wv && zeig('gewicht') ? ovCard('gewicht', 'Gewicht', wv, ws) : '', haushalt: () => mv && zeig('haushalt') ? ovCard('haushalt', 'Finanzen', mv, ms, mc) : '', training: () => tv && zeig('training') ? ovCard('training', tName(), tv, ts) : '',
+    arbeit: () => av && zeig('arbeit') ? ovCard('routinen', 'Arbeit', av, as, '', 'work') : '', uni: () => un.length && zeig('uni') ? ovCard('routinen', 'Uni', pktT(pkt) + (pkt === 100 ? ' Punkt' : ' Punkte'), uniSollT(un.length), '', 'uni') : '' };
+  const ovs = ovFolge().map(q => ovZeile[q[0]]()).join('');
   if (ovs) h += '<div class="ovs">' + ovs + '</div>';
   el.innerHTML = h;
 }
@@ -5580,7 +5592,7 @@ const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93
 /* Akzentfarbe (v149): wie die Hervorhebung in iOS; sie färbt Knöpfe, Verweise, Ringe und Umschalter. Die Farben je hell und dunkel stehen im CSS an :root[data-akz]. */
 const AKZ = [['blau', 'Blau', '#0A84FF'], ['indigo', 'Indigo', '#5E5CE6'], ['tuerkis', 'Türkis', '#40C8E0'], ['pink', 'Pink', '#FF375F'], ['graphit', 'Graphit', '#8E8E93']];
 const akz = () => AKZ.some(a => a[0] === E.akz) ? E.akz : 'blau';
-const akzSetzen = () => { if (akz() === 'blau') delete document.documentElement.dataset.akz; else document.documentElement.dataset.akz = akz(); };
+const akzSetzen = () => { if (akz() === 'blau') delete document.documentElement.dataset.akz; else document.documentElement.dataset.akz = akz(); document.body.classList.toggle('ohne-licht', E.licht === 0); };
 /* Kennzahlen im Gym (v149): bis zu drei Kacheln unter der großen Zahl, frei wählbar */
 const KZ = [['p', 'Verbesserung'], ['bes', 'Sätze besser'], ['dur', 'Trainingszeit'], ['rek', 'Rekorde'], ['avg', 'Ø Dauer'], ['woche', 'Pro Woche'], ['saetze', 'Sätze']];
 const kzWahl = () => { const l = (E.kz || []).filter(k => KZ.some(q => q[0] === k)); return l.length ? l : ['p', 'bes', 'dur']; };
@@ -5615,6 +5627,7 @@ function eSeiteHTML(k) {
   if (k === 'darst') return secHTML('Akzentfarbe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Akzentfarbe">' +
       AKZ.map(a => '<button type="button" class="chip" data-h="akz" data-v="' + a[0] + '" aria-pressed="' + (akz() === a[0]) + '"><i class="kf" style="background:' + a[2] + '"></i>' + a[1] + '</button>').join('') + '</div>' +
       '<p class="note">Färbt Knöpfe, Verweise, Ringe und die Auswahl, dazu das Licht auf Heute.</p></div>' +
+    '<ul class="entries"><li>' + schalter('licht', 'Licht hinter der Seite', E.licht !== 0) + '</li></ul>' +
     (HUELLE ? secHTML('Bedienung') + '<ul class="entries"><li>' + schalter('hapt', 'Haptik', E.hapt !== 0) + '</li></ul>' : '');
   if (k === 'ber') {
     const vs = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', tName()]].filter(q => anV(q[0])), st = anV(E.start || 'heute') ? E.start || 'heute' : erster();
@@ -5626,8 +5639,9 @@ function eSeiteHTML(k) {
         vs.map(q => '<button type="button" class="chip" data-h="start" data-v="' + q[0] + '" aria-pressed="' + (st === q[0]) + '">' + q[1] + '</button>').join('') + '</div></div>');
   }
   if (k === 'heute') {
-    const ov = OV.filter(q => anV(q[0] === 'arbeit' || q[0] === 'uni' ? 'routinen' : q[0]));
-    return ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', q[0] === 'training' ? tName() : q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' : '<p class="note">Auf Heute gibt es nichts zu wählen.</p>';
+    const ov = ovFolge().filter(q => anV(q[0] === 'arbeit' || q[0] === 'uni' ? 'routinen' : q[0])), name = q => q[0] === 'training' ? tName() : q[1];
+    return ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', name(q), !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' +
+      (ov.length < 2 ? '' : secHTML('Reihenfolge') + '<div class="es-reihe" id="es-ovr">' + ov.map(q => '<div class="prow" data-v="' + q[0] + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + name(q) + '</b></div>').join('') + '</div>') : '<p class="note">Auf Heute gibt es nichts zu wählen.</p>';
   }
   if (k === 'gym') {
     const w = kzWahl(), voll = w.length >= 3;
@@ -5635,13 +5649,15 @@ function eSeiteHTML(k) {
       secHTML('Kennzahlen', 'bis zu drei') + '<div class="card es-start"><div class="chips" role="group" aria-label="Kennzahlen">' +
       KZ.map(q => { const an = w.indexOf(q[0]) >= 0; return '<button type="button" class="chip" data-h="kz" data-v="' + q[0] + '" aria-pressed="' + an + '"' + (!an && voll ? ' aria-disabled="true"' : '') + '>' + q[1] + '</button>'; }).join('') + '</div>' +
       '<p class="note">Stehen unter der großen Zahl im Monat und im Jahr.</p></div>' +
-      secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
+      secHTML('Training' + INFO('emp')) + '<ul class="entries">' + wertRow('wdh', 'Wiederholungen je Satz', Math.floor(stdWdh() / 100) + '–' + stdWdh() % 100) + '<li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
       '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
       '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
   }
   if (k === 'kal') return '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
       actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) + '</ul>' +
       /* Kalender ein und aus (v147 nur fürs Eintragen, seit v148 überall): je Kalender ein Schalter mit seiner Farbe; der letzte beschreibbare, der an ist, ist gesperrt */
+      (kalAn() && kal.recht === 'an' ? secHTML('Stundenhöhe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Stundenhöhe">' +
+        [[28, 'Kompakt'], [36, 'Normal'], [48, 'Groß']].map(q => '<button type="button" class="chip" data-h="kalH" data-v="' + q[0] + '" aria-pressed="' + ((E.kalH || 36) === q[0]) + '">' + q[1] + '</button>').join('') + '</div><p class="note">So viel Platz hat eine Stunde im Tag des Kalenders.</p></div>' : '') +
       (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? secHTML('Kalender' + INFO('kal')) + '<ul class="entries">' + kalAlle().map(q => '<li>' + schalter('kalNein', '<i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n), (E.kalNein || []).indexOf(q.id) < 0, esc(q.id)).replace('<button', '<button data-w="' + (q.w ? 1 : 0) + '"') + '</li>').join('') + '</ul>' : '') +
       '<p class="note" id="info-kal"' + (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? ' hidden' : '') + '>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Ein Kalender, den du hier ausschaltest, verschwindet aus Track.: seine Termine stehen nicht mehr auf Heute, im Kalender und in der Suche, und beim Eintragen steht er nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist.</p>';
   if (k === 'planer') return secHTML('Notizen') + '<ul class="entries"><li>' + schalter('nNeu', 'Neue Notizen oben', E.nNeu === 1) + '</li></ul>' +
@@ -5656,6 +5672,11 @@ function paintE() {
   $('#es-body').innerHTML = eSeite ? eSeiteHTML(eSeite) : eStartHTML();
   $('#es-body').dataset.seite = eSeite;
   berEinzig(); kalEinzig();
+  const ovr = $('#es-ovr');
+  if (ovr) ziehListe(ovr, () => true, (von, nach) => {
+    if (von !== nach) { const l = [...ovr.children].map(x => x.dataset.v), v = l.splice(von, 1)[0]; l.splice(nach, 0, v); setE({ ovReihe: l.concat(OV.map(q => q[0]).filter(k => l.indexOf(k) < 0)) }); renderHome(); }
+    paintE();
+  });
   const r = $('#es-reihe');
   if (r) ziehListe(r, () => true, (von, nach) => {
     if (von !== nach) { const on = tabFolge().filter(anV), v = on.splice(von, 1)[0]; on.splice(nach, 0, v); setE({ reihe: on.concat(tabFolge().filter(x => on.indexOf(x) < 0)) }); leiste(); show(view); }
@@ -5705,12 +5726,16 @@ function einstAct(t) {
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'akz') { setE({ akz: v === 'blau' ? null : v }); akzSetzen(); document.querySelectorAll('#es-body [data-h="akz"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'hapt') setE({ hapt: an ? null : 0 });
+  else if (a === 'licht') { setE({ licht: an ? null : 0 }); akzSetzen(); }
+  else if (a === 'kalH') { setE({ kalH: +v === 36 ? null : +v }); document.querySelectorAll('#es-body [data-h="kalH"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'kz') {
     /* Kennzahlen: höchstens drei, mindestens eine; sie stehen in der Reihenfolge der Liste */
     const w = kzWahl(), drin = w.indexOf(v) >= 0;
     if (drin ? w.length === 1 : w.length >= 3) return;
     setE({ kz: KZ.map(q => q[0]).filter(x => x === v ? !drin : w.indexOf(x) >= 0) }); paintE(); renderTraining(); return;
   }
+  else if (a === 'wdh') return openZ({ titel: 'Wiederholungen je Satz', wert: stdWdh(), nurListe: true, liste: BEREICHE, text: n => Math.floor(n / 100) + '–' + n % 100 + ' Wdh',
+    dann: n => { if (BEREICHE.indexOf(n) >= 0) { setE({ wdh: n === 812 ? null : n }); paintE(); renderTraining(); } } });   // Standard für Übungen ohne eigenen Bereich
   else if (a === 'nNeu') { setE({ nNeu: an ? 1 : null }); renderPlaner(); renderHome(); }
   else if (a === 'schicht') return openZ({ titel: 'Schicht in Stunden', wert: schicht() / 60, einheit: 'h', komma: true, liste: reihe(1, 10, 0.5),
     dann: n => { const m = Math.round(n * 60); if (m >= 30 && m <= 720) { setE({ schicht: m === SCHICHT ? null : m }); paintE(); } } });

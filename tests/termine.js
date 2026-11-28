@@ -415,6 +415,17 @@ lauf(async () => {
     p.ok('Keine Fehler (Kalender zum Eintragen)', !fehler.length, fehler.join());
     await browser.close();
   }
+  /* 16b. Stundenhöhe (v150, Einstellungen → Kalender): Groß = 48 px je Stunde. Seminar 9–11 Uhr am 27.11.: oben 12 + 9 × 48 + 1 = 445 px, hoch 2 × 48 − 2 = 94 px */
+  {
+    const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle });
+    await ruf(page, 'info', { app: '1.7', kalender: 'an' }); await an(page);
+    await einstSeite(page, 'kal'); await page.click('#es-body [data-h="kalH"][data-v="48"]'); await zu(page);
+    await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
+    const blk = await page.evaluate(() => { const e = document.querySelector('.tv[data-slot="0"] .tl-e[data-id="d"]'); return e.style.top + ' ' + e.style.height + ' ' + getComputedStyle(document.querySelector('#tl .tl-in')).height; });
+    p.ok('Stundenhöhe Groß: Seminar 445 px oben, 94 px hoch, Zeitleiste 24 × 48 + 24 = 1176 px', blk === '445px 94px 1176px', blk);
+    p.ok('Keine Fehler (Stundenhöhe)', !fehler.length, fehler.join());
+    await browser.close();
+  }
   /* 17. Bewegung wie in Apples Kalender (v147, sein Video): Mit Bewegung liegt beim Wechsel Monat → Tag der Tag über dem Monat (Klasse wandel), die Woche des Tags beginnt auf der Höhe
      ihrer Zeile im Monat und endet in der Leiste; danach ist nur noch der Tag da. Zurück dasselbe rückwärts, danach ist der Tag leer. Blättern: Der Tag folgt dem Finger. */
   {

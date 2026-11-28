@@ -92,6 +92,27 @@ lauf(async () => {
   await p.click('#r-subs [data-r="sub"][data-v="uni"]'); await p.waitForTimeout(100);
   P.enthaelt('Uni: „1 von 20 Terminen“', await text(p, '#n-main .hero'), ['1 von 20 Terminen']);
 
+  /* 9. v150: Licht hinter der Seite aus (--amb-k 0 %), Reihenfolge der Übersicht auf Heute (Uni ganz nach oben gezogen) */
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const licht = () => p.evaluate(() => getComputedStyle(document.body).getPropertyValue('--amb-k').trim());
+  const an = await licht();
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="licht"]');
+  P.ok('Licht aus: --amb-k 0 %, gespeichert (E.licht 0)', an !== '0%' && (await licht()) === '0%' && (await gespeichert(p)).E.licht === 0, an + ' → ' + await licht());
+  await p.click('#es-body [data-h="licht"]');
+  P.ok('Licht wieder an', (await licht()) === an && !('licht' in (await gespeichert(p)).E));
+  await einstSeite(p, 'heute');
+  const ovr = () => p.evaluate(() => [...document.querySelectorAll('#es-ovr .prow')].map(x => x.textContent.trim()).join(' '));
+  P.ok('Heute: Reihenfolge der Übersicht wie gewohnt (nur Bereiche, die an sind)', (await ovr()) === 'Gewicht Finanzen Training Arbeit Uni', await ovr());
+  const z = await p.evaluate(() => { const r = [...document.querySelectorAll('#es-ovr .prow')].map(x => x.getBoundingClientRect()), q = document.querySelectorAll('#es-ovr .griff')[4].getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2, d: r[1].top - r[0].top }; });
+  await p.mouse.move(z.x, z.y); await p.mouse.down(); await p.mouse.move(z.x, z.y - z.d * 4.3, { steps: 10 }); await p.mouse.up(); await p.waitForTimeout(80);
+  P.ok('Uni nach oben gezogen: gespeichert (E.ovReihe) und so in der Liste', (await ovr()) === 'Uni Gewicht Finanzen Training Arbeit' && (await gespeichert(p)).E.ovReihe[0] === 'uni', await ovr());
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const zeilen = await p.evaluate(() => [...document.querySelectorAll('#v-heute .ovs .ov .k')].map(x => x.textContent).join(' '));
+  P.ok('Auf Heute: Uni steht oben (Gewicht ohne Einträge fehlt)', zeilen.startsWith('Uni'), zeilen);
+  /* 10. v150: Standardbereich der Wiederholungen 10–15 für Übungen ohne eigenen Bereich (Rudern hat keinen) */
+  await einstSeite(p, 'gym'); await p.click('#es-body [data-h="wdh"]'); await p.waitForTimeout(80);
+  await p.click('#z-list [data-v="1015"], #z-list button:has-text("10–15")'); await p.waitForTimeout(80);
+  P.ok('Standardbereich 10–15: gespeichert (E.wdh 1015) und auf der Seite', (await gespeichert(p)).E.wdh === 1015 && (await text(p, '#es-body')).includes('10–15'), await text(p, '#es-body [data-h="wdh"]'));
   await o.browser.close();
   /* 8. Beim Start gilt die gespeicherte Akzentfarbe (Pink), die Leiste steht in der gespeicherten Folge und die App öffnet mit dem ersten Bereich darin, wenn Heute aus ist */
   const o2 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, K, N, E: { akz: 'pink', reihe: ['training', 'gewicht'], weg: { heute: 1 } } } }), q = o2.page;
