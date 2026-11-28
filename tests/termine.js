@@ -126,23 +126,30 @@ lauf(async () => {
   p.ok('Gemerkt: Zustand und sechs Termine', merk.recht === 'an' && merk.liste.length === 6, JSON.stringify(merk).slice(0, 200));
   p.ok('Nichts davon in der Sicherung der App', !JSON.stringify(await gespeichert(page)).includes('Zahnarzt'));
 
-  /* 6. Wochenleiste und Kalender wie in iOS (v144): Zeichen in der Farbe des Kalenders (ganztägig und über mehrere Tage ein Strich, sonst ein Punkt), der Freitag (Zukunft) öffnet seinen eigenen Tag.
-     Do 26.: Geburtstag ganztägig (grau, #8E8E93), Früh (grün) und Zahnarzt (rot) → Strich und zwei Punkte. Fr 27.: Seminar (blau) → ein Punkt. */
-  const leiste = await page.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(w => w.dataset.d + ':' + [...w.querySelectorAll('u')].map(u => u.className + ' ' + getComputedStyle(u).backgroundColor).join('+')));
-  p.ok('Wochenleiste: Zeichen in den Farben der Kalender, kommende Tage mit eigenem Datum', JSON.stringify(leiste) === JSON.stringify(['2026-11-23:', '2026-11-24:', '2026-11-25:', '2026-11-26:t lang rgb(142, 142, 147)+t rgb(52, 199, 89)+t rgb(255, 59, 48)', '2026-11-27:t rgb(10, 132, 255)', '2026-11-28:', '2026-11-29:']), JSON.stringify(leiste));
+  /* 6. Wochenleiste und Kalender wie in iOS (v144, seit v146 wie Apple: eine Kapsel mit einem Abschnitt je Termin, ein einzelner Termin mit Uhrzeit ein Punkt, gedämpft in der Farbe des Kalenders).
+     Do 26.: Geburtstag ganztägig (grau, #8E8E93), Früh (grün) und Zahnarzt (rot) → Kapsel mit drei Abschnitten in dieser Reihenfolge. Fr 27.: Seminar (blau) → ein Punkt. Der Freitag (Zukunft) öffnet seinen eigenen Tag. */
+  const leiste = await page.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(w => w.dataset.d + ':' + [...w.querySelectorAll('.mk .pt, .mk .kap > span')].map(u => (u.classList.contains('pt') ? 'pt ' : 'kap ') + /#[0-9A-F]{6}/i.exec(u.getAttribute('style'))[0]).join('+')));
+  p.ok('Wochenleiste: Kapsel und Punkt in den Farben der Kalender, kommende Tage mit eigenem Datum', JSON.stringify(leiste) === JSON.stringify(['2026-11-23:', '2026-11-24:', '2026-11-25:', '2026-11-26:kap #8E8E93+kap #34C759+kap #FF3B30', '2026-11-27:pt #0A84FF', '2026-11-28:', '2026-11-29:']), JSON.stringify(leiste));
   await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
-  /* Tag: Woche oben, Titel, Seminar 9–11 Uhr als Block: oben 13 + 9 × 48 + 1 = 446 px, hoch 2 × 48 − 2 = 94 px, in der Farbe seines Kalenders */
+  /* Tag: Woche oben, Titel, Seminar 9–11 Uhr als Block (seit v146 40 px je Stunde, 12 px über 0:00): oben 12 + 9 × 40 + 1 = 373 px, hoch 2 × 40 − 2 = 78 px, in der Farbe seines Kalenders */
   const tag27 = await page.evaluate(() => { const c = document.querySelector('#csheet'), e = document.querySelector('#cs-day .tl-e[data-id="d"]');
     return [c.classList.contains('tag'), document.querySelector('.tv-t').textContent, document.querySelector('.tw.sel').dataset.d, [...document.querySelectorAll('.tv-wk .tw')].length, e.style.top, e.style.height, e.innerText.replace(/\s+/g, ' '), getComputedStyle(e.querySelector('.kf')).backgroundColor].join(' | '); });
-  p.ok('Tipp auf Freitag: Tagesansicht mit Woche und Seminar als Block 9–11 Uhr', tag27 === 'true | Freitag – 27. Nov. 2026 | 2026-11-27 | 7 | 446px | 94px | Seminar 09:00–11:00 | rgb(10, 132, 255)', tag27);
+  p.ok('Tipp auf Freitag: Tagesansicht mit Woche und Seminar als Block 9–11 Uhr', tag27 === 'true | Freitag – 27. Nov. 2026 | 2026-11-27 | 7 | 373px | 78px | Seminar 09:00–11:00 | rgb(10, 132, 255)', tag27);
   p.ok('Tag: oben links zurück zum Monat („November“)', (await text(page, '#cs-close')) === 'November');
   await page.click('#cs-close'); await page.waitForTimeout(50);
   const monate = await page.evaluate(() => [...document.querySelectorAll('#cs-body .cm')].map(c => c.dataset.ym));
   /* Zwölf Monate zurück (November 2025) bis zwölf voraus (November 2027) = 25 Monate, ohne Zahl je Monat (wie in iOS) */
   p.ok('Monat: 25 Monate von November 2025 bis November 2027', monate.length === 25 && monate[0] === '2025-11' && monate[24] === '2027-11' && !(await page.$('#cs-body .cm p')), monate.length + ' ' + monate[0] + ' … ' + monate[monate.length - 1]);
-  const dez = await page.evaluate(() => ['2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-06'].map(k => { const c = document.querySelector('.cd[data-d="' + k + '"]'); return (c.disabled ? 'zu' : 'auf') + c.querySelectorAll('u.lang').length; }).join());
-  p.ok('Monat: Kurztrip als Strich am 3., 4. und 5.12., kommende Tage sind antippbar', dez === 'auf0,auf1,auf1,auf1,auf0', dez);
+  const dez = await page.evaluate(() => ['2026-12-02', '2026-12-03', '2026-12-04', '2026-12-05', '2026-12-06'].map(k => { const c = document.querySelector('.cd[data-d="' + k + '"]'); return (c.disabled ? 'zu' : 'auf') + c.querySelectorAll('.mk .kap > span').length; }).join());
+  p.ok('Monat: Kurztrip als Kapsel am 3., 4. und 5.12., kommende Tage sind antippbar', dez === 'auf0,auf1,auf1,auf1,auf0', dez);
   p.ok('Monat: Der Monat des gewählten Tags steht im Blick', await page.evaluate(() => { const b = document.querySelector('#cs-body'), m = b.querySelector('.cm[data-ym="2026-11"]'); const r = m.getBoundingClientRect(), q = b.getBoundingClientRect(); return r.top >= q.top - 2 && r.top < q.bottom; }));
+  /* Wie Apple (v146): Vollbild, heute ein roter Kreis, der Name des Monats über seinem ersten Tag: 1.11.2026 ist ein Sonntag (Spalte 7, am Rand kurz „Nov“, rot als laufender Monat),
+     1.12.2026 ein Dienstag (Spalte 2, „Dezember“); die große Überschrift nennt den Monat oben im Blick und wechselt beim Scrollen (März 2027 mit Jahr). */
+  const apple = await page.evaluate(() => { const c = document.querySelector('#csheet'), r = c.getBoundingClientRect(), l11 = document.querySelector('.cm[data-ym="2026-11"] .cm-l'), l12 = document.querySelector('.cm[data-ym="2026-12"] .cm-l');
+    return [r.width === innerWidth && r.height === innerHeight, getComputedStyle(document.querySelector('.cd.now b')).backgroundColor, l11.textContent + (l11.classList.contains('jetzt') ? '*' : '') + ' ' + l11.getAttribute('style'), l12.textContent + (l12.classList.contains('jetzt') ? '*' : '') + ' ' + l12.getAttribute('style'), document.querySelector('#cs-mon').textContent, document.querySelector('.cs-wd').textContent].join(' | '); });
+  p.ok('Monat wie Apple: Vollbild, heute rot, „Nov“ über dem Sonntag, „Dezember“ über dem Dienstag, Überschrift „November“, Wochentage als Buchstaben', apple === 'true | rgb(255, 69, 58) | Nov* grid-column:7 | Dezember grid-column:2 | November | MDMDFSS', apple);
+  await page.evaluate(() => { const b = document.querySelector('#cs-body'); b.scrollTop = b.querySelector('.cm[data-ym="2027-03"]').offsetTop - b.firstElementChild.offsetTop + 30; }); await page.waitForTimeout(120);
+  p.ok('… beim Scrollen wechselt die große Überschrift (März 2027)', (await text(page, '#cs-mon')) === 'März 2027', await text(page, '#cs-mon'));
   await page.click('.cd[data-d="2026-12-04"]'); await page.waitForTimeout(50);
   p.enthaelt('Tipp auf den 4.12.: Kurztrip unter „Ganztägig“', await text(page, '#cs-day'), ['Ganztägig', 'Kurztrip']);
   /* Wischen über die Stunden: Tag danach und davor; über die Woche: Woche danach */
@@ -156,8 +163,8 @@ lauf(async () => {
   p.ok('Tipp auf einen Tag der Woche: dieser Tag', await page.evaluate(() => document.querySelector('.tw.sel').dataset.d === '2026-12-03' && document.querySelector('.tv-t').textContent === 'Donnerstag – 3. Dez. 2026'));
   await page.click('.tw[data-d="2026-12-04"]'); await page.waitForTimeout(30);
   /* Tipp auf eine freie Stelle der Zeitleiste um 14:20 → neuer Termin 14:00–15:00; ein Satz ohne Uhrzeit macht ihn nicht ganztägig */
-  await page.evaluate(() => { document.querySelector('#tl').scrollTop = 13 + 13 * 48; });
-  const yy = await page.evaluate(() => document.querySelector('.tl-in').getBoundingClientRect().top + 13 + (14 * 60 + 20) * 48 / 60);
+  await page.evaluate(() => { document.querySelector('#tl').scrollTop = 12 + 13 * 40; });
+  const yy = await page.evaluate(() => document.querySelector('.tl-in').getBoundingClientRect().top + 12 + (14 * 60 + 20) * 40 / 60);
   await page.mouse.click(200, yy); await page.waitForTimeout(50);
   b = await blatt(page);
   p.ok('Tipp auf 14:20 in der Zeitleiste: neuer Termin am 4.12. von 14:00 bis 15:00', b.offen && b.titel === 'Termin eintragen' && b.tag === '2026-12-04' && b.von === '14:00' && b.bis === '15:00' && !b.ganz, JSON.stringify(b));

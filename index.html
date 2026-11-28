@@ -62,6 +62,7 @@
      Kante und Fläche stehen im dunklen Block unten (--rand-a, --rand-s). --amb-k ist die Stärke des Lichts hinter der Seite, --amb-w ein zweites, neutrales Licht von links oben. */
   --cut:#FFFFFF; --schild:#E5E5EA; --amb-k:9%; --amb-w:transparent;
   --danger:#D70015;
+  --rot:#FF3B30; --mk:100%; --kt:70%; --kg:#FFFFFF; --kgp:20%;   /* Kalender wie iOS: heute rot; Zeichen im Monat (--mk) und Blöcke im Tag (--kgp Anteil der Kalenderfarbe auf --kg, Schrift --kt) */
   --good:#248A3D;--warn:#D9A300;
   --c-weight:#AF52DE;
   --c-money:#F08C00;
@@ -92,7 +93,7 @@
     --rand-a:inset 0 0 0 .68px rgba(255,255,255,.055),inset 0 6.8px 3.5px -6px rgba(255,255,255,.07),inset 0 16.5px 11px -14px rgba(255,255,255,.045),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.07),inset 0 -16.5px 11px -14px rgba(255,255,255,.045);
     --rand-s:inset 0 0 0 .68px rgba(255,255,255,.045),inset 0 6.8px 3.5px -6px rgba(255,255,255,.04),inset 0 16.5px 11px -14px rgba(255,255,255,.027),inset 0 -6.8px 3.5px -6px rgba(255,255,255,.04),inset 0 -16.5px 11px -14px rgba(255,255,255,.027);
     --schild:#3A3A3C; --amb-k:22%; --amb-w:rgba(255,255,255,.06);
-    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
+    --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158; --rot:#FF453A; --mk:64%; --kt:100%; --kg:#000000; --kgp:33%;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
@@ -622,71 +623,94 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .cs-day .note{margin:0}
 .cs-day .entries .l small{line-height:1.45;margin-top:2px}
 /* Kalender auf Heute wie in iOS (v144, sein Bild aus Apples Kalender: „auf Tag klicken, dann gleiche Ansicht, auch die Farben übernehmen, basically wie Kalender-App von iOS“).
-   #csheet.ios: Monat (cs-body) mit Strichen und Punkten in den Farben der Kalender; .tag: Tagesansicht in cs-day; .such: Suche. Die anderen Bereiche behalten ihren Kalender. */
+   Seit v146 nach seinem Vergleich mit Apples Kalender (vier Bilder): „es geht in die richtige Richtung, aber schau dir den Unterschied an … Apple sieht viel edler, eleganter aus,
+   ich will den iOS-Look oder noch besser“. Wie dort: Vollbild (Glas wie das Training, dunkler), große Überschrift des Monats, Wochentage als Buchstaben, der Name jedes Monats steht
+   über seinem ersten Tag (der laufende rot), Striche nur über vorhandenen Tagen, heute ein roter Kreis, je Tag eine Kapsel mit einem Abschnitt je Termin in gedämpfter Farbe
+   (ein einzelner Termin mit Uhrzeit: ein Punkt), im Tag die Uhrzeit als rote Kapsel und Termine in satter, dunkler Tönung ihrer Farbe. Die anderen Bereiche behalten ihren Kalender. */
 .cs-akt{justify-self:end;display:flex;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s)}
 .cs-akt[hidden],.cs-sbar[hidden],.cs-such[hidden]{display:none}
-.cs-akt button{position:relative;width:46px;height:40px;border:0;background:none;color:var(--ink);display:grid;place-items:center}
-.cs-akt svg{width:19px;height:19px}
+.cs-akt button{position:relative;width:48px;height:44px;border:0;background:none;color:var(--ink);display:grid;place-items:center}
+.cs-akt svg{width:20px;height:20px}
 #cs-today{justify-self:end}
-#csheet.ios .cs-top{grid-template-columns:auto 1fr auto;gap:8px;padding:12px 12px 8px}
+#csheet.ios{width:100%;max-width:480px;height:100%;max-height:none;margin:0 auto;border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none;padding-top:env(safe-area-inset-top,0px)}
+#csheet.ios::before{display:none}
+#csheet.ios::backdrop{background:rgba(242,242,247,.9);-webkit-backdrop-filter:blur(40px) saturate(1.6);backdrop-filter:blur(40px) saturate(1.6)}
+#csheet.ios .cs-top{grid-template-columns:auto 1fr auto;gap:8px;padding:8px 14px 2px}
 #csheet.ios #cs-today{display:none}
-#csheet.ios #cs-close{display:inline-flex;align-items:center;gap:6px;height:40px;padding:0 16px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-size:15px;font-weight:600}
-#csheet.ios #cs-close svg{width:8px;height:14px;margin-left:-3px}
 #csheet.ios #cs-title{visibility:hidden}
-.tl-h.weg span{visibility:hidden}
-.cs-sbar{display:flex;align-items:center;gap:10px;padding:12px 12px 8px}
-.cs-sbar .linkbtn{flex:none}
-.cs-q{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--muted)}
-.cs-q svg{flex:none;width:17px;height:17px}
-.cs-q input{flex:1;min-width:0;border:0;background:none;padding:0;color:var(--ink);font-size:16px;-webkit-appearance:none;appearance:none;outline:none;box-shadow:none}
+#csheet.ios #cs-close{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;height:44px;padding:0 18px 0 14px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-size:17px;font-weight:500}
+#csheet.ios:not(.tag) #cs-close{padding:0}
+#csheet.ios #cs-close svg{width:9px;height:16px}
+#csheet.ios:not(.tag) #cs-close svg{width:17px;height:10px}
+.cs-mon{margin:8px 20px 6px;font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+#csheet:not(.ios) .cs-mon,#csheet.tag .cs-mon,#csheet.such .cs-mon{display:none}
+#csheet.ios .cs-wd{padding:2px 0 7px;border-bottom:.5px solid var(--line)}
+#csheet.ios .cs-wd span{font-size:12.5px;font-weight:600;color:var(--ink)}
+#csheet.ios .cs-wd span.we{color:var(--muted)}
+.cs-sbar{display:flex;align-items:center;gap:10px;padding:8px 14px 6px}
+.cs-sbar .linkbtn{flex:none;font-size:17px}
+.cs-q{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:44px;padding:0 16px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--muted)}
+.cs-q svg{flex:none;width:18px;height:18px}
+.cs-q input{flex:1;min-width:0;border:0;background:none;padding:0;color:var(--ink);font-size:17px;-webkit-appearance:none;appearance:none;outline:none;box-shadow:none}
 .cs-q input::-webkit-search-cancel-button{display:none}
 #csheet.such .cs-top,#csheet.such .cs-wd,#csheet.such .cs-body,#csheet.such .cs-day,#csheet.such .cs-heute{display:none}
-.cs-such{flex:1;min-height:0;overflow-y:auto;padding:4px 16px 24px}
-.cs-such h4{margin:14px 2px 4px;font-size:13px;font-weight:600;color:var(--muted)}
-.cs-such .note{margin:16px 2px}
-.cs-heute{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:3;height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--rand-a);color:var(--ink);font-size:16px;font-weight:600}
+.cs-such{flex:1;min-height:0;overflow-y:auto;padding:4px 16px calc(24px + env(safe-area-inset-bottom,0px))}
+.cs-such h4{margin:16px 4px 6px;font-size:13px;font-weight:600;color:var(--muted)}
+.cs-such .note{margin:18px 4px}
+.cs-heute{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:3;height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--rand-a);color:var(--ink);font-size:17px;font-weight:600}
 #csheet:not(.ios) .cs-heute{display:none}
-#csheet.ios .cs-body{padding-bottom:84px}
+#csheet.ios .cs-body{padding:0 0 calc(100px + env(safe-area-inset-bottom,0px))}
 #csheet.ios .cs-day{display:none}
-#csheet.ios .cm{padding-top:20px}
-#csheet.ios .cm h3{margin:0 8px 8px;font-size:22px}
-#csheet.ios .cgrid{row-gap:0}
-#csheet.ios .cgrid>*{border-top:.5px solid var(--line);min-height:60px;padding-top:6px}
-#csheet.ios .cd.we:not(.now):not(.sel) b{color:var(--muted)}
-.wk u.lang,.cd u.lang{width:14px;border-radius:3px}
+#csheet.ios .cm{padding-top:18px}
+#csheet.ios .cgrid{row-gap:0;grid-template-columns:repeat(7,minmax(0,1fr))}
+.cm-l{justify-self:center;width:0;display:flex;justify-content:center;white-space:nowrap;padding:0 0 8px;font-size:21px;font-weight:700;letter-spacing:-.01em}
+.cm-l.jetzt{color:var(--rot)}
+#csheet.ios .cd{border-top:.5px solid var(--line);min-height:66px;padding:6px 0 0;gap:5px}
+#csheet.ios .cd b{width:38px;height:38px;font-size:20px;font-weight:400}
+#csheet.ios .cd.sel b{background:none;color:var(--ink)}
+#csheet.ios .cd.we b{color:var(--muted)}
+#csheet.ios .cd.now b{background:var(--rot);color:#fff;font-weight:600}
+.wk i.mk,.cd i.mk{gap:0;align-items:center}
+.mk .pt{display:block;width:6px;height:6px;border-radius:50%}
+.mk .kap{display:flex;height:5px;border-radius:3px;overflow:hidden}
+.mk .kap span{display:block;width:7px;height:100%}
+.mk .kap span:only-child{width:18px}
 #csheet.ios.tag .cs-wd,#csheet.ios.tag .cs-body{display:none}
 #csheet.ios.tag .cs-day{display:flex;flex:1;min-height:0;max-height:none;flex-direction:column;gap:0;padding:0;border-top:0;overflow:hidden}
-.tv-wk{display:grid;grid-template-columns:repeat(7,1fr);padding:0 10px 8px;touch-action:pan-y}
-.tw{border:0;background:none;padding:2px 0;display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--ink)}
-.tw small{font-size:11px;font-weight:600;color:var(--mid)}
-.tw b{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--round);font-size:18px;font-weight:500;font-variant-numeric:tabular-nums;transition:background-color .15s ease}
+.tv-k{flex:none;touch-action:pan-y;border-bottom:.5px solid var(--line)}
+.tv-wk{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 0 10px}
+.tw{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink)}
+.tw small{font-size:12.5px;font-weight:600;color:var(--ink)}
+.tw.we small{color:var(--muted)}
+.tw b{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--round);font-size:20px;font-weight:400;font-variant-numeric:tabular-nums;transition:background-color .15s ease}
 .tw.we b{color:var(--muted)}
-.tw.now b{color:var(--at);font-weight:700}
-.tw.sel b{background:var(--ink);color:var(--bg);font-weight:700}
+.tw.sel b{background:var(--ink);color:var(--bg);font-weight:600}
+.tw.now b{color:var(--rot);font-weight:600}
+.tw.now.sel b{background:var(--rot);color:#fff}
 .tw:not(.sel):active b{background:var(--fill)}
-.tv-k{flex:none;touch-action:pan-y}
-.tv-t{margin:0;padding:10px 16px;border-top:.5px solid var(--line);text-align:center;font-size:16px;font-weight:600}
-.tv-g{display:flex;align-items:flex-start;gap:6px;padding:0 10px 8px 0;border-bottom:.5px solid var(--line)}
-.tv-g>span{flex:none;width:68px;padding:7px 0 0 14px;font-size:12px;color:var(--muted)}
+.tv{flex:1;min-height:0;display:flex;flex-direction:column;touch-action:pan-y}
+.tv-t{margin:0;padding:12px 16px 10px;text-align:center;font-size:17px;font-weight:600;letter-spacing:-.01em}
+.tv-g{display:flex;align-items:flex-start;gap:8px;padding:2px 12px 10px 0;border-bottom:.5px solid var(--line)}
+.tv-g>span{flex:none;width:72px;padding:5px 0 0 16px;font-size:13px;color:var(--muted)}
 .tv-gl{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
-.tv-gp{flex:1 1 calc(50% - 4px);min-width:0;height:30px;display:flex;align-items:center;gap:7px;padding:0 10px 0 6px;border:0;border-radius:9px;background:color-mix(in srgb,var(--c) 30%,transparent);color:color-mix(in srgb,var(--c) 78%,var(--ink));font:inherit;font-size:14px;font-weight:600;text-align:left}
-.tv-gp .kf{flex:none;width:18px;height:18px;margin:0;border-radius:50%}
+.tv-gp{flex:1 1 calc(50% - 4px);min-width:0;height:28px;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border:0;border-radius:8px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:15px;font-weight:600;letter-spacing:-.01em;text-align:left}
+.tv-gp .kf{flex:none;display:grid;place-items:center;width:19px;height:19px;margin:0;border-radius:50%}
+.tv-gp .kf svg{width:11px;height:11px}
 .tv-gp span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
-.tl-in{position:relative;height:calc(24 * 48px + 26px);margin-bottom:76px}
-.tl-h{position:absolute;left:62px;right:0;height:0;border-top:.5px solid var(--line)}
-.tl-h span{position:absolute;right:calc(100% + 8px);top:-8px;font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
-.tl-ev{position:absolute;top:0;bottom:0;left:64px;right:8px}
-.tl-e{position:absolute;overflow:hidden;display:flex;flex-direction:column;gap:1px;padding:3px 6px 3px 9px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) 28%,transparent);color:color-mix(in srgb,var(--c) 76%,var(--ink));font:inherit;font-size:12.5px;line-height:1.25;text-align:left}
+.tl-in{position:relative;height:calc(24 * 40px + 24px);margin-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.tl-h{position:absolute;left:66px;right:0;height:0;border-top:.5px solid var(--line)}
+.tl-h span{position:absolute;right:calc(100% + 10px);top:-8.5px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl-h.weg span{visibility:hidden}
+.tl-ev{position:absolute;top:0;bottom:0;left:68px;right:10px}
+.tl-e{position:absolute;overflow:hidden;display:flex;flex-direction:column;gap:1px;padding:3px 7px 3px 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:13px;line-height:1.25;text-align:left}
 .tl-e .kf{position:absolute;left:0;top:0;bottom:0;width:3px;height:auto;margin:0;border-radius:0}
 .tl-e b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-e small{font-size:11.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-e small{font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-e.kurz{flex-direction:row;align-items:center;gap:6px;padding-top:0;padding-bottom:0}
 .tl-e:active,.tv-gp:active{opacity:.7}
-.tl-now{position:absolute;left:58px;right:0;height:0;border-top:1.5px solid var(--danger);z-index:2;pointer-events:none}
-.tl-now::before{content:"";position:absolute;left:0;top:-4.75px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
-.tl-now span{position:absolute;right:100%;top:-8px;padding-right:6px;font-size:11.5px;font-weight:700;color:var(--danger);font-variant-numeric:tabular-nums}
-.tv{flex:1;min-height:0;display:flex;flex-direction:column;touch-action:pan-y}
+.tl-now{position:absolute;left:66px;right:0;height:0;border-top:1.5px solid var(--rot);z-index:2;pointer-events:none}
+.tl-now span{position:absolute;right:calc(100% + 2px);top:-10.5px;padding:0 6px;border-radius:7px;background:var(--rot);color:#fff;font-family:var(--round);font-size:12.5px;font-weight:600;line-height:20px;font-variant-numeric:tabular-nums}
 .tv.go-n{animation:goN .24s cubic-bezier(.16,1,.3,1)}
 .tv.go-p{animation:goP .24s cubic-bezier(.16,1,.3,1)}
 
@@ -701,7 +725,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 #lsheet{width:100%;max-width:480px;height:calc(100% - var(--kb,0px));max-height:none;margin:0 auto var(--kb,0px);border-radius:0;background:none;-webkit-backdrop-filter:none;backdrop-filter:none;box-shadow:none}
 #lsheet::before{display:none}
 #lsheet::backdrop{background:rgba(242,242,247,.8);-webkit-backdrop-filter:blur(36px) saturate(1.7);backdrop-filter:blur(36px) saturate(1.7)}
-@media (prefers-color-scheme:dark){#lsheet::backdrop{background:rgba(34,34,38,.64)}}
+@media (prefers-color-scheme:dark){#lsheet::backdrop{background:rgba(34,34,38,.64)}#csheet.ios::backdrop{background:rgba(12,12,14,.84)}}
 #lform{gap:14px;min-height:100%;padding:calc(8px + env(safe-area-inset-top,0px)) 16px calc(16px + env(safe-area-inset-bottom,0px))}
 .l-grab{flex:none;align-self:center;width:36px;height:5px;border-radius:3px;background:var(--fill)}
 #lsheet .sh-head h2{font-size:15px}
@@ -1462,7 +1486,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v145</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v146</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1600,6 +1624,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   <div class="cs-top"><button type="button" class="linkbtn" id="cs-close">Schließen</button><b id="cs-title"></b><button type="button" class="linkbtn" id="cs-today">Heute</button>
     <span class="cs-akt" id="cs-akt" hidden><button type="button" data-c="suche" aria-label="Termine suchen"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.6"/><path d="M12.8 12.8l4.2 4.2"/></svg></button><button type="button" id="cs-plus" data-c="add" data-v="termin" aria-label="Termin eintragen"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M10 3.5v13M3.5 10h13"/></svg></button></span></div>
   <div class="cs-sbar" id="cs-sbar" hidden><label class="cs-q"><svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><circle cx="8.6" cy="8.6" r="5.6"/><path d="M12.8 12.8l4.2 4.2"/></svg><input id="cs-q" type="search" autocomplete="off" enterkeyhint="search" placeholder="Suchen" aria-label="Termine suchen"></label><button type="button" class="linkbtn" data-c="sucheZu">Abbrechen</button></div>
+  <h2 class="cs-mon" id="cs-mon"></h2>
   <div class="cs-wd" aria-hidden="true"><span>Mo</span><span>Di</span><span>Mi</span><span>Do</span><span>Fr</span><span>Sa</span><span>So</span></div>
   <div class="cs-body" id="cs-body"></div>
   <div class="cs-day" id="cs-day"></div>
@@ -3406,17 +3431,17 @@ function calHTML() {
   for (let i = i0; i <= curI + vor; i++) {
     const ym = ymOfIdx(i), y = +ym.slice(0, 4), m = +ym.slice(5), len = new Date(y, m, 0).getDate(), off = wd(new Date(y, m - 1, 1, 12)), span = i === curI ? +tk.slice(8) : len;
     let cells = '', g = 0, b = 0, t = 0;
-    for (let j = 0; j < off; j++) cells += '<span></span>';
+    if (ios) { const kurz = off === 0 || off > 4; cells += '<span class="cm-l' + (ym === tk.slice(0, 7) ? ' jetzt' : '') + '" style="grid-column:' + (off + 1) + '">' + (kurz ? MONTHS[m - 1].slice(0, 3) : MONTHS[m - 1]) + '</span>'; }   // wie bei Apple über dem ersten Tag, am Rand kurz
+    else for (let j = 0; j < off; j++) cells += '<span></span>';
     for (let d = 1; d <= len; d++) {
       const k = ym + '-' + pad(d), mk = k > tk && !vor ? '' : mark(k);
       if (mk.indexOf('t') >= 0) t += kalAm(k).filter(x => kalVon(x) === k).length;   // ein Termin über mehrere Tage zählt einmal
       if (mk.indexOf('g') >= 0) g++;
       if (mk.indexOf('b') >= 0 && cMode !== 'gym') b++;
-      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + ((off + d - 1) % 7 > 4 ? ' we' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') +
+      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + ((off + d - 1) % 7 > 4 ? ' we' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') + (ios && d === 1 ? ' style="grid-column-start:' + (off + 1) + '"' : '') +
         ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + (ios ? kalMarken(k) : dotsHTML(mk)) + '</button>';
     }
-    if (ios) for (let j = (off + len) % 7; j && j < 7; j++) cells += '<span></span>';   // die letzte Woche voll, damit der Strich über die ganze Breite geht
-    h += '<section class="cm" data-ym="' + ym + '"><h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3>' + (ios ? '' : '<p>' + calSum(cMode, ym, g, b, span, t) + '</p>') + '<div class="cgrid">' + cells + '</div></section>';
+    h += '<section class="cm" data-ym="' + ym + '">' + (ios ? '' : '<h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3><p>' + calSum(cMode, ym, g, b, span, t) + '</p>') + '<div class="cgrid">' + cells + '</div></section>';
   }
   return h;
 }
@@ -3458,18 +3483,21 @@ function calDayHTML() {
    Tag: oben die Woche (wischen = andere Woche), Titel, „Ganztägig“ mit Kapseln, darunter die Stunden mit den Terminen als Blöcken (überlappende nebeneinander), heute die rote Linie der Uhrzeit.
    Wischen über die Stunden = Tag davor oder danach; Tipp auf eine freie Stelle = neuer Termin zu dieser halben Stunde; Tipp auf einen Termin = ansehen und ändern. Suche über Titel und Ort. */
 let cView = 'monat', cVor = 'monat', cQ = '', cJetztT = null, cWisch = false;
-const TL_H = 48, TL_OBEN = 13;   // Höhe einer Stunde, Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+const TL_H = 40, TL_OBEN = 12;   // Höhe einer Stunde, Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+const RUNTER = '<svg viewBox="0 0 17 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l7 7 7-7"/></svg>';
 const ZURUECK = '<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>';
 const kalIos = () => cMode === 'all' && kalDa();
+const KAL_ICON = '<svg viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect x="1" y="1.6" width="9" height="8.4" rx="1.6" stroke="rgba(0,0,0,.62)" stroke-width="1.1"/><path d="M1 4h9" stroke="rgba(0,0,0,.62)" stroke-width="1.1"/><path d="M3.2 5.9h.9M5.05 5.9h.9M6.9 5.9h.9M3.2 7.8h.9M5.05 7.8h.9" stroke="rgba(0,0,0,.62)" stroke-width="1"/></svg>';
 const kalF = x => x.f || 'var(--accent)';   // x.f ist in kalNorm geprüft (#RRGGBB)
 const kalLang = x => !!x.g || kalVon(x) !== kalBis(x);
 const DF_TT = new Intl.DateTimeFormat('de-DE', { day: 'numeric', month: 'short', year: 'numeric' });
-/* Zeichen eines Tags im Monat und in der Wochenleiste auf Heute: ganztägige und mehrtägige als ein Strich (zwei Kalender = zwei Farben), dazu Punkte, zusammen höchstens drei */
+/* Zeichen eines Tags im Monat und in der Wochenleiste auf Heute, wie in Apples Kalender: eine Kapsel mit einem Abschnitt je Termin (höchstens sechs, ganztägige zuerst),
+   ein einzelner Termin mit Uhrzeit nur ein Punkt. Die Farbe ist die seines Kalenders, dunkel gedämpft (--mk), wie Apple sie im Monat zeigt. */
+const kalMk = x => 'color-mix(in srgb,' + kalF(x) + ' var(--mk),#000)';
 function kalMarken(k) {
-  const ts = kalAm(k); if (!ts.length) return '<i></i>';
-  const lang = ts.filter(kalLang), kurz = ts.filter(x => !kalLang(x)), fs = [...new Set(lang.map(kalF))].slice(0, 2);
-  return '<i>' + (fs.length ? '<u class="t lang" style="background:' + (fs.length > 1 ? 'linear-gradient(90deg,' + fs[0] + ' 50%,' + fs[1] + ' 50%)' : fs[0]) + '"></u>' : '') +
-    kurz.slice(0, fs.length ? 2 : 3).map(x => '<u class="t" style="background:' + kalF(x) + '"></u>').join('') + '</i>';
+  const ts = kalAm(k); if (!ts.length) return '<i class="mk"></i>';
+  if (ts.length === 1 && !kalLang(ts[0])) return '<i class="mk"><span class="pt" style="background:' + kalMk(ts[0]) + '"></span></i>';
+  return '<i class="mk"><span class="kap">' + ts.slice(0, 6).map(x => '<span style="background:' + kalMk(x) + '"></span>').join('') + '</span></i>';
 }
 const minVon = t => { const d = new Date(t); return d.getHours() * 60 + d.getMinutes(); };
 /* Teil eines Termins mit Uhrzeit an Tag k in Minuten: über Mitternacht von 0:00 bzw. bis 24:00 */
@@ -3482,6 +3510,16 @@ function kalSpalten(liste) {
   if (grp.length) fertig();
   return out;
 }
+function kalKlassen(ios) { cdlg.classList.toggle('ios', ios); cdlg.classList.toggle('tag', ios && cView === 'tag'); cdlg.classList.toggle('such', ios && cView === 'such'); }
+/* Große Überschrift im Monat: der Monat, der oben im Blick ist (mit Jahr, wenn es nicht das laufende ist) */
+function kalMonTitel() {
+  const b = $('#cs-body'), oben = b.getBoundingClientRect().top + 24, ms = b.querySelectorAll('.cm'); if (!kalIos() || cView !== 'monat' || !ms.length) return;
+  let m = ms[0]; for (const x of ms) { if (x.getBoundingClientRect().top <= oben) m = x; else break; }
+  const ym = m.dataset.ym, t = MONTHS[+ym.slice(5) - 1] + (ym.slice(0, 4) !== todayKey().slice(0, 4) ? ' ' + ym.slice(0, 4) : '');
+  if ($('#cs-mon').textContent !== t) $('#cs-mon').textContent = t;
+}
+let kalMonT = 0;
+$('#cs-body').addEventListener('scroll', () => { if (!kalMonT) kalMonT = requestAnimationFrame(() => { kalMonT = 0; kalMonTitel(); }); }, { passive: true });
 function kalTagHTML() {
   const k = cSel, tk = todayKey(), d0 = parseKey(k), mon = addDays(d0, -wd(d0));
   let wk = '';
@@ -3499,14 +3537,14 @@ function kalTagHTML() {
   }).join('') + '</div>';
   if (k === tk) tl += '<div class="tl-now" id="tl-now"></div>';
   return '<div class="tv-k"><div class="tv-wk" role="group" aria-label="Woche">' + wk + '</div></div><div class="tv"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
-    (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '"></i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
+    (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '">' + KAL_ICON + '</i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
     '<div class="tl" id="tl"><div class="tl-in">' + tl + '</div></div></div>';
 }
 /* Rote Linie der Uhrzeit, jede halbe Minute nachgezogen, solange der Tag offen ist */
 function kalJetzt() {
   const n = $('#tl-now'); if (!n) return;
   const m = minVon(Date.now()); n.style.top = (TL_OBEN + m * TL_H / 60) + 'px'; n.innerHTML = '<span>' + uhrT(m) + '</span>';
-  document.querySelectorAll('#tl .tl-h').forEach((h, i) => h.classList.toggle('weg', Math.abs(m - i * 60) < 20));   // die volle Stunde gleich daneben weicht der Uhrzeit wie in iOS
+  document.querySelectorAll('#tl .tl-h').forEach((h, i) => h.classList.toggle('weg', Math.abs(m - i * 60) < 26));   // die volle Stunde gleich daneben weicht der Uhrzeit wie in iOS
 }
 /* Tag malen. keep: Scrollstand behalten (neu gemeldete Termine). anim: go-n / go-p beim Wechsel des Tags. Sonst steht der Blick eine Stunde vor jetzt (heute), vor dem ersten Termin oder bei 7:30. */
 function kalTagMalen(keep, anim) {
@@ -3551,14 +3589,16 @@ function kalSuchHTML() {
 })();
 function paintCal(keep) {
   const b = $('#cs-body'), y = b.scrollTop, ios = kalIos();
-  cdlg.classList.toggle('ios', ios); cdlg.classList.toggle('tag', ios && cView === 'tag'); cdlg.classList.toggle('such', ios && cView === 'such');
+  kalKlassen(ios);
   $('#cs-akt').hidden = !ios; $('#cs-sbar').hidden = !(ios && cView === 'such'); $('#cs-such').hidden = !(ios && cView === 'such');
-  $('#cs-close').innerHTML = ios && cView === 'tag' ? ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]) : 'Schließen';
+  $('#cs-close').innerHTML = ios ? (cView === 'tag' ? ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]) : RUNTER) : 'Schließen';
   $('#cs-close').setAttribute('aria-label', ios && cView === 'tag' ? 'Zurück zum Monat' : 'Schließen');
+  document.querySelector('.cs-wd').innerHTML = DAYS.map((d, i) => '<span' + (i > 4 ? ' class="we"' : '') + '>' + (ios ? d.charAt(0) : d) + '</span>').join('');
   clearInterval(cJetztT); cJetztT = null;
   if (ios && cView === 'such') { $('#cs-such').innerHTML = kalSuchHTML(); return; }
   if (ios && cView === 'tag') { kalTagMalen(keep); b.innerHTML = calHTML(); return; }
   b.innerHTML = calHTML(); $('#cs-day').innerHTML = ios ? '' : calDayHTML();
+  if (ios) requestAnimationFrame(kalMonTitel);
   /* Neu geöffnet steht der Monat des gewählten Tags oben; ist er der letzte (ohne Termine immer der laufende), das Ende der Liste wie bisher */
   const m = keep ? null : b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
   b.scrollTop = keep ? y : m && m.nextElementSibling ? m.offsetTop - b.firstElementChild.offsetTop : b.scrollHeight;
@@ -3566,6 +3606,7 @@ function paintCal(keep) {
 function openCal(mode, sel) {
   cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && (sel <= todayKey() || (cMode === 'all' && kalDa())) ? sel : todayKey();
   cView = kalIos() ? 'tag' : 'monat'; cQ = ''; $('#cs-q').value = '';   // Kalender auf Heute: Ein Tipp auf einen Tag zeigt diesen Tag (wie in iOS); zurück geht es zum Monat
+  kalKlassen(kalIos());   // schon vor dem Öffnen: Das Vollbild fährt als Vollbild herein, nicht als Blatt
   $('#cs-title').textContent = CAL[cMode];
   openDlg(cdlg);
   paintCal(false);

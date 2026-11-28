@@ -1,0 +1,4 @@
+
+# Bilder aus dem Test-Browser gehören nicht ins Repository (es ist öffentlich); nur die Symbole der App
+/*.png
+!/icon-*.png
