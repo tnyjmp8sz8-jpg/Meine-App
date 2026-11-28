@@ -18,7 +18,7 @@ lauf(async () => {
 
   /* 1. Erste Seite: Sicherung und je Thema eine Zeile mit Wert; Unterseite und zurück */
   await einstSeite(p, '');
-  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Planer', await einstZeilen(p));
+  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Gewicht, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Gewicht | Planer', await einstZeilen(p));
   P.ok('… mit Werten rechts: „Blau“ und „Alle an“', await p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="seite"] b')].map(b => b.textContent).slice(0, 2).join(',')) === 'Blau,Alle an');
   P.ok('… und die Sicherung oben', !!(await p.$('#es-body .act[data-h="export"]')));
   await einstSeite(p, 'darst');
@@ -113,11 +113,26 @@ lauf(async () => {
   await einstSeite(p, 'gym'); await p.click('#es-body [data-h="wdh"]'); await p.waitForTimeout(80);
   await p.click('#z-list [data-v="1015"], #z-list button:has-text("10–15")'); await p.waitForTimeout(80);
   P.ok('Standardbereich 10–15: gespeichert (E.wdh 1015) und auf der Seite', (await gespeichert(p)).E.wdh === 1015 && (await text(p, '#es-body')).includes('10–15'), await text(p, '#es-body [data-h="wdh"]'));
+  /* 11. v152: Beträge verbergen (Arbeit: Stundenlohn 27,50 € steht als Punkte da), Schnitt im Gewicht über 14 Tage */
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="diskret"]');
+  await einstSeite(p, 'planer');
+  P.ok('Beträge verbergen: Stundenlohn als „••• €“, gespeichert (E.diskret 1)', (await text(p, '#es-body [data-h="lohn"]')).includes('••• €') && (await gespeichert(p)).E.diskret === 1, await text(p, '#es-body [data-h="lohn"]'));
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="diskret"]'); await einstSeite(p, 'planer');
+  P.ok('… wieder an: 27,50 €', (await text(p, '#es-body [data-h="lohn"]')).includes('27,50 €'));
   await o.browser.close();
+  /* Schnitt: Wiegen am 12., 19. und 26.11. (80, 82, 84 kg). Über 7 Tage zählt am 26. nur der 26. → 84,0; über 14 Tage der 19. und 26. → 83,0 */
+  const o3 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, W: { entries: { '2026-11-12': 80, '2026-11-19': 82, '2026-11-26': 84 } } } }), r = o3.page;
+  await bereich(r, 'gewicht');
+  const gross = () => r.evaluate(() => document.querySelector('#v-gewicht .w-hero').innerText.replace(/\s+/g, ' '));
+  P.ok('Gewicht mit 7-Tage-Schnitt: 84,0', (await gross()).includes('7-Tage-Schnitt') && (await gross()).includes('84,0'), await gross());
+  await einstSeite(r, 'gewicht'); await r.click('#es-body [data-h="schnitt"][data-v="14"]'); await r.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  await bereich(r, 'gewicht');
+  P.ok('Über 14 Tage: 83,0, so beschriftet und gespeichert (E.schnitt 14)', (await gross()).includes('14-Tage-Schnitt') && (await gross()).includes('83,0') && (await gespeichert(r)).E.schnitt === 14, await gross());
+  await o3.browser.close();
   /* 8. Beim Start gilt die gespeicherte Akzentfarbe (Pink), die Leiste steht in der gespeicherten Folge und die App öffnet mit dem ersten Bereich darin, wenn Heute aus ist */
   const o2 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, K, N, E: { akz: 'pink', reihe: ['training', 'gewicht'], weg: { heute: 1 } } } }), q = o2.page;
   const start = await q.evaluate(() => [document.documentElement.dataset.akz, [...document.querySelectorAll('.tabs-in .tab:not([hidden])')].map(b => b.textContent.trim()).join(' '), document.body.dataset.v].join(' | '));
   P.ok('Start mit Pink, Leiste Training, Gewicht, Planer, Finanzen; ohne Heute öffnet Training (der erste)', start === 'pink | Training Gewicht Planer Finanzen | training', start);
-  await P.ende(null, o.fehler.concat(o2.fehler));
+  await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler));
   await o2.browser.close();
 });

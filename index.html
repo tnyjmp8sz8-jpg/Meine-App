@@ -681,6 +681,9 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 #csheet.ios .cd.sel b{background:none;color:var(--ink)}
 #csheet.ios .cd.we b{color:var(--muted)}
 #csheet.ios .cd.now b{background:var(--rot);color:#fff;font-weight:600}
+#csheet.ios .cd[data-kw]{position:relative}
+#csheet.ios .cd[data-kw]::before{content:attr(data-kw);position:absolute;left:3px;top:5px;font-size:9.5px;font-weight:600;color:var(--muted);font-variant-numeric:tabular-nums}   /* Kalenderwoche (v152) */
+.tv-t small{font-size:12px;font-weight:500;color:var(--muted)}
 .wk i.mk,.cd i.mk{gap:0;align-items:center}
 .mk .pt{display:block;width:6px;height:6px;border-radius:50%}
 .mk .kap{display:flex;height:5px;border-radius:3px;overflow:hidden}
@@ -1768,6 +1771,10 @@ function normE(o) {
     if (Array.isArray(o.ovReihe)) { const l = o.ovReihe.filter((k, i) => OV.some(q => q[0] === k) && o.ovReihe.indexOf(k) === i); if (l.length) out.ovReihe = l; }
     if ([28, 48].indexOf(o.kalH) >= 0) out.kalH = o.kalH;
     if ([306, 508, 610, 1015, 1220, 1520].indexOf(o.wdh) >= 0) out.wdh = o.wdh;   // Standardbereich der Wiederholungen (v150)
+    /* v152: Beträge verbergen, Kalenderwochen, Schnitt im Gewicht über 14 Tage */
+    if (o.diskret === 1) out.diskret = 1;
+    if (o.kw === 1) out.kw = 1;
+    if (o.schnitt === 14) out.schnitt = 14;
   }
   return out;
 }
@@ -1880,11 +1887,13 @@ function wList() {
   return Object.keys(W.entries).filter(k => typeof W.entries[k] === 'number').sort().map(k => ({ k, t: dayNum(k), w: W.entries[k] }));
 }
 /* m = Mittel aller Einträge der letzten 7 Tage bis einschließlich dieses Tages */
+/* seit v152 wahlweise über 14 Tage (Einstellungen → Gewicht): ruhiger bei schwankendem Gewicht */
+const schnittTage = () => E.schnitt === 14 ? 14 : 7, schnittT = () => schnittTage() + '-Tage-Schnitt';
 function withTrend(list) {
   let j = 0, sum = 0;
   return list.map((e, i) => {
     sum += e.w;
-    while (e.t - list[j].t > 6) { sum -= list[j].w; j++; }
+    while (e.t - list[j].t > schnittTage() - 1) { sum -= list[j].w; j++; }
     return { k: e.k, t: e.t, w: e.w, m: sum / (i - j + 1) };
   });
 }
@@ -1926,7 +1935,7 @@ function chartSVG(pts, t0) {
   const X = t => L + (t - tMin) / (tMax - tMin) * (VW - L - R), Y = v => T + (hi - v) / (hi - lo) * (VH - T - B);
   const f = n => n.toFixed(1), base = VH - B;
   const tip = e => (e.t === t0 ? 'Heute' : DF_SHORT.format(dayDate(e.t))) + ' · ' + kg(e.w, 1) + ' kg · Schnitt ' + kg(e.m, 1);
-  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Gewichtsverlauf mit 7-Tage-Schnitt"' + scrubAttr(pts.map(e => [X(e.t), Y(e.m), tip(e)])) + '>';
+  let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="Gewichtsverlauf mit ' + schnittT() + '"' + scrubAttr(pts.map(e => [X(e.t), Y(e.m), tip(e)])) + '>';
   const steps = Math.round((hi - lo) / step);
   for (let i = 0; i <= steps; i++) {
     const v = lo + i * step;
@@ -2045,7 +2054,7 @@ function renderWeight() {
       (Math.round(p * 100) > 0 ? '<div class="side"><span class="pz">' + Math.round(p * 100) + ' %</span></div>' : '') + '</div>';
   }
 
-  let h = weekStripHTML('weight') + '<section class="hero w-hero"><p class="date">7-Tage-Schnitt</p>' +
+  let h = weekStripHTML('weight') + '<section class="hero w-hero"><p class="date">' + schnittT() + '</p>' +
     '<h1><span class="num">' + kg(last.m) + '</span><span class="unit">kg</span></h1>' +
     '<p class="sub">Zuletzt gewogen: ' + kg2(last.w) + ' kg, ' + when + '</p></section>';
   h += '<button type="button" class="' + (hasToday ? 'ghost center' : 'primary') + '" data-w="add">' + (hasToday ? 'Heutigen Eintrag ändern' : 'Heute eintragen') + '</button>';
@@ -2059,7 +2068,7 @@ function renderWeight() {
   h += '<div class="card chart"><div class="card-head"><div class="seg" role="group" aria-label="Zeitraum">' +
     [['28', '4 Wochen'], ['90', '3 Monate'], ['all', 'Alles']].map(r => '<button type="button" class="chip" data-w="range" data-r="' + r[0] + '" aria-pressed="' + (wRange === r[0]) + '">' + r[1] + '</button>').join('') + '</div>' + (pts.length >= 2 ? INFO('w-leg') : '') + '</div>' +
     (pts.length >= 2 ? chartSVG(pts, t0) +
-      '<p class="legend" id="info-w-leg" hidden><span><i style="background:var(--at);width:16px;height:3px;border-radius:2px"></i>7-Tage-Schnitt</span><span><i style="background:var(--muted);opacity:.55;width:7px;height:7px;border-radius:50%"></i>einzelne Messung</span></p>'
+      '<p class="legend" id="info-w-leg" hidden><span><i style="background:var(--at);width:16px;height:3px;border-radius:2px"></i>' + schnittT() + '</span><span><i style="background:var(--muted);opacity:.55;width:7px;height:7px;border-radius:50%"></i>einzelne Messung</span></p>'
       : '<p class="note">' + (all.length < 2 ? 'Ab dem zweiten Eintrag siehst du hier deinen Verlauf.' : 'In diesem Zeitraum gibt es zu wenige Einträge.') + '</p>') +
     '</div>';
   h += goalHTML;
@@ -2219,8 +2228,10 @@ const mfdoc = patchDoc(() => MF, v => { MF = normMF(v); });
 const mdocs = {};
 const mdoc = y => mdocs[y] || (mdocs[y] = patchDoc(() => MY[y] || { tx: {} }, v => { MY[y] = normMY(v); }));
 
-const eur0 = c => Math.round(Math.abs(c) / 100).toLocaleString('de-DE');
-const eur = c => (Math.abs(c) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
+/* Beträge verbergen (v152, Einstellungen → Darstellung): Schaut jemand mit, stehen statt der Euro-Beträge Punkte da, überall, auch im Widget. Eingaben bleiben lesbar. */
+const verdeckt = () => E.diskret === 1;
+const eur0 = c => verdeckt() ? '•••' : Math.round(Math.abs(c) / 100).toLocaleString('de-DE');
+const eur = c => verdeckt() ? '••• €' : (Math.abs(c) / 100).toLocaleString('de-DE', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' €';
 const minus = c => Math.round(c / 100) < 0 ? '−' : '';
 function parseEur(v) {
   let s = String(v).replace(/[^0-9.,]/g, '');
@@ -2440,7 +2451,7 @@ function accAt(id, ym) { const s = accState(id, ym); return s ? s.v : null; }
 /* Vermögen in einem Monat: Summe aller Konten, mit acc nur dieses Konto. null, solange es keinen Stand gibt */
 function wealthAt(ym, acc) { let t = null; accList().forEach(a => { if (acc && a.id !== acc) return; const v = accAt(a.id, ym); if (v != null) t = (t || 0) + v; }); return t; }
 const hasWealth = () => balMonths().length > 0;
-const eurS = c => (Math.round(c / 100) > 0 ? '+' : Math.round(c / 100) < 0 ? '−' : '±') + eur0(c) + ' €';
+const eurS = c => verdeckt() ? '••• €' : (Math.round(c / 100) > 0 ? '+' : Math.round(c / 100) < 0 ? '−' : '±') + eur0(c) + ' €';
 const signCls = c => Math.round(c / 100) > 0 ? 'up' : Math.round(c / 100) < 0 ? 'down' : '';
 const ymName = ym => MONTHS[+ym.slice(5) - 1];
 /* Veränderung in einem Zeitraum ('YYYY-MM' oder 'YYYY'): Stand am Ende gegenüber dem Stand davor, im ersten Zeitraum gegenüber dem ersten Stand.
@@ -3539,7 +3550,7 @@ function calHTML() {
       if (mk.indexOf('t') >= 0) t += kalAm(k).filter(x => kalVon(x) === k).length;   // ein Termin über mehrere Tage zählt einmal
       if (mk.indexOf('g') >= 0) g++;
       if (mk.indexOf('b') >= 0 && cMode !== 'gym') b++;
-      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + ((off + d - 1) % 7 > 4 ? ' we' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') + (ios && d === 1 ? ' style="grid-column-start:' + (off + 1) + '"' : '') +
+      cells += '<button type="button" class="cd' + (k === tk ? ' now' : '') + (k === cSel ? ' sel' : '') + ((off + d - 1) % 7 > 4 ? ' we' : '') + '" data-d="' + k + '"' + (k > tk && !vor ? ' disabled' : '') + (ios && d === 1 ? ' style="grid-column-start:' + (off + 1) + '"' : '') + (ios && E.kw === 1 && (d === 1 || (off + d - 1) % 7 === 0) ? ' data-kw="' + kwVon(k) + '"' : '') +
         ' aria-label="' + d + '. ' + MONTHS[m - 1] + (mk ? ', mit Eintrag' : '') + '"' + (k === cSel ? ' aria-current="date"' : '') + '><b>' + d + '</b>' + (ios ? kalMarken(k) : dotsHTML(mk)) + '</button>';
     }
     h += '<section class="cm" data-ym="' + ym + '">' + (ios ? '' : '<h3>' + MONTHS[m - 1] + (y !== +tk.slice(0, 4) ? ' ' + y : '') + '</h3><p>' + calSum(cMode, ym, g, b, span, t) + '</p>') + '<div class="cgrid">' + cells + '</div></section>';
@@ -3567,7 +3578,7 @@ function calDayHTML() {
     const w = W.entries[k];
     if (typeof w !== 'number') return h + note('Kein Eintrag an diesem Tag.') + add('w', 'Gewicht eintragen');
     const t = withTrend(wList()).find(e => e.k === k);
-    return h + '<ul class="entries">' + btn('data-c="w" aria-label="Eintrag ändern"', kg2(w) + ' kg', t ? '7-Tage-Schnitt ' + kg(t.m) + ' kg' : '', '') + '</ul>';
+    return h + '<ul class="entries">' + btn('data-c="w" aria-label="Eintrag ändern"', kg2(w) + ' kg', t ? schnittT() + ' ' + kg(t.m) + ' kg' : '', '') + '</ul>';
   }
   if (cMode === 'money') {
     const tx = txOf();
@@ -3596,6 +3607,8 @@ const KAL_D = 450, KAL_EASE = (() => {
 const RUNTER = '<svg viewBox="0 0 17 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l7 7 7-7"/></svg>';
 const ZURUECK = '<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>';
 const kalIos = () => cMode === 'all' && kalDa();
+/* Kalenderwoche nach ISO 8601 (v152, Einstellungen → Kalender): Die Woche gehört zu dem Jahr, in dem ihr Donnerstag liegt; Woche 1 enthält den 4. Januar */
+const kwVon = k => { const d = parseKey(k), t = addDays(d, 3 - wd(d)), n = Math.round((t - new Date(t.getFullYear(), 0, 1, 12)) / 864e5); return 1 + Math.floor(n / 7); };
 const KAL_ICON = '<svg viewBox="0 0 11 11" fill="none" aria-hidden="true"><rect x="1" y="1.6" width="9" height="8.4" rx="1.6" stroke="rgba(0,0,0,.62)" stroke-width="1.1"/><path d="M1 4h9" stroke="rgba(0,0,0,.62)" stroke-width="1.1"/><path d="M3.2 5.9h.9M5.05 5.9h.9M6.9 5.9h.9M3.2 7.8h.9M5.05 7.8h.9" stroke="rgba(0,0,0,.62)" stroke-width="1"/></svg>';
 const kalF = x => x.f || 'var(--accent)';   // x.f ist in kalNorm geprüft (#RRGGBB)
 const kalLang = x => !!x.g || kalVon(x) !== kalBis(x);
@@ -3652,7 +3665,7 @@ function kalSeiteHTML(k) {
       '<i class="kf" style="background:' + kalF(x) + '"></i><b>' + esc(x.t || 'Ohne Titel') + '</b><small>' + kalZeit(x, k) + (x.o && !kurz ? ' · ' + esc(x.o) : '') + '</small></button>';
   }).join('') + '</div>';
   if (k === tk) tl += '<div class="tl-now"></div>';
-  return '<div class="tv" data-d="' + k + '" style="--tlh:' + (24 * TL_H + 24) + 'px"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
+  return '<div class="tv" data-d="' + k + '" style="--tlh:' + (24 * TL_H + 24) + 'px"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + (E.kw === 1 ? '<small> · KW ' + kwVon(k) + '</small>' : '') + '</h3>' +
     (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '">' + KAL_ICON + '</i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
     '<div class="tl"><div class="tl-in">' + tl + '</div></div></div>';
 }
@@ -5519,7 +5532,7 @@ function homeWerte() {
   if (wl.length) {
     const rate = weeklyRate(wl, dayNum(tk));
     wv = kg(wl[wl.length - 1].m) + ' kg';
-    ws = (rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt') + (typeof W.entries[tk] === 'number' ? '' : ' · heute noch nicht gewogen');
+    ws = (rate != null ? signed(rate) + ' kg pro Woche' : schnittT()) + (typeof W.entries[tk] === 'number' ? '' : ' · heute noch nicht gewogen');
   }
   let mv = '', ms = '', mc = '';
   if (hasMoney()) {
@@ -5585,10 +5598,11 @@ const ES_SYM = {
   ber: '<svg viewBox="0 0 20 20" fill="#fff" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.6" opacity=".55"/></svg>',
   heute: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.8 9.2L10 4l6.2 5.2V16H3.8z"/><path d="M8.2 16v-4h3.6v4"/></svg>',
   gym: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6.5v7M14 6.5v7M3.6 8.3v3.4M16.4 8.3v3.4M6 10h8"/></svg>',
+  gewicht: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 13.5l4-4 3 2.5 5.5-6"/><path d="M12.5 6h3.5v3.5"/></svg>',
   kal: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="4.6" width="13" height="11.8" rx="2.4"/><path d="M3.5 8.3h13M7 3.2v2.6M13 3.2v2.6" stroke-linecap="round"/></svg>',
   planer: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 6h7M8.5 10h7M8.5 14h7"/><path d="M4 5.8l.9.9 1.6-1.7M4 9.8l.9.9 1.6-1.7M4 13.8l.9.9 1.6-1.7"/></svg>'
 };
-const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
+const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], gewicht: ['Gewicht', '#BF5AF2'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
 /* Akzentfarbe (v149): wie die Hervorhebung in iOS; sie färbt Knöpfe, Verweise, Ringe und Umschalter. Die Farben je hell und dunkel stehen im CSS an :root[data-akz]. */
 const AKZ = [['blau', 'Blau', '#0A84FF'], ['indigo', 'Indigo', '#5E5CE6'], ['tuerkis', 'Türkis', '#40C8E0'], ['pink', 'Pink', '#FF375F'], ['graphit', 'Graphit', '#8E8E93']];
 const akz = () => AKZ.some(a => a[0] === E.akz) ? E.akz : 'blau';
@@ -5608,12 +5622,13 @@ function eWert(k) {
   if (k === 'heute') return '';
   if (k === 'gym') return esc(K.pn || '');
   if (k === 'kal') { if (!kalAn()) return 'Aus'; const a = kalAlle(); return a.length > 1 ? a.filter(x => (E.kalNein || []).indexOf(x.id) < 0).length + ' von ' + a.length : ''; }
+  if (k === 'gewicht') return schnittTage() + ' Tage';
   if (k === 'planer') return '';
   return '';
 }
 function eStartHTML() {
   const au = hInfo.sicherung;
-  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
+  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'gewicht' ? istAn('gewicht') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
   return secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
@@ -5628,6 +5643,7 @@ function eSeiteHTML(k) {
       AKZ.map(a => '<button type="button" class="chip" data-h="akz" data-v="' + a[0] + '" aria-pressed="' + (akz() === a[0]) + '"><i class="kf" style="background:' + a[2] + '"></i>' + a[1] + '</button>').join('') + '</div>' +
       '<p class="note">Färbt Knöpfe, Verweise, Ringe und die Auswahl, dazu das Licht auf Heute.</p></div>' +
     '<ul class="entries"><li>' + schalter('licht', 'Licht hinter der Seite', E.licht !== 0) + '</li></ul>' +
+    secHTML('Datenschutz') + '<ul class="entries"><li>' + schalter('diskret', 'Beträge verbergen', verdeckt()) + '</li></ul><p class="note">Statt der Euro-Beträge stehen Punkte da, auf Heute, in Finanzen, bei der Arbeit und im Widget.</p>' +
     (HUELLE ? secHTML('Bedienung') + '<ul class="entries"><li>' + schalter('hapt', 'Haptik', E.hapt !== 0) + '</li></ul>' : '');
   if (k === 'ber') {
     const vs = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', tName()]].filter(q => anV(q[0])), st = anV(E.start || 'heute') ? E.start || 'heute' : erster();
@@ -5661,10 +5677,14 @@ function eSeiteHTML(k) {
         [['aus', 'Keine']].concat(ER_Z).map(q => '<button type="button" class="chip" data-h="erZ" data-v="' + q[0] + '" aria-pressed="' + (String(E.erZ != null ? E.erZ : 60) === String(q[0])) + '">' + q[1] + '</button>').join('') +
         '</div><p class="note">Ganztägig</p><div class="chips" role="group" aria-label="Erinnerung ganztägig">' +
         [['aus', 'Keine']].concat(ER_G).map(q => '<button type="button" class="chip" data-h="erG" data-v="' + q[0] + '" aria-pressed="' + (String(E.erG != null ? E.erG : 'aus') === String(q[0])) + '">' + q[1] + '</button>').join('') + '</div></div>' : '') +
+      (kalAn() && kal.recht === 'an' ? '<ul class="entries">' + '<li>' + schalter('kw', 'Kalenderwochen', E.kw === 1) + '</li></ul>' : '') +
       (kalAn() && kal.recht === 'an' ? secHTML('Stundenhöhe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Stundenhöhe">' +
         [[28, 'Kompakt'], [36, 'Normal'], [48, 'Groß']].map(q => '<button type="button" class="chip" data-h="kalH" data-v="' + q[0] + '" aria-pressed="' + ((E.kalH || 36) === q[0]) + '">' + q[1] + '</button>').join('') + '</div><p class="note">So viel Platz hat eine Stunde im Tag des Kalenders.</p></div>' : '') +
       (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? secHTML('Kalender' + INFO('kal')) + '<ul class="entries">' + kalAlle().map(q => '<li>' + schalter('kalNein', '<i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n), (E.kalNein || []).indexOf(q.id) < 0, esc(q.id)).replace('<button', '<button data-w="' + (q.w ? 1 : 0) + '"') + '</li>').join('') + '</ul>' : '') +
       '<p class="note" id="info-kal"' + (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? ' hidden' : '') + '>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Ein Kalender, den du hier ausschaltest, verschwindet aus Track.: seine Termine stehen nicht mehr auf Heute, im Kalender und in der Suche, und beim Eintragen steht er nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist.</p>';
+  if (k === 'gewicht') return secHTML('Schnitt') + '<div class="card es-start"><div class="chips" role="group" aria-label="Schnitt">' +
+      [[7, '7 Tage'], [14, '14 Tage']].map(q => '<button type="button" class="chip" data-h="schnitt" data-v="' + q[0] + '" aria-pressed="' + (schnittTage() === q[0]) + '">' + q[1] + '</button>').join('') +
+      '</div><p class="note">Die große Zahl, die Linie im Graphen und die Prognose rechnen mit dem Mittel der letzten 7 oder 14 Tage. Über 14 Tage wirkt ein einzelner Ausreißer weniger.</p></div>';
   if (k === 'planer') return secHTML('Notizen') + '<ul class="entries"><li>' + schalter('nNeu', 'Neue Notizen oben', E.nNeu === 1) + '</li></ul>' +
       secHTML('Arbeit') + '<ul class="entries">' + wertRow('schicht', 'Schicht beim Eintragen', stdT(schicht())) + wertRow('lohn', 'Stundenlohn', eur(N.work.rate || LOHN)) + '</ul>' +
       secHTML('Uni') + '<ul class="entries">' + wertRow('uniSoll', 'Ziel an Terminen', String(uniSoll())) + '</ul>';
@@ -5732,6 +5752,9 @@ function einstAct(t) {
   else if (a === 'akz') { setE({ akz: v === 'blau' ? null : v }); akzSetzen(); document.querySelectorAll('#es-body [data-h="akz"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'hapt') setE({ hapt: an ? null : 0 });
   else if (a === 'licht') { setE({ licht: an ? null : 0 }); akzSetzen(); }
+  else if (a === 'diskret') { setE({ diskret: an ? 1 : null }); render(); }
+  else if (a === 'kw') setE({ kw: an ? 1 : null });
+  else if (a === 'schnitt') { setE({ schnitt: +v === 14 ? 14 : null }); document.querySelectorAll('#es-body [data-h="schnitt"]').forEach(b => b.setAttribute('aria-pressed', b === t)); renderWeight(); renderHome(); return; }
   else if (a === 'erZ' || a === 'erG') {
     setE(a === 'erZ' ? { erZ: v === 'aus' ? 'aus' : +v === 60 ? null : +v } : { erG: v === 'aus' ? null : +v });
     document.querySelectorAll('#es-body [data-h="' + a + '"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return;

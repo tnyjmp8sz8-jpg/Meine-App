@@ -434,6 +434,13 @@ lauf(async () => {
     await page.fill('#te-text', 'Arzt 15 Uhr');
     p.ok('… mit Uhrzeit: „1 Tag“', (await blatt(page)).er === '1 Tag', JSON.stringify(await blatt(page)));
     await zu(page);
+    /* Kalenderwochen (v152): 27.11.2026 liegt in KW 48 (Donnerstag 26.11. ist der 330. Tag, (330 − 1) / 7 = 47 → 48); der 1.12. (Dienstag) beginnt seine Zeile im Monat mit KW 49 */
+    await einstSeite(page, 'kal'); await page.click('#es-body [data-h="kw"]'); await zu(page);
+    await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
+    p.ok('Kalenderwochen: im Tag „KW 48“', (await text(page, '.tv[data-slot="0"] .tv-t')).includes('KW 48'), await text(page, '.tv[data-slot="0"] .tv-t'));
+    await page.click('#cs-close'); await page.waitForTimeout(60);
+    p.ok('… im Monat am Anfang jeder Zeile (1.12.: 49, 7.12.: 50, 30.11.: 49)', await page.evaluate(() => ['2026-12-01', '2026-12-07', '2026-11-30'].map(k => document.querySelector('.cd[data-d="' + k + '"]').dataset.kw).join()) === '49,50,49');
+    await zu(page);
     p.ok('Keine Fehler (Stundenhöhe)', !fehler.length, fehler.join());
     await browser.close();
   }
