@@ -2,3 +2,7 @@
 # Bilder aus dem Test-Browser gehören nicht ins Repository (es ist öffentlich); nur die Symbole der App
 /*.png
 !/icon-*.png
+# Playwright auf einem eigenen PC (siehe NEUSTART.md): nicht ins Repository
+node_modules/
+package-lock.json
+package.json
