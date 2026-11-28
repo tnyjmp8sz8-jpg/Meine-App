@@ -92,7 +92,7 @@ lauf(async () => {
   await p.click('#gear'); await p.waitForTimeout(80); await schalter('kraft'); await zu(); s = await stand();
   P.ok('Gym aus, Cardio an: Titel „Cardio.“, kein Umschalter, der Lauf ist zu sehen', s.titel === 'Cardio.' && await p.evaluate(() => !document.querySelector('#v-training .subtabs') && document.querySelector('#v-training').textContent.includes('km')), JSON.stringify(s));
   await p.click('#gear'); await p.waitForTimeout(80);
-  P.ok('ohne Gym fehlt die Seite „Gym“ (Empfehlung je Satz) in den Einstellungen', (await es()).titel === 'Darstellung | Bereiche', (await es()).titel);
+  P.ok('ohne Gym fehlt die Seite „Gym“ (Empfehlung je Satz) in den Einstellungen, „Cardio“ bleibt', (await es()).titel === 'Darstellung | Bereiche | Cardio', (await es()).titel);
   for (const k of ['heute', 'routinen', 'gewicht', 'haushalt', 'kraft']) await schalter(k);
   e = await es(); s = await stand();
   P.ok('alles wieder an: fünf Bereiche, sechs Schalter an, der Merker ist leer', s.tabs === 'Heute Planer Gewicht Finanzen Training' && s.n === '5' && s.leiste && e.ber === 'Heute:an Planer:an Gewicht:an Finanzen:an Gym:an Cardio:an' && Object.keys((await gespeichert(p)).E.weg).length === 0, JSON.stringify([s, e]));

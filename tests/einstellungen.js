@@ -18,7 +18,7 @@ lauf(async () => {
 
   /* 1. Erste Seite: Sicherung und je Thema eine Zeile mit Wert; Unterseite und zurück */
   await einstSeite(p, '');
-  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Gewicht, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Gewicht | Planer', await einstZeilen(p));
+  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Cardio, Gewicht, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Cardio | Gewicht | Planer', await einstZeilen(p));
   P.ok('… mit Werten rechts: „Blau“ und „Alle an“', await p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="seite"] b')].map(b => b.textContent).slice(0, 2).join(',')) === 'Blau,Alle an');
   P.ok('… und die Sicherung oben', !!(await p.$('#es-body .act[data-h="export"]')));
   await einstSeite(p, 'darst');
@@ -151,6 +151,32 @@ lauf(async () => {
   P.ok('Cardio im Jahr: „Kilometer pro Monat“', (await grafik()).startsWith('Kilometer pro Monat | zu'), await grafik());
   await q4.click('#v-training .pull-k'); await q4.click('#v-training .pull-m [data-v="pace"]'); await q4.waitForTimeout(60);
   P.ok('Pace als Kurve über Oktober und November, gemerkt (E.cStat)', (await grafik()) === 'Pace je Monat | zu | Pace je Monat' && (await gespeichert(q4)).E.cStat === 'pace' && !!(await q4.$('#v-training .card.chart .g-trend')), await grafik());
+  /* 13. v153: Ziele je Monat, nur da, wenn eingestellt. Cardio: im November ein Lauf mit 6 km, Ziel 20 km → Linie 30 % (6 / 20), „noch 14 km“ (20 − 6);
+     im Oktober 5 km → 25 % (5 / 20, Monat vorbei, also der Anteil). Ziel 5 km → „erreicht“. Arbeit: eine Schicht 10:00–14:00 ohne Pause zu 25 € = 4 × 25 = 100 €; Ziel 600 € → „noch 500 €“ (16,7 %). */
+  const ziel = sel => q4.evaluate(s => { const l = document.querySelector(s + ' .soll'), t = document.querySelector(s + ' .soll-t'); return l ? [l.firstChild.style.width].concat([...t.children].map(x => x.textContent)).join(' | ') : 'keine'; }, sel);
+  await q4.click('#v-training [data-t="mode"][data-v="month"]'); await q4.waitForTimeout(60);
+  P.ok('Cardio ohne Ziel: keine Linie', (await ziel('#v-training')) === 'keine', await ziel('#v-training'));
+  await einstSeite(q4, 'cardio');
+  P.ok('Seite Cardio: „Ziel je Monat“ steht auf „Aus“', (await text(q4, '#es-body [data-h="cZiel"]')).includes('Aus'), await text(q4, '#es-body [data-h="cZiel"]'));
+  await zahlWahl(q4, '#es-body [data-h="cZiel"]', '20');
+  P.ok('Ziel 20 km: gespeichert (E.cZiel 20), auf der Seite und in der Zeile der ersten Seite', (await gespeichert(q4)).E.cZiel === 20 && (await text(q4, '#es-body [data-h="cZiel"]')).includes('20 km'), await text(q4, '#es-body'));
+  await q4.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await bereich(q4, 'training'); await q4.waitForTimeout(40);
+  P.ok('Cardio im November: Linie 30 %, „Ziel 20 km | noch 14 km“', (await ziel('#v-training')) === '30% | Ziel 20 km | noch 14 km', await ziel('#v-training'));
+  await q4.click('#v-training .mnav [data-m="prev"] >> visible=true'); await q4.waitForTimeout(60);
+  P.ok('Oktober (vorbei): Linie 25 %, rechts der Anteil', (await ziel('#v-training')) === '25% | Ziel 20 km | 25 %', await ziel('#v-training'));
+  await q4.click('#v-training .mnav [data-m="next"] >> visible=true'); await einstSeite(q4, 'cardio'); await zahlWahl(q4, '#es-body [data-h="cZiel"]', '5');
+  await q4.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await bereich(q4, 'training'); await q4.waitForTimeout(40);
+  P.ok('Ziel 5 km: volle Linie, „erreicht“ in Grün', (await ziel('#v-training')) === '100% | Ziel 5 km | erreicht' && !!(await q4.$('#v-training .soll-t .up')), await ziel('#v-training'));
+  await einstSeite(q4, 'cardio'); await q4.click('#es-body [data-h="cZiel"]'); await q4.click('#z-list [data-zv="0"]'); await q4.waitForTimeout(60);
+  await q4.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await bereich(q4, 'training'); await q4.waitForTimeout(40);
+  P.ok('„Kein Ziel“ nimmt es zurück: keine Linie, nichts gespeichert', (await ziel('#v-training')) === 'keine' && !('cZiel' in (await gespeichert(q4)).E), await ziel('#v-training'));
+  await q4.evaluate(() => { const st = JSON.parse(localStorage.getItem('takt.v1')); st.N.work.e = { w1: { d: '2026-11-20', a: 600, b: 840, p: 0, r: 2500 } }; localStorage.setItem('takt.v1', JSON.stringify(st)); });
+  await q4.reload(); await q4.waitForTimeout(150);
+  await einstSeite(q4, 'planer'); await zahlWahl(q4, '#es-body [data-h="wZiel"]', '600');
+  P.ok('Ziel beim Verdienst 600 €: gespeichert in Cent (E.wZiel 60000)', (await gespeichert(q4)).E.wZiel === 60000 && (await text(q4, '#es-body [data-h="wZiel"]')).includes('600 €'), await text(q4, '#es-body [data-h="wZiel"]'));
+  await q4.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await bereich(q4, 'training'); await q4.waitForTimeout(40);
+  await bereich(q4, 'routinen'); await q4.click('#r-subs [data-r="sub"][data-v="work"]'); await q4.waitForTimeout(60);
+  P.ok('Arbeit: Linie 16,7 %, „Ziel 600 € | noch 500 €“', (await ziel('#v-routinen')) === '16.7% | Ziel 600 € | noch 500 €', await ziel('#v-routinen'));
   await o4.browser.close();
   await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler, o4.fehler));
   await o2.browser.close();

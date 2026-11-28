@@ -918,6 +918,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 /* Soll der Termine im Teil „Uni“: schmaler Balken unter der großen Zahl */
 .soll{height:4px;border-radius:2px;background:var(--line);overflow:hidden;margin-top:-4px}
 .soll i{display:block;height:100%;border-radius:2px;background:var(--accent)}
+.soll-t{display:flex;justify-content:space-between;gap:12px;margin:-9px 2px 0;font-size:12px;color:var(--muted)}   /* knapp unter der Linie: .view hat 22 px Abstand */
 /* Wechsel des Bereichs (v105): sofort und ohne Einblenden, wie die Leiste unten in iOS. Bis v104 blendete die Ansicht ein und ihre Teile stiegen nacheinander auf;
    0,7 s später, wenn die Klasse neu ging, blendete der ganze Bereich ein zweites Mal von fast unsichtbar ein (sein Eindruck: „ganz kurzer Mikro-Reset, als würde es neu laden“).
    Keine Regel animation an .view:not([hidden]): Sie startet neu, sobald eine Klasse mit eigener Animation (neu, go-n, go-p) wieder geht. */
@@ -1541,7 +1542,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v152</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v153</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1785,6 +1786,8 @@ function normE(o) {
     if (o.schnitt === 14) out.schnitt = 14;
     if (['dur', 'rek', 'bes', 'p'].indexOf(o.kStat) >= 0) out.kStat = o.kStat;   // Statistik im Jahr (v152)
     if (['n', 'zeit', 'pace', 'eff'].indexOf(o.cStat) >= 0) out.cStat = o.cStat;
+    if (Number.isInteger(o.cZiel) && o.cZiel >= 1 && o.cZiel <= 2000) out.cZiel = o.cZiel;   // Ziel je Monat in km (v153)
+    if (Number.isInteger(o.wZiel) && o.wZiel >= 100 && o.wZiel <= 10000000) out.wZiel = o.wZiel;   // Ziel je Monat beim Verdienst in Cent (v153)
   }
   return out;
 }
@@ -2983,10 +2986,18 @@ function lastFoldHTML(r) {
   return foldHTML('letzterLauf', 'Letzter Lauf', dRow(r.d) + ' · ' + kmf(r.m) + ' km in ' + fmt(r.s), de && de.c ? 'Effizienz <span class="' + de.c + '">' + de.t + '</span>' : dp && dp.c ? '<span class="' + dp.c + '">' + dp.t.replace(' pro km', '') + '</span>' : '', rows);
 }
 
+/* Ziel je Monat (v153): Linie wie das Soll der Uni, darunter links das Ziel, rechts was fehlt (laufender Monat), „erreicht“ in Grün oder der Anteil (frühere Monate).
+   f formatiert eine Menge mit Einheit. Nur da, wenn ein Ziel eingestellt ist. */
+function zielHTML(ist, soll, f, laufend) {
+  const da = ist >= soll, rest = da ? '<span class="up">erreicht</span>' : laufend ? 'noch ' + f(soll - ist) : Math.floor(ist / soll * 100) + ' %';
+  return '<div class="soll" role="img" aria-label="' + f(Math.min(ist, soll)) + ' von ' + f(soll) + '"><i style="width:' + Math.min(100, ist / soll * 100).toFixed(1) + '%"></i></div>' +
+    '<p class="soll-t"><span>Ziel ' + f(soll) + '</span><span>' + rest + '</span></p>';
+}
+const kmZ = v => (Math.round(v * 10) / 10).toLocaleString('de-DE') + ' km';
 function tMonthHTML(all, curYM) {
   const list = all.filter(r => r.d.slice(0, 7) === tYM), g = tAgg(list), name = MONTHS[+tYM.slice(5) - 1];
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), gp = tAgg(all.filter(r => r.d.slice(0, 7) === prevYM));
-  let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g);
+  let h = navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + tHero('Gelaufen im ' + name, g) + (E.cZiel && tYM <= curYM ? zielHTML(g.m / 1000, E.cZiel, kmZ, tYM === curYM) : '');
   h += '<button type="button" class="primary" data-t="add">Lauf eintragen</button>';
   /* Reihenfolge wie in den anderen Bereichen: Zahl, Knopf, Kennzahlen des Monats, Graph, darunter die Klappzeilen (letzter Lauf im Vergleich, Läufe des Monats).
      Die Effizienz im Schnitt trägt ihr Plus oder Minus zum Vormonat. */
@@ -4884,6 +4895,7 @@ function workHTML() {
   if (seg && arbMode === 'jahr') return seg + workJahrHTML(list);
   let h = seg + '<section class="hero w-hero"><p class="date">Verdienst im ' + MONTHS[+cur.slice(5) - 1] + '</p><h1><span class="num">' + eur(pay(c)).replace(' €', '') + '</span><span class="unit">€</span></h1><p class="sub">' +
     (c.length ? stdT(mins(c)) + ' an ' + tage(c).replace('Tage', 'Tagen') : list.length ? 'In diesem Monat noch nichts eingetragen' : 'Noch keine Arbeitszeit eingetragen') + '</p></section>' +
+    (E.wZiel ? zielHTML(pay(c), E.wZiel, v => eur0(v) + ' €', true) : '') +
     '<button type="button" class="primary" data-n="newwork">Arbeitszeit eintragen</button>';
   /* Umsatz pro Stunde (v137, sein Wort 26.11.: „immer den durchschnittlichen Stundenumsatz ausrechnen von den letzten Monaten gesamt und diesen Monat aktuell“): zwei Zeilen in einer Karte,
      der laufende Monat (darunter Summe und Abstand zum Schnitt, nur der Abstand farbig) und der Schnitt aller früheren Monate. Jede Zeile nur, wenn es dafür einen Umsatz gibt. */
@@ -5648,11 +5660,12 @@ const ES_SYM = {
   ber: '<svg viewBox="0 0 20 20" fill="#fff" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.6" opacity=".55"/></svg>',
   heute: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.8 9.2L10 4l6.2 5.2V16H3.8z"/><path d="M8.2 16v-4h3.6v4"/></svg>',
   gym: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6.5v7M14 6.5v7M3.6 8.3v3.4M16.4 8.3v3.4M6 10h8"/></svg>',
+  cardio: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5h3.2l2-5 3.6 9.5 2-4.5H17"/></svg>',
   gewicht: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 13.5l4-4 3 2.5 5.5-6"/><path d="M12.5 6h3.5v3.5"/></svg>',
   kal: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="4.6" width="13" height="11.8" rx="2.4"/><path d="M3.5 8.3h13M7 3.2v2.6M13 3.2v2.6" stroke-linecap="round"/></svg>',
   planer: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 6h7M8.5 10h7M8.5 14h7"/><path d="M4 5.8l.9.9 1.6-1.7M4 9.8l.9.9 1.6-1.7M4 13.8l.9.9 1.6-1.7"/></svg>'
 };
-const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], gewicht: ['Gewicht', '#BF5AF2'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
+const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], cardio: ['Cardio', '#FF375F'], gewicht: ['Gewicht', '#BF5AF2'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
 /* Akzentfarbe (v149): wie die Hervorhebung in iOS; sie färbt Knöpfe, Verweise, Ringe und Umschalter. Die Farben je hell und dunkel stehen im CSS an :root[data-akz]. */
 const AKZ = [['blau', 'Blau', '#0A84FF'], ['indigo', 'Indigo', '#5E5CE6'], ['tuerkis', 'Türkis', '#40C8E0'], ['pink', 'Pink', '#FF375F'], ['graphit', 'Graphit', '#8E8E93']];
 const akz = () => AKZ.some(a => a[0] === E.akz) ? E.akz : 'blau';
@@ -5673,12 +5686,13 @@ function eWert(k) {
   if (k === 'gym') return esc(K.pn || '');
   if (k === 'kal') { if (!kalAn()) return 'Aus'; const a = kalAlle(); return a.length > 1 ? a.filter(x => (E.kalNein || []).indexOf(x.id) < 0).length + ' von ' + a.length : ''; }
   if (k === 'gewicht') return schnittTage() + ' Tage';
+  if (k === 'cardio') return E.cZiel ? kmZ(E.cZiel) : '';
   if (k === 'planer') return '';
   return '';
 }
 function eStartHTML() {
   const au = hInfo.sicherung;
-  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'gewicht' ? istAn('gewicht') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
+  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'cardio' ? istAn('cardio') : k === 'gewicht' ? istAn('gewicht') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
   return secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
@@ -5735,8 +5749,10 @@ function eSeiteHTML(k) {
   if (k === 'gewicht') return secHTML('Schnitt') + '<div class="card es-start"><div class="chips" role="group" aria-label="Schnitt">' +
       [[7, '7 Tage'], [14, '14 Tage']].map(q => '<button type="button" class="chip" data-h="schnitt" data-v="' + q[0] + '" aria-pressed="' + (schnittTage() === q[0]) + '">' + q[1] + '</button>').join('') +
       '</div><p class="note">Die große Zahl, die Linie im Graphen und die Prognose rechnen mit dem Mittel der letzten 7 oder 14 Tage. Über 14 Tage wirkt ein einzelner Ausreißer weniger.</p></div>';
+  if (k === 'cardio') return '<ul class="entries">' + wertRow('cZiel', 'Ziel je Monat', E.cZiel ? kmZ(E.cZiel) : 'Aus') + '</ul>' +
+      '<p class="note">Unter den Kilometern des Monats steht eine Linie bis zum Ziel und was noch fehlt.</p>';
   if (k === 'planer') return secHTML('Notizen') + '<ul class="entries"><li>' + schalter('nNeu', 'Neue Notizen oben', E.nNeu === 1) + '</li></ul>' +
-      secHTML('Arbeit') + '<ul class="entries">' + wertRow('schicht', 'Schicht beim Eintragen', stdT(schicht())) + wertRow('lohn', 'Stundenlohn', eur(N.work.rate || LOHN)) + '</ul>' +
+      secHTML('Arbeit') + '<ul class="entries">' + wertRow('schicht', 'Schicht beim Eintragen', stdT(schicht())) + wertRow('lohn', 'Stundenlohn', eur(N.work.rate || LOHN)) + wertRow('wZiel', 'Ziel je Monat', E.wZiel ? eur0(E.wZiel) + ' €' : 'Aus') + '</ul>' +
       secHTML('Uni') + '<ul class="entries">' + wertRow('uniSoll', 'Ziel an Terminen', String(uniSoll())) + '</ul>';
   return '';
 }
@@ -5823,6 +5839,11 @@ function einstAct(t) {
     dann: n => { const m = Math.round(n * 60); if (m >= 30 && m <= 720) { setE({ schicht: m === SCHICHT ? null : m }); paintE(); } } });
   else if (a === 'lohn') return openZ({ titel: 'Stundenlohn', wert: (N.work.rate || LOHN) / 100, einheit: '€', komma: true, liste: reihe(12, 40, 0.5),
     dann: n => { const c = Math.round(n * 100); if (okCents(c) && c > 0) { ndoc.patch({ work: { rate: c } }); paintE(); renderPlaner(); } } });
+  /* Ziele je Monat (v153): 0 = kein Ziel; eigene Werte über die Tasten */
+  else if (a === 'cZiel') return openZ({ titel: 'Ziel je Monat', wert: E.cZiel || 0, einheit: 'km', komma: false, stellen: 4, liste: [0].concat(reihe(10, 300, 10)), text: v => v ? v + ' km' : 'Kein Ziel',
+    dann: n => { const m = Math.round(n); if (m >= 0 && m <= 2000) { setE({ cZiel: m || null }); paintE(); renderTraining(); } } });
+  else if (a === 'wZiel') return openZ({ titel: 'Ziel je Monat', wert: E.wZiel ? E.wZiel / 100 : 0, einheit: '€', komma: false, stellen: 5, liste: [0].concat(reihe(100, 2000, 50)), text: v => v ? v.toLocaleString('de-DE') + ' €' : 'Kein Ziel',
+    dann: n => { const c = Math.round(n) * 100; if (c === 0 || (c >= 100 && c <= 10000000)) { setE({ wZiel: c || null }); paintE(); renderPlaner(); } } });
   else if (a === 'uniSoll') return openZ({ titel: 'Ziel an Terminen', wert: uniSoll(), einheit: 'Termine', komma: false, liste: reihe(5, 40, 1),
     dann: n => { const m = Math.round(n); if (m >= 1 && m <= 99) { setE({ uniSoll: m === UNI_SOLL ? null : m }); paintE(); renderPlaner(); } } });
   else return bkAct(a);
