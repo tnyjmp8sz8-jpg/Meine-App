@@ -392,6 +392,17 @@ lauf(async () => {
     const wahl = () => page.evaluate(() => ({ zu: document.querySelector('#te-kalf').hidden, chips: [...document.querySelectorAll('#te-kal .chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join() }));
     p.ok('Blatt: nur Privat und Uni zur Wahl', (await wahl()).chips === 'Privat*,Uni', JSON.stringify(await wahl()));
     await zu(page);
+    /* v154: Standard-Kalender in den Einstellungen („Neue Termine in“), derselbe Merker wie die Wahl im Blatt (E.kalW); der Stand gibt ihn an die Schnelleingabe */
+    await einstSeite(page, 'kal');
+    const std = () => page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="kalW"]')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join());
+    p.ok('Einstellungen: „Neue Termine in“ mit Privat (gewählt) und Uni', (await std()) === 'Privat*,Uni', await std());
+    await page.click('#es-body [data-h="kalW"][data-v="k4"]');
+    p.ok('Uni gewählt: gespeichert (E.kalW k4)', (await std()) === 'Privat,Uni*' && (await gespeichert(page)).E.kalW === 'k4', await std());
+    await zu(page); await page.waitForTimeout(400);
+    p.ok('Stand: vorbelegt Uni', (await stand()) === 'Privat,Uni | k4 | 60 | -', await stand());
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Blatt: Uni vorbelegt', (await wahl()).chips === 'Privat,Uni*', JSON.stringify(await wahl()));
+    await zu(page); await einstSeite(page, 'kal'); await page.click('#es-body [data-h="kalW"][data-v="k3"]'); await zu(page); await page.waitForTimeout(400);
     /* Seit v148 ist ein ausgeschalteter Kalender überall weg: „Schicht“ (Arbeit) steht weder auf Heute noch im Tag, „Geburtstag Mama“ (Geburtstage) auch nicht */
     p.ok('Aus heißt weg: Heute ohne „Geburtstag Mama“', !(await heute(page)).some(z => z.includes('Geburtstag')), JSON.stringify(await heute(page)));
     await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);

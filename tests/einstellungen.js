@@ -114,6 +114,17 @@ lauf(async () => {
   await p.click('#z-list [data-v="1015"], #z-list button:has-text("10–15")'); await p.waitForTimeout(80);
   P.ok('Standardbereich 10–15: gespeichert (E.wdh 1015) und auf der Seite', (await gespeichert(p)).E.wdh === 1015 && (await text(p, '#es-body')).includes('10–15'), await text(p, '#es-body [data-h="wdh"]'));
   /* 11. v152: Beträge verbergen (Arbeit: Stundenlohn 27,50 € steht als Punkte da), Schnitt im Gewicht über 14 Tage */
+  /* v154: Sätze je neuer Übung (fehlt = 3). Mit 4: Eine Übung, die im Plan dazukommt, hat 4 Sätze. */
+  await einstSeite(p, 'gym'); await p.click('#es-body [data-h="saetze"]'); await p.click('#z-list [data-zv="4"]'); await p.waitForTimeout(60);
+  P.ok('Sätze je neuer Übung 4: gespeichert (E.saetze 4) und auf der Seite', (await gespeichert(p)).E.saetze === 4 && (await text(p, '#es-body [data-h="saetze"]')).includes('4'), await text(p, '#es-body [data-h="saetze"]'));
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  /* Die neue Einheit „Arme“ mit Rudern: gespeichert mit 4 Sätzen */
+  await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await p.click('#v-training h2.sec [data-k="ordnen"]'); await p.waitForTimeout(80);
+  await p.click('#o-add'); await p.waitForTimeout(80);
+  await p.fill('#p-name', 'Arme'); await p.fill('#p-new', 'Rudern'); await p.click('#p-new-add'); await p.click('#p-save'); await p.waitForTimeout(150);
+  const arme = Object.values((await gespeichert(p)).K.plans).find(x => x && x.n === 'Arme');
+  P.ok('Neue Einheit im Plan: Rudern beginnt mit 4 Sätzen', !!arme && arme.items.length === 1 && arme.items[0].sets === 4, JSON.stringify(arme));
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
   await einstSeite(p, 'darst'); await p.click('#es-body [data-h="diskret"]');
   await einstSeite(p, 'planer');
   P.ok('Beträge verbergen: Stundenlohn als „••• €“, gespeichert (E.diskret 1)', (await text(p, '#es-body [data-h="lohn"]')).includes('••• €') && (await gespeichert(p)).E.diskret === 1, await text(p, '#es-body [data-h="lohn"]'));
@@ -170,6 +181,12 @@ lauf(async () => {
   await einstSeite(q4, 'cardio'); await q4.click('#es-body [data-h="cZiel"]'); await q4.click('#z-list [data-zv="0"]'); await q4.waitForTimeout(60);
   await q4.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close())); await bereich(q4, 'training'); await q4.waitForTimeout(40);
   P.ok('„Kein Ziel“ nimmt es zurück: keine Linie, nichts gespeichert', (await ziel('#v-training')) === 'keine' && !('cZiel' in (await gespeichert(q4)).E), await ziel('#v-training'));
+  /* v154: Messwert im Graphen „Letzte Läufe“ bleibt gewählt (E.cMet), auch nach dem Neuladen */
+  const met = () => q4.evaluate(() => [...document.querySelectorAll('#v-training [data-t="metric"]')].filter(c => c.offsetParent).map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join());
+  P.ok('Cardio: Effizienz ist vorgewählt', (await met()) === 'Effizienz*,Pace', await met());
+  await q4.click('#v-training [data-t="metric"][data-v="pace"] >> visible=true'); await q4.waitForTimeout(60);
+  await q4.reload(); await q4.waitForTimeout(150); await bereich(q4, 'training'); await q4.click('#v-training .subtabs [data-v="cardio"]'); await q4.waitForTimeout(60);
+  P.ok('Pace gewählt: nach dem Neuladen noch Pace (E.cMet)', (await met()) === 'Effizienz,Pace*' && (await gespeichert(q4)).E.cMet === 'pace', await met());
   await q4.evaluate(() => { const st = JSON.parse(localStorage.getItem('takt.v1')); st.N.work.e = { w1: { d: '2026-11-20', a: 600, b: 840, p: 0, r: 2500 } }; localStorage.setItem('takt.v1', JSON.stringify(st)); });
   await q4.reload(); await q4.waitForTimeout(150);
   await einstSeite(q4, 'planer'); await zahlWahl(q4, '#es-body [data-h="wZiel"]', '600');

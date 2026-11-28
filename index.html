@@ -1542,7 +1542,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v153</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v154</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1737,7 +1737,8 @@ let MY = {};                               // Haushalt: Jahr -> { tx: { id: {...
 let mMode = 'month', mYM = '', mYear = 0, mNow = '';   // mNow: der laufende Monat beim letzten Zeichnen
 const VIEWS = ['heute', 'routinen', 'gewicht', 'haushalt', 'training'];
 let T = { runs: {}, hk: {} };              // Training/Cardio: { id: { d, m (Meter), s (Sekunden), hr } }, hk siehe normT()
-let tMode = 'month', tYM = '', tYear = 0, tMetric = 'eff';
+let tMode = 'month', tYM = '', tYear = 0;
+const tMetricN = () => E.cMet === 'pace' ? 'pace' : 'eff';   // seit v154 gemerkt (E.cMet)
 let N = { folders: {}, tasks: {}, notes: {}, work: { e: {}, got: {} }, uni: { e: {} } };   // Planer: Notizen, Arbeit, Uni; Aufbau siehe normN()
 let K = { ex: {}, log: {}, plans: {}, meta: {}, live: null };               // Kraft: Übungen { id: { n } } und Sätze { Datum: { id: [[kg, Wdh], ...] } }
 let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
@@ -1788,6 +1789,8 @@ function normE(o) {
     if (['n', 'zeit', 'pace', 'eff'].indexOf(o.cStat) >= 0) out.cStat = o.cStat;
     if (Number.isInteger(o.cZiel) && o.cZiel >= 1 && o.cZiel <= 2000) out.cZiel = o.cZiel;   // Ziel je Monat in km (v153)
     if (Number.isInteger(o.wZiel) && o.wZiel >= 100 && o.wZiel <= 10000000) out.wZiel = o.wZiel;   // Ziel je Monat beim Verdienst in Cent (v153)
+    if (Number.isInteger(o.saetze) && o.saetze >= 1 && o.saetze <= 6) out.saetze = o.saetze;   // Sätze je neuer Übung (v154, fehlt = 3)
+    if (o.cMet === 'pace') out.cMet = 'pace';   // Messwert im Graphen „Letzte Läufe“ (v154, fehlt = Effizienz)
   }
   return out;
 }
@@ -3007,7 +3010,7 @@ function tMonthHTML(all, curYM) {
   const last = all[all.length - 1];
   /* Die Karte mit dem Verlauf gibt es erst, wenn es etwas zu zeigen gibt: ab zwei Läufen (für die Effizienz mit Puls). Vorher stünde nur eine leere Karte mit zwei Knöpfen da.
      Gibt es nur für den anderen Messwert einen Graphen (Läufe ohne Puls), bleibt die Karte, damit man umschalten kann. */
-  const svg = runSVG(all, tMetric);
+  const tMetric = tMetricN(), svg = runSVG(all, tMetric);
   if (svg || runSVG(all, tMetric === 'eff' ? 'pace' : 'eff')) h += '<div class="card chart"><div class="card-head"><p class="note">Letzte Läufe</p><div class="seg" role="group" aria-label="Messwert">' +
     [['eff', 'Effizienz'], ['pace', 'Pace']].map(m => '<button type="button" class="chip" data-t="metric" data-v="' + m[0] + '" aria-pressed="' + (tMetric === m[0]) + '">' + m[1] + '</button>').join('') + '</div></div>' +
     (svg || '<p class="note">' + (tMetric === 'eff' ? 'Ab zwei Läufen mit Puls siehst du hier den Verlauf.' : 'Ab zwei Läufen siehst du hier den Verlauf.') + '</p>') + '</div>';
@@ -3056,7 +3059,7 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'uhr') return t.dataset.id ? openT(t.dataset.id) : openT(null, keyOf(new Date(+t.dataset.von)), Math.round((t.dataset.bis - t.dataset.von) / 1000));
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
-  else if (a === 'metric') tMetric = t.dataset.v;
+  else if (a === 'metric') setE({ cMet: t.dataset.v === 'pace' ? 'pace' : null });
   else if (a === 'cstat') setE({ cStat: t.dataset.v === 'km' ? null : t.dataset.v });
   else if (a === 'kstat') setE({ kStat: t.dataset.v === 'n' ? null : t.dataset.v });
   else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; $('#scroll').scrollTop = 0; }
@@ -3239,6 +3242,7 @@ const stdWdh = () => [306, 508, 610, 1015, 1220, 1520].indexOf(E.wdh) >= 0 ? E.w
 const exBis = id => (K.ex[id] && K.ex[id].z) || stdWdh() % 100;
 const exVon = id => { const x = K.ex[id], bis = exBis(id); return x && x.zu >= 1 && x.zu < bis ? x.zu : x && x.z ? Math.max(1, bis - 4) : Math.floor(stdWdh() / 100); };
 const empAn = () => K.emp !== 0;
+const stdSaetze = () => E.saetze >= 1 && E.saetze <= 6 ? E.saetze : 3;   // Sätze, mit denen eine neue Übung in Plan, Training oder Einheit beginnt (v154)
 /* So viele Wiederholungen ergeben mit der Last „last“ dasselbe geschätzte Maximum rm (Umkehrung von rm1): 53,33 mit 42,5 kg → (53,33 / 42,5 − 1) × 30 = 7,6 → 7 */
 const wdhBei = (rm, last, k) => last > 0 ? Math.floor((rm / last - 1) * (k || 30) + 1e-9) : 0;
 const schrittText = st => st.toLocaleString('de-DE') + ' kg';
@@ -3992,7 +3996,7 @@ const kSetsIn = sets => sets.map(s => Object.assign({ w: s[0] ? kgn(s[0]) : '', 
 /* Neue Übung in der Einheit: vorbelegt mit den Sätzen vom letzten Mal */
 function kNewItem(id) {
   const hist = kHist(id).filter(x => x.d < kS.date), last = hist[hist.length - 1];
-  return { id, sets: last ? last.sets.map(q => ({ w: q[0] ? kgn(q[0]) : '', r: String(q[1]) })) : [{ w: '', r: '' }, { w: '', r: '' }, { w: '', r: '' }] };
+  return { id, sets: last ? last.sets.map(q => ({ w: q[0] ? kgn(q[0]) : '', r: String(q[1]) })) : Array.from({ length: stdSaetze() }, () => ({ w: '', r: '' })) };
 }
 function paintK() {
   $('#k-items').innerHTML = kS.items.map((it, i) => {
@@ -4562,7 +4566,7 @@ $('#lform').addEventListener('click', e => {
     }
   }
   else if (a === 'skip' && it) { lMenu = false; lJ = null; if (it.sk) delete it.sk; else { it.sk = 1; if (lR && lR.i === lI) lR = lVor = null; lWeiter(); } }
-  else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, 3) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; lMenu = false; $('#l-new').value = ''; }
+  else if (a === 'pick') { Lw.items.push({ id: t.dataset.id, sets: liveSets(t.dataset.id, stdSaetze()) }); lI = Lw.items.length - 1; lJ = null; lAdd = false; lMenu = false; $('#l-new').value = ''; }
   else if (a === 'rm' && it) { if (wasRm) { Lw.items.splice(lI, 1); lJ = null; lMenu = false; lR = lVor = null; } else lRm = true; }
   else if (a === 'addset' && it) { const s = it.sets, l = s[s.length - 1]; s.push({ w: l.w, r: l.r, done: false }); }
   else if (a === 'rmset' && it) { if (it.sets.length > 1) it.sets.pop(); lJ = null; if (lR && lR.i === lI && !it.sets[lR.j]) lR = lVor = null; }
@@ -4575,7 +4579,7 @@ function lAddNew() {
   const name = $('#l-new').value.trim(); if (!name || !Lw) return;
   const id = exIdFor(name);
   let i = Lw.items.findIndex(it => it.id === id);
-  if (i < 0) { Lw.items.push({ id, sets: liveSets(id, 3) }); i = Lw.items.length - 1; }
+  if (i < 0) { Lw.items.push({ id, sets: liveSets(id, stdSaetze()) }); i = Lw.items.length - 1; }
   lI = i; lJ = null; lAdd = false; lMenu = false;
   $('#l-new').value = ''; paintL(); saveLive();
 }
@@ -4726,7 +4730,7 @@ pdlg.addEventListener('click', e => { if (e.target === pdlg) daneben(pdlg, pS, p
 $('#pform').addEventListener('click', e => {
   const t = e.target.closest('[data-pa]'); if (!t) return;
   const a = t.dataset.pa, row = t.closest('.prow'), i = row ? +row.dataset.i : -1;
-  if (a === 'pick') { pS.items.push({ id: t.dataset.id, sets: 3 }); $('#p-new').value = ''; }
+  if (a === 'pick') { pS.items.push({ id: t.dataset.id, sets: stdSaetze() }); $('#p-new').value = ''; }
   else if (a === 'menu') pMenu = pMenu === i ? -1 : i;
   else if (a === 'dr' || a === 'su') { if (pS.items[i][a]) delete pS.items[i][a]; else pS.items[i][a] = 1; }
   else if (a === 'rm') { pS.items.splice(i, 1); pMenu = -1; }
@@ -4737,7 +4741,7 @@ $('#pform').addEventListener('click', e => {
 function pAddNew() {
   const name = $('#p-new').value.trim(); if (!name) return;
   const id = exIdFor(name);
-  if (!pS.items.some(it => it.id === id)) pS.items.push({ id, sets: 3 });
+  if (!pS.items.some(it => it.id === id)) pS.items.push({ id, sets: stdSaetze() });
   $('#p-new').value = ''; paintP();
 }
 $('#p-new-add').addEventListener('click', pAddNew);
@@ -5729,7 +5733,7 @@ function eSeiteHTML(k) {
       secHTML('Kennzahlen', 'bis zu drei') + '<div class="card es-start"><div class="chips" role="group" aria-label="Kennzahlen">' +
       KZ.map(q => { const an = w.indexOf(q[0]) >= 0; return '<button type="button" class="chip" data-h="kz" data-v="' + q[0] + '" aria-pressed="' + an + '"' + (!an && voll ? ' aria-disabled="true"' : '') + '>' + q[1] + '</button>'; }).join('') + '</div>' +
       '<p class="note">Stehen unter der großen Zahl im Monat und im Jahr.</p></div>' +
-      secHTML('Training' + INFO('emp')) + '<ul class="entries">' + wertRow('wdh', 'Wiederholungen je Satz', Math.floor(stdWdh() / 100) + '–' + stdWdh() % 100) + '<li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
+      secHTML('Training' + INFO('emp')) + '<ul class="entries">' + wertRow('saetze', 'Sätze je neuer Übung', String(stdSaetze())) + wertRow('wdh', 'Wiederholungen je Satz', Math.floor(stdWdh() / 100) + '–' + stdWdh() % 100) + '<li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
       '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
       '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
   }
@@ -5742,6 +5746,10 @@ function eSeiteHTML(k) {
         '</div><p class="note">Ganztägig</p><div class="chips" role="group" aria-label="Erinnerung ganztägig">' +
         [['aus', 'Keine']].concat(ER_G).map(q => '<button type="button" class="chip" data-h="erG" data-v="' + q[0] + '" aria-pressed="' + (String(E.erG != null ? E.erG : 'aus') === String(q[0])) + '">' + q[1] + '</button>').join('') + '</div></div>' : '') +
       (kalAn() && kal.recht === 'an' ? '<ul class="entries">' + '<li>' + schalter('kw', 'Kalenderwochen', E.kw === 1) + '</li></ul>' : '') +
+      /* Standard-Kalender (v154, wie „Standardkalender“ in iOS): derselbe Merker wie die letzte Wahl im Blatt (E.kalW); ihn nimmt auch die Schnelleingabe der iPhone-App */
+      (kalAn() && kal.recht === 'an' && kalWahl().length > 1 ? secHTML('Neue Termine in') + '<div class="card es-start"><div class="chips" role="group" aria-label="Standard-Kalender">' +
+        kalWahl().map(q => '<button type="button" class="chip" data-h="kalW" data-v="' + esc(q.id) + '" aria-pressed="' + (kalStd() === q.id) + '"><i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n) + '</button>').join('') +
+        '</div><p class="note">Wählst du beim Eintragen einen anderen, gilt der ab dann.</p></div>' : '') +
       (kalAn() && kal.recht === 'an' ? secHTML('Stundenhöhe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Stundenhöhe">' +
         [[28, 'Kompakt'], [36, 'Normal'], [48, 'Groß']].map(q => '<button type="button" class="chip" data-h="kalH" data-v="' + q[0] + '" aria-pressed="' + ((E.kalH || 36) === q[0]) + '">' + q[1] + '</button>').join('') + '</div><p class="note">So viel Platz hat eine Stunde im Tag des Kalenders.</p></div>' : '') +
       (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? secHTML('Kalender' + INFO('kal')) + '<ul class="entries">' + kalAlle().map(q => '<li>' + schalter('kalNein', '<i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n), (E.kalNein || []).indexOf(q.id) < 0, esc(q.id)).replace('<button', '<button data-w="' + (q.w ? 1 : 0) + '"') + '</li>').join('') + '</ul>' : '') +
@@ -5834,6 +5842,9 @@ function einstAct(t) {
   }
   else if (a === 'wdh') return openZ({ titel: 'Wiederholungen je Satz', wert: stdWdh(), nurListe: true, liste: BEREICHE, text: n => Math.floor(n / 100) + '–' + n % 100 + ' Wdh',
     dann: n => { if (BEREICHE.indexOf(n) >= 0) { setE({ wdh: n === 812 ? null : n }); paintE(); renderTraining(); } } });   // Standard für Übungen ohne eigenen Bereich
+  else if (a === 'saetze') return openZ({ titel: 'Sätze je neuer Übung', wert: stdSaetze(), nurListe: true, liste: [1, 2, 3, 4, 5, 6], text: n => n + (n === 1 ? ' Satz' : ' Sätze'),
+    dann: n => { if (n >= 1 && n <= 6) { setE({ saetze: n === 3 ? null : n }); paintE(); } } });
+  else if (a === 'kalW') { if (kalWahl().some(q => q.id === t.dataset.v)) { setE({ kalW: t.dataset.v }); paintE(); } return; }
   else if (a === 'nNeu') { setE({ nNeu: an ? 1 : null }); renderPlaner(); renderHome(); }
   else if (a === 'schicht') return openZ({ titel: 'Schicht in Stunden', wert: schicht() / 60, einheit: 'h', komma: true, liste: reihe(1, 10, 0.5),
     dann: n => { const m = Math.round(n * 60); if (m >= 30 && m <= 720) { setE({ schicht: m === SCHICHT ? null : m }); paintE(); } } });
