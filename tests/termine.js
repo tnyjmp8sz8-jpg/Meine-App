@@ -1,7 +1,7 @@
 // Termine aus dem Kalender des iPhones (v130, iPhone-App ab 1.3): Heute, Wochenleiste, Übersicht, Blatt „Termin“ mit dem Satz-Leser, Speichern, Ändern, Löschen, Einstellungen.
 // Die iPhone-App wird nachgestellt (window.webkit.messageHandlers.track sammelt, was die App schickt; TrackHuelle.info und .termine liefern, was der Kalender meldet).
 // Die Uhr steht auf Donnerstag, 26.11.2026, 10:00: So hängt nichts vom Tag ab, an dem die Reihe läuft.
-const { oeffnen, text, pruefer, lauf, gespeichert } = require('./lib');
+const { oeffnen, text, pruefer, lauf, gespeichert, einstSeite } = require('./lib');
 
 const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
 const JETZT = new Date(2026, 10, 26, 10, 0);
@@ -258,12 +258,12 @@ lauf(async () => {
 
   /* 11. Einstellungen: Abschnitt „Kalender“; aus = alles weg, an = Liste neu anfordern */
   await an(page);
-  await page.click('#gear'); await page.waitForTimeout(80);
+  await einstSeite(page, 'kal');
   p.ok('Einstellungen: Schalter „Termine zeigen“ ist an', await page.evaluate(() => document.querySelector('#esheet [data-h="kal"]').getAttribute('aria-checked') === 'true' && document.querySelector('#es-kaln').hidden));
   await page.click('#esheet [data-h="kal"]'); await zu(page); await page.waitForTimeout(50);
   p.ok('Aus: keine Liste, kein Schnell-Knopf, gespeichert als kal 0', !(await heute(page)).length && !(await page.$('#v-heute [data-v="termin"]')) && (await gespeichert(page)).E.kal === 0);
   p.ok('Aus: Wochenleiste ohne Punkte, kommende Tage zeigen wieder auf heute', await page.evaluate(() => !document.querySelector('#v-heute .wk u.t') && document.querySelectorAll('#v-heute .wk .wd[data-d="2026-11-26"]').length === 4));
-  await page.click('#gear'); await page.waitForTimeout(80);
+  await einstSeite(page, 'kal');
   await leeren(page); await page.click('#esheet [data-h="kal"]'); await zu(page); await page.waitForTimeout(50);
   p.ok('Wieder an: Liste angefordert, Termine zurück', (await post(page, 'termine')).length === 1 && (await heute(page)).length === 4 && (await gespeichert(page)).E.kal === undefined);
 
@@ -275,7 +275,7 @@ lauf(async () => {
   p.ok('Abgelehnt: Blatt erklärt den Weg', b.offen && b.nein && b.titel === 'Termine', JSON.stringify(b));
   await leeren(page); await page.click('#te-einst'); await page.waitForTimeout(50);
   p.ok('„Einstellungen öffnen“ geht an die iPhone-App', (await post(page, 'einstellungen')).length === 1);
-  await page.click('#gear'); await page.waitForTimeout(80);
+  await einstSeite(page, 'kal');
   p.ok('Einstellungen zeigen die Zeile zum Erlauben', await page.evaluate(() => !document.querySelector('#es-kaln').hidden));
   await zu(page);
 
@@ -378,7 +378,7 @@ lauf(async () => {
     p.ok('Stand: alle vier Kalender, vorbelegt Privat (der von iOS), Erinnerung 60 min, ganztägig keine', (await stand()) === 'Arbeit,Geburtstage,Privat,Uni | k3 | 60 | -', await stand());
     /* Die einmalige Vorwahl (v148) greift nur bei seinen Kalendernamen (Prüfsummen im Code): Hier bleibt alles an, und sie ist nicht als geschehen gemerkt */
     p.ok('Keine Vorwahl bei anderen Namen', await page.evaluate(() => { const e = (JSON.parse(localStorage.getItem('takt.v1') || '{}') || {}).E || {}; return !e.kalVor && !e.kalNein; }));
-    await page.click('#gear');
+    await einstSeite(page, 'kal');
     const sch = () => page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="kalNein"]')].map(b => b.textContent + (b.getAttribute('aria-checked') === 'true' ? '+' : '-') + (b.disabled ? '!' : '')).join(' '));
     p.ok('Einstellungen: je Kalender ein Schalter, alle an', (await sch()) === 'Arbeit+ Geburtstage+ Privat+ Uni+', await sch());
     for (const k of ['k1', 'k2', 'k4']) await page.click('#es-body [data-h="kalNein"][data-v="' + k + '"]');
@@ -400,14 +400,14 @@ lauf(async () => {
     await page.waitForTimeout(400);
     p.ok('Stand für das große Widget: kalNein mit den zwei ausgeschalteten (Arbeit, Geburtstage)', await page.evaluate(() => JSON.stringify(window.__post.filter(m => m.art === 'stand').pop().kalNein)) === '["k1","k2"]');
     /* Nur noch ein Kalender an: keine Wahl im Blatt, aber der Auftrag nennt ihn, sonst nähme iOS seinen Kalender für neue Termine */
-    await page.click('#gear'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
+    await einstSeite(page, 'kal'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
     await page.click('#v-heute [data-v="termin"]');
     p.ok('Nur Privat an: keine Wahl im Blatt', (await wahl()).zu);
     await page.fill('#te-text', 'Kino morgen 20 Uhr'); await leeren(page); await page.click('#te-save'); await page.waitForTimeout(80);
     const m = await post(page, 'termin');
     p.ok('… der Auftrag geht trotzdem an Privat (kal k3)', m.length === 1 && m[0].kal === 'k3', JSON.stringify(m));
     /* Schnelleingabe der iPhone-App hat Uni gewählt: Eingang „kalwahl“ → vorbelegt */
-    await page.click('#gear'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
+    await einstSeite(page, 'kal'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
     await ruf(page, 'eingang', [{ id: 'e1', art: 'kalwahl', kal: 'k4', t: Date.now() }]); await page.waitForTimeout(50);
     await page.click('#v-heute [data-v="termin"]');
     p.ok('Eingang „kalwahl“ aus der Schnelleingabe: Uni ist vorbelegt', (await wahl()).chips === 'Privat,Uni*' && (await gespeichert(page)).E.kalW === 'k4', JSON.stringify(await wahl()));

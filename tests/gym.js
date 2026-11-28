@@ -1,6 +1,6 @@
 // Gym: Recap für Monat und Jahr, Verbesserung gesamt und je Übung, laufendes Training mit „Letztes Mal“.
 // Kleiner, von Hand nachgerechneter Datensatz: eine Übung, fünf Einheiten im Vormonat, eine heute.
-const { APP, oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, nachOben, zahlWahl, einstellungen } = require('./lib');
+const { APP, oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, nachOben, zahlWahl, einstellungen, einstSeite, einstZeilen } = require('./lib');
 /* Seit v148 liegen „Übungen“ und „Einheiten“ (im Jahr „Monate“ und „Übungen“) in einer Leiste, von der immer nur ein Teil offen ist: Vor dem Tipp auf eine Übung die Liste öffnen */
 const uebAuf = async pg => { if (!(await pg.$('#v-training .folds [data-k="ex"]'))) { await pg.click('#v-training [data-fold="uebungen"]'); await pg.waitForTimeout(80); } };
 
@@ -555,7 +555,7 @@ lauf(async () => {
   P.ok('Vorgabe Curls, erster Satz oben: ein Schritt mehr Gewicht, der führende Satz mindestens das untere Ende (22,5×8), der zweite 22,5×7', (await reihen14()) === '22,5×8 22,5×7' && (await emp()) === 'Empfehlung 22,5 kg × 8 · +2,5 kg', (await reihen14()) + ' # ' + (await emp()));
   /* Schalter in den Einstellungen: aus → K.emp = 0; ein neu gestartetes Training zeigt die Werte vom letzten Mal, ohne Zeile „Empfehlung“ und ohne Bereich. Wieder an → der Merker ist weg. */
   await em.click('#l-del'); await em.click('#l-del'); await em.waitForTimeout(150);
-  await einstellungen(em);
+  await einstSeite(em, 'gym');   // seit v149 liegen die Schalter des Trainings auf der Seite „Gym“
   const sch = () => em.evaluate(() => { const b = document.querySelector('#esheet [data-h="emp"]'); return b.getAttribute('role') + ' ' + b.getAttribute('aria-checked') + ' ' + Math.round(b.getBoundingClientRect().height >= 40); });
   P.ok('Einstellungen: Schalter „Empfehlung je Satz“ steht auf an und ist mindestens 40 px hoch', (await sch()) === 'switch true 1' && (await text(em, '#esheet [data-h="emp"]')) === 'Empfehlung je Satz', await sch());
   await em.click('#esheet [data-h="emp"]');
@@ -566,7 +566,7 @@ lauf(async () => {
   await em.click('.lt-r.act .chk'); await em.waitForTimeout(60);
   P.ok('ohne Empfehlung passt sich nach dem Abhaken nichts an', (await reihen14()) === '90×12 90×10 90×8 65×6', await reihen14());
   await em.click('#l-del'); await em.click('#l-del'); await em.waitForTimeout(150);
-  await einstellungen(em); await em.click('#esheet [data-h="emp"]');
+  await einstSeite(em, 'gym'); await em.click('#esheet [data-h="emp"]');
   P.ok('wieder eingeschaltet: Schalter an, der Merker ist weg', (await sch()) === 'switch true 1' && (await gespeichert(em)).K.emp == null, await sch());
   await o14.browser.close();
 
@@ -632,23 +632,27 @@ lauf(async () => {
   const reihen16 = () => ei.$$eval('#l-items .lx > .lt .lt-r', l => l.map(z => [z.children[1], z.children[2]].map(c => c.firstChild ? c.firstChild.textContent : '').join('×')).join(' '));
   const sw = h => ei.evaluate(q => { const b = document.querySelector('#esheet ' + q); return b ? b.getAttribute('aria-checked') : 'fehlt'; }, h);
   P.ok('Heute zeigt die Zeile Gewicht', (await text(ei, '#v-heute .ovs')).includes('Gewicht'), await text(ei, '#v-heute .ovs'));
+  /* Seit v149 wie iOS: erste Seite mit Zeilen je Thema, „Auf Heute zeigen“ auf „Heute“, Start auf „Bereiche“, das Training auf „Gym“ */
   await einstellungen(ei);
-  const es16 = await ei.evaluate(() => ({ titel: [...document.querySelectorAll('#es-body h2.sec')].map(h => h.textContent).join(' | '), ov: [...document.querySelectorAll('#es-body [data-h="ov"]')].map(b => b.textContent + ':' + b.getAttribute('aria-checked')).join(' | '),
-    start: [...document.querySelectorAll('#es-body [data-h="start"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '), res: !document.querySelector('#es-res').hidden }));
-  P.ok('Einstellungen: Sicherung, Bereiche, Start, Auf Heute zeigen, Training; alle fünf Zeilen an, Start ist Heute, „Nach der Reserve fragen“ ist da',
-    es16.titel === 'Sicherung | Bereiche | Start | Auf Heute zeigen | Training' && es16.ov === 'Gewicht:true | Finanzen:true | Training:true | Arbeit:true | Uni:true' && es16.start === 'Heute* Planer Gewicht Finanzen Training' && es16.res, JSON.stringify(es16));
+  const es16 = { titel: await einstZeilen(ei) };
+  await einstSeite(ei, 'heute'); es16.ov = await ei.evaluate(() => [...document.querySelectorAll('#es-body [data-h="ov"]')].map(b => b.textContent + ':' + b.getAttribute('aria-checked')).join(' | '));
+  await einstSeite(ei, 'ber'); es16.start = await ei.evaluate(() => [...document.querySelectorAll('#es-body [data-h="start"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '));
+  await einstSeite(ei, 'gym'); es16.res = await ei.evaluate(() => !document.querySelector('#es-res').hidden);
+  P.ok('Einstellungen: Seiten Darstellung, Bereiche, Heute, Gym, Planer; alle fünf Zeilen an, Start ist Heute, „Nach der Reserve fragen“ ist da',
+    es16.titel === 'Darstellung | Bereiche | Heute | Gym | Planer' && es16.ov === 'Gewicht:true | Finanzen:true | Training:true | Arbeit:true | Uni:true' && es16.start === 'Heute* Planer Gewicht Finanzen Training' && es16.res, JSON.stringify(es16));
+  await einstSeite(ei, 'heute');
   await ei.click('#esheet [data-h="ov"][data-v="gewicht"]');
   P.ok('Gewicht abgewählt: Schalter aus, gespeichert (E.aus.gewicht), die Zeile fehlt auf Heute', (await sw('[data-h="ov"][data-v="gewicht"]')) === 'false' && (await gespeichert(ei)).E.aus.gewicht === 1 && await ei.evaluate(() => !(document.querySelector('#v-heute .ovs') || { textContent: '' }).textContent.includes('Gewicht')));
   await ei.click('#esheet [data-h="ov"][data-v="gewicht"]');
   P.ok('wieder angewählt: Die Zeile ist zurück, der Merker ist weg', (await text(ei, '#v-heute .ovs')).includes('Gewicht') && !(await gespeichert(ei)).E.aus.gewicht);
-  await ei.click('#esheet [data-h="emp"]');
+  await einstSeite(ei, 'gym'); await ei.click('#esheet [data-h="emp"]');
   P.ok('Empfehlung aus: „Nach der Reserve fragen“ verschwindet', (await ei.evaluate(() => { const l = document.querySelector('#es-res'); return l.hidden && l.getBoundingClientRect().height === 0; })));
   await ei.click('#esheet [data-h="emp"]');
-  await ei.click('#esheet [data-h="start"][data-v="training"]');
+  await einstSeite(ei, 'ber'); await ei.click('#esheet [data-h="start"][data-v="training"]');
   P.ok('Start-Bereich Training: gewählt und gespeichert (E.start)', (await gespeichert(ei)).E.start === 'training' && await ei.evaluate(() => document.querySelector('#esheet [data-h="start"][data-v="training"]').getAttribute('aria-pressed') === 'true' && document.querySelector('#esheet [data-h="start"][data-v="heute"]').getAttribute('aria-pressed') === 'false'));
   await ei.goto(APP); await ei.waitForTimeout(400);
   P.ok('ohne Zusatz in der Adresse öffnet die App jetzt mit Training', await ei.evaluate(() => document.body.dataset.v === 'training' && !document.querySelector('#v-training').hidden));
-  await einstellungen(ei); await ei.click('#esheet [data-h="start"][data-v="heute"]');
+  await einstSeite(ei, 'ber'); await ei.click('#esheet [data-h="start"][data-v="heute"]');
   P.ok('zurück auf Heute: Der Merker ist weg', (await gespeichert(ei)).E.start == null);
   await ei.click('#es-close'); await bereich(ei, 'training'); await ei.click('#v-training [data-k="start"]'); await ei.waitForTimeout(300);
   /* Seit v139 mit gelernter Kurve: 45×5, dann 40×12 → k = (40·12 − 45·5) / (45 − 40) = 51, zur 30 gezogen (60 + 51) / 3 = 37.
@@ -666,7 +670,7 @@ lauf(async () => {
   /* Frage nach der Reserve: an → nach dem Abhaken da; in den Einstellungen aus (K.res = 0) → nach dem nächsten Abhaken keine Frage; die Empfehlung bleibt */
   await ei.click('.lt-r.act .chk'); await ei.waitForTimeout(60);
   P.ok('Reserve an: Frage nach dem ersten Satz', !!(await ei.$('#l-resv')));
-  await ei.click('#ls-close'); await ei.waitForTimeout(200); await einstellungen(ei); await ei.click('#esheet [data-h="res"]');
+  await ei.click('#ls-close'); await ei.waitForTimeout(200); await einstSeite(ei, 'gym'); await ei.click('#esheet [data-h="res"]');
   P.ok('„Nach der Reserve fragen“ aus: gespeichert als K.res = 0', (await sw('[data-h="res"]')) === 'false' && (await gespeichert(ei)).K.res === 0);
   await ei.click('#es-close'); await ei.click('#v-heute [data-k="live"]'); await ei.waitForTimeout(300);
   await ei.click('.lt-r.act .chk'); await ei.waitForTimeout(60);

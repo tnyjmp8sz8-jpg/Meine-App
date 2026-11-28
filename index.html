@@ -71,6 +71,11 @@
   --round:ui-rounded,"SF Pro Rounded",-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif;
   color-scheme:light;
 }
+/* Akzentfarbe (v149, Einstellungen → Darstellung): wie die Hervorhebung in iOS, je hell und dunkel; ohne Wahl Blau wie oben */
+:root[data-akz="indigo"]{--accent:#5856D6;--at:#4A48C4;--accent-soft:#E4E4FA;--accent-line:#5856D6;--accent-deep:#4644B8}
+:root[data-akz="tuerkis"]{--accent:#0FA5C2;--at:#0A8AA3;--accent-soft:#D8F3F8;--accent-line:#0FA5C2;--accent-deep:#0B8AA3}
+:root[data-akz="pink"]{--accent:#FF2D55;--at:#E0244A;--accent-soft:#FFE0E6;--accent-line:#FF2D55;--accent-deep:#D91E45}
+:root[data-akz="graphit"]{--accent:#636366;--at:#48484A;--accent-soft:#E9E9EB;--accent-line:#636366;--accent-deep:#48484A}
 @media (prefers-color-scheme:dark){
   :root{
     --bg:#000000; --glass:rgba(30,30,30,.56); --glass-sel:rgba(255,255,255,.11); --tab-cut:#1F1F22; --sheet:rgba(30,30,32,.8); --sheet-fest:#1A1A1C; --ink:#F5F5F7; --muted:#98989F; --line:rgba(255,255,255,.12);
@@ -96,6 +101,10 @@
     --accent:#0A84FF; --at:#3D95FF; --accent-soft:#0B2748; --accent-line:#0A84FF; --accent-deep:#0068D6; --on-accent:#FFFFFF; --mid:#6E6E73; --danger:#FF5A50; --good:#30D158; --rot:#FF453A; --mk:64%; --kt:100%; --kg:#000000; --kgp:33%;--warn:#FFD60A; --c-weight:#BF5AF2; --c-money:#FF9F0A;
     color-scheme:dark;
   }
+  :root[data-akz="indigo"]{--accent:#5E5CE6;--at:#7D7AFF;--accent-soft:#1F1E4D;--accent-line:#5E5CE6;--accent-deep:#4B49C8}
+  :root[data-akz="tuerkis"]{--accent:#40C8E0;--at:#5FD4E8;--accent-soft:#0B3440;--accent-line:#40C8E0;--accent-deep:#2AA7BE}
+  :root[data-akz="pink"]{--accent:#FF375F;--at:#FF5C7C;--accent-soft:#4A1020;--accent-line:#FF375F;--accent-deep:#D92B4F}
+  :root[data-akz="graphit"]{--accent:#8E8E93;--at:#AEAEB2;--accent-soft:#2C2C2E;--accent-line:#8E8E93;--accent-deep:#6C6C70}
   /* Blätter liegen eine Ebene über der Seite: graues Glas, die Flächen darin durchscheinend mit etwas kräftigerer Kante (wie in iOS) */
   dialog{--surface:rgba(255,255,255,.07);--fill:rgba(255,255,255,.12);--sel:rgba(255,255,255,.18);--cut:#2B2B2E;--schild:#48484A}
 }
@@ -812,7 +821,24 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 /* Einstellungen (v106): hinter dem Zahnrad auf Heute. Sicherung und Version stehen nur hier, nicht mehr auf jeder Seite. */
 .es{display:flex;flex-direction:column;gap:14px;padding:10px 16px 22px}
 .es-body{display:flex;flex-direction:column;gap:10px}
-#es-rest{display:contents}   /* der Teil, der sich nach den Bereichen richtet: zählt für die Abstände nicht als eigener Kasten */
+/* Einstellungen wie iOS (v149): erste Seite mit Zeilen je Thema (farbiges Symbol, Wert, Pfeil), Unterseiten mit „‹ Einstellungen“ */
+.es-zur{display:inline-flex;align-items:center;gap:5px;flex:none;border:0;background:none;padding:8px 2px;color:var(--at);font:inherit;font-size:16px}
+.es-zur svg{width:8px;height:14px}
+.es-zur[hidden]{display:none}
+#esheet.unter .sh-head{display:grid;grid-template-columns:1fr auto 1fr}
+#esheet.unter .sh-head h2{font-size:16px}
+#esheet.unter .sh-head .x{justify-self:end}
+.entries button.es-nav{align-items:center;justify-content:flex-start;gap:12px;min-height:46px}
+.es-nav .ei{flex:none;width:29px;height:29px;border-radius:7px;display:grid;place-items:center}
+.es-nav .ei svg{width:18px;height:18px}
+.es-nav .l{flex:1;min-width:0}
+.entries button.es-wert{align-items:center}
+.es-nav b.dim,.es-wert b.dim{display:inline-flex;align-items:center;gap:6px;font-weight:400;white-space:nowrap}
+.es-nav b svg,.es-wert b svg{width:13px;height:13px}
+#es-body .chip[aria-disabled="true"]{opacity:.38}
+.es-reihe{display:flex;flex-direction:column;gap:6px}
+#es-reihe .prow{transition:transform .18s ease}
+#es-body .fld{margin:0}
 .es-body .sec{margin:4px 2px -2px}
 .es .foot{margin-top:4px}
 .es-start{display:flex;flex-direction:column;gap:8px;padding:12px 14px}
@@ -1094,7 +1120,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,.sch .sw,.sch .sw::after{transition:none}
+  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,#es-reihe .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
   .l-resv,.l-resv-in,.toast,.toast>*{animation:none}
 }
@@ -1497,13 +1523,14 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 <dialog tabindex="-1" id="esheet" aria-labelledby="es-title">
   <div class="es">
     <div class="sh-head">
+      <button type="button" class="es-zur" id="es-zur" hidden><svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>Einstellungen</button>
       <h2 id="es-title">Einstellungen</h2>
       <button type="button" class="x" id="es-close" aria-label="Schließen">
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v148</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v149</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1725,13 +1752,22 @@ function normE(o) {
     /* Kalender, die beim Eintragen nicht zur Wahl stehen (v147, sein Wunsch 28.11.: nur seine drei); Kennungen aus Apples Kalender */
     if (Array.isArray(o.kalNein)) { const l = o.kalNein.filter(x => typeof x === 'string' && x && x.length <= 200).slice(0, 60); if (l.length) out.kalNein = l; }
     if (o.kalVor === 1) out.kalVor = 1;   // die einmalige Vorwahl seiner Kalender ist geschehen (v148)
+    /* v149, Einstellungen wie iOS: Akzentfarbe, Haptik aus, Kennzahlen im Gym, Reihenfolge der Leiste, Länge der Schicht, Ziel der Uni, neue Notizen oben.
+       Die gültigen Werte stehen hier ausgeschrieben: normE läuft beim Laden, bevor die Listen der Einstellungen (AKZ, KZ) stehen. */
+    if (['indigo', 'tuerkis', 'pink', 'graphit'].indexOf(o.akz) >= 0) out.akz = o.akz;
+    if (o.hapt === 0) out.hapt = 0;
+    if (Array.isArray(o.kz)) { const l = ['p', 'bes', 'dur', 'rek', 'avg', 'woche', 'saetze'].filter(k => o.kz.indexOf(k) >= 0).slice(0, 3); if (l.length) out.kz = l; }
+    if (Array.isArray(o.reihe)) { const l = o.reihe.filter((v, i) => VIEWS.indexOf(v) >= 0 && o.reihe.indexOf(v) === i); if (l.length) out.reihe = l; }
+    if (Number.isInteger(o.schicht) && o.schicht >= 30 && o.schicht <= 720) out.schicht = o.schicht;
+    if (Number.isInteger(o.uniSoll) && o.uniSoll >= 1 && o.uniSoll <= 99) out.uniSoll = o.uniSoll;
+    if (o.nNeu === 1) out.nNeu = 1;
   }
   return out;
 }
 function setE(p) { E = normE(Object.assign({}, E, p)); saveLocal(); }
 const istAn = k => !E.weg[k];                                                  // Bereich (oder Gym, Cardio) ist eingeschaltet
 const anV = v => v === 'training' ? istAn('kraft') || istAn('cardio') : istAn(v);        // dasselbe für einen Bereich der Leiste
-const erster = () => VIEWS.find(anV);                                           // der erste eingeschaltete Bereich: Dort steht das Zahnrad, wenn Heute aus ist
+const erster = () => tabFolge().find(anV);                                           // der erste eingeschaltete Bereich: Dort steht das Zahnrad, wenn Heute aus ist
 const tName = () => !istAn('cardio') ? 'Gym' : !istAn('kraft') ? 'Cardio' : 'Training';   // Name des Trainings in Leiste, Titel und Einstellungen
 
 const LS = 'takt.v1';
@@ -3252,7 +3288,27 @@ function kPeriod(pre) {
   const pp = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
   return { n: ds.length, bes, cmp, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
-const kTiles = s => '<div class="figs on-bg">' + fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : '')) + fig(s.cmp ? String(s.bes) : '–', '', s.bes === 1 ? 'Satz besser' : 'Sätze besser') + fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit') + '</div>';
+/* Kennzahlen unter der großen Zahl, Monat (pre JJJJ-MM) oder Jahr (JJJJ). Seit v149 frei wählbar (Einstellungen → Gym, höchstens drei; ohne Wahl wie bisher Verbesserung,
+   Sätze besser, Trainingszeit). Rekorde: Übungen, die an ihrem Tag einen Rekord hatten (wie in der Liste der Einheiten). Ø Dauer: Mittel der Einheiten mit Dauer.
+   Pro Woche: Einheiten geteilt durch die Wochen des Zeitraums, im laufenden Monat oder Jahr nur bis heute. Sätze: alle Sätze aller Einheiten. */
+function kTiles(s, pre) {
+  const ds = kDates().filter(d => d.slice(0, pre.length) === pre), tk = todayKey();
+  const tile = k => {
+    if (k === 'p') return fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : ''));
+    if (k === 'bes') return fig(s.cmp ? String(s.bes) : '–', '', s.bes === 1 ? 'Satz besser' : 'Sätze besser');
+    if (k === 'dur') return fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit');
+    if (k === 'rek') { const n = ds.reduce((a, d) => a + kDay(d).filter(x => recOf(x.sets, kHist(x.id).filter(q => q.d < d), exBw(x.id, d))).length, 0); return fig(String(n), '', n === 1 ? 'Rekord' : 'Rekorde'); }
+    if (k === 'avg') { const m = ds.map(d => ((K.meta || {})[d] || {}).dur || 0).filter(x => x >= 60); return fig(m.length ? Math.round(m.reduce((a, b) => a + b, 0) / m.length / 60) + ' min' : '–', '', 'Ø Dauer'); }
+    if (k === 'woche') {
+      const y = +pre.slice(0, 4), lang = pre.length === 4 ? (new Date(y, 1, 29).getDate() === 29 ? 366 : 365) : new Date(y, +pre.slice(5), 0).getDate();
+      const tage = tk.slice(0, pre.length) === pre ? (pre.length === 4 ? Math.round((parseKey(tk) - new Date(y, 0, 1, 12)) / 864e5) + 1 : +tk.slice(8)) : lang;
+      return fig(ds.length ? (ds.length / Math.max(1, tage / 7)).toLocaleString('de-DE', { maximumFractionDigits: 1 }) : '–', '', 'pro Woche');
+    }
+    const n = ds.reduce((a, d) => a + kDay(d).reduce((b, x) => b + x.sets.length, 0), 0);
+    return fig(String(n), '', 'Sätze');
+  };
+  return '<div class="figs on-bg">' + kzWahl().map(tile).join('') + '</div>';
+}
 /* Erklärung hinter dem „i“ an „Verbesserung“, in Klartext (v102, seine Frage vom 24.11.: „was bedeutet die Jahres- und Monatsverbesserung? zu letztem Jahr und Monat?“).
    pre = 'JJJJ' oder 'JJJJ-MM'. Gerechnet wird wie in exDelta(): Stand am Ende gegenüber dem Stand davor, je Übung. */
 const kNote = (s, pre) => s.p ? '<p class="note" id="info-k-imp" hidden>Verbesserung: ' + (pre.length === 4
@@ -3361,7 +3417,7 @@ function kYearHTML(curYM) {
   for (let m = 1; m <= 12; m++) per.push(kPeriod(y + '-' + pad(m)));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
-  h += kTiles(s) + kNote(s, y);
+  h += kTiles(s, y) + kNote(s, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
   const ex = kExListe();
   return h + leisteHTML([{ key: 'gymMonate', t: 'Monate', n: per.filter(q => q.n).length, rows: () => per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
@@ -3378,7 +3434,7 @@ function kraftHTML(curYM) {
   if (tMode === 'year') return h + kYearHTML(curYM);
   const prevYM = ymOfIdx(ymIdx(tYM) - 1), s = kPeriod(tYM), name = MONTHS[+tYM.slice(5) - 1];
   h += navHTML(name + ' ' + tYM.slice(0, 4), tYM < curYM, 'Einen Monat') + kHero('Gym im ' + name, s.n, MONTHS[+prevYM.slice(5) - 1] + ': ' + dates.filter(d => d.slice(0, 7) === prevYM).length);
-  if (s.n) h += kTiles(s) + kNote(s, tYM);
+  if (s.n) h += kTiles(s, tYM) + kNote(s, tYM);
   /* Pläne in einer Karte, in ihrer Reihenfolge, jeder mit einem Ring: in der laufenden Runde erledigt grün mit Haken, übersprungen grau mit dem Zeichen dafür, als Nächstes dran blau mit seinem Platz,
      die übrigen grau mit ihrem Platz. Nur der Plan, der dran ist, trägt rechts den Knopf zum Überspringen (v93): So bleibt die Reihenfolge der Runde eindeutig.
      Jeder lässt sich antippen und starten. Bis v89 trug der nächste eine voll blaue Scheibe mit Play-Zeichen (ihm zu billig, 24.11.). */
@@ -4672,7 +4728,7 @@ const subsRHTML = () => '<div class="card-head"><div class="subtabs" role="group
 const firstLine = s => (String(s).split('\n').map(l => l.trim()).find(Boolean) || '');
 /* Reihenfolge der Notizen (v133, sein Wort 26.11.: „neue Notizen nicht nach oben schieben, sondern runter, älteste immer oben“): nach dem Anlegen, die älteste zuerst.
    Ändern verschiebt nichts (bis v132: zuletzt geänderte zuerst). Gilt im Planer und im Widget (nz im Stand). */
-const notesFolge = () => noteList().sort((a, b) => (a.c || a.m || 0) - (b.c || b.m || 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0));
+const notesFolge = () => { const l = noteList().sort((a, b) => (a.c || a.m || 0) - (b.c || b.m || 0) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0)); return E.nNeu === 1 ? l.reverse() : l; };   // seit v149 wahlweise die neueste oben (Einstellungen → Planer)
 /* Zeile einer Notiz: Der Kreis hakt ab und löscht (mit „Rückgängig“, deshalb data-undo), ein Tipp auf den Text öffnet sie */
 /* Abgehakt: Gelöscht ist sofort (auch „Rückgängig“ steht sofort da). Die Zeile füllt noch kurz ihren Kreis, wird blass und gibt dann ihren Platz frei, erst danach wird gezeichnet. */
 function raus(li, dann) {
@@ -4773,11 +4829,11 @@ function workHTML() {
 }
 /* Soll im Studium: 18 behandelte Termine (seine Angabe, 23.11.2026). Für Punkte gibt es kein Soll. */
 const UNI_SOLL = 18;
-const uniSollT = n => n + ' von ' + UNI_SOLL + ' Terminen';
+const uniSollT = n => n + ' von ' + uniSoll() + ' Terminen';
 function uniHTML() {
   const list = uniList(), sum = l => l.reduce((s, x) => s + x.p, 0), nT = n => n + (n === 1 ? ' Termin' : ' Termine');
   let h = '<section class="hero w-hero"><p class="date">Punkte gesamt</p><h1><span class="num">' + pktT(sum(list)) + '</span></h1><p class="sub">' + (list.length ? uniSollT(list.length) : 'Noch kein Termin eingetragen') + '</p></section>' +
-    (list.length ? '<div class="soll" role="img" aria-label="' + uniSollT(list.length) + '"><i style="width:' + Math.min(100, list.length / UNI_SOLL * 100).toFixed(1) + '%"></i></div>' : '') +
+    (list.length ? '<div class="soll" role="img" aria-label="' + uniSollT(list.length) + '"><i style="width:' + Math.min(100, list.length / uniSoll() * 100).toFixed(1) + '%"></i></div>' : '') +
     '<div class="figs on-bg">' + FACH.map(f => fig(pktT(sum(list.filter(x => x.f === f[0]))), '', f[1])).join('') + '</div>' +
     '<button type="button" class="primary" data-n="newuni">Termin eintragen</button>';
   const row = x => '<li><button type="button" class="two" data-n="uni" data-id="' + esc(x.id) + '" aria-label="Termin ändern"><span class="l"><span>' + (x.n ? esc(x.n) : 'Termin') + '</span><small>' + dRow(x.d) + '</small></span><b>' + pktT(x.p) + ' Pkt.</b></button></li>';
@@ -4847,10 +4903,10 @@ function bCalc() { const x = bRead(), c = $('#b-calc'); c.hidden = typeof x === 
    Bis v127 standen Zeiten, Pause und Lohn wie beim jüngsten Eintrag da. */
 const LOHN = 2500, SCHICHT = 150;
 function openB(id) {
-  const x = id ? N.work.e[id] : null, jetzt = new Date(), b0 = jetzt.getHours() * 60 + jetzt.getMinutes(), v = x || { a: (b0 - SCHICHT + 1440) % 1440, b: b0, p: 0 }, r = x ? x.r : N.work.rate || LOHN;
+  const x = id ? N.work.e[id] : null, jetzt = new Date(), b0 = jetzt.getHours() * 60 + jetzt.getMinutes(), v = x || { a: (b0 - schicht() + 1440) % 1440, b: b0, p: 0 }, r = x ? x.r : N.work.rate || LOHN;
   bE = { id: x ? id : null, u: x && x.u ? x.u : 0, p: v.p || 0, r };
   $('#bs-title').textContent = x ? 'Arbeitszeit ändern' : 'Arbeitszeit eintragen';
-  $('#b-date').value = x ? x.d : b0 < SCHICHT ? keyOf(addDays(jetzt, -1)) : todayKey();
+  $('#b-date').value = x ? x.d : b0 < schicht() ? keyOf(addDays(jetzt, -1)) : todayKey();
   $('#b-von').value = uhrT(v.a); $('#b-bis').value = uhrT(v.b);
   $('#b-err').hidden = true; $('#b-del').hidden = !x;
   paintB(); bCalc(); openDlg(bdlg); bdlg.scrollTop = 0;
@@ -5507,39 +5563,117 @@ function renderHome() {
    Auf Heute steht nur noch die Erinnerung, wenn die Sicherung fällig ist; alles Übrige liegt hinter dem Zahnrad: Stand der Sicherung, speichern, einlesen,
    in der iPhone-App der Ordner für die Sicherung von selbst (was dabei geschieht, hinter dem „i“, ein Fehler der iPhone-App im Wortlaut darunter), dazu die Version. */
 const edlg = $('#esheet');
-function paintE() {
+/* Einstellungen wie in iOS (v149, sein Auftrag 28.11.: „großer Umbau: ich will mehr Anpassungsfähigkeit, volle Freiheit … überrasche mich mit funktionellen und sinnvollen
+   anpassbaren Add-ons, die die Übersichtlichkeit nicht verschlechtern … Apple-Look iOS“): Auf der ersten Seite stehen nur die Sicherung und je Thema eine Zeile mit farbigem Symbol
+   und dem jetzigen Wert; ein Tipp schiebt die Unterseite herein, „‹ Einstellungen“ oben links führt zurück. So passt jede neue Wahl auf ihre Seite, ohne die erste länger zu machen.
+   eSeite: '' (erste Seite) oder ein Schlüssel aus E_SEITEN. Wer eine Wahl ergänzt, legt sie auf die passende Seite und ihren Zustand in E (normE) oder in den Bereich selbst. */
+let eSeite = '';
+const ES_SYM = {
+  darst: '<svg viewBox="0 0 20 20" fill="none" aria-hidden="true"><circle cx="10" cy="10" r="6.2" stroke="#fff" stroke-width="1.8"/><path d="M10 3.8a6.2 6.2 0 0 1 0 12.4z" fill="#fff"/></svg>',
+  ber: '<svg viewBox="0 0 20 20" fill="#fff" aria-hidden="true"><rect x="3.5" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="3.5" width="5.5" height="5.5" rx="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.6" opacity=".55"/></svg>',
+  heute: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M3.8 9.2L10 4l6.2 5.2V16H3.8z"/><path d="M8.2 16v-4h3.6v4"/></svg>',
+  gym: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M6 6.5v7M14 6.5v7M3.6 8.3v3.4M16.4 8.3v3.4M6 10h8"/></svg>',
+  kal: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="4.6" width="13" height="11.8" rx="2.4"/><path d="M3.5 8.3h13M7 3.2v2.6M13 3.2v2.6" stroke-linecap="round"/></svg>',
+  planer: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 6h7M8.5 10h7M8.5 14h7"/><path d="M4 5.8l.9.9 1.6-1.7M4 9.8l.9.9 1.6-1.7M4 13.8l.9.9 1.6-1.7"/></svg>'
+};
+const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
+/* Akzentfarbe (v149): wie die Hervorhebung in iOS; sie färbt Knöpfe, Verweise, Ringe und Umschalter. Die Farben je hell und dunkel stehen im CSS an :root[data-akz]. */
+const AKZ = [['blau', 'Blau', '#0A84FF'], ['indigo', 'Indigo', '#5E5CE6'], ['tuerkis', 'Türkis', '#40C8E0'], ['pink', 'Pink', '#FF375F'], ['graphit', 'Graphit', '#8E8E93']];
+const akz = () => AKZ.some(a => a[0] === E.akz) ? E.akz : 'blau';
+const akzSetzen = () => { if (akz() === 'blau') delete document.documentElement.dataset.akz; else document.documentElement.dataset.akz = akz(); };
+/* Kennzahlen im Gym (v149): bis zu drei Kacheln unter der großen Zahl, frei wählbar */
+const KZ = [['p', 'Verbesserung'], ['bes', 'Sätze besser'], ['dur', 'Trainingszeit'], ['rek', 'Rekorde'], ['avg', 'Ø Dauer'], ['woche', 'Pro Woche'], ['saetze', 'Sätze']];
+const kzWahl = () => { const l = (E.kz || []).filter(k => KZ.some(q => q[0] === k)); return l.length ? l : ['p', 'bes', 'dur']; };
+/* Reihenfolge der Leiste (v149): E.reihe nennt die fünf Bereiche in seiner Folge; fehlt einer, steht er am Ende wie bisher */
+const tabFolge = () => (E.reihe || []).filter(v => VIEWS.indexOf(v) >= 0).concat(VIEWS.filter(v => (E.reihe || []).indexOf(v) < 0));
+const VNAME = v => ({ heute: 'Heute', routinen: 'Planer', gewicht: 'Gewicht', haushalt: 'Finanzen', training: tName() })[v];
+const schicht = () => E.schicht >= 30 && E.schicht <= 720 ? E.schicht : SCHICHT;
+const uniSoll = () => E.uniSoll >= 1 && E.uniSoll <= 99 ? E.uniSoll : UNI_SOLL;
+/* Wert rechts in der Zeile jeder Unterseite (wie „Aus“ oder „Blau“ in iOS) */
+function eWert(k) {
+  if (k === 'darst') return AKZ.find(a => a[0] === akz())[1];
+  if (k === 'ber') { const n = BER.filter(q => istAn(q[0])).length; return n === BER.length ? 'Alle an' : n + ' von ' + BER.length; }
+  if (k === 'heute') return '';
+  if (k === 'gym') return esc(K.pn || '');
+  if (k === 'kal') { if (!kalAn()) return 'Aus'; const a = kalAlle(); return a.length > 1 ? a.filter(x => (E.kalNein || []).indexOf(x.id) < 0).length + ' von ' + a.length : ''; }
+  if (k === 'planer') return '';
+  return '';
+}
+function eStartHTML() {
   const au = hInfo.sicherung;
-  $('#es-body').innerHTML = secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
+  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
+  return secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
     (au ? '<p class="note" id="bk-err"' + (au.fehler ? '' : ' hidden') + '>' + esc(au.fehler) + '</p><p class="note" id="info-bk" hidden>Die App legt bei jeder Änderung von selbst eine Sicherung ab: in „Dateien“ unter „Auf meinem iPhone › Track.“, je Tag eine Datei, die neuesten 14 bleiben. Wird die App gelöscht, sind auch diese Dateien weg. Mit einem Ordner in iCloud Drive liegt dort zusätzlich immer eine Kopie, und die Erinnerung an die Sicherung entfällt. Was sonst in dem Ordner liegt, bleibt unberührt. Zurückholen geht über „Sicherung einlesen“.</p>' : '') +
-    secHTML('Bereiche' + INFO('ber')) + '<ul class="entries" id="es-ber">' + BER.map(q => '<li>' + schalter('ber', q[1], istAn(q[0]), q[0]) + '</li>').join('') + '</ul>' +
-    '<p class="note" id="info-ber" hidden>Was aus ist, verschwindet aus der Leiste unten und von Heute. Die Daten bleiben gespeichert und sind wieder da, sobald du den Bereich einschaltest. Ist Heute aus, steht das Zahnrad im ersten Bereich.</p>' +
-    '<div id="es-rest">' + einstRestHTML() + '</div>';
+    '<ul class="entries es-navs">' + seiten.map(k => '<li><button type="button" class="two es-nav" data-h="seite" data-v="' + k + '"><span class="ei" style="background:' + E_SEITEN[k][1] + '">' + ES_SYM[k] + '</span><span class="l"><span>' + E_SEITEN[k][0] + '</span></span><b class="dim">' + eWert(k) + CHEV(1) + '</b></button></li>').join('') + '</ul>';
+}
+const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
+/* Eine Zeile mit Wert, die „Zahl wählen“ öffnet (wie die Dauer in „Einheit ändern“) */
+const wertRow = (h, text, wert) => '<li><button type="button" class="two es-wert" data-h="' + h + '"><span class="l"><span>' + text + '</span></span><b class="dim">' + wert + CHEV(1) + '</b></button></li>';
+function eSeiteHTML(k) {
+  if (k === 'darst') return secHTML('Akzentfarbe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Akzentfarbe">' +
+      AKZ.map(a => '<button type="button" class="chip" data-h="akz" data-v="' + a[0] + '" aria-pressed="' + (akz() === a[0]) + '"><i class="kf" style="background:' + a[2] + '"></i>' + a[1] + '</button>').join('') + '</div>' +
+      '<p class="note">Färbt Knöpfe, Verweise, Ringe und die Auswahl, dazu das Licht auf Heute.</p></div>' +
+    (HUELLE ? secHTML('Bedienung') + '<ul class="entries"><li>' + schalter('hapt', 'Haptik', E.hapt !== 0) + '</li></ul>' : '');
+  if (k === 'ber') {
+    const vs = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', tName()]].filter(q => anV(q[0])), st = anV(E.start || 'heute') ? E.start || 'heute' : erster();
+    const on = tabFolge().filter(anV);
+    return secHTML('Bereiche' + INFO('ber')) + '<ul class="entries" id="es-ber">' + BER.map(q => '<li>' + schalter('ber', q[1], istAn(q[0]), q[0]) + '</li>').join('') + '</ul>' +
+      '<p class="note" id="info-ber" hidden>Was aus ist, verschwindet aus der Leiste unten und von Heute. Die Daten bleiben gespeichert und sind wieder da, sobald du den Bereich einschaltest. Ist Heute aus, steht das Zahnrad im ersten Bereich.</p>' +
+      (on.length < 2 ? '' : secHTML('Reihenfolge der Leiste') + '<div class="es-reihe" id="es-reihe">' + on.map(v => '<div class="prow" data-v="' + v + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + VNAME(v) + '</b></div>').join('') + '</div>') +
+      (vs.length < 2 ? '' : secHTML('Start') + '<div class="card es-start"><p class="note">Die App öffnet mit</p><div class="chips" role="group" aria-label="Start-Bereich">' +
+        vs.map(q => '<button type="button" class="chip" data-h="start" data-v="' + q[0] + '" aria-pressed="' + (st === q[0]) + '">' + q[1] + '</button>').join('') + '</div></div>');
+  }
+  if (k === 'heute') {
+    const ov = OV.filter(q => anV(q[0] === 'arbeit' || q[0] === 'uni' ? 'routinen' : q[0]));
+    return ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', q[0] === 'training' ? tName() : q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' : '<p class="note">Auf Heute gibt es nichts zu wählen.</p>';
+  }
+  if (k === 'gym') {
+    const w = kzWahl(), voll = w.length >= 3;
+    return '<label class="fld" for="es-pn"><span>Name des Plans</span><input id="es-pn" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Plan" value="' + esc(K.pn || '') + '"></label>' +
+      secHTML('Kennzahlen', 'bis zu drei') + '<div class="card es-start"><div class="chips" role="group" aria-label="Kennzahlen">' +
+      KZ.map(q => { const an = w.indexOf(q[0]) >= 0; return '<button type="button" class="chip" data-h="kz" data-v="' + q[0] + '" aria-pressed="' + an + '"' + (!an && voll ? ' aria-disabled="true"' : '') + '>' + q[1] + '</button>'; }).join('') + '</div>' +
+      '<p class="note">Stehen unter der großen Zahl im Monat und im Jahr.</p></div>' +
+      secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
+      '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
+      '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>';
+  }
+  if (k === 'kal') return '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
+      actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) + '</ul>' +
+      /* Kalender ein und aus (v147 nur fürs Eintragen, seit v148 überall): je Kalender ein Schalter mit seiner Farbe; der letzte beschreibbare, der an ist, ist gesperrt */
+      (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? secHTML('Kalender' + INFO('kal')) + '<ul class="entries">' + kalAlle().map(q => '<li>' + schalter('kalNein', '<i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n), (E.kalNein || []).indexOf(q.id) < 0, esc(q.id)).replace('<button', '<button data-w="' + (q.w ? 1 : 0) + '"') + '</li>').join('') + '</ul>' : '') +
+      '<p class="note" id="info-kal"' + (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? ' hidden' : '') + '>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Ein Kalender, den du hier ausschaltest, verschwindet aus Track.: seine Termine stehen nicht mehr auf Heute, im Kalender und in der Suche, und beim Eintragen steht er nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist.</p>';
+  if (k === 'planer') return secHTML('Notizen') + '<ul class="entries"><li>' + schalter('nNeu', 'Neue Notizen oben', E.nNeu === 1) + '</li></ul>' +
+      secHTML('Arbeit') + '<ul class="entries">' + wertRow('schicht', 'Schicht beim Eintragen', stdT(schicht())) + wertRow('lohn', 'Stundenlohn', eur(N.work.rate || LOHN)) + '</ul>' +
+      secHTML('Uni') + '<ul class="entries">' + wertRow('uniSoll', 'Ziel an Terminen', String(uniSoll())) + '</ul>';
+  return '';
+}
+function paintE() {
+  if (eSeite && !E_SEITEN[eSeite]) eSeite = '';
+  $('#es-title').textContent = eSeite ? E_SEITEN[eSeite][0] : 'Einstellungen';
+  $('#es-zur').hidden = !eSeite; edlg.classList.toggle('unter', !!eSeite);
+  $('#es-body').innerHTML = eSeite ? eSeiteHTML(eSeite) : eStartHTML();
+  $('#es-body').dataset.seite = eSeite;
   berEinzig(); kalEinzig();
+  const r = $('#es-reihe');
+  if (r) ziehListe(r, () => true, (von, nach) => {
+    if (von !== nach) { const on = tabFolge().filter(anV), v = on.splice(von, 1)[0]; on.splice(nach, 0, v); setE({ reihe: on.concat(tabFolge().filter(x => on.indexOf(x) < 0)) }); leiste(); show(view); }
+    paintE();
+  });
+}
+/* Zur Unterseite und zurück: Die neue Seite schiebt sich wie in iOS von rechts herein (zurück von links), höchstens 0,3 s */
+function eGeh(k) {
+  const vor = !!k; eSeite = k; paintE(); edlg.scrollTop = 0;
+  if (!ruhig()) $('#es-body').animate([{ transform: 'translateX(' + (vor ? 28 : -28) + '%)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 300, easing: KAL_EASE });
 }
 /* Der letzte eingeschaltete Bereich lässt sich nicht abschalten: Sein Schalter ist gesperrt, bis ein zweiter an ist. */
 function berEinzig() { const b = [...document.querySelectorAll('#es-ber .sch')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
-/* Was sich nach den Bereichen richtet, wird nach jedem Schalter dort neu gezeichnet: Start (nur eingeschaltete Bereiche, ohne Wahl bei einem einzigen),
-   „Auf Heute zeigen“ (nur mit Heute und nur Zeilen eingeschalteter Bereiche), „Training“ (nur mit Gym). */
-function einstRestHTML() {
-  const vs = [['heute', 'Heute'], ['routinen', 'Planer'], ['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', tName()]].filter(q => anV(q[0])), st = anV(E.start || 'heute') ? E.start || 'heute' : erster();
-  const ov = istAn('heute') ? OV.filter(q => anV(q[0] === 'arbeit' || q[0] === 'uni' ? 'routinen' : q[0])) : [];
-  return (vs.length < 2 ? '' : secHTML('Start') + '<div class="card es-start"><p class="note">Die App öffnet mit</p><div class="chips" role="group" aria-label="Start-Bereich">' +
-      vs.map(q => '<button type="button" class="chip" data-h="start" data-v="' + q[0] + '" aria-pressed="' + (st === q[0]) + '">' + q[1] + '</button>').join('') + '</div></div>') +
-    (ov.length ? secHTML('Auf Heute zeigen') + '<ul class="entries">' + ov.map(q => '<li>' + schalter('ov', q[0] === 'training' ? tName() : q[1], !E.aus[q[0]], q[0]) + '</li>').join('') + '</ul>' : '') +
-    (!istAn('kraft') ? '' : secHTML('Training' + INFO('emp')) + '<ul class="entries"><li>' + schalter('emp', 'Empfehlung je Satz', empAn()) + '</li>' +
-      '<li id="es-res"' + (empAn() ? '' : ' hidden') + '>' + schalter('res', 'Nach der Reserve fragen', K.res !== 0) + '</li></ul>' +
-    '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>') +
-    /* Kalender (v130, nur in der iPhone-App ab 1.3): Termine an oder aus; hat iOS den Zugriff abgelehnt, führt die zweite Zeile in die Einstellungen des iPhones */
-    (!kalKann() ? '' : secHTML('Kalender' + INFO('kal')) + '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
-      actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) +
-      /* Kalender ein und aus (v147 nur fürs Eintragen, seit v148 überall): je Kalender ein Schalter mit seiner Farbe; der letzte beschreibbare, der an ist, ist gesperrt */
-      (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? '<li class="grp">Kalender</li>' + kalAlle().map(k => '<li>' + schalter('kalNein', '<i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n), (E.kalNein || []).indexOf(k.id) < 0, esc(k.id)).replace('<button', '<button data-w="' + (k.w ? 1 : 0) + '"') + '</li>').join('') : '') + '</ul>' +
-    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Ein Kalender, den du hier ausschaltest, verschwindet aus Track.: seine Termine stehen nicht mehr auf Heute, im Kalender und in der Suche, und beim Eintragen steht er nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist.</p>');
-}
-const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
-function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
+function openE() { eSeite = ''; paintE(); openDlg(edlg); edlg.scrollTop = 0; }
+$('#es-zur').addEventListener('click', () => eGeh(''));
+/* Name des Plans auch in den Einstellungen (Seite Gym), gilt sofort */
+edlg.addEventListener('input', e => { if (e.target.id !== 'es-pn') return; const v = e.target.value.trim(); if (v !== (K.pn || '')) { kdoc.patch({ pn: v || null }); renderTraining(); } });
+edlg.addEventListener('keydown', e => { if (e.target.id === 'es-pn' && e.key === 'Enter') { e.preventDefault(); e.target.blur(); } });
 /* Wie berEinzig: Der letzte beschreibbare Kalender, der an ist, lässt sich nicht abschalten (sonst gäbe es keinen zum Eintragen) */
 function kalEinzig() { const b = [...document.querySelectorAll('#es-body [data-h="kalNein"][data-w="1"]')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
 /* Schalter und Wahl in den Einstellungen. Der Schalter wird an Ort und Stelle umgelegt (kein neues Zeichnen: So gleitet er).
@@ -5548,12 +5682,15 @@ function kalEinzig() { const b = [...document.querySelectorAll('#es-body [data-h
    ber: ein Bereich an oder aus; Leiste und Ansichten richten sich sofort danach, und ist der offene Bereich jetzt aus, steht dahinter der erste eingeschaltete. */
 function einstAct(t) {
   const a = t.dataset.h, v = t.dataset.v, an = t.getAttribute('aria-checked') !== 'true';
+  if (a === 'seite') return eGeh(v);
   if (a === 'emp') { kdoc.patch({ emp: an ? null : 0 }); $('#es-res').hidden = !an; }
   else if (a === 'res') kdoc.patch({ res: an ? null : 0 });
   else if (a === 'ber') {
     const weg = Object.assign({}, E.weg); if (an) delete weg[v]; else weg[v] = 1;
     if (Object.keys(weg).length >= BER.length) return;
-    setE({ weg }); t.setAttribute('aria-checked', an); berEinzig(); $('#es-rest').innerHTML = einstRestHTML(); bereiche();
+    setE({ weg }); t.setAttribute('aria-checked', an); berEinzig(); bereiche();
+    /* Reihenfolge und Start richten sich nach den Bereichen: die Seite neu, aber erst, wenn der Schalter geglitten ist */
+    if (ruhig()) paintE(); else setTimeout(() => { if (edlg.open && eSeite === 'ber') paintE(); }, 230);
     return;
   }
   else if (a === 'ov') { const aus = Object.assign({}, E.aus); if (an) delete aus[v]; else aus[v] = 1; setE({ aus }); renderHome(); }
@@ -5566,6 +5703,21 @@ function einstAct(t) {
     setE({ kalNein: nein }); t.setAttribute('aria-checked', an); kalEinzig(); kalNeu(); return;
   }
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
+  else if (a === 'akz') { setE({ akz: v === 'blau' ? null : v }); akzSetzen(); document.querySelectorAll('#es-body [data-h="akz"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
+  else if (a === 'hapt') setE({ hapt: an ? null : 0 });
+  else if (a === 'kz') {
+    /* Kennzahlen: höchstens drei, mindestens eine; sie stehen in der Reihenfolge der Liste */
+    const w = kzWahl(), drin = w.indexOf(v) >= 0;
+    if (drin ? w.length === 1 : w.length >= 3) return;
+    setE({ kz: KZ.map(q => q[0]).filter(x => x === v ? !drin : w.indexOf(x) >= 0) }); paintE(); renderTraining(); return;
+  }
+  else if (a === 'nNeu') { setE({ nNeu: an ? 1 : null }); renderPlaner(); renderHome(); }
+  else if (a === 'schicht') return openZ({ titel: 'Schicht in Stunden', wert: schicht() / 60, einheit: 'h', komma: true, liste: reihe(1, 10, 0.5),
+    dann: n => { const m = Math.round(n * 60); if (m >= 30 && m <= 720) { setE({ schicht: m === SCHICHT ? null : m }); paintE(); } } });
+  else if (a === 'lohn') return openZ({ titel: 'Stundenlohn', wert: (N.work.rate || LOHN) / 100, einheit: '€', komma: true, liste: reihe(12, 40, 0.5),
+    dann: n => { const c = Math.round(n * 100); if (okCents(c) && c > 0) { ndoc.patch({ work: { rate: c } }); paintE(); renderPlaner(); } } });
+  else if (a === 'uniSoll') return openZ({ titel: 'Ziel an Terminen', wert: uniSoll(), einheit: 'Termine', komma: false, liste: reihe(5, 40, 1),
+    dann: n => { const m = Math.round(n); if (m >= 1 && m <= 99) { setE({ uniSoll: m === UNI_SOLL ? null : m }); paintE(); renderPlaner(); } } });
   else return bkAct(a);
   t.setAttribute('aria-checked', an);
 }
@@ -5776,6 +5928,8 @@ function frisch(el) { clearTimeout(neuT); document.querySelectorAll('.view.neu')
 /* Leiste unten nach den eingeschalteten Bereichen (v125): abgeschaltete fehlen, --n ist ihre Zahl (Breite der Kapsel und der Linse).
    Mit einem einzigen Bereich gibt es keine Leiste (body.solo): Eine Leiste mit einem Knopf führt nirgends hin. */
 function leiste() {
+  akzSetzen();   // Akzentfarbe (v149): beim Start und nach dem Einlesen einer Sicherung mit
+  const box = $('.tabs-in'); tabFolge().forEach(v => box.appendChild(box.querySelector('.tab[data-view="' + v + '"]')));   // Reihenfolge der Leiste (v149)
   const tabs = [...document.querySelectorAll('.tab')];
   tabs.forEach(b => { b.hidden = !anV(b.dataset.view); });
   const n = tabs.filter(b => !b.hidden).length;
@@ -6002,7 +6156,7 @@ function hPost(o) { try { HUELLE.postMessage(o); } catch (e) {} }
    „wahl“ = Bereich, Umschalter, Klappzeile, Monat, Punkt im Graphen, Wert im Blatt „Zahl wählen“ · „leicht“ = abhaken · „mittel“ = gelöscht, Training gestartet · „erfolg“ = gespeichert, Rekord im laufenden Training · „fehler“ = Eingabe passt nicht.
    Sparsam wie in iOS: Ein Blatt öffnen oder schließen gibt keinen Impuls, und zwei Impulse kurz hintereinander werden zu einem. */
 let hapT = 0;
-function haptik(w) { if (!HUELLE) return; const t = performance.now(); if (t - hapT < 50) return; hapT = t; hPost({ art: 'haptik', w }); }
+function haptik(w) { if (!HUELLE || E.hapt === 0) return; const t = performance.now(); if (t - hapT < 50) return; hapT = t; hPost({ art: 'haptik', w }); }
 document.addEventListener('click', e => {
   const b = e.target.closest && e.target.closest('button'); if (!b) return;
   if (b.matches('.tk, .chk, [data-k="skip"], [data-la="skip"], .rv-b')) haptik('leicht');
@@ -6329,7 +6483,8 @@ if (HUELLE) window.TrackHuelle = {
     let gleich = neu.recht === kal.recht && JSON.stringify(neu.liste) === JSON.stringify(kal.liste);
     kal = neu; kalMerk();
     if (kalVorwahl()) gleich = false;
-    if (!gleich) { kalNeu(); if (edlg.open) { $('#es-rest').innerHTML = einstRestHTML(); kalEinzig(); } }
+    if (!gleich && edlg.open && (eSeite === 'kal' || !eSeite)) paintE();   // Kalender zur Wahl und Zahl auf der ersten Seite
+    if (!gleich) kalNeu();
     if (JSON.stringify(neu.kals) !== JSON.stringify(alt.kals)) hSoon();   // die Kalender zur Wahl gehen an die Schnelleingabe der iPhone-App
     const t = kalWill; kalWill = '';
     if (t && neu.recht !== 'fehlt' && !document.querySelector('dialog[open]')) openTe(null, 0, t);

@@ -2,7 +2,7 @@
 // Geprüft wird: Leiste unten (Knöpfe, Zahl --n, Platz der Linse), Titel, Zahnrad, Start, Heute (Schnell-Knöpfe, Notizen, Übersicht, Punkte der Wochenleiste, Woche),
 // Training ohne Umschalter, der letzte Bereich bleibt an, die Daten bleiben, Neuladen, Einlesen einer Sicherung.
 // Alle Daten liegen auf heute: So hängt nichts vom Tag ab, an dem der Test läuft.
-const { APP, oeffnen, text, bereich, gespeichert, einstellungen, pruefer, lauf, tag } = require('./lib');
+const { APP, oeffnen, text, bereich, gespeichert, einstellungen, einstSeite, einstZeilen, pruefer, lauf, tag } = require('./lib');
 
 const heute = tag(0), jahr = heute.slice(0, 4);
 const daten = () => ({ S: { routines: [], running: null }, LY: {}, W: { entries: { [heute]: 80 } },
@@ -20,7 +20,8 @@ lauf(async () => {
     titel: document.querySelector('.mark').textContent, gear: vis(document.querySelector('#gear')), plus: vis(document.querySelector('#add')), leiste: vis(document.querySelector('.tabs')), v: document.body.dataset.v }; });
   const heuteStand = () => p.evaluate(() => ({ quick: [...document.querySelectorAll('#v-heute [data-h="q"]')].map(b => b.dataset.v).join(' '), ovs: [...document.querySelectorAll('#v-heute .ovs .ov .k')].map(b => b.textContent).join(' '),
     notiz: document.querySelector('#v-heute').textContent.includes('Milch kaufen'), punkte: [...document.querySelectorAll('#v-heute .wd.now i u')].map(u => u.className).join('') }));
-  const schalter = k => p.click('#esheet [data-h="ber"][data-v="' + k + '"]');
+  /* Seit v149 liegen die Schalter auf der Seite „Bereiche“ der Einstellungen */
+  const schalter = async k => { await einstSeite(p, 'ber'); await p.click('#esheet [data-h="ber"][data-v="' + k + '"]'); };
   const zu = async () => { await p.click('#es-close'); await p.waitForTimeout(60); };
 
   let s = await stand(), h = await heuteStand();
@@ -28,9 +29,16 @@ lauf(async () => {
   P.ok('Heute am Anfang: keine Schnell-Knöpfe und keine Notizen (seit v131/v132), fünf Zeilen, keine Punkte für Wiegen und Training (seit v135 nur Termine)', h.quick === '' && !h.notiz && h.ovs === 'Gewicht Finanzen Training Arbeit Uni' && h.punkte === '', JSON.stringify(h));
 
   await einstellungen(p);
-  const es = () => p.evaluate(() => ({ ber: [...document.querySelectorAll('#es-ber .sch')].map(b => b.textContent.trim() + ':' + (b.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + (b.disabled ? '!' : '')).join(' '),
-    titel: [...document.querySelectorAll('#es-body h2.sec')].map(x => x.textContent).join(' | '), start: [...document.querySelectorAll('#es-body [data-h="start"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' '),
-    ov: [...document.querySelectorAll('#es-body [data-h="ov"]')].map(b => b.textContent.trim()).join(' ') }));
+  /* Stand der Einstellungen über alle Seiten (seit v149 wie iOS): titel = Zeilen der ersten Seite, ber und start von „Bereiche“, ov von „Heute“ (fehlt die Seite: leer).
+     Am Ende steht wieder die Seite „Bereiche“ offen. */
+  const es = async () => {
+    await einstSeite(p, ''); const titel = await einstZeilen(p);
+    let ov = '';
+    if (titel.includes('Heute')) { await einstSeite(p, 'heute'); ov = await p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="ov"]')].map(b => b.textContent.trim()).join(' ')); }
+    await einstSeite(p, 'ber');
+    return Object.assign({ titel, ov }, await p.evaluate(() => ({ ber: [...document.querySelectorAll('#es-ber .sch')].map(b => b.textContent.trim() + ':' + (b.getAttribute('aria-checked') === 'true' ? 'an' : 'aus') + (b.disabled ? '!' : '')).join(' '),
+      start: [...document.querySelectorAll('#es-body [data-h="start"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '')).join(' ') })));
+  };
   let e = await es();
   P.ok('Einstellungen: sechs Schalter, alle an, keiner gesperrt', e.ber === 'Heute:an Planer:an Gewicht:an Finanzen:an Gym:an Cardio:an', e.ber);
 
@@ -62,7 +70,7 @@ lauf(async () => {
   // --- Heute aus: nur noch Gym, keine Leiste, Zahnrad im Gym ---
   await einstellungen(p); await schalter('heute'); await p.waitForTimeout(60);
   e = await es(); s = await stand();
-  P.ok('Heute aus: nur Gym bleibt, sein Schalter ist gesperrt; kein Abschnitt Start, kein „Auf Heute zeigen“', e.ber === 'Heute:aus Planer:aus Gewicht:aus Finanzen:aus Gym:an! Cardio:aus' && e.titel === 'Sicherung | Bereiche | Training', JSON.stringify(e));
+  P.ok('Heute aus: nur Gym bleibt, sein Schalter ist gesperrt; kein Abschnitt Start, kein „Auf Heute zeigen“', e.ber === 'Heute:aus Planer:aus Gewicht:aus Finanzen:aus Gym:an! Cardio:aus' && e.titel === 'Darstellung | Bereiche | Gym' && e.start === '' && e.ov === '', JSON.stringify(e));
   P.ok('dahinter steht jetzt Gym: keine Leiste, Titel „Gym.“, Zahnrad und Plus nebeneinander', !s.leiste && s.v === 'training' && s.titel === 'Gym.' && s.gear && s.plus && await p.evaluate(() => document.body.classList.contains('solo') && !document.querySelector('#v-training').hidden && document.querySelector('#v-heute').hidden), JSON.stringify(s));
   await p.click('#esheet [data-h="ber"][data-v="kraft"]', { force: true }).catch(() => {});
   P.ok('der letzte Bereich lässt sich nicht abschalten', (await gespeichert(p)).E.weg.kraft == null && (await es()).ber.includes('Gym:an!'));
@@ -84,7 +92,7 @@ lauf(async () => {
   await p.click('#gear'); await p.waitForTimeout(80); await schalter('kraft'); await zu(); s = await stand();
   P.ok('Gym aus, Cardio an: Titel „Cardio.“, kein Umschalter, der Lauf ist zu sehen', s.titel === 'Cardio.' && await p.evaluate(() => !document.querySelector('#v-training .subtabs') && document.querySelector('#v-training').textContent.includes('km')), JSON.stringify(s));
   await p.click('#gear'); await p.waitForTimeout(80);
-  P.ok('ohne Gym fehlt der Abschnitt „Training“ (Empfehlung je Satz) in den Einstellungen', (await es()).titel === 'Sicherung | Bereiche', (await es()).titel);
+  P.ok('ohne Gym fehlt die Seite „Gym“ (Empfehlung je Satz) in den Einstellungen', (await es()).titel === 'Darstellung | Bereiche', (await es()).titel);
   for (const k of ['heute', 'routinen', 'gewicht', 'haushalt', 'kraft']) await schalter(k);
   e = await es(); s = await stand();
   P.ok('alles wieder an: fünf Bereiche, sechs Schalter an, der Merker ist leer', s.tabs === 'Heute Planer Gewicht Finanzen Training' && s.n === '5' && s.leiste && e.ber === 'Heute:an Planer:an Gewicht:an Finanzen:an Gym:an Cardio:an' && Object.keys((await gespeichert(p)).E.weg).length === 0, JSON.stringify([s, e]));

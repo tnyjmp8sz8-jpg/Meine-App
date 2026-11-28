@@ -4,7 +4,7 @@ const path = require('path');
 
 const APP = 'file://' + path.resolve(__dirname, '..', 'index.html');
 /* Alle Testreihen in der Reihenfolge, in der alle.js (und am.js mit vorgetäuschtem Datum) sie laufen lässt */
-const REIHEN = ['ablauf', 'aufbau', 'klappen', 'gesten', 'eingabe', 'loeschen', 'notizen', 'arbeit', 'finanzen', 'gym', 'bereiche', 'termine', 'haendler', 'monat', 'huelle', 'uhr', 'haptik', 'speicher', 'update'];
+const REIHEN = ['ablauf', 'aufbau', 'klappen', 'gesten', 'eingabe', 'loeschen', 'notizen', 'arbeit', 'finanzen', 'gym', 'bereiche', 'einstellungen', 'termine', 'haendler', 'monat', 'huelle', 'uhr', 'haptik', 'speicher', 'update'];
 const pad = n => String(n).padStart(2, '0');
 /* Datum als YYYY-MM-DD, n Tage zurück */
 const tag = (n = 0) => { const d = new Date(); d.setHours(12, 0, 0, 0); d.setDate(d.getDate() - n); return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); };
@@ -43,6 +43,16 @@ const blaetterZu = page => page.evaluate(() => document.querySelectorAll('dialog
 async function zahlWahl(page, sel, wert) { await page.click(sel); await page.keyboard.type(String(wert)); await page.keyboard.press('Enter'); await page.waitForTimeout(80); }
 /* Einstellungen öffnen (v106): Sicherung und Version liegen hinter dem Zahnrad oben auf Heute. Ist das Blatt schon offen, bleibt es so. */
 async function einstellungen(page) { if (await page.evaluate(() => document.querySelector('#esheet').open)) return; await page.click('.tab[data-view="heute"]'); await page.click('#gear'); await page.waitForTimeout(80); }
+/* Einstellungen wie iOS (v149): Unterseite öffnen (darst, ber, heute, gym, kal, planer) oder mit '' zurück zur ersten Seite. Öffnet die Einstellungen, wenn nötig. */
+async function einstSeite(page, seite) {
+  await einstellungen(page);
+  const jetzt = await page.evaluate(() => document.querySelector('#es-body').dataset.seite || '');
+  if (jetzt === seite) return;
+  if (jetzt) { await page.click('#es-zur'); await page.waitForTimeout(40); }
+  if (seite) { await page.click('#es-body [data-h="seite"][data-v="' + seite + '"]'); await page.waitForTimeout(40); }
+}
+/* Zeilen der ersten Seite (Namen der Unterseiten) */
+const einstZeilen = page => page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="seite"] .l')].map(x => x.textContent).join(' | '));
 const nachOben = page => page.evaluate(() => { document.querySelector('#scroll').scrollTop = 0; });
 const nachUnten = page => page.evaluate(() => { const s = document.querySelector('#scroll'); s.scrollTop = s.scrollHeight; });
 
@@ -73,4 +83,4 @@ function pruefer(name) {
 /* Fängt Abbrüche ab (z. B. Knopf nicht gefunden), damit der Test eine lesbare Meldung liefert */
 function lauf(fn) { fn().catch(e => { console.log('  ABBRUCH ' + String(e.message).split('\n')[0]); process.exit(1); }); }
 
-module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, zahlWahl, einstellungen, nachOben, nachUnten, wischen, pruefer, lauf };
+module.exports = { APP, REIHEN, tag, monat, zahl, pad, oeffnen, text, bereich, gespeichert, blaetterZu, zahlWahl, einstellungen, einstSeite, einstZeilen, nachOben, nachUnten, wischen, pruefer, lauf };

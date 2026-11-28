@@ -1,0 +1,102 @@
+// Einstellungen wie iOS (v149): erste Seite mit Zeilen je Thema, Unterseiten mit „‹ Einstellungen“, und die neuen Wahlmöglichkeiten:
+// Akzentfarbe, Haptik, Name des Plans, Kennzahlen im Gym, Reihenfolge der Leiste, neue Notizen oben, Länge der Schicht, Stundenlohn, Ziel der Uni.
+// Die Uhr steht auf Donnerstag, 26.11.2026, 18:00: So hängt nichts vom Tag ab, an dem die Reihe läuft.
+const { oeffnen, text, bereich, gespeichert, pruefer, lauf, einstSeite, einstZeilen, zahlWahl } = require('./lib');
+
+const huelle = () => { window.__post = []; window.webkit = { messageHandlers: { track: { postMessage: o => window.__post.push(JSON.parse(JSON.stringify(o))) } } }; };
+const JETZT = new Date(2026, 10, 26, 18, 0);
+const K = { ex: { a: { n: 'Rudern' }, b: { n: 'Bankdrücken' } },
+  log: { '2026-11-02': { a: [[60, 10], [60, 9]] }, '2026-11-12': { a: [[62.5, 10], [62.5, 9]], b: [[80, 8]] }, '2026-11-23': { a: [[65, 10], [65, 9], [65, 8]], b: [[82.5, 8]] } },
+  meta: { '2026-11-02': { dur: 3000 }, '2026-11-12': { dur: 3600 }, '2026-11-23': { dur: 4200 } }, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }, { id: 'b', sets: 3 }], o: 1 } }, live: null };
+const N = { folders: {}, tasks: {}, notes: { n1: { x: 'Erste', f: '', c: 1, m: 1 }, n2: { x: 'Zweite', f: '', c: 2, m: 2 }, n3: { x: 'Dritte', f: '', c: 3, m: 3 } },
+  work: { rate: 2500, e: {} }, uni: { e: { u1: { d: '2026-11-10', f: 'kons', p: 150, n: 'Füllung' } } } };
+
+lauf(async () => {
+  const P = pruefer('Einstellungen');
+  const o = await oeffnen({ uhr: JETZT, skript: huelle, daten: { S: { routines: [], running: null }, LY: {}, K, N } }), p = o.page;
+  await p.evaluate(() => window.TrackHuelle.info({ app: '1.7' }));
+
+  /* 1. Erste Seite: Sicherung und je Thema eine Zeile mit Wert; Unterseite und zurück */
+  await einstSeite(p, '');
+  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Planer', await einstZeilen(p));
+  P.ok('… mit Werten rechts: „Blau“ und „Alle an“', await p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="seite"] b')].map(b => b.textContent).slice(0, 2).join(',')) === 'Blau,Alle an');
+  P.ok('… und die Sicherung oben', !!(await p.$('#es-body .act[data-h="export"]')));
+  await einstSeite(p, 'darst');
+  P.ok('Unterseite „Darstellung“: Titel, „‹ Einstellungen“ sichtbar, die Sicherung ist weg', (await text(p, '#es-title')) === 'Darstellung' && await p.evaluate(() => !document.querySelector('#es-zur').hidden && !document.querySelector('#es-body .act[data-h="export"]')));
+  await p.click('#es-zur'); await p.waitForTimeout(40);
+  P.ok('„‹ Einstellungen“ führt zurück', (await text(p, '#es-title')) === 'Einstellungen' && await p.evaluate(() => document.querySelector('#es-zur').hidden));
+
+  /* 2. Akzentfarbe: Indigo färbt Knöpfe (--accent), bleibt nach dem Neuladen, Blau nimmt sie zurück */
+  const farbe = () => p.evaluate(() => [document.documentElement.dataset.akz || '', getComputedStyle(document.documentElement).getPropertyValue('--accent').trim()].join(' '));
+  const blau = await farbe();
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="akz"][data-v="indigo"]');
+  const indigo = await farbe();
+  P.ok('Akzentfarbe Indigo: gesetzt und gespeichert, --accent ist eine andere Farbe als Blau', indigo.startsWith('indigo ') && indigo.split(' ')[1] !== blau.split(' ')[1] && (await gespeichert(p)).E.akz === 'indigo', blau + ' → ' + indigo);
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="akz"][data-v="blau"]');
+  P.ok('Blau: wieder wie am Anfang, kein Merker', (await farbe()) === blau && !(await gespeichert(p)).E.akz);
+
+  /* 3. Haptik aus: Ein Tipp auf einen Bereich schickt keinen Impuls mehr an die iPhone-App */
+  const impulse = async () => { await p.evaluate(() => { window.__post.length = 0; }); await p.click('.tab[data-view="gewicht"]'); await p.waitForTimeout(80); await p.click('.tab[data-view="heute"]'); await p.waitForTimeout(80); return p.evaluate(() => window.__post.filter(m => m.art === 'haptik').length); };
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const mit = await impulse();
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="hapt"]'); await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  const ohne = await impulse();
+  P.ok('Haptik: an Impulse beim Wechsel des Bereichs, aus keine (E.hapt 0)', mit > 0 && ohne === 0 && (await gespeichert(p)).E.hapt === 0, mit + ' / ' + ohne);
+  await einstSeite(p, 'darst'); await p.click('#es-body [data-h="hapt"]');
+
+  /* 4. Kennzahlen im Gym: Trainingszeit ab, Rekorde dazu. Rekorde im November: am 12. Rudern (62,5 > 60) und Bankdrücken (erste Einheit zählt nicht),
+     am 23. Rudern (65) und Bankdrücken (82,5 > 80) → 3. Ø Dauer: (50 + 60 + 70) / 3 = 60 min. Sätze: 2 + 3 + 4 = 9. */
+  await einstSeite(p, 'gym');
+  const kz = () => p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="kz"]')].map(b => b.textContent + (b.getAttribute('aria-pressed') === 'true' ? '*' : '') + (b.getAttribute('aria-disabled') === 'true' ? '!' : '')).join(' '));
+  P.ok('Kennzahlen: drei gewählt (Verbesserung, Sätze besser, Trainingszeit), die übrigen gesperrt', (await kz()) === 'Verbesserung* Sätze besser* Trainingszeit* Rekorde! Ø Dauer! Pro Woche! Sätze!', await kz());
+  await p.click('#es-body [data-h="kz"][data-v="dur"]'); await p.click('#es-body [data-h="kz"][data-v="rek"]');
+  P.ok('Trainingszeit ab, Rekorde dazu', (await kz()) === 'Verbesserung* Sätze besser* Trainingszeit! Rekorde* Ø Dauer! Pro Woche! Sätze!' && JSON.stringify((await gespeichert(p)).E.kz) === '["p","bes","rek"]', await kz());
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  await bereich(p, 'training');
+  const kacheln = () => p.evaluate(() => [...document.querySelectorAll('#v-training .figs .fig')].map(f => [...f.children].map(c => c.textContent.trim()).filter(Boolean).join(' ')).join(' | '));
+  P.ok('Gym im November: Kacheln Verbesserung, Sätze besser, 3 Rekorde', /Verbesserung .*\| .*Sätze besser \| 3 Rekorde$/.test(await kacheln()), await kacheln());
+  await einstSeite(p, 'gym');
+  for (const k of ['p', 'bes', 'rek']) await p.click('#es-body [data-h="kz"][data-v="' + k + '"]');   // die letzte bleibt: mindestens eine
+  await p.click('#es-body [data-h="kz"][data-v="avg"]'); await p.click('#es-body [data-h="kz"][data-v="saetze"]');
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  P.ok('Mindestens eine bleibt (Rekorde), dazu Ø Dauer 60 min und 9 Sätze', (await kacheln()) === '3 Rekorde | 60 min Ø Dauer | 9 Sätze', await kacheln());
+
+  /* 5. Name des Plans auf der Seite „Gym“ */
+  await einstSeite(p, 'gym'); await p.fill('#es-pn', 'Oberkörper');
+  P.ok('Name des Plans aus den Einstellungen: steht über den Einheiten', (await text(p, '#v-training h2.sec')).startsWith('Oberkörper') && (await gespeichert(p)).K.pn === 'Oberkörper');
+
+  /* 6. Reihenfolge der Leiste: Heute am Griff um zwei Plätze nach unten ziehen → Planer, Gewicht, Heute, Finanzen, Training */
+  await einstSeite(p, 'ber');
+  const g = await p.evaluate(() => { const r = [...document.querySelectorAll('#es-reihe .prow')].map(x => x.getBoundingClientRect()), q = document.querySelector('#es-reihe .prow .griff').getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2, d: r[1].top - r[0].top }; });
+  await p.mouse.move(g.x, g.y); await p.mouse.down(); await p.mouse.move(g.x, g.y + g.d * 2.2, { steps: 8 }); await p.mouse.up(); await p.waitForTimeout(80);
+  const tabs = () => p.evaluate(() => [...document.querySelectorAll('.tabs-in .tab')].map(b => b.textContent.trim()).join(' '));
+  P.ok('Leiste in neuer Folge, gespeichert (E.reihe)', (await tabs()) === 'Planer Gewicht Heute Finanzen Training' && (await gespeichert(p)).E.reihe.join() === 'routinen,gewicht,heute,haushalt,training', await tabs());
+  P.ok('… auch in der Liste der Einstellungen', (await text(p, '#es-reihe')).replace(/\s+/g, ' ').trim() === 'Planer Gewicht Heute Finanzen Training');
+  P.ok('… und die Linse sitzt auf dem offenen Bereich (Heute, jetzt Platz 2)', await p.evaluate(() => document.body.dataset.v === 'heute' && document.querySelector('.tabs-in').style.getPropertyValue('--i') === '2'));
+
+  /* 7. Planer: neue Notizen oben, Schicht 3 Stunden (Beginn 15:00 bei jetzt 18:00), Stundenlohn 27,50 €, Ziel der Uni 20 */
+  await einstSeite(p, 'planer'); await p.click('#es-body [data-h="nNeu"]');
+  await zahlWahl(p, '#es-body [data-h="schicht"]', '3');
+  await zahlWahl(p, '#es-body [data-h="lohn"]', '27,5');
+  await zahlWahl(p, '#es-body [data-h="uniSoll"]', '20');
+  P.ok('Planer-Seite zeigt 3 Std, 27,50 € und 20', /3 Std.*27,50 €.*20/.test((await text(p, '#es-body')).replace(/\s+/g, ' ')), await text(p, '#es-body'));
+  const e = (await gespeichert(p));
+  P.ok('gespeichert: E.nNeu 1, E.schicht 180, E.uniSoll 20, N.work.rate 2750', e.E.nNeu === 1 && e.E.schicht === 180 && e.E.uniSoll === 20 && e.N.work.rate === 2750, JSON.stringify([e.E, e.N.work.rate]));
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  await bereich(p, 'routinen');
+  const notizen = () => p.evaluate(() => [...document.querySelectorAll('#n-main [data-n="note"] .ntxt')].map(x => x.textContent.trim()).join(','));
+  P.ok('Notizen: die neueste oben', (await notizen()) === 'Dritte,Zweite,Erste', await notizen());
+  await p.click('#r-subs [data-r="sub"][data-v="work"]'); await p.waitForTimeout(100); await p.click('#add'); await p.waitForTimeout(100);
+  P.ok('Arbeitszeit eintragen: Beginn 15:00, Ende 18:00 (Schicht 3 Stunden)', (await p.inputValue('#b-von')) === '15:00' && (await p.inputValue('#b-bis')) === '18:00', (await p.inputValue('#b-von')) + '–' + (await p.inputValue('#b-bis')));
+  await p.evaluate(() => document.querySelectorAll('dialog[open]').forEach(d => d.close()));
+  await p.click('#r-subs [data-r="sub"][data-v="uni"]'); await p.waitForTimeout(100);
+  P.enthaelt('Uni: „1 von 20 Terminen“', await text(p, '#n-main .hero'), ['1 von 20 Terminen']);
+
+  await o.browser.close();
+  /* 8. Beim Start gilt die gespeicherte Akzentfarbe (Pink), die Leiste steht in der gespeicherten Folge und die App öffnet mit dem ersten Bereich darin, wenn Heute aus ist */
+  const o2 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, K, N, E: { akz: 'pink', reihe: ['training', 'gewicht'], weg: { heute: 1 } } } }), q = o2.page;
+  const start = await q.evaluate(() => [document.documentElement.dataset.akz, [...document.querySelectorAll('.tabs-in .tab:not([hidden])')].map(b => b.textContent.trim()).join(' '), document.body.dataset.v].join(' | '));
+  P.ok('Start mit Pink, Leiste Training, Gewicht, Planer, Finanzen; ohne Heute öffnet Training (der erste)', start === 'pink | Training Gewicht Planer Finanzen | training', start);
+  await P.ende(null, o.fehler.concat(o2.fehler));
+  await o2.browser.close();
+});
