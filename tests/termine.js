@@ -423,6 +423,17 @@ lauf(async () => {
     await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
     const blk = await page.evaluate(() => { const e = document.querySelector('.tv[data-slot="0"] .tl-e[data-id="d"]'); return e.style.top + ' ' + e.style.height + ' ' + getComputedStyle(document.querySelector('#tl .tl-in')).height; });
     p.ok('Stundenhöhe Groß: Seminar 445 px oben, 94 px hoch, Zeitleiste 24 × 48 + 24 = 1176 px', blk === '445px 94px 1176px', blk);
+    /* Erinnerung bei neuen Terminen (v151): mit Uhrzeit „1 Tag“ (1440), ganztägig „Am Vortag“ (900) → so vorbelegt im Blatt und im Stand für die Schnelleingabe */
+    await zu(page); await einstSeite(page, 'kal');
+    p.ok('Erinnerung: vorgewählt 1 Std und Keine', (await page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="erZ"][aria-pressed="true"], #es-body [data-h="erG"][aria-pressed="true"]')].map(b => b.textContent).join(','))) === '1 Std,Keine');
+    await page.click('#es-body [data-h="erZ"][data-v="1440"]'); await page.click('#es-body [data-h="erG"][data-v="900"]'); await zu(page); await page.waitForTimeout(400);
+    const eg = (await gespeichert(page)).E, st = await page.evaluate(() => window.__post.filter(m => m.art === 'stand').pop());
+    p.ok('gespeichert (E.erZ 1440, E.erG 900) und im Stand für die iPhone-App', eg.erZ === 1440 && eg.erG === 900 && st.erZ === 1440 && st.erG === 900, JSON.stringify([eg.erZ, eg.erG, st.erZ, st.erG]));
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Neuer Termin ohne Uhrzeit (ganztägig): „Am Vortag“ vorgewählt', (await blatt(page)).er === 'Am Vortag', JSON.stringify(await blatt(page)));
+    await page.fill('#te-text', 'Arzt 15 Uhr');
+    p.ok('… mit Uhrzeit: „1 Tag“', (await blatt(page)).er === '1 Tag', JSON.stringify(await blatt(page)));
+    await zu(page);
     p.ok('Keine Fehler (Stundenhöhe)', !fehler.length, fehler.join());
     await browser.close();
   }

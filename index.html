@@ -1531,7 +1531,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v150</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v151</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -5656,6 +5656,11 @@ function eSeiteHTML(k) {
   if (k === 'kal') return '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
       actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) + '</ul>' +
       /* Kalender ein und aus (v147 nur fürs Eintragen, seit v148 überall): je Kalender ein Schalter mit seiner Farbe; der letzte beschreibbare, der an ist, ist gesperrt */
+      /* Erinnerung bei neuen Terminen (v151): dieselbe, die das Blatt vorbelegt und die Schnelleingabe der iPhone-App nimmt; eine andere Wahl im Blatt gilt ab dann wie bisher */
+      (kalAn() && kal.recht === 'an' ? secHTML('Erinnerung bei neuen Terminen') + '<div class="card es-start"><p class="note">Mit Uhrzeit</p><div class="chips" role="group" aria-label="Erinnerung mit Uhrzeit">' +
+        [['aus', 'Keine']].concat(ER_Z).map(q => '<button type="button" class="chip" data-h="erZ" data-v="' + q[0] + '" aria-pressed="' + (String(E.erZ != null ? E.erZ : 60) === String(q[0])) + '">' + q[1] + '</button>').join('') +
+        '</div><p class="note">Ganztägig</p><div class="chips" role="group" aria-label="Erinnerung ganztägig">' +
+        [['aus', 'Keine']].concat(ER_G).map(q => '<button type="button" class="chip" data-h="erG" data-v="' + q[0] + '" aria-pressed="' + (String(E.erG != null ? E.erG : 'aus') === String(q[0])) + '">' + q[1] + '</button>').join('') + '</div></div>' : '') +
       (kalAn() && kal.recht === 'an' ? secHTML('Stundenhöhe') + '<div class="card es-start"><div class="chips" role="group" aria-label="Stundenhöhe">' +
         [[28, 'Kompakt'], [36, 'Normal'], [48, 'Groß']].map(q => '<button type="button" class="chip" data-h="kalH" data-v="' + q[0] + '" aria-pressed="' + ((E.kalH || 36) === q[0]) + '">' + q[1] + '</button>').join('') + '</div><p class="note">So viel Platz hat eine Stunde im Tag des Kalenders.</p></div>' : '') +
       (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? secHTML('Kalender' + INFO('kal')) + '<ul class="entries">' + kalAlle().map(q => '<li>' + schalter('kalNein', '<i class="kf"' + (q.f ? ' style="background:' + q.f + '"' : '') + '></i>' + esc(q.n), (E.kalNein || []).indexOf(q.id) < 0, esc(q.id)).replace('<button', '<button data-w="' + (q.w ? 1 : 0) + '"') + '</li>').join('') + '</ul>' : '') +
@@ -5727,6 +5732,10 @@ function einstAct(t) {
   else if (a === 'akz') { setE({ akz: v === 'blau' ? null : v }); akzSetzen(); document.querySelectorAll('#es-body [data-h="akz"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'hapt') setE({ hapt: an ? null : 0 });
   else if (a === 'licht') { setE({ licht: an ? null : 0 }); akzSetzen(); }
+  else if (a === 'erZ' || a === 'erG') {
+    setE(a === 'erZ' ? { erZ: v === 'aus' ? 'aus' : +v === 60 ? null : +v } : { erG: v === 'aus' ? null : +v });
+    document.querySelectorAll('#es-body [data-h="' + a + '"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return;
+  }
   else if (a === 'kalH') { setE({ kalH: +v === 36 ? null : +v }); document.querySelectorAll('#es-body [data-h="kalH"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else if (a === 'kz') {
     /* Kennzahlen: höchstens drei, mindestens eine; sie stehen in der Reihenfolge der Liste */
