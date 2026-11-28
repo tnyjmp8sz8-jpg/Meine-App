@@ -55,7 +55,7 @@ struct NotizAbhaken: AppIntent {
 }
 
 /// Kapsel zum schnellen Eintragen im Widget: Plus in der Farbe des Bereichs, dahinter das Wort. Notiz und Ausgabe öffnen die Schnelleingabe (Schnell.swift),
-/// Termin (ab 1.4) die App mit dem Blatt „Termin“. Seit v131 gibt es auf Heute keine Reihe mit Schnell-Knöpfen mehr (sein Wunsch): Hier ist ihr Platz.
+/// seit 1.6 auch Termin (1.4 und 1.5 öffneten die App mit dem Blatt „Termin“). Seit v131 gibt es auf Heute keine Reihe mit Schnell-Knöpfen mehr (sein Wunsch): Hier ist ihr Platz.
 func widgetKnopf(_ titel: String, _ ziel: String, _ farbe: Color, _ f: Farben) -> some View {
     Link(destination: URL(string: ziel)!) {
         HStack(spacing: 3) {
@@ -83,7 +83,7 @@ struct NotizenAnsicht: View {
                 if knoepfe {
                     widgetKnopf("Notiz", "trackpunkt://schnell/notiz", f.blau, f)
                     widgetKnopf("Ausgabe", "trackpunkt://schnell/ausgabe", f.orange, f)
-                    widgetKnopf("Termin", "trackpunkt://neu/termin", f.blau, f)
+                    widgetKnopf("Termin", "trackpunkt://schnell/termin", f.blau, f)
                 }
             }
             .frame(height: 28)
@@ -201,7 +201,7 @@ struct TagAnsicht: View {
             }
             .frame(height: 134, alignment: .topLeading)
             Rectangle().fill(f.spur).frame(height: 0.5).padding(.vertical, 8)
-            kopf("Kalender", [("Termin", "trackpunkt://neu/termin", f.blau)])
+            kopf("Kalender", [("Termin", "trackpunkt://schnell/termin", f.blau)])
             Link(destination: URL(string: "trackpunkt://neu/kalender")!) {
                 VStack(alignment: .leading, spacing: 0) {
                     ForEach(Array(zeilen().enumerated()), id: \.offset) { zeile($0.element) }

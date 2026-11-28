@@ -341,9 +341,22 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
         }
         // Wörter für Händler, die die Web-App selbst einsortiert (ab 1.4): Bei ihnen fragt „Ausgabe eintragen“ nicht nach
         let muster: [String] = (inhalt["muster"] as? [Any] ?? []).compactMap { $0 as? String }
-        let widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? [],
+        var widget: [String: Any] = ["tage": inhalt["tage"] ?? [], "notizen": inhalt["notizen"] ?? [], "nz": inhalt["nz"] ?? [],
                                      "konten": konten, "konto": inhalt["konto"] as? String ?? "",
                                      "kats": kats, "haendler": haendler, "zahlen": Array(zahlen.prefix(4)), "muster": muster]
+        // Für die Schnelleingabe „Termin“ (ab 1.6, v147): Kalender zur Wahl (nur mit Kennung und Name, Farbe nur als #RRGGBB), der vorbelegte, die Erinnerungen.
+        // Fehlen sie (ältere Web-App, kein Zugriff auf den Kalender), bleibt alles weg: Dann trägt die Schnelleingabe in den Kalender von iOS ein, mit 60 Minuten Erinnerung.
+        if let roh = inhalt["kals"] as? [[String: Any]] {
+            widget["kals"] = roh.compactMap { eins -> [String: String]? in
+                guard let id = eins["id"] as? String, let n = eins["n"] as? String else { return nil }
+                var k = ["id": id, "n": n]
+                if let f = eins["f"] as? String, f.count == 7, f.hasPrefix("#") { k["f"] = f }
+                return k
+            }
+            widget["kal"] = inhalt["kal"] as? String ?? ""
+            if let z = (inhalt["erZ"] as? NSNumber)?.doubleValue { widget["erZ"] = z }
+            if let g = (inhalt["erG"] as? NSNumber)?.doubleValue { widget["erG"] = g }
+        }
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
             // Ist gerade die Schnelleingabe offen, liest sie die Konten neu: Nach einem Kaltstart aus dem Widget kommt der Stand erst jetzt
@@ -427,6 +440,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             // Kalender (Kalender.swift, ab 1.3): anlegen, lesen, ändern, löschen im Kalender des Simulators („an|1|60|30|1|0“),
             // dazu, was davon in der Web-App angekommen ist (Zustand und ob eine Liste da ist: „an|liste“)
             alles["kalender"] = Termine.shared.pruefung()
+            // Schnelleingabe „Termin“ (ab 1.6): Tag und Uhrzeit aus dem Satz, Rechnung in TerminLesen.pruefung()
+            alles["terminLesen"] = TerminLesen.pruefung()
             alles["kalenderWeb"] = kalender
             // Rechnung: Sicherung fällig am 20.11.2026, jetzt 17.11. mittags → 5 Termine, der erste am 20.11. um 18 Uhr, der zweite am 23.11.
             let jetzt = Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 17, hour: 12)) ?? Date()

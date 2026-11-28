@@ -15,6 +15,12 @@ struct Stand: Codable {
         var id: String      // Kennung in der Web-App
         var n: String       // Name
     }
+    /// Ein Kalender zur Wahl in der Schnelleingabe „Termin“ (ab 1.6, v147 der Web-App)
+    struct Kal: Codable {
+        var id: String      // Kennung im Kalender von Apple
+        var n: String       // Name
+        var f: String?      // Farbe #RRGGBB
+    }
     /// Eine Zahl für das Widget „Überblick“ (ab v106 der Web-App, höchstens vier, in dieser Reihenfolge)
     struct Zahl: Codable {
         var b: String       // Bereich: training, gewicht, cardio, haushalt (bestimmt die Farbe)
@@ -33,6 +39,12 @@ struct Stand: Codable {
     var haendler: [String]? // Händler (klein geschrieben), die schon einsortiert sind: Bei ihnen wird nicht gefragt
     var zahlen: [Zahl]?     // für das Widget „Überblick“ (ab 1.2)
     var muster: [String]?   // Wörter für Händler, die die Web-App selbst einsortiert (ab 1.4, v131): Bei ihnen fragt „Ausgabe eintragen“ nicht nach der Kategorie
+    // Für die Schnelleingabe „Termin“ (ab 1.6, v147 der Web-App, wahlfrei): die Kalender, die er in der App zum Eintragen anbietet, der vorbelegte
+    // und die zuletzt gewählten Erinnerungen in Minuten vor dem Beginn (mit Uhrzeit und ganztägig; fehlt die Angabe: keine)
+    var kals: [Kal]?
+    var kal: String?
+    var erZ: Double?
+    var erG: Double?
 
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]
@@ -132,6 +144,9 @@ enum Ablage {
         // Ab 1.5 unten anfügen: In der App steht die älteste Notiz oben, neue kommen unten dazu (v133)
         standAendern { $0.nz = ($0.nz ?? []) + [Stand.Notiz(id: "neu-" + id, x: zeile)] }
     }
+
+    /// Kalender in der Schnelleingabe gewählt: Beim nächsten Mal ist er vorbelegt, auch bevor die App den Auftrag übernommen hat
+    static func kalGewaehlt(_ id: String) { standAendern { $0.kal = id } }
 
     /// Abhaken im Widget. Eine Notiz, die selbst erst vorgemerkt ist, wird einfach wieder gestrichen.
     static func notizWeg(_ id: String) {

@@ -1,6 +1,6 @@
 #!/bin/bash
 # Baut die iPhone-App und prüft sie im Simulator. Läuft auf einem Mac mit Xcode: bei GitHub (.github/workflows/ios.yml) oder bei Codemagic (codemagic.yaml).
-# Ergebnis im Ordner ios/: Track.ipa (unsigniert, zum Installieren mit AltStore), simulator.png, widget.png, schnell-*.png, pruefung-1…3.json.
+# Ergebnis im Ordner ios/: Track.ipa (unsigniert, zum Installieren mit AltStore), simulator.png, widget.png, schnell-*.png (Notiz, Ausgabe, Termin), pruefung-1…3.json.
 # Die IPA entsteht erst, wenn alle Prüfungen bestanden sind.
 set -eo pipefail
 cd "$(dirname "$0")"
@@ -92,6 +92,10 @@ xcrun simctl io "$GERAET" screenshot schnell-ausgabe.png
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
 xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -schnellkonten -schnelloffen; sleep 5
 xcrun simctl io "$GERAET" screenshot schnell-ausgabe-offen.png
+# Termin (1.6): ein Satz, darunter was eingetragen wird, und die Kalender (drei Beispielkalender)
+xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell termin -schnellkonten; sleep 5
+xcrun simctl io "$GERAET" screenshot schnell-termin.png
 # Mit „-schnellprobe“ trägt sie von selbst „Schnell notiert“ ein und geht zurück auf den Home-Bildschirm (Bild danach).
 # Die Notiz muss dann im gemeinsamen Ordner für das Widget stehen.
 xcrun simctl terminate "$GERAET" de.trackapp.track; sleep 2
@@ -108,6 +112,17 @@ xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell ausgabe -sc
 echo "SCHNELLPROBE: $(cat "$DATEN/Documents/schnellprobe.json" 2>/dev/null || echo 'keine Datei')"
 grep -q '"k":"in"' "$DATEN/Documents/schnellprobe.json"
 grep -q '"acc":"b2"' "$DATEN/Documents/schnellprobe.json"
+# Dasselbe für den Termin (1.6): Die Probe schreibt „Track Schnellprobe morgen 15 Uhr“ und wählt den zweiten Beispielkalender (b2, den es nicht gibt: dann der von iOS).
+# Im Kalender muss genau ein Termin „Track Schnellprobe“ stehen, 60 Minuten lang, nicht ganztägig, ohne Fehler (danach löscht die Probe ihn wieder).
+xcrun simctl terminate "$GERAET" de.trackapp.track || true; sleep 2
+rm -f "$DATEN/Documents/schnellprobe.json"
+xcrun simctl launch "$GERAET" de.trackapp.track -ohneFragen -schnell termin -schnellkonten -schnellprobe; sleep 7
+echo "TERMINPROBE: $(cat "$DATEN/Documents/schnellprobe.json" 2>/dev/null || echo 'keine Datei')"
+grep -q '"t":"Track Schnellprobe"' "$DATEN/Documents/schnellprobe.json"
+grep -q '"gefunden":1' "$DATEN/Documents/schnellprobe.json"
+grep -q '"minuten":60' "$DATEN/Documents/schnellprobe.json"
+grep -q '"fehler":""' "$DATEN/Documents/schnellprobe.json"
+grep -q '"kal":"b2"' "$DATEN/Documents/schnellprobe.json"
 # Speicher übersteht Neustarts · Web-App und Hülle sind verbunden · der Stand liegt für das Widget bereit (8 Tage) · Plan der Mitteilungen stimmt
 grep -q '"starts":3' pruefung-3.json
 grep -q '"bruecke":true' pruefung-3.json
@@ -138,6 +153,8 @@ grep -q '"kalender":"an|1|60|30|1|0|1|k"' pruefung-3.json
 # Händler, die die App selbst einsortiert (1.4): Wörter im Stand, Regel wie in der App
 grep -q '"muster":true' pruefung-3.json
 grep -q '"kalenderWeb":"an|liste"' pruefung-3.json
+# Schnelleingabe „Termin“ (1.6): Tag und Uhrzeit aus dem Satz wie in der App (Rechnung in TerminLesen.swift)
+grep -q '"terminLesen":"Zahnarzt|2026-11-29|900|960;Kino|2026-12-04|1215|1275;Klausur|2026-12-03|540|660;Treffen|2027-01-02|540|600;guten Morgen sagen|-|-|-;Urlaub|2026-12-24|-|-"' pruefung-3.json
 grep -q 'sicherung-0 20.11. 18:00, sicherung-1 23.11. 18:00' pruefung-3.json
 grep -q 'ablauf 20.11. 12:00' pruefung-3.json
 mv Track.ipa.neu Track.ipa

@@ -1701,6 +1701,8 @@ function normE(o) {
     if (o.erZ === 'aus' || (typeof o.erZ === 'number' && isFinite(o.erZ) && o.erZ !== 60)) out.erZ = o.erZ;
     if (typeof o.erG === 'number' && isFinite(o.erG)) out.erG = o.erG;
     if (typeof o.kalW === 'string' && o.kalW && o.kalW.length <= 200) out.kalW = o.kalW;   // zuletzt gewählter Kalender für neue Termine (v131)
+    /* Kalender, die beim Eintragen nicht zur Wahl stehen (v147, sein Wunsch 28.11.: nur seine drei); Kennungen aus Apples Kalender */
+    if (Array.isArray(o.kalNein)) { const l = o.kalNein.filter(x => typeof x === 'string' && x && x.length <= 200).slice(0, 60); if (l.length) out.kalNein = l; }
   }
   return out;
 }
@@ -4902,8 +4904,13 @@ const tedlg = $('#tesheet'); let teE = null;
 const ER_Z = [[15, '15 min'], [60, '1 Std'], [1440, '1 Tag']], ER_G = [[-540, 'Am Tag'], [900, 'Am Vortag']];
 /* Kalender, in den der Termin kommt (v131, sein Wunsch: „beim Eintragen für geteilten Kalender auswählen oder meinen eigenen privaten“): nur mit mindestens zwei, in die er schreiben darf.
    Neu: der zuletzt hier gewählte (E.kalW), sonst der, den iOS für neue Termine nimmt. Vorhanden: sein Kalender; bei einem, der sich wiederholt, keine Wahl (iOS verschiebt ein einzelnes Vorkommen nicht). */
+/* Zur Wahl beim Eintragen (v147): die Kalender, die in den Einstellungen an sind. Sind alle aus oder gibt es keinen davon mehr, alle. Vorbelegt: zuletzt gewählt, sonst der von iOS, sonst der erste. */
+const kalWahl = () => { const ks = kal.kals || [], nein = E.kalNein || [], l = ks.filter(k => nein.indexOf(k.id) < 0); return l.length ? l : ks; };
+const kalStd = () => { const ks = kalWahl(); return (ks.find(k => k.id === E.kalW) || ks.find(k => k.std) || ks[0] || {}).id || ''; };
 function teKals() {
-  const ks = kal.kals || [], zeig = ks.length > 1 && !teE.fest && !(teE.ev && teE.ev.r);
+  const ks = kalWahl().slice(), eig = teE.ev && (kal.kals || []).find(k => k.id === teE.ev.ki);
+  if (eig && ks.indexOf(eig) < 0) ks.unshift(eig);   // ein Termin aus einem abgeschalteten Kalender zeigt seinen eigenen trotzdem
+  const zeig = ks.length > 1 && !teE.fest && !(teE.ev && teE.ev.r);
   $('#te-kalf').hidden = !zeig; if (!zeig) return;
   $('#te-kal').innerHTML = ks.map(k => '<button type="button" class="chip" data-kal="' + esc(k.id) + '" aria-pressed="' + (teE.kal === k.id) + '"><i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n) + '</button>').join('');
 }
@@ -4922,8 +4929,7 @@ function openTe(id, s, tag, min) {
   const tag0 = x ? kalVon(x) : isKey(tag) ? tag : todayKey(), er = x && typeof x.er === 'number' ? x.er : 'aus';
   teE = { id: x ? x.id : null, s0: x ? x.s : 0, ev: x, tag0, g: x ? !!x.g : true, fest: !!x && !x.w, lang: !!x && !x.g && x.e - x.s > 864e5, er0: er, dauer: x && !x.g ? Math.round((x.e - x.s) / 6e4) : 60, hand: { tag: false, zeit: false, bis: false },
     erZ: x && !x.g ? er : E.erZ != null ? E.erZ : 60, erG: x && x.g ? er : E.erG != null ? E.erG : 'aus' };
-  const ks = kal.kals || [], gibt = id => ks.some(k => k.id === id);
-  teE.kal = teE.kal0 = x ? x.ki || '' : gibt(E.kalW) ? E.kalW : (ks.find(k => k.std) || ks[0] || {}).id || '';
+  teE.kal = teE.kal0 = x ? x.ki || '' : kalStd();
   $('#te-lab').textContent = x ? 'Titel' : 'Was und wann';
   $('#te-title').textContent = nein ? 'Termine' : x ? (teE.fest ? 'Termin' : 'Termin ändern') : 'Termin eintragen';
   $('#te-nein').hidden = !nein; $('#te-in').hidden = nein;
@@ -5000,7 +5006,7 @@ $('#teform').addEventListener('submit', e => {
   if ('er' in o) { if (o.er == null) delete y.er; else y.er = o.er; }
   /* Kalender: neu immer mit, wenn es eine Wahl gibt; beim Ändern nur, wenn er gewechselt wurde. Die Farbe folgt sofort, bis der Kalender die Liste neu schickt. */
   const kz = (kal.kals || []).find(k => k.id === teE.kal);
-  if (kz && !$('#te-kalf').hidden && (!teE.id || teE.kal !== teE.kal0)) { o.kal = kz.id; y.ki = kz.id; y.k = kz.n; if (kz.f) y.f = kz.f; else delete y.f; if (!teE.id && E.kalW !== kz.id) setE({ kalW: kz.id }); }
+  if (kz && (!teE.id || (!$('#te-kalf').hidden && teE.kal !== teE.kal0))) { o.kal = kz.id; y.ki = kz.id; y.k = kz.n; if (kz.f) y.f = kz.f; else delete y.f; if (!teE.id && E.kalW !== kz.id) setE({ kalW: kz.id }); }
   kal.liste = kal.liste.filter(z => !(alt && z.id === alt.id && z.s === alt.s)).concat(y).sort((p, q) => p.s - q.s); kalMap = null;
   hPost(o); closeDlg(tedlg);
 });
@@ -5285,7 +5291,7 @@ function paintE() {
     secHTML('Bereiche' + INFO('ber')) + '<ul class="entries" id="es-ber">' + BER.map(q => '<li>' + schalter('ber', q[1], istAn(q[0]), q[0]) + '</li>').join('') + '</ul>' +
     '<p class="note" id="info-ber" hidden>Was aus ist, verschwindet aus der Leiste unten und von Heute. Die Daten bleiben gespeichert und sind wieder da, sobald du den Bereich einschaltest. Ist Heute aus, steht das Zahnrad im ersten Bereich.</p>' +
     '<div id="es-rest">' + einstRestHTML() + '</div>';
-  berEinzig();
+  berEinzig(); kalEinzig();
 }
 /* Der letzte eingeschaltete Bereich lässt sich nicht abschalten: Sein Schalter ist gesperrt, bis ein zweiter an ist. */
 function berEinzig() { const b = [...document.querySelectorAll('#es-ber .sch')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
@@ -5302,11 +5308,15 @@ function einstRestHTML() {
     '<p class="note" id="info-emp" hidden>Im Training schlägt die App für jeden Satz Gewicht und Wiederholungen vor. Erst mehr Wiederholungen bis ans obere Ende des Bereichs (8–12, je Übung im Training änderbar), dann mehr Gewicht, sobald der erste Satz oben ankommt (den Schritt legst du im Training je Übung fest). Sie lernt aus deinen Einheiten, um wie viele Wiederholungen du von Satz zu Satz nachlässt, und plant die späteren Sätze danach. Nach jedem abgehakten Satz passt sie den nächsten an das an, was du gerade geschafft hast. Mit „Nach der Reserve fragen“ tippst du dazu an, wie viele Wiederholungen noch gegangen wären: 0 und 1 gelten als hart genug, ab 2 traut sie dir mehr zu. Aus: Es stehen nur die Werte vom letzten Mal da.</p>') +
     /* Kalender (v130, nur in der iPhone-App ab 1.3): Termine an oder aus; hat iOS den Zugriff abgelehnt, führt die zweite Zeile in die Einstellungen des iPhones */
     (!kalKann() ? '' : secHTML('Kalender' + INFO('kal')) + '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
-      actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) + '</ul>' +
-    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft.</p>');
+      actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) +
+      /* Welche Kalender beim Eintragen zur Wahl stehen (v147): je Kalender ein Schalter mit seiner Farbe; der letzte eingeschaltete ist gesperrt */
+      (kalAn() && kal.recht === 'an' && (kal.kals || []).length > 1 ? '<li class="grp">Zum Eintragen anbieten</li>' + kal.kals.map(k => '<li>' + schalter('kalNein', '<i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n), kalWahl().indexOf(k) >= 0, esc(k.id)) + '</li>').join('') : '') + '</ul>' +
+    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Unter „Zum Eintragen anbieten“ wählst du, welche Kalender beim Eintragen zur Wahl stehen; Termine aus allen bleiben zu sehen.</p>');
 }
 const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
+/* Wie berEinzig: Der letzte Kalender zum Eintragen lässt sich nicht abschalten */
+function kalEinzig() { const b = [...document.querySelectorAll('#es-body [data-h="kalNein"]')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
 /* Schalter und Wahl in den Einstellungen. Der Schalter wird an Ort und Stelle umgelegt (kein neues Zeichnen: So gleitet er).
    emp: Empfehlung im Training; läuft gerade ein Training, verschwinden Zeile und Bereich sofort, vorbelegt wird ab der nächsten Übung anders. res: die Frage nach der Reserve.
    ov: eine Zeile der Übersicht auf Heute. start: der Bereich, mit dem die App öffnet.
@@ -5324,6 +5334,12 @@ function einstAct(t) {
   else if (a === 'ov') { const aus = Object.assign({}, E.aus); if (an) delete aus[v]; else aus[v] = 1; setE({ aus }); renderHome(); }
   else if (a === 'kal') { setE({ kal: an ? null : 0 }); if (an) hPost({ art: kal.recht === 'an' || kal.recht === 'nein' ? 'termine' : 'terminAn' }); $('#es-kaln').hidden = !(an && kal.recht === 'nein'); renderHome(); }
   else if (a === 'kalEinst') return hPost({ art: 'einstellungen' });
+  else if (a === 'kalNein') {
+    const nein = (E.kalNein || []).filter(id => id !== v && (kal.kals || []).some(k => k.id === id));   // Kennungen von Kalendern, die es nicht mehr gibt, fallen dabei weg
+    if (!an) nein.push(v);
+    if (!(kal.kals || []).some(k => nein.indexOf(k.id) < 0)) return;
+    setE({ kalNein: nein }); t.setAttribute('aria-checked', an); kalEinzig(); return;
+  }
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else return bkAct(a);
   t.setAttribute('aria-checked', an);
@@ -5795,6 +5811,15 @@ function hZahlen() {
   else if (hasMoney()) { const b = mSum(curYM).bal; z.push({ b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
   return z.slice(0, 4).map(x => ({ b: x.b, t: hCut(x.t, 20), w: hCut(x.w, 24), s: hCut(x.s, 32) }));
 }
+/* Für die Schnelleingabe „Termin“ der iPhone-App (ab 1.6, v147): die Kalender zur Wahl (wie im Blatt), der vorbelegte und die zuletzt gewählten Erinnerungen
+   (Minuten vor dem Beginn; fehlt die Angabe, keine). Ohne Zugriff auf den Kalender nichts davon. */
+function hKal() {
+  if (kal.recht !== 'an') return {};
+  const o = { kals: kalWahl().map(k => Object.assign({ id: k.id, n: hCut(k.n, 40) }, k.f ? { f: k.f } : {})), kal: kalStd() }, z = E.erZ != null ? E.erZ : 60, g = E.erG;
+  if (typeof z === 'number') o.erZ = z;
+  if (typeof g === 'number') o.erG = g;
+  return o;
+}
 function hStand() {
   const tk = todayKey(), tage = [];
   for (let i = 0; i < 8; i++) {
@@ -5810,7 +5835,7 @@ function hStand() {
   for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c) zahl[t.c] = (zahl[t.c] || 0) + 1; } }
   const kats = allCats().map((k, i) => ({ id: k[0], n: hCut(MF.cats && MF.cats[k[0]] ? MF.cats[k[0]].n : k[1], 40), i })).sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || (zahl[b.id] || 0) - (zahl[a.id] || 0) || a.i - b.i).map(k => ({ id: k.id, n: k.n }));
   const haendler = [...hk.keys()].sort((a, b) => (hk.get(b).d > hk.get(a).d) - (hk.get(b).d < hk.get(a).d) || (hk.get(b).t || 0) - (hk.get(a).t || 0)).slice(0, 300);
-  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, muster: katMuster(), zahlen: hZahlen() };
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, muster: katMuster(), zahlen: hZahlen(), ...hKal() };
 }
 /* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
@@ -5955,6 +5980,9 @@ function hEingang(list) {
       /* Nachtrag: Beim Bezahlen wurde nach der Kategorie gefragt, die Ausgabe (Auftrag zu) war da schon gebucht. Gilt nur für eine Ausgabe, die es noch gibt, und eine Kategorie, die es gibt. */
       for (const y in MY) { const alt = ((MY[y] || {}).tx || {})[c.zu];
         if (alt && alt.k === 'out' && allCats().some(k => k[0] === c.kid)) { const p = { tx: {} }; p.tx[c.zu] = Object.assign({}, alt, { c: c.kid }); mdoc(y).patch(p); } }
+    } else if (c.art === 'kalwahl') {
+      /* In der Schnelleingabe „Termin“ (iPhone-App ab 1.6) einen anderen Kalender gewählt: Er ist beim nächsten Termin vorbelegt, wie nach einer Wahl im Blatt */
+      if (typeof c.kal === 'string' && c.kal && c.kal.length <= 200) setE({ kalW: c.kal });
     } else if (c.art === 'lauf') healthRuns([c.lauf]);
     else if (c.art === 'gym') gymUhr(c.gym);
   });
@@ -6072,10 +6100,11 @@ if (HUELLE) window.TrackHuelle = {
   /* Termine aus dem Kalender (iPhone-App ab 1.3): beim Start, beim Zurückkommen und nach jeder Änderung dort. Gezeichnet wird nur, wenn sich etwas geändert hat.
      Hat er „Termin“ angetippt, bevor iOS gefragt wurde (kalWill), öffnet sich das Blatt jetzt: mit der Erlaubnis zum Eintragen, ohne sie mit dem Weg in die Einstellungen. */
   termine(o) {
-    const neu = kalNorm(o); if (!neu.recht) return;
+    const neu = kalNorm(o), alt = kal; if (!neu.recht) return;
     const gleich = neu.recht === kal.recht && JSON.stringify(neu.liste) === JSON.stringify(kal.liste);
     kal = neu; kalMerk();
-    if (!gleich) { kalNeu(); if (edlg.open) $('#es-rest').innerHTML = einstRestHTML(); }
+    if (!gleich) { kalNeu(); if (edlg.open) { $('#es-rest').innerHTML = einstRestHTML(); kalEinzig(); } }
+    if (JSON.stringify(neu.kals) !== JSON.stringify(alt.kals)) hSoon();   // die Kalender zur Wahl gehen an die Schnelleingabe der iPhone-App
     const t = kalWill; kalWill = '';
     if (t && neu.recht !== 'fehlt' && !document.querySelector('dialog[open]')) openTe(null, 0, t);
   },

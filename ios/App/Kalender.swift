@@ -171,6 +171,24 @@ final class Termine {
         return ""
     }
 
+    /// Nach der Schnelleingabe (ab 1.6): Das große Widget zeigt den neuen Termin sofort, auch wenn die Web-App gerade nicht läuft
+    func widgetNeu() {
+        reihe.async {
+            if Tagesblick.merken(Tagesblick.ausKalender(self.lager, Date())) { WidgetCenter.shared.reloadTimelines(ofKind: "tag") }
+        }
+    }
+
+    /// Nur für die Probe der Schnelleingabe im Bau: Wie viele Termine mit diesem Titel stehen heute bis übermorgen im Kalender? Danach werden sie gelöscht.
+    func probeTitel(_ titel: String) -> Int {
+        guard zustand == "an", !titel.isEmpty else { return -1 }
+        return reihe.sync {
+            let tag = Calendar.current.startOfDay(for: Date())
+            let treffer = lager.events(matching: lager.predicateForEvents(withStart: tag, end: tag.addingTimeInterval(3 * 86400), calendars: nil)).filter { $0.title == titel }
+            for t in treffer { try? lager.remove(t, span: .thisEvent, commit: true) }
+            return treffer.count
+        }
+    }
+
     /// Löscht einen Termin ({ id, s0 }), bei einem, der sich wiederholt, nur dieses Vorkommen. Ist er schon weg, gilt das als gelungen.
     func loeschen(_ auftrag: [String: Any], _ dann: @escaping (String) -> Void) {
         guard zustand == "an" else { return dann("Track. darf den Kalender nicht benutzen.") }
