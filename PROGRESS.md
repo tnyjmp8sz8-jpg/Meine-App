@@ -1,7 +1,8 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v154 (28.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v154): alle 20 Reihen. Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine und Einstellungen laufen immer mit fester Uhr.
+- App-Inhalt (`index.html`): v155 (28.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v155): alle 20 Reihen. Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine und Einstellungen laufen immer mit fester Uhr.
+- v155 (28.11., weiter am Auftrag „Add-ons … nicht aufhören“): Einstellungen → Widget (nur in der iPhone-App): Zeilen des Widgets „Überblick“ an und aus (höchstens vier, das kleine zeigt die ersten zwei) und am Griff ordnen; neu wählbar Arbeit (Verdienst im Monat) und Uni (Punkte). Ohne neue Installation: Die Zeilen baut die App. Am iPhone ungeprüft. Geprüft: Einstellungen 58.
 - v154 (28.11., weiter am Auftrag „Add-ons … nicht aufhören“): Standard-Kalender für neue Termine (Einstellungen → Kalender, „Neue Termine in“; auch für die Schnelleingabe im Widget), Sätze je neuer Übung (Einstellungen → Gym, 1 bis 6, Vorgabe 3), der Messwert im Cardio-Graphen (Effizienz oder Pace) bleibt gewählt. Geprüft: Einstellungen 52, Termine 148.
 - v153 (28.11., weiter an seinem Auftrag „anpassbare Add-ons … nicht aufhören“): Ziele je Monat, nur da, wenn eingestellt: Kilometer im Cardio (neue Seite „Cardio“ in den Einstellungen) und Verdienst bei der Arbeit (Seite Planer). Unter der großen Zahl eine Linie, darunter „Ziel …“ und „noch …“, „erreicht“ in Grün; in früheren Monaten der Anteil. Geprüft: Einstellungen 48.
 - v152 (28.11., zwei Bildschirmfotos von Gym mit v151, Monat und Jahr: „Übungen und Einheiten wegmachen, irgendwo anders hin, unter Plan-Einstellungen oder so“ und „Möglichkeit geben auf Wechseln der Statistik, z. B. Verbesserung Kurve etc., was Sinn macht; gleiches bei Cardio“; dazu weitere Wahl in den Einstellungen): (1) Übungen und Einheiten stehen im Blatt „Plan“ (Anpassen) mit einem Umschalter; die Gym-Ansicht endet mit dem Plan. (2) Jahresgrafik mit Auswahlmenü wie in iOS: Gym Einheiten, Trainingszeit, Rekorde, Sätze besser (Balken) oder Verbesserung (Kurve); Cardio Kilometer, Läufe, Laufzeit (Balken) oder Pace, Effizienz (Kurve); die Wahl bleibt. (3) Beträge verbergen (Darstellung), Kalenderwochen (Kalender), Schnitt im Gewicht über 7 oder 14 Tage (neue Seite Gewicht). Am Bild belegt: Bei ihm läuft v151 mit „Torso & Ex“ als Planname und den Kennzahlen Verbesserung, Sätze besser, Rekorde. Geprüft: Einstellungen 39, Gym 253, Termine 144, Klappzeilen 141.
@@ -76,6 +77,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v135: Kalender auf Heute nur mit Terminen aus Apples Kalender.
 - v136: Gym „Statistik ab“ (November-Einheiten zählen, aber nicht für Fortschritt); Arbeit mit Umsatz pro Stunde und „Frühere Monate“.
 - v137: Blatt schließt nicht mehr beim Tipp ins Feld; Umsatz mit Monat und Schnitt der früheren Monate; Jahr mit „Frühere Monate“.
+- v155: Widget „Überblick“ anpassbar (Zeilen, Reihenfolge, neu Arbeit und Uni).
 - v154: Standard-Kalender, Sätze je neuer Übung, Messwert im Cardio gemerkt.
 - v153: Ziele je Monat (Kilometer im Cardio, Verdienst bei der Arbeit).
 - v152: Übungen und Einheiten im Blatt „Plan“; Jahresgrafik wählbar (Gym, Cardio); Beträge verbergen, Kalenderwochen, Schnitt über 14 Tage.

@@ -841,7 +841,7 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .es-nav b svg,.es-wert b svg{width:13px;height:13px}
 #es-body .chip[aria-disabled="true"]{opacity:.38}
 .es-reihe{display:flex;flex-direction:column;gap:6px}
-#es-reihe .prow,#es-ovr .prow{transition:transform .18s ease}
+#es-reihe .prow,#es-ovr .prow,#es-wor .prow{transition:transform .18s ease}
 #es-body .fld{margin:0}
 .es-body .sec{margin:4px 2px -2px}
 .es .foot{margin-top:4px}
@@ -1132,7 +1132,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
   dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
-  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,#es-reihe .prow,#es-ovr .prow,.sch .sw,.sch .sw::after{transition:none}
+  button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,#es-reihe .prow,#es-ovr .prow,#es-wor .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
   .l-resv,.l-resv-in,.toast,.toast>*{animation:none}
 }
@@ -1542,7 +1542,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v154</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v155</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1746,6 +1746,9 @@ let tSub = 'kraft', hMode = 'day', hWeek = '', hMonth = '';
    aus = Zeilen der Übersicht auf Heute, die er nicht sehen will ({ gewicht: 1, … }). Was nur das Training betrifft, steht in K (emp, res). */
 let E = { aus: {}, weg: {} };
 const OV = [['gewicht', 'Gewicht'], ['haushalt', 'Finanzen'], ['training', 'Training'], ['arbeit', 'Arbeit'], ['uni', 'Uni']];
+/* Zeilen des Widgets „Überblick“ (v155): höchstens vier in seiner Reihenfolge; das kleine Widget zeigt die ersten zwei. Ohne Wahl wie bisher Gym, Gewicht, Laufen, Finanzen. */
+const WID = [['gym', 'Gym'], ['gewicht', 'Gewicht'], ['laufen', 'Laufen'], ['geld', 'Finanzen'], ['arbeit', 'Arbeit'], ['uni', 'Uni']], WID_STD = ['gym', 'gewicht', 'laufen', 'geld'];
+const widWahl = () => { const l = (E.wid || []).filter(k => WID.some(q => q[0] === k)); return l.length ? l : WID_STD; };
 const ovFolge = () => (E.ovReihe || []).map(k => OV.find(q => q[0] === k)).filter(Boolean).concat(OV.filter(q => (E.ovReihe || []).indexOf(q[0]) < 0));   // Reihenfolge der Übersicht auf Heute (v150)
 /* Bereiche zum Abschalten (v125, sein Wunsch: „selbst wählen, welche Bereiche unten überhaupt angezeigt werden … theoretisch zu einer Gym-App (auch ohne Cardio) alleine machen“).
    weg = abgeschaltete Bereiche ({ gewicht: 1, … }); Gym (kraft) und Cardio zählen einzeln, „Training“ steht in der Leiste, solange eines von beiden an ist.
@@ -1790,7 +1793,8 @@ function normE(o) {
     if (Number.isInteger(o.cZiel) && o.cZiel >= 1 && o.cZiel <= 2000) out.cZiel = o.cZiel;   // Ziel je Monat in km (v153)
     if (Number.isInteger(o.wZiel) && o.wZiel >= 100 && o.wZiel <= 10000000) out.wZiel = o.wZiel;   // Ziel je Monat beim Verdienst in Cent (v153)
     if (Number.isInteger(o.saetze) && o.saetze >= 1 && o.saetze <= 6) out.saetze = o.saetze;   // Sätze je neuer Übung (v154, fehlt = 3)
-    if (o.cMet === 'pace') out.cMet = 'pace';   // Messwert im Graphen „Letzte Läufe“ (v154, fehlt = Effizienz)
+    if (o.cMet === 'pace') out.cMet = 'pace';
+    if (Array.isArray(o.wid)) { const l = o.wid.filter((k, i) => WID.some(q => q[0] === k) && o.wid.indexOf(k) === i).slice(0, 4); if (l.length) out.wid = l; }   // Zeilen im Widget (v155)   // Messwert im Graphen „Letzte Läufe“ (v154, fehlt = Effizienz)
   }
   return out;
 }
@@ -5667,9 +5671,10 @@ const ES_SYM = {
   cardio: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 10.5h3.2l2-5 3.6 9.5 2-4.5H17"/></svg>',
   gewicht: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 13.5l4-4 3 2.5 5.5-6"/><path d="M12.5 6h3.5v3.5"/></svg>',
   kal: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="4.6" width="13" height="11.8" rx="2.4"/><path d="M3.5 8.3h13M7 3.2v2.6M13 3.2v2.6" stroke-linecap="round"/></svg>',
+  widget: '<svg viewBox="0 0 20 20" fill="#fff" aria-hidden="true"><rect x="3.5" y="3.5" width="13" height="5.5" rx="1.6"/><rect x="3.5" y="11" width="5.5" height="5.5" rx="1.6"/><rect x="11" y="11" width="5.5" height="5.5" rx="1.6" opacity=".55"/></svg>',
   planer: '<svg viewBox="0 0 20 20" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8.5 6h7M8.5 10h7M8.5 14h7"/><path d="M4 5.8l.9.9 1.6-1.7M4 9.8l.9.9 1.6-1.7M4 13.8l.9.9 1.6-1.7"/></svg>'
 };
-const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], cardio: ['Cardio', '#FF375F'], gewicht: ['Gewicht', '#BF5AF2'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'] };
+const E_SEITEN = { darst: ['Darstellung', '#5E5CE6'], ber: ['Bereiche', '#8E8E93'], heute: ['Heute', '#0A84FF'], gym: ['Gym', '#30D158'], cardio: ['Cardio', '#FF375F'], gewicht: ['Gewicht', '#BF5AF2'], kal: ['Kalender', '#FF453A'], planer: ['Planer', '#FF9F0A'], widget: ['Widget', '#64D2FF'] };
 /* Akzentfarbe (v149): wie die Hervorhebung in iOS; sie färbt Knöpfe, Verweise, Ringe und Umschalter. Die Farben je hell und dunkel stehen im CSS an :root[data-akz]. */
 const AKZ = [['blau', 'Blau', '#0A84FF'], ['indigo', 'Indigo', '#5E5CE6'], ['tuerkis', 'Türkis', '#40C8E0'], ['pink', 'Pink', '#FF375F'], ['graphit', 'Graphit', '#8E8E93']];
 const akz = () => AKZ.some(a => a[0] === E.akz) ? E.akz : 'blau';
@@ -5696,7 +5701,7 @@ function eWert(k) {
 }
 function eStartHTML() {
   const au = hInfo.sicherung;
-  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'cardio' ? istAn('cardio') : k === 'gewicht' ? istAn('gewicht') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
+  const seiten = Object.keys(E_SEITEN).filter(k => k === 'heute' ? istAn('heute') : k === 'gym' ? istAn('kraft') : k === 'cardio' ? istAn('cardio') : k === 'widget' ? !!HUELLE : k === 'gewicht' ? istAn('gewicht') : k === 'kal' ? kalKann() : k === 'planer' ? istAn('routinen') : true);
   return secHTML('Sicherung') + '<ul class="entries"><li><div class="xrow"><span class="l"><span>Stand</span><small id="bk-msg"' + (bkBad() ? ' class="neg"' : '') + '>' + esc(bkSub('')) + '</small></span></div></li>' +
     actRow('data-h="export"', 'Sicherung speichern') + actRow('data-h="import"', 'Sicherung einlesen') +
     (au ? actRow('data-h="ordner"', '<span id="bk-ord">' + esc(bkOrd()) + '</span>', false, INFO('bk')) + (au.ordner ? actRow('data-h="ordnerweg"', 'Ordner nicht mehr benutzen') : '') : '') + '</ul>' +
@@ -5759,6 +5764,12 @@ function eSeiteHTML(k) {
       '</div><p class="note">Die große Zahl, die Linie im Graphen und die Prognose rechnen mit dem Mittel der letzten 7 oder 14 Tage. Über 14 Tage wirkt ein einzelner Ausreißer weniger.</p></div>';
   if (k === 'cardio') return '<ul class="entries">' + wertRow('cZiel', 'Ziel je Monat', E.cZiel ? kmZ(E.cZiel) : 'Aus') + '</ul>' +
       '<p class="note">Unter den Kilometern des Monats steht eine Linie bis zum Ziel und was noch fehlt.</p>';
+  if (k === 'widget') {
+    const w = widWahl(), name = k2 => WID.find(q => q[0] === k2)[1], folge = w.concat(WID.map(q => q[0]).filter(x => w.indexOf(x) < 0));
+    return secHTML('Überblick' + INFO('wid')) + '<ul class="entries">' + folge.map(x => { const an = w.indexOf(x) >= 0, b = schalter('wid', name(x), an, x); return '<li>' + (!an && w.length >= 4 || an && w.length === 1 ? b.replace('<button', '<button disabled') : b) + '</li>'; }).join('') + '</ul>' +
+      '<p class="note" id="info-wid" hidden>Das Widget „Überblick“ zeigt bis zu vier Zeilen, das kleine die ersten zwei. Eine Zeile erscheint erst, wenn es dafür etwas gibt. Gym zeigt, was heute dran ist.</p>' +
+      (w.length < 2 ? '' : secHTML('Reihenfolge') + '<div class="es-reihe" id="es-wor">' + w.map(x => '<div class="prow" data-v="' + x + '"><span class="griff" aria-hidden="true">' + GRIFF + '</span><b>' + name(x) + '</b></div>').join('') + '</div>');
+  }
   if (k === 'planer') return secHTML('Notizen') + '<ul class="entries"><li>' + schalter('nNeu', 'Neue Notizen oben', E.nNeu === 1) + '</li></ul>' +
       secHTML('Arbeit') + '<ul class="entries">' + wertRow('schicht', 'Schicht beim Eintragen', stdT(schicht())) + wertRow('lohn', 'Stundenlohn', eur(N.work.rate || LOHN)) + wertRow('wZiel', 'Ziel je Monat', E.wZiel ? eur0(E.wZiel) + ' €' : 'Aus') + '</ul>' +
       secHTML('Uni') + '<ul class="entries">' + wertRow('uniSoll', 'Ziel an Terminen', String(uniSoll())) + '</ul>';
@@ -5774,6 +5785,11 @@ function paintE() {
   const ovr = $('#es-ovr');
   if (ovr) ziehListe(ovr, () => true, (von, nach) => {
     if (von !== nach) { const l = [...ovr.children].map(x => x.dataset.v), v = l.splice(von, 1)[0]; l.splice(nach, 0, v); setE({ ovReihe: l.concat(OV.map(q => q[0]).filter(k => l.indexOf(k) < 0)) }); renderHome(); }
+    paintE();
+  });
+  const wor = $('#es-wor');
+  if (wor) ziehListe(wor, () => true, (von, nach) => {
+    if (von !== nach) { const l = [...wor.children].map(x => x.dataset.v), v = l.splice(von, 1)[0]; l.splice(nach, 0, v); setE({ wid: l }); }
     paintE();
   });
   const r = $('#es-reihe');
@@ -5844,6 +5860,7 @@ function einstAct(t) {
     dann: n => { if (BEREICHE.indexOf(n) >= 0) { setE({ wdh: n === 812 ? null : n }); paintE(); renderTraining(); } } });   // Standard für Übungen ohne eigenen Bereich
   else if (a === 'saetze') return openZ({ titel: 'Sätze je neuer Übung', wert: stdSaetze(), nurListe: true, liste: [1, 2, 3, 4, 5, 6], text: n => n + (n === 1 ? ' Satz' : ' Sätze'),
     dann: n => { if (n >= 1 && n <= 6) { setE({ saetze: n === 3 ? null : n }); paintE(); } } });
+  else if (a === 'wid') { const w = widWahl().slice(), i = w.indexOf(v); if (i >= 0 && w.length > 1) w.splice(i, 1); else if (i < 0 && w.length < 4) w.push(v); setE({ wid: w.join() === WID_STD.join() ? null : w }); paintE(); return; }
   else if (a === 'kalW') { if (kalWahl().some(q => q.id === t.dataset.v)) { setE({ kalW: t.dataset.v }); paintE(); } return; }
   else if (a === 'nNeu') { setE({ nNeu: an ? 1 : null }); renderPlaner(); renderHome(); }
   else if (a === 'schicht') return openZ({ titel: 'Schicht in Stunden', wert: schicht() / 60, einheit: 'h', komma: true, liste: reihe(1, 10, 0.5),
@@ -6314,20 +6331,24 @@ function hSoon() { if (!HUELLE) return; clearTimeout(hTimer); hTimer = setTimeou
    Halbe Zeichen, die schon im Text stehen, fallen dabei weg. */
 const hCut = (s, n) => Array.from(s).filter(c => c.length > 1 || c < '\uD800' || c > '\uDFFF').slice(0, n).join('');
 /* Zahlen für das Widget „Überblick“ der iPhone-App (v106, iPhone-App ab 1.2; ältere überlesen das Feld): höchstens vier, fertig formatiert, kurz genug für eine Kachel.
-   Je { b: Bereich (gibt die Farbe), t: Titel, w: Wert, s: Unterzeile }. Gym zuerst (was heute dran ist), dann Gewicht, Laufen, Finanzen; nur Bereiche mit Daten. */
+   Je { b: Bereich (gibt die Farbe; unbekannt = blau), t: Titel, w: Wert, s: Unterzeile }. Seit v155 in der Wahl aus den Einstellungen (widWahl), ohne Wahl Gym, Gewicht, Laufen, Finanzen; nur Zeilen mit Daten. */
 function hZahlen() {
-  const z = [], tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1], plans = kPlans(), m = (K.meta || {})[tk];
-  if (K.live) z.push({ b: 'training', t: 'Gym', w: planName(K.live.plan) || 'Training', s: 'läuft gerade' });
-  else if (kDay(tk).length) z.push({ b: 'training', t: 'Gym', w: (m && (planName(m.plan) || m.n)) || 'Training', s: 'heute erledigt' });
-  else if (plans.length) { const r = planRunde(plans), pl = plans[r.next]; z.push(pl ? { b: 'training', t: 'Gym', w: pl.n, s: 'heute dran' } : { b: 'training', t: 'Gym', w: 'Runde geschafft', s: 'neue ab Montag' }); }
+  const r = {}, z = { push: x => { r[x.k] = x; } }, tk = todayKey(), curYM = tk.slice(0, 7), mName = MONTHS[+curYM.slice(5) - 1], plans = kPlans(), m = (K.meta || {})[tk];
+  if (K.live) z.push({ k: 'gym', b: 'training', t: 'Gym', w: planName(K.live.plan) || 'Training', s: 'läuft gerade' });
+  else if (kDay(tk).length) z.push({ k: 'gym', b: 'training', t: 'Gym', w: (m && (planName(m.plan) || m.n)) || 'Training', s: 'heute erledigt' });
+  else if (plans.length) { const r = planRunde(plans), pl = plans[r.next]; z.push(pl ? { k: 'gym', b: 'training', t: 'Gym', w: pl.n, s: 'heute dran' } : { k: 'gym', b: 'training', t: 'Gym', w: 'Runde geschafft', s: 'neue ab Montag' }); }
   const wl = withTrend(wList());
-  if (wl.length) { const rate = weeklyRate(wl, dayNum(tk)); z.push({ b: 'gewicht', t: 'Gewicht', w: kg(wl[wl.length - 1].m) + ' kg', s: rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt' }); }
+  if (wl.length) { const rate = weeklyRate(wl, dayNum(tk)); z.push({ k: 'gewicht', b: 'gewicht', t: 'Gewicht', w: kg(wl[wl.length - 1].m) + ' kg', s: rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt' }); }
   const runs = tRuns();
-  if (runs.length) { const g = tAgg(runs.filter(x => x.d.slice(0, 7) === curYM)); z.push({ b: 'cardio', t: 'Laufen', w: kg(g.m / 1000) + ' km', s: g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' im ' + mName }); }
+  if (runs.length) { const g = tAgg(runs.filter(x => x.d.slice(0, 7) === curYM)); z.push({ k: 'laufen', b: 'cardio', t: 'Laufen', w: kg(g.m / 1000) + ' km', s: g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' im ' + mName }); }
   const wNow = wealthDelta(curYM);
-  if (wNow) z.push({ b: 'haushalt', t: 'Vermögen', w: minus(wNow.end) + eur0(wNow.end) + ' €', s: wNow.d != null ? eurS(wNow.d) + ' im ' + mName : mName });
-  else if (hasMoney()) { const b = mSum(curYM).bal; z.push({ b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
-  return z.slice(0, 4).map(x => ({ b: x.b, t: hCut(x.t, 20), w: hCut(x.w, 24), s: hCut(x.s, 32) }));
+  if (wNow) z.push({ k: 'geld', b: 'haushalt', t: 'Vermögen', w: minus(wNow.end) + eur0(wNow.end) + ' €', s: wNow.d != null ? eurS(wNow.d) + ' im ' + mName : mName });
+  else if (hasMoney()) { const b = mSum(curYM).bal; z.push({ k: 'geld', b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
+  const wl2 = workList().filter(x => x.d.slice(0, 7) === curYM);
+  if (workList().length) z.push({ k: 'arbeit', b: 'routinen', t: 'Arbeit', w: eur0(workSum(wl2)) + ' €', s: wl2.length ? stdT(wMins(wl2)) + ' im ' + mName : 'noch nichts im ' + mName });
+  const ul = uniList();
+  if (ul.length) z.push({ k: 'uni', b: 'routinen', t: 'Uni', w: pktT(ul.reduce((a, x) => a + x.p, 0)) + ' Punkte', s: uniSollT(ul.length) });
+  return widWahl().map(k => r[k]).filter(Boolean).slice(0, 4).map(x => ({ b: x.b, t: hCut(x.t, 20), w: hCut(x.w, 24), s: hCut(x.s, 32) }));
 }
 /* Für die Schnelleingabe „Termin“ der iPhone-App (ab 1.6, v147): die Kalender zur Wahl (wie im Blatt), der vorbelegte und die zuletzt gewählten Erinnerungen
    (Minuten vor dem Beginn; fehlt die Angabe, keine). Ohne Zugriff auf den Kalender nichts davon. */

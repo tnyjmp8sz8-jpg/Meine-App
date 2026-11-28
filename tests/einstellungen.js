@@ -18,7 +18,7 @@ lauf(async () => {
 
   /* 1. Erste Seite: Sicherung und je Thema eine Zeile mit Wert; Unterseite und zurück */
   await einstSeite(p, '');
-  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Cardio, Gewicht, Planer (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Cardio | Gewicht | Planer', await einstZeilen(p));
+  P.ok('Erste Seite: Darstellung, Bereiche, Heute, Gym, Cardio, Gewicht, Planer, Widget (ohne Kalender: die iPhone-App kennt ihn nicht)', (await einstZeilen(p)) === 'Darstellung | Bereiche | Heute | Gym | Cardio | Gewicht | Planer | Widget', await einstZeilen(p));
   P.ok('… mit Werten rechts: „Blau“ und „Alle an“', await p.evaluate(() => [...document.querySelectorAll('#es-body [data-h="seite"] b')].map(b => b.textContent).slice(0, 2).join(',')) === 'Blau,Alle an');
   P.ok('… und die Sicherung oben', !!(await p.$('#es-body .act[data-h="export"]')));
   await einstSeite(p, 'darst');
@@ -195,6 +195,26 @@ lauf(async () => {
   await bereich(q4, 'routinen'); await q4.click('#r-subs [data-r="sub"][data-v="work"]'); await q4.waitForTimeout(60);
   P.ok('Arbeit: Linie 16,7 %, „Ziel 600 € | noch 500 €“', (await ziel('#v-routinen')) === '16.7% | Ziel 600 € | noch 500 €', await ziel('#v-routinen'));
   await o4.browser.close();
-  await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler, o4.fehler));
+  /* 14. v155: Zeilen im Widget „Überblick“ (nur in der iPhone-App). Daten: Plan (Gym), Gewicht, eine Schicht am 20.11. 10:00–14:00 zu 25 € (4 Std × 25 € = 100 €),
+     ein Uni-Termin mit 1,5 Punkten; keine Läufe, keine Finanzen. Ohne Wahl: Gym, Gewicht, Laufen, Finanzen → im Stand nur Gym und Gewicht. Höchstens vier an, mindestens eine. */
+  const o5 = await oeffnen({ uhr: JETZT, skript: huelle, daten: { S: { routines: [], running: null }, LY: {}, K, W: { entries: { '2026-11-26': 84 } },
+    N: Object.assign({}, N, { work: { rate: 2500, e: { w1: { d: '2026-11-20', a: 600, b: 840, p: 0, r: 2500 } } } }) } }), q5 = o5.page;
+  await q5.evaluate(() => window.TrackHuelle.info({ app: '1.7' }));
+  const wstand = async () => { await q5.waitForTimeout(400); return q5.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop(); return s ? s.zahlen.map(z => z.t + (z.t === 'Arbeit' || z.t === 'Uni' ? ' ' + z.w + ' / ' + z.s : '')).join(', ') : 'kein Stand'; }); };
+  P.ok('Widget ohne Wahl: Gym, Gewicht (Laufen und Finanzen ohne Daten)', (await wstand()) === 'Gym, Gewicht', await wstand());
+  await einstSeite(q5, 'widget');
+  const wsch = () => q5.evaluate(() => [...document.querySelectorAll('#es-body [data-h="wid"]')].map(b => b.textContent + (b.getAttribute('aria-checked') === 'true' ? '+' : '-') + (b.disabled ? '!' : '')).join(' '));
+  P.ok('Seite Widget: vier an, Arbeit und Uni gesperrt', (await wsch()) === 'Gym+ Gewicht+ Laufen+ Finanzen+ Arbeit-! Uni-!', await wsch());
+  for (const k of ['laufen', 'geld', 'arbeit', 'uni']) await q5.click('#es-body [data-h="wid"][data-v="' + k + '"]');
+  P.ok('Laufen und Finanzen aus, Arbeit und Uni an: gespeichert (E.wid)', (await gespeichert(q5)).E.wid.join() === 'gym,gewicht,arbeit,uni', JSON.stringify((await gespeichert(q5)).E.wid));
+  P.ok('Stand: Gym, Gewicht, Arbeit 100 € / 4 Std im November, Uni 1,5 Punkte / 1 von 18 Terminen', (await wstand()) === 'Gym, Gewicht, Arbeit 100 € / 4 Std im November, Uni 1,5 Punkte / 1 von 18 Terminen', await wstand());
+  const wor = () => q5.evaluate(() => [...document.querySelectorAll('#es-wor .prow')].map(x => x.textContent.trim()).join(' '));
+  const wz = await q5.evaluate(() => { const r = [...document.querySelectorAll('#es-wor .prow')].map(x => x.getBoundingClientRect()), q = document.querySelectorAll('#es-wor .griff')[3].getBoundingClientRect(); return { x: q.left + q.width / 2, y: q.top + q.height / 2, d: r[1].top - r[0].top }; });
+  await q5.mouse.move(wz.x, wz.y); await q5.mouse.down(); await q5.mouse.move(wz.x, wz.y - wz.d * 3.3, { steps: 10 }); await q5.mouse.up(); await q5.waitForTimeout(80);
+  P.ok('Uni nach oben gezogen: Reihenfolge und Stand', (await wor()) === 'Uni Gym Gewicht Arbeit' && (await wstand()).startsWith('Uni 1,5 Punkte'), (await wor()) + ' | ' + await wstand());
+  for (const k of ['gym', 'gewicht', 'arbeit']) await q5.click('#es-body [data-h="wid"][data-v="' + k + '"]');
+  P.ok('Die letzte Zeile bleibt gesperrt an', (await wsch()).includes('Uni+!'), await wsch());
+  await o5.browser.close();
+  await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler, o4.fehler, o5.fehler));
   await o2.browser.close();
 });
