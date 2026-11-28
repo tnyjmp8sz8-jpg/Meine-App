@@ -638,14 +638,15 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 #csheet.ios .cs-top{grid-template-columns:auto 1fr auto;gap:8px;padding:8px 14px 2px}
 #csheet.ios #cs-today{display:none}
 #csheet.ios #cs-title{visibility:hidden}
-#csheet.ios #cs-close{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;height:44px;padding:0 18px 0 14px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-size:17px;font-weight:500}
+#csheet.ios #cs-close{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:44px;height:44px;padding:0 18px 0 14px;border-radius:999px;background:var(--fill);box-shadow:var(--rand-s);color:var(--ink);font-size:17px;font-weight:500;white-space:nowrap;overflow:hidden}
 #csheet.ios:not(.tag) #cs-close{padding:0}
-#csheet.ios #cs-close svg{width:9px;height:16px}
+#csheet.ios.tag #cs-close{justify-content:flex-start}   /* wächst der Knopf zur Kapsel (knopfMorph), bleibt der Pfeil vorn stehen und der Monat kommt hinten dazu */
+#csheet.ios #cs-close svg{flex:none;width:9px;height:16px}
 #csheet.ios:not(.tag) #cs-close svg{width:17px;height:10px}
-.cs-mon{margin:8px 20px 6px;font-size:34px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
+.cs-mon{margin:8px 20px 8px;font-size:32px;font-weight:700;letter-spacing:-.02em;line-height:1.15}
 #csheet:not(.ios) .cs-mon,#csheet.tag .cs-mon,#csheet.such .cs-mon{display:none}
 #csheet.ios .cs-wd{padding:2px 0 7px;border-bottom:.5px solid var(--line)}
-#csheet.ios .cs-wd span{font-size:12.5px;font-weight:600;color:var(--ink)}
+#csheet.ios .cs-wd span{font-size:10.5px;font-weight:600;color:var(--ink)}
 #csheet.ios .cs-wd span.we{color:var(--muted)}
 .cs-sbar{display:flex;align-items:center;gap:10px;padding:8px 14px 6px}
 .cs-sbar .linkbtn{flex:none;font-size:17px}
@@ -657,15 +658,15 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .cs-such{flex:1;min-height:0;overflow-y:auto;padding:4px 16px calc(24px + env(safe-area-inset-bottom,0px))}
 .cs-such h4{margin:16px 4px 6px;font-size:13px;font-weight:600;color:var(--muted)}
 .cs-such .note{margin:18px 4px}
-.cs-heute{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:3;height:48px;padding:0 22px;border:0;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--rand-a);color:var(--ink);font-size:17px;font-weight:600}
+.cs-heute{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:3;height:44px;padding:0 20px;border:0;border-radius:999px;background:var(--glass);-webkit-backdrop-filter:blur(24px) saturate(1.6);backdrop-filter:blur(24px) saturate(1.6);box-shadow:var(--rand-a);color:var(--ink);font-size:16px;font-weight:500}
 #csheet:not(.ios) .cs-heute{display:none}
 #csheet.ios .cs-body{padding:0 0 calc(100px + env(safe-area-inset-bottom,0px))}
 #csheet.ios .cs-day{display:none}
 #csheet.ios .cm{padding-top:18px}
 #csheet.ios .cgrid{row-gap:0;grid-template-columns:repeat(7,minmax(0,1fr))}
-.cm-l{justify-self:center;width:0;display:flex;justify-content:center;white-space:nowrap;padding:0 0 8px;font-size:21px;font-weight:700;letter-spacing:-.01em}
+.cm-l{justify-self:center;width:0;display:flex;justify-content:center;white-space:nowrap;padding:0 0 8px;font-size:19px;font-weight:600;letter-spacing:-.01em}
 .cm-l.jetzt{color:var(--rot)}
-#csheet.ios .cd{border-top:.5px solid var(--line);min-height:66px;padding:6px 0 0;gap:5px}
+#csheet.ios .cd{border-top:.5px solid var(--line);min-height:70px;padding:6px 0 0;gap:5px}
 #csheet.ios .cd b{width:38px;height:38px;font-size:20px;font-weight:400}
 #csheet.ios .cd.sel b{background:none;color:var(--ink)}
 #csheet.ios .cd.we b{color:var(--muted)}
@@ -677,42 +678,50 @@ u.t{background:var(--accent)}   /* Termin aus dem Kalender des iPhones */
 .mk .kap span:only-child{width:18px}
 #csheet.ios.tag .cs-wd,#csheet.ios.tag .cs-body{display:none}
 #csheet.ios.tag .cs-day{display:flex;flex:1;min-height:0;max-height:none;flex-direction:column;gap:0;padding:0;border-top:0;overflow:hidden}
-.tv-k{flex:none;touch-action:pan-y;border-bottom:.5px solid var(--line)}
-.tv-wk{display:grid;grid-template-columns:repeat(7,1fr);padding:6px 0 10px}
-.tw{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--ink)}
-.tw small{font-size:12.5px;font-weight:600;color:var(--ink)}
+/* Tag (v147, sein Video aus Apples Kalender: „genau gleichen smoothen Effekt“): Woche und Tag liegen je dreimal nebeneinander (davor, jetzt, danach) und folgen beim Wischen dem Finger.
+   Alle drei liegen im selben Feld eines Rasters übereinander (grid-area 1/1) und stehen nur über transform nebeneinander: So bestimmt der höchste die Höhe, und nichts springt. */
+.tv-k{flex:none;touch-action:pan-y;border-bottom:.5px solid var(--line);-webkit-user-select:none;user-select:none}
+.tv-wb{display:grid}
+.tv-wk{grid-area:1/1;display:grid;grid-template-columns:repeat(7,1fr);padding:4px 0 8px}
+.tw{border:0;background:none;padding:0;display:flex;flex-direction:column;align-items:center;gap:4px;color:var(--ink)}
+.tw small{font-size:10.5px;font-weight:600;line-height:13px;color:var(--ink)}
 .tw.we small{color:var(--muted)}
-.tw b{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;font-family:var(--round);font-size:20px;font-weight:400;font-variant-numeric:tabular-nums;transition:background-color .15s ease}
+.tw b{width:36px;height:36px;border-radius:50%;display:grid;place-items:center;font-family:var(--round);font-size:19px;font-weight:400;font-variant-numeric:tabular-nums;transition:background-color .2s ease,color .2s ease}
 .tw.we b{color:var(--muted)}
 .tw.sel b{background:var(--ink);color:var(--bg);font-weight:600}
 .tw.now b{color:var(--rot);font-weight:600}
 .tw.now.sel b{background:var(--rot);color:#fff}
 .tw:not(.sel):active b{background:var(--fill)}
-.tv{flex:1;min-height:0;display:flex;flex-direction:column;touch-action:pan-y}
-.tv-t{margin:0;padding:12px 16px 10px;text-align:center;font-size:17px;font-weight:600;letter-spacing:-.01em}
-.tv-g{display:flex;align-items:flex-start;gap:8px;padding:2px 12px 10px 0;border-bottom:.5px solid var(--line)}
-.tv-g>span{flex:none;width:72px;padding:5px 0 0 16px;font-size:13px;color:var(--muted)}
+.tv-b{flex:1;min-height:0;display:grid;grid-template-rows:minmax(0,1fr);grid-template-columns:minmax(0,1fr);overflow:hidden;touch-action:pan-y;-webkit-user-select:none;user-select:none}
+.tv{grid-area:1/1;min-height:0;display:flex;flex-direction:column;touch-action:pan-y;will-change:transform}
+.tv-t{margin:0;padding:10px 16px 8px;text-align:center;font-size:15px;font-weight:600;letter-spacing:-.01em}
+.tv-g{display:flex;align-items:flex-start;gap:6px;padding:0 10px 8px 0;border-bottom:.5px solid var(--line)}
+.tv-g>span{flex:none;width:66px;padding:4px 0 0 12px;font-size:11px;color:var(--muted)}
 .tv-gl{flex:1;min-width:0;display:flex;flex-wrap:wrap;gap:4px}
-.tv-gp{flex:1 1 calc(50% - 4px);min-width:0;height:28px;display:flex;align-items:center;gap:7px;padding:0 10px 0 5px;border:0;border-radius:8px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:15px;font-weight:600;letter-spacing:-.01em;text-align:left}
-.tv-gp .kf{flex:none;display:grid;place-items:center;width:19px;height:19px;margin:0;border-radius:50%}
-.tv-gp .kf svg{width:11px;height:11px}
+.tv-gp{flex:1 1 calc(50% - 4px);min-width:0;height:22px;display:flex;align-items:center;gap:5px;padding:0 8px 0 3px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:13px;font-weight:600;letter-spacing:-.01em;text-align:left}
+.tv-gp .kf{flex:none;display:grid;place-items:center;width:16px;height:16px;margin:0;border-radius:50%}
+.tv-gp .kf svg{width:10px;height:10px}
 .tv-gp span{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y}
-.tl-in{position:relative;height:calc(24 * 40px + 24px);margin-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
-.tl-h{position:absolute;left:66px;right:0;height:0;border-top:.5px solid var(--line)}
-.tl-h span{position:absolute;right:calc(100% + 10px);top:-8.5px;font-size:12.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tl-in{position:relative;height:calc(24 * 36px + 24px);margin-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.tl-h{position:absolute;left:62px;right:0;height:0;border-top:.5px solid var(--line)}
+.tl-h span{position:absolute;right:calc(100% + 9px);top:-7.5px;font-size:11px;color:var(--muted);font-variant-numeric:tabular-nums}
 .tl-h.weg span{visibility:hidden}
-.tl-ev{position:absolute;top:0;bottom:0;left:68px;right:10px}
-.tl-e{position:absolute;overflow:hidden;display:flex;flex-direction:column;gap:1px;padding:3px 7px 3px 10px;border:0;border-radius:6px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:13px;line-height:1.25;text-align:left}
+.tl-ev{position:absolute;top:0;bottom:0;left:64px;right:8px}
+.tl-e{position:absolute;overflow:hidden;display:flex;flex-direction:column;gap:0;padding:2px 6px 2px 9px;border:0;border-radius:5px;background:color-mix(in srgb,var(--c) var(--kgp),var(--kg));color:color-mix(in srgb,var(--c) var(--kt),#000);font:inherit;font-size:12.5px;line-height:1.25;text-align:left}
 .tl-e .kf{position:absolute;left:0;top:0;bottom:0;width:3px;height:auto;margin:0;border-radius:0}
 .tl-e b{font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tl-e small{font-size:12px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tl-e small{font-size:11.5px;opacity:.85;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-e.kurz{flex-direction:row;align-items:center;gap:6px;padding-top:0;padding-bottom:0}
 .tl-e:active,.tv-gp:active{opacity:.7}
-.tl-now{position:absolute;left:66px;right:0;height:0;border-top:1.5px solid var(--rot);z-index:2;pointer-events:none}
-.tl-now span{position:absolute;right:calc(100% + 2px);top:-10.5px;padding:0 6px;border-radius:7px;background:var(--rot);color:#fff;font-family:var(--round);font-size:12.5px;font-weight:600;line-height:20px;font-variant-numeric:tabular-nums}
-.tv.go-n{animation:goN .24s cubic-bezier(.16,1,.3,1)}
-.tv.go-p{animation:goP .24s cubic-bezier(.16,1,.3,1)}
+.tl-now{position:absolute;left:62px;right:0;height:0;border-top:1.5px solid var(--rot);z-index:2;pointer-events:none}
+.tl-now span{position:absolute;right:calc(100% + 2px);top:-9.5px;padding:0 5px;border-radius:6px;background:var(--rot);color:#fff;font-family:var(--round);font-size:11px;font-weight:600;line-height:18px;font-variant-numeric:tabular-nums}
+/* Wechsel Monat ↔ Tag (v147, wie in Apples Kalender): Solange er läuft, steht der Monat da und der Tag liegt darüber (position absolute ab der Kopfzeile). Die Bewegung macht kalWandel(). */
+#csheet.ios.wandel .cs-day{display:flex;position:absolute;left:0;right:0;bottom:0;z-index:2;max-height:none;flex-direction:column;gap:0;padding:0;border-top:0;overflow:hidden;pointer-events:none}
+#csheet.ios.tag.wandel .cs-mon{display:block}
+#csheet.ios.tag.wandel .cs-wd{display:grid}
+#csheet.ios.tag.wandel .cs-body{display:block}
+#csheet.ios.wandel .cs-body,#csheet.ios.wandel .cs-akt,#csheet.ios.wandel #cs-close,#csheet.ios.wandel .cs-heute{pointer-events:none}
 
 /* Laufendes Training: eine Übung im Fokus, im Vollbild (v96, sein Wunsch nach einem Bild aus Alpha Progression: „ganzer Bildschirm … will Fokus darauf“).
    Kein schwebendes Blatt, aber Glas wie die anderen (v101, sein „kannst du da doch auch so edel Glass transparent iOS-Look? überall anwenden“): Der Grund ist halb durchsichtig
@@ -960,6 +969,7 @@ button:active{transition-duration:.04s}
 .tab:active svg{transform:scale(.88)}
 .tk:active i{transform:scale(.84)}
 .cd:not(.sel):active b{background:var(--fill)}
+#csheet.ios .cd.sel:not(.now):active b{background:var(--fill)}   /* im Kalender wie iOS: auch der gewählte Tag wird beim Antippen grau */
 /* Milchglas kommt und geht überall gleich (v143 an der Ebene RIR, sein Wort: „der Übergang beim Rein- und Rauskommen ist noch etwas unsmooth“; seit v145 überall, sein Wort:
    „GENAU diesen Unschärfe-Modus will ich überall in gleicher Qualität, wo das noch gebraucht wird“): Die Unschärfe selbst wächst von blur(0) auf und nimmt wieder ab, die Tönung mit ihr,
    statt dass eine Fläche samt fertiger Unschärfe ein- und ausblendet (WebKit zeichnet Milchglas unter wechselnder Deckkraft unruhig). Gilt hinter jedem Blatt (::backdrop),
@@ -1076,7 +1086,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
 
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
-  dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]),.tv.go-n,.tv.go-p{animation:none}
+  dialog[open],dialog[open]::backdrop,.view.go-n:not([hidden]),.view.go-p:not([hidden]){animation:none}
   button,.fold svg,body,.tabs-in::before,.mark,#p-items .prow,#o-items .prow,.sch .sw,.sch .sw::after{transition:none}
   .fill,.glyph,.g-scrub>*{transition:none}
   .l-resv,.l-resv-in,.toast,.toast>*{animation:none}
@@ -1486,7 +1496,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v146</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v147</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -3484,8 +3494,16 @@ function calDayHTML() {
    Monat: Striche zwischen den Wochen, je Tag bis zu drei Zeichen in der Farbe des Kalenders (ganztägig und über mehrere Tage ein Strich, sonst ein Punkt), Wochenende grau.
    Tag: oben die Woche (wischen = andere Woche), Titel, „Ganztägig“ mit Kapseln, darunter die Stunden mit den Terminen als Blöcken (überlappende nebeneinander), heute die rote Linie der Uhrzeit.
    Wischen über die Stunden = Tag davor oder danach; Tipp auf eine freie Stelle = neuer Termin zu dieser halben Stunde; Tipp auf einen Termin = ansehen und ändern. Suche über Titel und Ort. */
-let cView = 'monat', cVor = 'monat', cQ = '', cJetztT = null, cWisch = false;
-const TL_H = 40, TL_OBEN = 12;   // Höhe einer Stunde, Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+let cView = 'monat', cVor = 'monat', cQ = '', cJetztT = null, cWisch = false, cLauf = null, cZieht = false, cSpaeter = false;   // cLauf: laufende Bewegung (Blättern, Monat ↔ Tag), cZieht: der Finger zieht gerade; solange wird nicht neu gezeichnet (cSpaeter: danach)
+const TL_H = 36, TL_OBEN = 12;   // Höhe einer Stunde (wie bei Apple rund 35 pt), Abstand über 0:00 (Hälfte der Zeile mit der Uhrzeit)
+/* Bewegung wie in iOS: eine Feder ohne Nachschwingen (kritisch gedämpft), ausgemessen an seinem Video aus Apples Kalender (60 Bilder je Sekunde, Monat → Tag):
+   nach 0,1 s die Hälfte des Wegs, nach 0,2 s 85 %, nach 0,33 s 98 %. Das passt zu x(t) = 1 − (1 + ωt)·e^(−ωt) mit ω = 17 je Sekunde. Als linear()-Kurve mit 25 Punkten über 0,45 s,
+   wo der Browser sie kennt (Safari ab 17.2), sonst eine ähnliche Bézierkurve. */
+const KAL_D = 450, KAL_EASE = (() => {
+  const w = 17, x = t => 1 - (1 + w * t) * Math.exp(-w * t), ende = x(KAL_D / 1000), p = [];
+  for (let i = 0; i <= 24; i++) p.push(+(x(KAL_D / 1000 * i / 24) / ende).toFixed(4));
+  return window.CSS && CSS.supports && CSS.supports('animation-timing-function', 'linear(0, 1)') ? 'linear(' + p.join(', ') + ')' : 'cubic-bezier(.3,.75,.2,1)';
+})();
 const RUNTER = '<svg viewBox="0 0 17 10" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M1.5 1.5l7 7 7-7"/></svg>';
 const ZURUECK = '<svg viewBox="0 0 8 14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 1L1 7l6 6"/></svg>';
 const kalIos = () => cMode === 'all' && kalDa();
@@ -3522,42 +3540,162 @@ function kalMonTitel() {
 }
 let kalMonT = 0;
 $('#cs-body').addEventListener('scroll', () => { if (!kalMonT) kalMonT = requestAnimationFrame(() => { kalMonT = 0; kalMonTitel(); }); }, { passive: true });
-function kalTagHTML() {
-  const k = cSel, tk = todayKey(), d0 = parseKey(k), mon = addDays(d0, -wd(d0));
-  let wk = '';
+/* Tag (v147, sein Video aus Apples Kalender): Die Woche und der Tag liegen je dreimal nebeneinander (davor, jetzt, danach; data-slot -1, 0, 1) und folgen beim Wischen dem Finger.
+   Nur die mittleren sind bedienbar, die beiden daneben sind inert. Die Zeitleiste des mittleren trägt die id tl. */
+const monVon = k => keyOf(addDays(parseKey(k), -wd(parseKey(k))));
+function kalWocheHTML(mon) {
+  const tk = todayKey(), m0 = parseKey(mon);
+  let h = '';
   for (let i = 0; i < 7; i++) {
-    const d = addDays(mon, i), kk = keyOf(d);
-    wk += '<button type="button" class="tw' + (kk === k ? ' sel' : '') + (kk === tk ? ' now' : '') + (i > 4 ? ' we' : '') + '" data-c="tag" data-d="' + kk + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '. ' + MONTHS[d.getMonth()] + '"' + (kk === k ? ' aria-current="date"' : '') + '><small>' + DAYS[i].charAt(0) + '</small><b>' + d.getDate() + '</b></button>';
+    const d = addDays(m0, i), kk = keyOf(d);
+    h += '<button type="button" class="tw' + (kk === cSel ? ' sel' : '') + (kk === tk ? ' now' : '') + (i > 4 ? ' we' : '') + '" data-c="tag" data-d="' + kk + '" aria-label="' + DAYS_LONG[i] + ', ' + d.getDate() + '. ' + MONTHS[d.getMonth()] + '"' + (kk === cSel ? ' aria-current="date"' : '') + '><small>' + DAYS[i].charAt(0) + '</small><b>' + d.getDate() + '</b></button>';
   }
+  return '<div class="tv-wk" data-w="' + mon + '" role="group" aria-label="Woche">' + h + '</div>';
+}
+function kalSeiteHTML(k) {
+  const tk = todayKey(), d0 = parseKey(k);
   const ts = kalAm(k), ganz = ts.filter(x => x.g || (kalVon(x) < k && kalBis(x) > k)), zeit = kalSpalten(ts.filter(x => ganz.indexOf(x) < 0).map(x => { const s = kalStrecke(x, k); return { x, a: s[0], b: s[1] }; }).sort((p, q) => p.a - q.a || q.b - p.b));
   let tl = '';
   for (let h = 0; h <= 24; h++) tl += '<div class="tl-h" style="top:' + (TL_OBEN + h * TL_H) + 'px"><span>' + pad(h % 24) + ':00</span></div>';
   tl += '<div class="tl-ev">' + zeit.map(o => {
-    const x = o.x, hoch = Math.max(20, (o.b - o.a) * TL_H / 60 - 2), kurz = hoch < 36, w = 100 / o.n;
+    const x = o.x, hoch = Math.max(18, (o.b - o.a) * TL_H / 60 - 2), kurz = hoch < 31, w = 100 / o.n;
     return '<button type="button" class="tl-e' + (kurz ? ' kurz' : '') + '" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + ';top:' + (TL_OBEN + o.a * TL_H / 60 + 1) + 'px;height:' + hoch + 'px;left:calc(' + (o.c * w) + '% + 1px);width:calc(' + w + '% - 2px)" aria-label="' + esc(x.t || 'Ohne Titel') + ', ' + kalZeit(x, k) + '">' +
       '<i class="kf" style="background:' + kalF(x) + '"></i><b>' + esc(x.t || 'Ohne Titel') + '</b><small>' + kalZeit(x, k) + (x.o && !kurz ? ' · ' + esc(x.o) : '') + '</small></button>';
   }).join('') + '</div>';
-  if (k === tk) tl += '<div class="tl-now" id="tl-now"></div>';
-  return '<div class="tv-k"><div class="tv-wk" role="group" aria-label="Woche">' + wk + '</div></div><div class="tv"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
+  if (k === tk) tl += '<div class="tl-now"></div>';
+  return '<div class="tv" data-d="' + k + '"><h3 class="tv-t">' + DAYS_LONG[wd(d0)] + ' – ' + DF_TT.format(d0) + '</h3>' +
     (ganz.length ? '<div class="tv-g"><span>Ganztägig</span><div class="tv-gl">' + ganz.map(x => '<button type="button" class="tv-gp" data-c="termin" ' + kalAttr(x) + ' style="--c:' + kalF(x) + '" aria-label="' + esc(x.t || 'Ohne Titel') + ', ganztägig"><i class="kf" style="background:' + kalF(x) + '">' + KAL_ICON + '</i><span>' + esc(x.t || 'Ohne Titel') + '</span></button>').join('') + '</div></div>' : '') +
-    '<div class="tl" id="tl"><div class="tl-in">' + tl + '</div></div></div>';
+    '<div class="tl"><div class="tl-in">' + tl + '</div></div></div>';
 }
-/* Rote Linie der Uhrzeit, jede halbe Minute nachgezogen, solange der Tag offen ist */
+/* Rote Linie der Uhrzeit (auf jeder Seite, die heute zeigt), jede halbe Minute nachgezogen, solange der Tag offen ist */
 function kalJetzt() {
-  const n = $('#tl-now'); if (!n) return;
-  const m = minVon(Date.now()); n.style.top = (TL_OBEN + m * TL_H / 60) + 'px'; n.innerHTML = '<span>' + uhrT(m) + '</span>';
-  document.querySelectorAll('#tl .tl-h').forEach((h, i) => h.classList.toggle('weg', Math.abs(m - i * 60) < 26));   // die volle Stunde gleich daneben weicht der Uhrzeit wie in iOS
+  const m = minVon(Date.now());
+  document.querySelectorAll('#cs-day .tl-now').forEach(n => {
+    n.style.top = (TL_OBEN + m * TL_H / 60) + 'px'; n.innerHTML = '<span>' + uhrT(m) + '</span>';
+    n.parentNode.querySelectorAll('.tl-h').forEach((h, i) => h.classList.toggle('weg', Math.abs(m - i * 60) < 24));   // die volle Stunde gleich daneben weicht der Uhrzeit wie in iOS
+  });
 }
-/* Tag malen. keep: Scrollstand behalten (neu gemeldete Termine). anim: go-n / go-p beim Wechsel des Tags. Sonst steht der Blick eine Stunde vor jetzt (heute), vor dem ersten Termin oder bei 7:30. */
-function kalTagMalen(keep, anim) {
+/* Woche und Tag ordnen: Für den gewählten Tag stehen davor, jetzt und danach bereit. Was schon da ist, bleibt (mit seinem Scrollstand), Fehlendes kommt dazu, Übriges geht.
+   Neue Seiten stehen auf derselben Höhe wie die mittlere: So liegen die Stunden beim Blättern auf einer Linie. */
+function kalReihe(box, sel, attr, keys, html) {
+  const da = [];
+  box.querySelectorAll(sel).forEach(el => { const i = keys.indexOf(el.dataset[attr]); if (i < 0 || da[i]) el.remove(); else da[i] = el; });
+  const neu = [];
+  keys.forEach((k, i) => {
+    if (!da[i]) { box.insertAdjacentHTML('beforeend', html(k)); da[i] = box.lastElementChild; neu.push(da[i]); }
+    const el = da[i]; el.dataset.slot = i - 1; el.style.transform = i === 1 ? '' : 'translate3d(' + (i - 1) * 100 + '%,0,0)';
+    if (i === 1) el.removeAttribute('inert'); else el.setAttribute('inert', '');
+  });
+  return neu;
+}
+function kalOrdnen() {
+  const box = $('#cs-day'), wb = box.querySelector('.tv-wb'), tb = box.querySelector('.tv-b'); if (!wb || !tb) return;
+  const mitte = tb.querySelector('.tv[data-d="' + cSel + '"] .tl') || $('#tl'), y = mitte ? mitte.scrollTop : 0, mon = monVon(cSel);
+  kalReihe(wb, '.tv-wk', 'w', [-7, 0, 7].map(n => keyOf(addDays(parseKey(mon), n))), kalWocheHTML);
+  kalReihe(tb, '.tv', 'd', [-1, 0, 1].map(n => keyOf(addDays(parseKey(cSel), n))), kalSeiteHTML).forEach(el => { el.querySelector('.tl').scrollTop = y; });
+  tb.querySelectorAll('.tl').forEach(t => { t.id = t.parentNode.dataset.slot === '0' ? 'tl' : ''; if (!t.id) t.removeAttribute('id'); });
+  kalAuswahl(); kalJetzt();
+}
+/* Der gewählte Tag in allen drei Wochen */
+function kalAuswahl() {
+  document.querySelectorAll('#cs-day .tw').forEach(b => { const s = b.dataset.d === cSel; b.classList.toggle('sel', s); if (s) b.setAttribute('aria-current', 'date'); else b.removeAttribute('aria-current'); });
+}
+/* Tag neu malen. keep: Scrollstand behalten (neu gemeldete Termine). Sonst steht der Blick eine Stunde vor jetzt (heute), vor dem ersten Termin oder bei 7:30. */
+function kalTagMalen(keep) {
   const box = $('#cs-day'), alt = $('#tl'), y = alt ? alt.scrollTop : 0;
-  box.innerHTML = kalTagHTML(); kalJetzt();
-  clearInterval(cJetztT); cJetztT = cSel === todayKey() ? setInterval(() => { if (!cdlg.open) { clearInterval(cJetztT); cJetztT = null; } else kalJetzt(); }, 30000) : null;
-  $('#cs-close').innerHTML = ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]);
-  const tl = $('#tl'), erst = kalAm(cSel).filter(x => !x.g && !(kalVon(x) < cSel && kalBis(x) > cSel)).map(x => kalStrecke(x, cSel)[0]).sort((a, b) => a - b)[0];
-  const ziel = cSel === todayKey() ? minVon(Date.now()) - 90 : erst != null ? erst - 30 : 450;
-  tl.scrollTop = keep ? y : Math.max(0, TL_OBEN + ziel * TL_H / 60);
-  const tv = box.querySelector('.tv'); if (anim && !ruhig()) tv.classList.add(anim);
+  box.innerHTML = '<div class="tv-k"><div class="tv-wb"></div></div><div class="tv-b"></div>';
+  kalOrdnen();
+  clearInterval(cJetztT); cJetztT = setInterval(() => { if (!cdlg.open) { clearInterval(cJetztT); cJetztT = null; } else kalJetzt(); }, 30000);
+  const erst = kalAm(cSel).filter(x => !x.g && !(kalVon(x) < cSel && kalBis(x) > cSel)).map(x => kalStrecke(x, cSel)[0]).sort((a, b) => a - b)[0];
+  const ziel = cSel === todayKey() ? minVon(Date.now()) - 90 : erst != null ? erst - 30 : 450, top = keep ? y : Math.max(0, TL_OBEN + ziel * TL_H / 60);
+  box.querySelectorAll('.tl').forEach(t => { t.scrollTop = top; });
+}
+/* Der Knopf oben links wechselt seinen Inhalt (Pfeil nach unten ↔ „‹ Monat“): Er wächst oder schrumpft dabei weich und kommt aus der Unschärfe, wie in Apples Kalender.
+   w0: Breite vorher (gemessen, bevor sich die Klassen geändert haben). */
+function knopfMorph(html, w0) {
+  const el = $('#cs-close'); if (el.dataset.k === html) return;   // verglichen wird mit dem gemerkten Text: innerHTML schreibt das SVG anders zurück
+  w0 = w0 || el.offsetWidth; el.innerHTML = html; el.dataset.k = html;
+  if (ruhig() || !w0 || !el.offsetWidth) return;
+  el.animate([{ width: w0 + 'px' }, { width: el.offsetWidth + 'px' }], { duration: 420, easing: KAL_EASE });
+  el.animate([{ filter: 'blur(5px)', opacity: .5 }, { filter: 'blur(0px)', opacity: 1 }], { duration: 300, easing: 'ease-out' });
+}
+const kalKnopf = () => ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]);
+/* Eine Bewegung beginnt: Sie endet, wenn alle ihre Animationen durch sind, oder sofort mit cLauf.ende() (der Kalender wird geschlossen oder neu geöffnet).
+   Hat sich in der Zwischenzeit etwas geändert (neue Termine), wird danach neu gezeichnet. */
+function kalLauf(anims, ende) {
+  const lauf = { anims, nachher: false, ende: () => { if (cLauf !== lauf) return; cLauf = null; ende(); anims.forEach(a => a.cancel()); if ((lauf.nachher || cSpaeter) && cdlg.open) { cSpaeter = false; paintCal(true); } } };
+  cLauf = lauf;
+  Promise.all(anims.map(a => a.finished)).then(lauf.ende, () => {});
+  if (!anims.length) lauf.ende();
+}
+/* Zum Tag k blättern. Woche und Tag gleiten von dx0 (wo der Finger losließ, in px) an ihren Platz, mit dem Schwung v (px je ms). Liegt k weiter weg als ein Tag
+   (Tipp in der Woche, Wischen über die Woche, „Heute“), zeigt die Seite daneben vorher schon k; ebenso die Woche daneben, wenn die Woche wechselt.
+   art: 'tag' (über den Tag gewischt) oder 'woche' (über die Woche); k gleich dem gewählten Tag: zurück an den Platz. */
+function kalBlaettern(k, art, dx0, v) {
+  const box = $('#cs-day'), tb = box.querySelector('.tv-b'), wb = box.querySelector('.tv-wb'); if (!tb || !wb || cLauf) return;
+  const alt = cSel, W = tb.clientWidth || 1, dir = k > alt ? 1 : k < alt ? -1 : 0, wAlt = monVon(alt), wNeu = monVon(k), wdir = wNeu > wAlt ? 1 : wNeu < wAlt ? -1 : 0;
+  const ersetze = (rahmen, sel, slot, html, attr, key) => {
+    const nb = rahmen.querySelector(sel + '[data-slot="' + slot + '"]'); if (!nb || nb.dataset[attr] === key) return;
+    nb.insertAdjacentHTML('afterend', html(key)); const neu = nb.nextElementSibling; nb.remove();
+    neu.dataset.slot = slot; neu.style.transform = 'translate3d(' + slot * 100 + '%,0,0)'; neu.setAttribute('inert', '');
+    const tl = neu.querySelector('.tl'), mitte = $('#tl'); if (tl && mitte) tl.scrollTop = mitte.scrollTop;
+  };
+  if (dir) ersetze(tb, '.tv', dir, kalSeiteHTML, 'd', k);
+  if (wdir) ersetze(wb, '.tv-wk', wdir, kalWocheHTML, 'w', wNeu);
+  cSel = k; kalAuswahl(); kalJetzt();
+  if (dir) knopfMorph(kalKnopf());
+  const anims = [];
+  if (!ruhig()) {
+    /* Aus dem Wischen: Die Kurve beginnt mit dem Schwung des Fingers (Steigung am Anfang = Schwung × Dauer / Weg) und läuft weich aus; ohne Schwung (Tipp, „Heute“) die Feder */
+    const weg = -dir * W - (art === 'tag' ? dx0 : 0), rest = Math.abs(weg), dauer = v ? Math.round(Math.max(220, Math.min(380, rest / Math.max(Math.abs(v), .8) * 1.6))) : KAL_D;
+    const steil = v && rest > 1 ? Math.max(.3, Math.min(.9, Math.abs(v) * dauer / rest * .25)) : 0, kurve = v ? 'cubic-bezier(.25,' + steil.toFixed(2) + ',.3,1)' : KAL_EASE;
+    const zug = (els, von, bis) => els.forEach(el => { const s = +el.dataset.slot * 100;
+      anims.push(el.animate([{ transform: 'translate3d(calc(' + s + '% + ' + von + 'px),0,0)' }, { transform: 'translate3d(calc(' + s + '% + ' + bis + 'px),0,0)' }], { duration: dauer, easing: kurve, fill: 'forwards' })); });
+    if (art === 'tag' || dir) zug([...tb.querySelectorAll('.tv')], art === 'tag' ? dx0 : 0, -dir * W);
+    if (art === 'woche' || wdir) zug([...wb.querySelectorAll('.tv-wk')], art === 'woche' ? dx0 : 0, -wdir * W);
+  }
+  kalLauf(anims, kalOrdnen);
+}
+/* Monat → Tag wie in Apples Kalender: Die Woche des Tags wandert hinauf an den Platz der Wochenleiste, unter ihr klappt der Tag auf und blendet ein. Was im Monat darüber steht,
+   gleitet mit hinauf und blendet aus, was darunter steht, gleitet hinab. Die Wochentage gleiten von ihrer Zeile im Monat in die Leiste, die Überschrift des Monats verschwimmt.
+   Der Tag steht dabei schon fertig an seinem Platz (über dem Monat, Klasse wandel) und fährt nur von der Woche im Monat dorthin. zurueck: dasselbe rückwärts (Tag → Monat). */
+function kalWandel(zurueck) {
+  const b = $('#cs-body'), tag = $('#cs-day'), kopf = cdlg.querySelector('.cs-top'), wdEl = cdlg.querySelector('.cs-wd'), w0 = $('#cs-close').offsetWidth;
+  const top = kopf.offsetTop + kopf.offsetHeight + 'px';
+  cdlg.classList.add('wandel'); tag.style.top = top;
+  if (zurueck) { cView = 'monat'; kalKlassen(true); kalMonat(false); kalMonTitel(); }
+  else { cView = 'tag'; kalKlassen(true); kalTagMalen(false); }
+  knopfMorph(zurueck ? RUNTER : kalKnopf(), w0);
+  $('#cs-close').setAttribute('aria-label', zurueck ? 'Schließen' : 'Zurück zum Monat');
+  const d = b.querySelector('.cd[data-d="' + cSel + '"]'), tw = tag.querySelector('.tv-wk[data-slot="0"] .tw[data-d="' + cSel + '"]');
+  const ende = () => { cdlg.classList.remove('wandel'); tag.style.top = ''; if (zurueck) { tag.innerHTML = ''; clearInterval(cJetztT); cJetztT = null; } };
+  if (!d || !tw) return kalLauf([], ende);
+  const mitte = r => r.top + r.height / 2, nb = d.querySelector('b').getBoundingClientRect(), zb = tw.querySelector('b').getBoundingClientRect();
+  const dn = mitte(nb) - mitte(zb), dl = wdEl.firstElementChild.getBoundingClientRect().top - tw.querySelector('small').getBoundingClientRect().top;
+  const reihe = d.getBoundingClientRect().top, bb = b.getBoundingClientRect(), unten = Math.max(120, (bb.bottom - reihe) * .85), D = KAL_D, anims = [];
+  const an = (el, kf, o) => anims.push(el.animate(zurueck ? kf.slice().reverse().map(f => Object.assign({}, f, f.offset != null ? { offset: 1 - f.offset } : {})) : kf, Object.assign({ duration: D, easing: KAL_EASE, fill: 'both' }, o)));
+  const ty = y => 'translateY(' + y + 'px)';
+  /* Leiste und Tag: von der Woche im Monat an ihren Platz; die Buchstaben der Wochentage von ihrer Zeile im Monat */
+  an(tag.querySelector('.tv-k'), [{ transform: ty(dn) }, { transform: 'none' }]);
+  tag.querySelectorAll('.tv-wk[data-slot="0"] small').forEach(s => an(s, [{ transform: ty(dl - dn) }, { transform: 'none' }]));
+  /* Der Kreis um den gewählten Tag kommt erst unterwegs dazu (im Monat hat er keinen, außer heute) */
+  const sb = tw.querySelector('b'), sc = getComputedStyle(sb);
+  if (!tw.classList.contains('now')) an(sb, [{ backgroundColor: 'rgba(0,0,0,0)', color: getComputedStyle(d.querySelector('b')).color }, { backgroundColor: sc.backgroundColor, color: sc.color }], { duration: 260, easing: 'ease-out' });
+  /* Tage der Leiste, die in der Woche des Monats nicht stehen (Ende des Vormonats, Anfang des nächsten), kommen aus dem Nichts */
+  tag.querySelectorAll('.tv-wk[data-slot="0"] .tw').forEach(t => { const x = b.querySelector('.cd[data-d="' + t.dataset.d + '"]');
+    if (!x || Math.abs(x.getBoundingClientRect().top - reihe) > 2) an(t.querySelector('b'), [{ opacity: 0 }, { opacity: 0, offset: .3 }, { opacity: 1 }]); });
+  an(tag.querySelector('.tv-b'), [{ transform: ty(dn) }, { transform: 'none' }]);
+  an(tag.querySelector('.tv[data-slot="0"]'), [{ opacity: 0 }, { opacity: 1 }], { duration: zurueck ? 260 : 360, easing: 'ease-out' });
+  /* Der Monat: über der Woche hinauf und aus, die Woche selbst verdeckt die Leiste, darunter hinab und aus */
+  b.querySelectorAll('.cd, .cm-l').forEach(el => {
+    const r = el.getBoundingClientRect(); if (r.bottom < bb.top - 80 || r.top > bb.bottom + 80) return;
+    if (Math.abs(r.top - reihe) < 2 && el.classList.contains('cd')) an(el, [{ opacity: 0 }, { opacity: 0 }]);
+    else if (r.top < reihe) an(el, [{ transform: 'none', opacity: 1 }, { transform: ty(-dn * .5), opacity: 0, offset: .5 }, { transform: ty(-dn), opacity: 0 }]);
+    else an(el, [{ transform: 'none', opacity: 1 }, { transform: ty(unten), opacity: 0 }]);
+  });
+  an(wdEl, [{ opacity: 0 }, { opacity: 0 }]);
+  an($('#cs-mon'), [{ opacity: 1, filter: 'blur(0px)' }, { opacity: 0, filter: 'blur(8px)' }], { duration: 320, easing: 'ease-out' });
+  kalLauf(anims, ende);
 }
 /* Suche über Titel und Ort: erst was noch kommt (ab heute, aufsteigend), dann was war (absteigend), je Tag eine Überschrift. Höchstens 150 Treffer. */
 function kalSuchHTML() {
@@ -3573,39 +3711,67 @@ function kalSuchHTML() {
   });
   return h + '</ul>';
 }
-/* Wischen im Tag: über die Woche = Woche davor oder danach, über die Stunden = Tag davor oder danach. Nur deutlich waagerecht, sonst scrollt es wie gewohnt. */
+/* Wischen im Tag (v147, wie in Apples Kalender): Woche oder Tag folgen dem Finger, die Nachbarn kommen von der Seite mit. Losgelassen nach mehr als 40 % der Breite
+   oder mit Schwung geht es weiter (über den Tag ein Tag, über die Woche eine Woche), sonst gleitet alles zurück. Nur deutlich waagerecht, sonst scrollt es wie gewohnt.
+   Bis v146 sprang der Tag erst beim Loslassen und blendete von der Seite ein. */
 (function () {
-  let x0 = 0, y0 = 0, auf = null;
   const box = $('#cs-day');
+  let z = null;
   cdlg.addEventListener('pointerdown', () => { cWisch = false; }, true);
-  box.addEventListener('pointerdown', e => { if (!kalIos() || cView !== 'tag') return; x0 = e.clientX; y0 = e.clientY; auf = e.target.closest('.tv-wk') ? 'woche' : e.target.closest('.tv') ? 'tag' : null; });
-  box.addEventListener('pointerup', e => {
-    if (!auf) return;
-    const dx = e.clientX - x0, dy = e.clientY - y0, wo = auf; auf = null;
-    if (Math.abs(dx) < 50 || Math.abs(dx) < Math.abs(dy) * 1.5) return;
-    cWisch = true; const vor = dx < 0;
-    cSel = keyOf(addDays(parseKey(cSel), (vor ? 1 : -1) * (wo === 'woche' ? 7 : 1))); kalTagMalen(false, vor ? 'go-n' : 'go-p');
+  box.addEventListener('pointerdown', e => {
+    if (!kalIos() || cView !== 'tag' || cLauf || e.button > 0) return;
+    const art = e.target.closest('.tv-k') ? 'woche' : e.target.closest('.tv-b') ? 'tag' : null;
+    z = art ? { art, x0: e.clientX, y0: e.clientY, dx: 0, zieht: false, id: e.pointerId, spur: [] } : null;
   });
-  box.addEventListener('pointercancel', () => { auf = null; });
-  box.addEventListener('animationend', e => e.target.classList.remove('go-n', 'go-p'));
+  box.addEventListener('pointermove', e => {
+    if (!z || e.pointerId !== z.id) return;
+    if (!z.zieht) {
+      const dx = e.clientX - z.x0, dy = e.clientY - z.y0;
+      if (Math.abs(dy) > 10 && Math.abs(dy) >= Math.abs(dx)) { z = null; return; }
+      if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy) * 1.2) return;
+      z.zieht = true; cZieht = true; z.x0 = e.clientX;
+      try { box.setPointerCapture(e.pointerId); } catch (f) {}
+      z.els = [...box.querySelectorAll(z.art === 'tag' ? '.tv' : '.tv-wk')];
+      if (z.art === 'tag') { const y = $('#tl') ? $('#tl').scrollTop : 0; box.querySelectorAll('.tl').forEach(t => { t.scrollTop = y; }); }   // Nachbarn auf dieselbe Stunde
+    }
+    z.dx = e.clientX - z.x0; z.spur.push([e.timeStamp, e.clientX]); if (z.spur.length > 5) z.spur.shift();
+    z.els.forEach(el => { el.style.transform = 'translate3d(calc(' + (+el.dataset.slot * 100) + '% + ' + z.dx + 'px),0,0)'; });
+  });
+  const los = e => {
+    if (!z || e.pointerId !== z.id) return;
+    const q = z; z = null; if (!q.zieht) return;
+    cWisch = true; cZieht = false;
+    const s = q.spur, a = s[0], b = s[s.length - 1], v = a && b[0] > a[0] ? (b[1] - a[1]) / (b[0] - a[0]) : 0, W = box.clientWidth || 1;   // Schwung in px je ms
+    const dir = q.dx < -W * .4 || (v < -.3 && q.dx < -16) ? 1 : q.dx > W * .4 || (v > .3 && q.dx > 16) ? -1 : 0;
+    kalBlaettern(keyOf(addDays(parseKey(cSel), dir * (q.art === 'woche' ? 7 : 1))), q.art, q.dx, v);
+  };
+  box.addEventListener('pointerup', los);
+  box.addEventListener('pointercancel', los);
 })();
+/* Monat malen; der Monat des gewählten Tags steht oben (ist er der letzte, ohne Termine immer der laufende, das Ende der Liste wie bisher). keep: Scrollstand behalten. */
+function kalMonat(keep) {
+  const b = $('#cs-body'), y = b.scrollTop;
+  b.innerHTML = calHTML();
+  const m = keep ? null : b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
+  b.scrollTop = keep ? y : m && m.nextElementSibling ? m.offsetTop - b.firstElementChild.offsetTop : b.scrollHeight;
+}
 function paintCal(keep) {
-  const b = $('#cs-body'), y = b.scrollTop, ios = kalIos();
+  if (cLauf) { cLauf.nachher = true; return; }
+  if (cZieht) { cSpaeter = true; return; }   // neue Termine während des Ziehens: gezeichnet wird nach dem Loslassen
+  const ios = kalIos();
   kalKlassen(ios);
   $('#cs-akt').hidden = !ios; $('#cs-sbar').hidden = !(ios && cView === 'such'); $('#cs-such').hidden = !(ios && cView === 'such');
-  $('#cs-close').innerHTML = ios ? (cView === 'tag' ? ZURUECK + esc(MONTHS[+cSel.slice(5, 7) - 1]) : RUNTER) : 'Schließen';
+  $('#cs-close').innerHTML = $('#cs-close').dataset.k = ios ? (cView === 'tag' ? kalKnopf() : RUNTER) : 'Schließen';
   $('#cs-close').setAttribute('aria-label', ios && cView === 'tag' ? 'Zurück zum Monat' : 'Schließen');
   document.querySelector('.cs-wd').innerHTML = DAYS.map((d, i) => '<span' + (i > 4 ? ' class="we"' : '') + '>' + (ios ? d.charAt(0) : d) + '</span>').join('');
   clearInterval(cJetztT); cJetztT = null;
   if (ios && cView === 'such') { $('#cs-such').innerHTML = kalSuchHTML(); return; }
-  if (ios && cView === 'tag') { kalTagMalen(keep); b.innerHTML = calHTML(); return; }
-  b.innerHTML = calHTML(); $('#cs-day').innerHTML = ios ? '' : calDayHTML();
+  if (ios && cView === 'tag') { kalTagMalen(keep); return; }
+  kalMonat(keep); $('#cs-day').innerHTML = ios ? '' : calDayHTML();
   if (ios) requestAnimationFrame(kalMonTitel);
-  /* Neu geöffnet steht der Monat des gewählten Tags oben; ist er der letzte (ohne Termine immer der laufende), das Ende der Liste wie bisher */
-  const m = keep ? null : b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
-  b.scrollTop = keep ? y : m && m.nextElementSibling ? m.offsetTop - b.firstElementChild.offsetTop : b.scrollHeight;
 }
 function openCal(mode, sel) {
+  if (cLauf) cLauf.ende();
   cMode = CAL[mode] ? mode : 'all'; cSel = isKey(sel) && (sel <= todayKey() || (cMode === 'all' && kalDa())) ? sel : todayKey();
   cView = kalIos() ? 'tag' : 'monat'; cQ = ''; $('#cs-q').value = '';   // Kalender auf Heute: Ein Tipp auf einen Tag zeigt diesen Tag (wie in iOS); zurück geht es zum Monat
   kalKlassen(kalIos());   // schon vor dem Öffnen: Das Vollbild fährt als Vollbild herein, nicht als Blatt
@@ -3614,14 +3780,16 @@ function openCal(mode, sel) {
   paintCal(false);
 }
 document.querySelector('.app').addEventListener('click', e => { const b = e.target.closest('.wk .wd'); if (b) openCal(b.parentNode.dataset.cal, b.dataset.d); });
-$('#cs-close').addEventListener('click', () => { if (kalIos() && cView === 'tag') { cView = 'monat'; paintCal(false); } else closeDlg(cdlg); });
+cdlg.addEventListener('close', () => { cZieht = false; if (cLauf) cLauf.ende(); });
+$('#cs-close').addEventListener('click', () => { if (cLauf) return; if (kalIos() && cView === 'tag') { if (ruhig()) { cView = 'monat'; paintCal(false); } else kalWandel(true); } else closeDlg(cdlg); });
 $('#cs-today').addEventListener('click', () => { cSel = todayKey(); paintCal(false); });
 $('#cs-q').addEventListener('input', () => { cQ = $('#cs-q').value; $('#cs-such').innerHTML = kalSuchHTML(); });
 cdlg.addEventListener('click', e => {
   if (e.target === cdlg) return closeDlg(cdlg);
   if (cWisch) { cWisch = false; return; }   // der Klick, den die Maus nach dem Wischen schickt, ist kein Tipp (der Finger schickt keinen)
   const d = e.target.closest('.cd');
-  if (d) { if (!d.disabled) { cSel = d.dataset.d; if (kalIos()) cView = 'tag'; paintCal(!kalIos()); } return; }
+  if (cLauf) return;   // während einer Bewegung zählt kein Tipp
+  if (d) { if (!d.disabled) { if (kalIos() && !ruhig()) { cSel = d.dataset.d; kalWandel(false); } else { cSel = d.dataset.d; if (kalIos()) cView = 'tag'; paintCal(!kalIos()); } } return; }
   const leer = e.target.closest('.tl-in');
   if (leer && !e.target.closest('.tl-e')) {   // Tipp auf eine freie Stelle der Zeitleiste: neuer Termin zu dieser halben Stunde
     const min = Math.max(0, Math.min(1410, Math.floor((e.clientY - leer.getBoundingClientRect().top - TL_OBEN) / TL_H * 2) * 30));
@@ -3629,8 +3797,16 @@ cdlg.addEventListener('click', e => {
   }
   const c = e.target.closest('[data-c]'); if (!c) return;
   const a = c.dataset.c, v = c.dataset.v;
-  if (a === 'tag') { const alt = cSel; cSel = c.dataset.d; kalTagMalen(false, cSel > alt ? 'go-n' : cSel < alt ? 'go-p' : ''); }
-  else if (a === 'heute') { const alt = cSel; cSel = todayKey(); if (cView === 'tag') kalTagMalen(false, cSel > alt ? 'go-n' : cSel < alt ? 'go-p' : ''); else paintCal(false); }
+  if (a === 'tag') { if (c.dataset.d !== cSel) kalBlaettern(c.dataset.d, 'tag', 0, 0); }
+  else if (a === 'heute') {
+    if (cView === 'tag') { if (cSel !== todayKey()) kalBlaettern(todayKey(), 'tag', 0, 0); }
+    else {   // im Monat gleitet die Liste zum laufenden Monat, wie in iOS
+      cSel = todayKey(); const b = $('#cs-body'), m = b.querySelector('.cm[data-ym="' + cSel.slice(0, 7) + '"]');
+      b.querySelectorAll('.cd.sel').forEach(x => { x.classList.remove('sel'); x.removeAttribute('aria-current'); });
+      const n = b.querySelector('.cd[data-d="' + cSel + '"]'); if (n) { n.classList.add('sel'); n.setAttribute('aria-current', 'date'); }
+      if (m) b.scrollTo({ top: m.offsetTop - b.firstElementChild.offsetTop, behavior: ruhig() ? 'auto' : 'smooth' });
+    }
+  }
   else if (a === 'suche') { cVor = cView; cView = 'such'; paintCal(false); fokus($('#cs-q')); }
   else if (a === 'sucheZu') { cView = cVor || 'monat'; cQ = ''; $('#cs-q').value = ''; $('#cs-q').blur(); paintCal(false); }
   else if (a === 'day') openK(cSel);

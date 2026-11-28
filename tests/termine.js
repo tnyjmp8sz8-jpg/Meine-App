@@ -131,10 +131,15 @@ lauf(async () => {
   const leiste = await page.evaluate(() => [...document.querySelectorAll('#v-heute .wk .wd')].map(w => w.dataset.d + ':' + [...w.querySelectorAll('.mk .pt, .mk .kap > span')].map(u => (u.classList.contains('pt') ? 'pt ' : 'kap ') + /#[0-9A-F]{6}/i.exec(u.getAttribute('style'))[0]).join('+')));
   p.ok('Wochenleiste: Kapsel und Punkt in den Farben der Kalender, kommende Tage mit eigenem Datum', JSON.stringify(leiste) === JSON.stringify(['2026-11-23:', '2026-11-24:', '2026-11-25:', '2026-11-26:kap #8E8E93+kap #34C759+kap #FF3B30', '2026-11-27:pt #0A84FF', '2026-11-28:', '2026-11-29:']), JSON.stringify(leiste));
   await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
-  /* Tag: Woche oben, Titel, Seminar 9–11 Uhr als Block (seit v146 40 px je Stunde, 12 px über 0:00): oben 12 + 9 × 40 + 1 = 373 px, hoch 2 × 40 − 2 = 78 px, in der Farbe seines Kalenders */
-  const tag27 = await page.evaluate(() => { const c = document.querySelector('#csheet'), e = document.querySelector('#cs-day .tl-e[data-id="d"]');
-    return [c.classList.contains('tag'), document.querySelector('.tv-t').textContent, document.querySelector('.tw.sel').dataset.d, [...document.querySelectorAll('.tv-wk .tw')].length, e.style.top, e.style.height, e.innerText.replace(/\s+/g, ' '), getComputedStyle(e.querySelector('.kf')).backgroundColor].join(' | '); });
-  p.ok('Tipp auf Freitag: Tagesansicht mit Woche und Seminar als Block 9–11 Uhr', tag27 === 'true | Freitag – 27. Nov. 2026 | 2026-11-27 | 7 | 373px | 78px | Seminar 09:00–11:00 | rgb(10, 132, 255)', tag27);
+  /* Tag: Woche oben, Titel, Seminar 9–11 Uhr als Block (seit v147 36 px je Stunde wie bei Apple, 12 px über 0:00): oben 12 + 9 × 36 + 1 = 337 px, hoch 2 × 36 − 2 = 70 px, in der Farbe seines Kalenders.
+     Seit v147 liegen Woche und Tag je dreimal nebeneinander (davor, jetzt, danach): 26., 27., 28.11. und die Wochen ab 16., 23., 30.11.; bedienbar ist nur die mittlere. */
+  const tag27 = await page.evaluate(() => { const c = document.querySelector('#csheet'), s = document.querySelector('.tv[data-slot="0"]'), e = s.querySelector('.tl-e[data-id="d"]');
+    return [c.classList.contains('tag'), s.querySelector('.tv-t').textContent, document.querySelector('.tw.sel').dataset.d, [...document.querySelectorAll('.tv-wk[data-slot="0"] .tw')].length, e.style.top, e.style.height, e.innerText.replace(/\s+/g, ' '), getComputedStyle(e.querySelector('.kf')).backgroundColor].join(' | '); });
+  p.ok('Tipp auf Freitag: Tagesansicht mit Woche und Seminar als Block 9–11 Uhr', tag27 === 'true | Freitag – 27. Nov. 2026 | 2026-11-27 | 7 | 337px | 70px | Seminar 09:00–11:00 | rgb(10, 132, 255)', tag27);
+  const drei = () => page.evaluate(() => { const nach = q => [...document.querySelectorAll(q)].sort((x, y) => x.dataset.slot - y.dataset.slot);   // nach Platz, nicht nach Reihenfolge im Dokument
+    return nach('#cs-day .tv').map(t => t.dataset.d.slice(5) + '@' + t.dataset.slot + (t.inert ? 'i' : '') + (t.querySelector('#tl') ? '#' : '')).join(' ') + ' | ' +
+      nach('#cs-day .tv-wk').map(t => t.dataset.w.slice(5) + '@' + t.dataset.slot + (t.inert ? 'i' : '')).join(' '); });
+  p.ok('Tag: davor, jetzt, danach bereit, nur die Mitte bedienbar', (await drei()) === '11-26@-1i 11-27@0# 11-28@1i | 11-16@-1i 11-23@0 11-30@1i', await drei());
   p.ok('Tag: oben links zurück zum Monat („November“)', (await text(page, '#cs-close')) === 'November');
   await page.click('#cs-close'); await page.waitForTimeout(50);
   const monate = await page.evaluate(() => [...document.querySelectorAll('#cs-body .cm')].map(c => c.dataset.ym));
@@ -151,20 +156,26 @@ lauf(async () => {
   await page.evaluate(() => { const b = document.querySelector('#cs-body'); b.scrollTop = b.querySelector('.cm[data-ym="2027-03"]').offsetTop - b.firstElementChild.offsetTop + 30; }); await page.waitForTimeout(120);
   p.ok('… beim Scrollen wechselt die große Überschrift (März 2027)', (await text(page, '#cs-mon')) === 'März 2027', await text(page, '#cs-mon'));
   await page.click('.cd[data-d="2026-12-04"]'); await page.waitForTimeout(50);
-  p.enthaelt('Tipp auf den 4.12.: Kurztrip unter „Ganztägig“', await text(page, '#cs-day'), ['Ganztägig', 'Kurztrip']);
+  p.enthaelt('Tipp auf den 4.12.: Kurztrip unter „Ganztägig“', await text(page, '.tv[data-slot="0"]'), ['Ganztägig', 'Kurztrip']);
   /* Wischen über die Stunden: Tag danach und davor; über die Woche: Woche danach */
   const wisch = async (sel, dx) => { const r = await page.evaluate(q => { const b = document.querySelector(q).getBoundingClientRect(); return [b.left + b.width / 2, b.top + Math.min(60, b.height / 2)]; }, sel);
     await page.mouse.move(r[0], r[1]); await page.mouse.down(); await page.mouse.move(r[0] + dx, r[1] + 4, { steps: 4 }); await page.mouse.up(); await page.waitForTimeout(40);
     return page.evaluate(() => document.querySelector('.tw.sel').dataset.d); };
   p.ok('Wischen über die Stunden: nach links der 5.12., nach rechts wieder der 4.12.', (await wisch('#tl', -120)) === '2026-12-05' && (await wisch('#tl', 120)) === '2026-12-04');
-  p.ok('Wischen über die Woche: eine Woche weiter (11.12.)', (await wisch('.tv-wk', -150)) === '2026-12-11');
-  p.ok('… und zurück (4.12.)', (await wisch('.tv-wk', 150)) === '2026-12-04');
-  await page.click('.tw[data-d="2026-12-03"]');
-  p.ok('Tipp auf einen Tag der Woche: dieser Tag', await page.evaluate(() => document.querySelector('.tw.sel').dataset.d === '2026-12-03' && document.querySelector('.tv-t').textContent === 'Donnerstag – 3. Dez. 2026'));
-  await page.click('.tw[data-d="2026-12-04"]'); await page.waitForTimeout(30);
-  /* Tipp auf eine freie Stelle der Zeitleiste um 14:20 → neuer Termin 14:00–15:00; ein Satz ohne Uhrzeit macht ihn nicht ganztägig */
-  await page.evaluate(() => { document.querySelector('#tl').scrollTop = 12 + 13 * 40; });
-  const yy = await page.evaluate(() => document.querySelector('.tl-in').getBoundingClientRect().top + 12 + (14 * 60 + 20) * 40 / 60);
+  p.ok('Nach dem Wischen: wieder davor, jetzt, danach', (await drei()) === '12-03@-1i 12-04@0# 12-05@1i | 11-23@-1i 11-30@0 12-07@1i', await drei());
+  p.ok('Wischen über die Woche: eine Woche weiter (11.12.)', (await wisch('.tv-k', -150)) === '2026-12-11');
+  p.ok('… und zurück (4.12.)', (await wisch('.tv-k', 150)) === '2026-12-04');
+  /* Kurz gezogen (40 px, unter 40 % der Breite) und ohne Schwung losgelassen: alles gleitet zurück, der Tag bleibt */
+  { const r = await page.evaluate(() => { const b = document.querySelector('#tl').getBoundingClientRect(); return [b.left + b.width / 2, b.top + 60]; });
+    await page.mouse.move(r[0], r[1]); await page.mouse.down(); await page.mouse.move(r[0] - 40, r[1], { steps: 3 }); await page.waitForTimeout(150); await page.mouse.move(r[0] - 41, r[1]); await page.waitForTimeout(150); await page.mouse.up(); await page.waitForTimeout(40);
+    const st = await page.evaluate(() => document.querySelector('.tw.sel').dataset.d + ' ' + document.querySelector('.tv[data-slot="0"]').style.transform);
+    p.ok('Kurz gezogen, ohne Schwung: bleibt beim 4.12. und steht wieder an seinem Platz', st === '2026-12-04 ', st); }
+  await page.click('.tv-wk[data-slot="0"] .tw[data-d="2026-12-03"]');
+  p.ok('Tipp auf einen Tag der Woche: dieser Tag', await page.evaluate(() => document.querySelector('.tw.sel').dataset.d === '2026-12-03' && document.querySelector('.tv[data-slot="0"] .tv-t').textContent === 'Donnerstag – 3. Dez. 2026'));
+  await page.click('.tv-wk[data-slot="0"] .tw[data-d="2026-12-04"]'); await page.waitForTimeout(30);
+  /* Tipp auf eine freie Stelle der Zeitleiste um 14:20 → neuer Termin 14:00–15:00; ein Satz ohne Uhrzeit macht ihn nicht ganztägig (36 px je Stunde, 12 px über 0:00) */
+  await page.evaluate(() => { document.querySelector('#tl').scrollTop = 12 + 13 * 36; });
+  const yy = await page.evaluate(() => document.querySelector('#tl .tl-in').getBoundingClientRect().top + 12 + (14 * 60 + 20) * 36 / 60);
   await page.mouse.click(200, yy); await page.waitForTimeout(50);
   b = await blatt(page);
   p.ok('Tipp auf 14:20 in der Zeitleiste: neuer Termin am 4.12. von 14:00 bis 15:00', b.offen && b.titel === 'Termin eintragen' && b.tag === '2026-12-04' && b.von === '14:00' && b.bis === '15:00' && !b.ganz, JSON.stringify(b));
@@ -339,9 +350,9 @@ lauf(async () => {
     /* Ganztägig bis 0:00 des Folgetags: nur am 28.11. */
     await page.click('#v-heute .wk .wd[data-d="2026-11-28"]'); await page.waitForTimeout(80);
     p.enthaelt('Markt am 28.11.', await text(page, '#cs-day'), ['Markt', 'Ganztägig']);
-    await page.click('.tw[data-d="2026-11-29"]'); await page.waitForTimeout(50);
-    p.ok('Markt nicht am 29.11.', !(await text(page, '#cs-day')).includes('Markt'), await text(page, '#cs-day'));
-    await page.click('.tw[data-d="2026-11-26"]'); await page.waitForTimeout(50);
+    await page.click('.tv-wk[data-slot="0"] .tw[data-d="2026-11-29"]'); await page.waitForTimeout(50);
+    p.ok('Markt nicht am 29.11.', !(await text(page, '.tv[data-slot="0"]')).includes('Markt'), await text(page, '.tv[data-slot="0"]'));
+    await page.click('.tv-wk[data-slot="0"] .tw[data-d="2026-11-26"]'); await page.waitForTimeout(50);
     p.ok('Kein Uni-Termin in der Tagesliste (seit v135 nur Termine)', !(await text(page, '#cs-day')).includes('Füllung'), await text(page, '#cs-day'));
     await zu(page);
     /* Tipp auf die Termine im großen Widget: trackpunkt://neu/kalender → TrackHuelle.neu('kalender') öffnet die Übersicht bei heute */
@@ -353,6 +364,95 @@ lauf(async () => {
     p.ok('neu(„notizen“) öffnet den Planer bei den Notizen', await page.evaluate(() => !document.querySelector('#v-routinen').hidden && document.querySelector('#r-subs [aria-pressed="true"]').dataset.v === 'note'));
     p.ok('Gemerkt: auch die Kalender', (await page.evaluate(() => JSON.parse(localStorage.getItem('takt.termine')).kals.length)) === 1);
     p.ok('Keine Fehler (Kalender wählen)', !fehler.length, fehler.join());
+    await browser.close();
+  }
+  /* 16. Kalender zum Eintragen (v147, sein Wunsch 28.11.: „Kalender-Kategorien nur Privat, IK und SOPHIAARON“): In den Einstellungen je Kalender ein Schalter; im Blatt und in der
+     Schnelleingabe der iPhone-App (Stand: kals, kal, erZ, erG) stehen nur die eingeschalteten; der letzte lässt sich nicht abschalten. Gewählt in der Schnelleingabe (Eingang „kalwahl“):
+     beim nächsten Termin vorbelegt. Ein Termin aus einem abgeschalteten Kalender zeigt beim Ändern seinen eigenen trotzdem. */
+  {
+    const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle });
+    const KALS = [{ id: 'k1', n: 'Arbeit', f: '#FF3B30' }, { id: 'k2', n: 'Geburtstage', f: '#8E8E93' }, { id: 'k3', n: 'Privat', f: '#FF9F0A', std: 1 }, { id: 'k4', n: 'Uni', f: '#AF52DE' }];
+    const L3 = LISTE.map(x => Object.assign({}, x, { ki: x.k === 'Privat' ? 'k3' : x.k === 'Uni' ? 'k4' : 'k2' })).concat([{ id: 'z', s: um(1, 18), e: um(1, 19), t: 'Schicht', w: 1, ki: 'k1', k: 'Arbeit', f: '#FF3B30' }]);
+    await ruf(page, 'info', { app: '1.6', kalender: 'an' }); await ruf(page, 'termine', { recht: 'an', liste: L3, kals: KALS }); await page.waitForTimeout(400);
+    const stand = () => page.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop(); return s ? [(s.kals || []).map(k => k.n + (k.f ? '' : '?')).join(','), s.kal, s.erZ, 'erG' in s ? s.erG : '-'].join(' | ') : 'kein Stand'; });
+    p.ok('Stand: alle vier Kalender, vorbelegt Privat (der von iOS), Erinnerung 60 min, ganztägig keine', (await stand()) === 'Arbeit,Geburtstage,Privat,Uni | k3 | 60 | -', await stand());
+    await page.click('#gear');
+    const sch = () => page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="kalNein"]')].map(b => b.textContent + (b.getAttribute('aria-checked') === 'true' ? '+' : '-') + (b.disabled ? '!' : '')).join(' '));
+    p.ok('Einstellungen: je Kalender ein Schalter, alle an', (await sch()) === 'Arbeit+ Geburtstage+ Privat+ Uni+', await sch());
+    for (const k of ['k1', 'k2', 'k4']) await page.click('#es-body [data-h="kalNein"][data-v="' + k + '"]');
+    p.ok('Drei aus: Privat bleibt als letzter gesperrt an', (await sch()) === 'Arbeit- Geburtstage- Privat+! Uni-', await sch());
+    await page.evaluate(() => document.querySelector('#es-body [data-h="kalNein"][data-v="k3"]').click());
+    p.ok('Gespeichert: drei abgeschaltet', JSON.stringify((await gespeichert(page)).E.kalNein) === '["k1","k2","k4"]', JSON.stringify((await gespeichert(page)).E.kalNein));
+    await page.click('#es-body [data-h="kalNein"][data-v="k4"]');
+    await zu(page); await page.waitForTimeout(400);
+    p.ok('Stand: nur noch Privat und Uni', (await stand()) === 'Privat,Uni | k3 | 60 | -', await stand());
+    await page.click('#v-heute [data-v="termin"]');
+    const wahl = () => page.evaluate(() => ({ zu: document.querySelector('#te-kalf').hidden, chips: [...document.querySelectorAll('#te-kal .chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join() }));
+    p.ok('Blatt: nur Privat und Uni zur Wahl', (await wahl()).chips === 'Privat*,Uni', JSON.stringify(await wahl()));
+    await zu(page);
+    await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
+    await page.click('.tv[data-slot="0"] .tl-e[data-id="z"]');
+    p.ok('Termin aus „Arbeit“ (abgeschaltet): beim Ändern steht sein Kalender mit dabei', (await wahl()).chips === 'Arbeit*,Privat,Uni', JSON.stringify(await wahl()));
+    await zu(page);
+    /* Nur noch ein Kalender an: keine Wahl im Blatt, aber der Auftrag nennt ihn, sonst nähme iOS seinen Kalender für neue Termine */
+    await page.click('#gear'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Nur Privat an: keine Wahl im Blatt', (await wahl()).zu);
+    await page.fill('#te-text', 'Kino morgen 20 Uhr'); await leeren(page); await page.click('#te-save'); await page.waitForTimeout(80);
+    const m = await post(page, 'termin');
+    p.ok('… der Auftrag geht trotzdem an Privat (kal k3)', m.length === 1 && m[0].kal === 'k3', JSON.stringify(m));
+    /* Schnelleingabe der iPhone-App hat Uni gewählt: Eingang „kalwahl“ → vorbelegt */
+    await page.click('#gear'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
+    await ruf(page, 'eingang', [{ id: 'e1', art: 'kalwahl', kal: 'k4', t: Date.now() }]); await page.waitForTimeout(50);
+    await page.click('#v-heute [data-v="termin"]');
+    p.ok('Eingang „kalwahl“ aus der Schnelleingabe: Uni ist vorbelegt', (await wahl()).chips === 'Privat,Uni*' && (await gespeichert(page)).E.kalW === 'k4', JSON.stringify(await wahl()));
+    await zu(page);
+    p.ok('Keine Fehler (Kalender zum Eintragen)', !fehler.length, fehler.join());
+    await browser.close();
+  }
+  /* 17. Bewegung wie in Apples Kalender (v147, sein Video): Mit Bewegung liegt beim Wechsel Monat → Tag der Tag über dem Monat (Klasse wandel), die Woche des Tags beginnt auf der Höhe
+     ihrer Zeile im Monat und endet in der Leiste; danach ist nur noch der Tag da. Zurück dasselbe rückwärts, danach ist der Tag leer. Blättern: Der Tag folgt dem Finger. */
+  {
+    const { browser, page, fehler } = await oeffnen({ uhr: JETZT, skript: huelle, bewegung: true });
+    await ruf(page, 'info', { app: '1.6', kalender: 'an' }); await an(page);
+    await page.click('#v-heute .wk .wd[data-d="2026-11-26"]'); await page.waitForTimeout(700);
+    await page.click('#cs-close'); await page.waitForTimeout(700);
+    const nur = () => page.evaluate(() => document.getAnimations().filter(a => !(a instanceof CSSAnimation) && !(a instanceof CSSTransition)));
+    const halt = t => page.evaluate(t => { const as = document.getAnimations().filter(a => !(a instanceof CSSAnimation) && !(a instanceof CSSTransition)); as.forEach(a => { a.pause(); a.currentTime = t; }); return as.length; }, t);
+    const zeile = await page.evaluate(() => { const b = document.querySelector('.cd[data-d="2026-12-04"] b').getBoundingClientRect(); return b.top + b.height / 2; });
+    await page.click('.cd[data-d="2026-12-04"]');
+    const n = await halt(0);
+    const start = await page.evaluate(() => { const c = document.querySelector('#csheet'), b = document.querySelector('.tv-wk[data-slot="0"] .tw[data-d="2026-12-04"] b').getBoundingClientRect();
+      return [c.classList.contains('wandel'), c.classList.contains('tag'), getComputedStyle(document.querySelector('.cs-body')).display, Math.round(b.top + b.height / 2), getComputedStyle(document.querySelector('.tv[data-slot="0"]')).opacity].join(' | '); });
+    p.ok('Monat → Tag, am Anfang: Tag über dem Monat, die Woche auf der Höhe ihrer Zeile im Monat, der Tag noch unsichtbar', n > 20 && start === 'true | true | block | ' + Math.round(zeile) + ' | 0', n + ' Animationen · ' + start + ' (Zeile ' + Math.round(zeile) + ')');
+    await page.evaluate(() => document.getAnimations().forEach(a => a.play())); await page.waitForTimeout(700);
+    const ende = await page.evaluate(() => { const c = document.querySelector('#csheet'); return [c.classList.contains('wandel'), c.classList.contains('tag'), getComputedStyle(document.querySelector('.cs-body')).display, document.querySelector('#tl').closest('.tv').dataset.d, document.querySelector('#cs-close').textContent].join(' | '); });
+    p.ok('… am Ende: nur der Tag (4.12.), oben „‹ Dezember“', ende === 'false | true | none | 2026-12-04 | Dezember', ende);
+    p.ok('… alle Animationen sind abgeräumt', (await page.evaluate(() => document.getAnimations().filter(a => !(a instanceof CSSAnimation) && !(a instanceof CSSTransition) && a.playState !== 'finished').length)) === 0);
+    /* Blättern mit dem Finger: Nach 100 px zur Seite steht der Tag 100 px weiter links, der nächste kommt von rechts nach */
+    const r = await page.evaluate(() => { const b = document.querySelector('#tl').getBoundingClientRect(); return [b.left + b.width * .7, b.top + 100, b.width]; });
+    await page.mouse.move(r[0], r[1]); await page.mouse.down(); await page.mouse.move(r[0] - 20, r[1]); await page.mouse.move(r[0] - 120, r[1], { steps: 5 });
+    const mitte = await page.evaluate(() => [...document.querySelectorAll('.tv')].sort((x, y) => x.dataset.slot - y.dataset.slot).map(t => Math.round(t.getBoundingClientRect().left)).join(','));
+    p.ok('Beim Ziehen: Tag und Nachbarn folgen dem Finger (100 px)', mitte === [-r[2] - 100, -100, r[2] - 100].join(','), mitte);
+    /* Meldet der Kalender währenddessen etwas Neues, bleibt alles unter dem Finger; gezeichnet wird nach dem Loslassen */
+    await an(page, LISTE.concat([{ id: 'n', s: um(9, 16), e: um(9, 17), t: 'Neu dazu', w: 1, k: 'Privat', f: '#FF3B30' }]));
+    const zt = await page.evaluate(() => document.querySelector('.tv[data-slot="0"]').style.transform);
+    p.ok('Neue Termine beim Ziehen: nichts springt (die Seite steht weiter 100 px links)', /- 100px|-100px/.test(zt), zt);
+    await page.mouse.up(); await page.waitForTimeout(700);
+    p.ok('… nach dem Loslassen steht der neue Termin am 5.12.', (await text(page, '.tv[data-slot="0"]')).includes('Neu dazu'), await text(page, '.tv[data-slot="0"]'));
+    p.ok('Losgelassen mit Schwung: der 5.12.', await page.evaluate(() => document.querySelector('.tw.sel').dataset.d === '2026-12-05' && document.querySelector('#tl').closest('.tv').dataset.d === '2026-12-05' && !document.querySelector('.tv[data-slot="0"]').style.transform));
+    /* Zurück: am Anfang ist der Monat schon gezeichnet und der Tag liegt darüber, am Ende ist der Tag leer und oben steht wieder der Pfeil */
+    await page.click('#cs-close'); await halt(0);
+    p.ok('Tag → Monat, am Anfang: Monat da, Tag darüber', await page.evaluate(() => document.querySelector('#csheet').classList.contains('wandel') && !document.querySelector('#csheet').classList.contains('tag') && !!document.querySelector('.cd[data-d="2026-12-05"]') && !!document.querySelector('#cs-day .tv')));
+    await page.evaluate(() => document.getAnimations().forEach(a => a.play())); await page.waitForTimeout(700);
+    p.ok('… am Ende: nur der Monat, der Tag ist leer', await page.evaluate(() => !document.querySelector('#csheet').classList.contains('wandel') && document.querySelector('#cs-day').innerHTML === '' && document.querySelector('#cs-close').getAttribute('aria-label') === 'Schließen'));
+    /* „Heute“ im Monat: Die Liste gleitet zum laufenden Monat (weich, nicht im selben Augenblick) */
+    await page.evaluate(() => { const b = document.querySelector('#cs-body'); b.scrollTop = b.querySelector('.cm[data-ym="2027-05"]').offsetTop; });
+    await page.click('.cs-heute');
+    const y1 = await page.evaluate(() => document.querySelector('#cs-body').scrollTop); await page.waitForTimeout(900);
+    const ziel = await page.evaluate(() => { const b = document.querySelector('#cs-body'); return [b.scrollTop, b.querySelector('.cm[data-ym="2026-11"]').offsetTop - b.firstElementChild.offsetTop]; });
+    p.ok('„Heute“ im Monat: gleitet zum November', Math.abs(ziel[0] - ziel[1]) < 2 && Math.abs(y1 - ziel[1]) > 50, y1 + ' → ' + ziel.join(' / '));
+    p.ok('Keine Fehler (Bewegung)', !fehler.length, fehler.join());
     await browser.close();
   }
   await p.ende();
