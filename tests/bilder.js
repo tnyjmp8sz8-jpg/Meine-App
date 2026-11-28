@@ -32,7 +32,7 @@ lauf(async () => {
       await versuch('blatt-stand', async () => { await page.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await page.click('#add'); });
       await versuch('gym', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); });
       await versuch('gym-jahr', async () => { await page.click('#v-training [data-t="mode"][data-v="year"]'); });
-      await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training [data-fold="uebungen"]'); await page.click('#v-training .folds [data-k="ex"]'); });
+      await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training h2.sec [data-k="ordnen"]'); await page.click('#osheet [data-k="ex"]'); });
       await versuch('training-laeuft', async () => { await page.click('#v-training .row .go'); });
       await versuch('notizen', async () => { await bereich(page, 'routinen'); await page.click('#r-subs [data-v="note"]'); await nachOben(page); });
       await versuch('blatt-notiz', async () => { await page.click('#n-main [data-n="note"]:has-text("Betreuer")'); });

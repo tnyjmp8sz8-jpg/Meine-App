@@ -133,6 +133,25 @@ lauf(async () => {
   const o2 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, K, N, E: { akz: 'pink', reihe: ['training', 'gewicht'], weg: { heute: 1 } } } }), q = o2.page;
   const start = await q.evaluate(() => [document.documentElement.dataset.akz, [...document.querySelectorAll('.tabs-in .tab:not([hidden])')].map(b => b.textContent.trim()).join(' '), document.body.dataset.v].join(' | '));
   P.ok('Start mit Pink, Leiste Training, Gewicht, Planer, Finanzen; ohne Heute öffnet Training (der erste)', start === 'pink | Training Gewicht Planer Finanzen | training', start);
-  await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler));
+  /* 12. v152: Statistik im Jahr wählbar (sein Wort: „Möglichkeit geben auf Wechseln der Statistik, z. B. Verbesserung Kurve … gleiches bei Cardio“).
+     Gym: alle drei Einheiten im November → Rekorde 3 (siehe 4.); Verbesserung braucht zwei Monate für eine Kurve. Cardio: je ein Lauf im Oktober und November → Pace als Kurve. */
+  const o4 = await oeffnen({ uhr: JETZT, daten: { S: { routines: [], running: null }, LY: {}, K, N, T: { runs: { r1: { d: '2026-10-05', m: 5000, s: 1500, hr: 150 }, r2: { d: '2026-11-10', m: 6000, s: 1740, hr: 148 } } } } }), q4 = o4.page;
+  await bereich(q4, 'training'); await q4.click('#v-training [data-t="mode"][data-v="year"]'); await q4.waitForTimeout(60);
+  const grafik = () => q4.evaluate(() => { const c = document.querySelector('#v-training .card.chart'), m = c.querySelector('.pull-m'); return [c.querySelector('.pull-k').textContent.trim(), m.hidden ? 'zu' : [...m.querySelectorAll('[role="menuitemradio"]')].map(b => b.textContent.trim() + (b.getAttribute('aria-checked') === 'true' ? '*' : '')).join(','), (c.querySelector('svg[role="img"]') || { getAttribute: () => c.querySelector('.note').textContent }).getAttribute('aria-label')].join(' | '); });
+  P.ok('Gym im Jahr: Grafik „Einheiten pro Monat“, Menü zu', (await grafik()) === 'Einheiten pro Monat | zu | Einheiten pro Monat', await grafik());
+  await q4.click('#v-training .pull-k');
+  P.ok('Tipp öffnet das Menü mit fünf Statistiken, die gewählte mit Haken', (await grafik()) === 'Einheiten pro Monat | Einheiten pro Monat*,Trainingszeit pro Monat,Rekorde pro Monat,Sätze besser pro Monat,Verbesserung je Monat | Einheiten pro Monat', await grafik());
+  await q4.click('#v-training .pull-m [data-v="rek"]'); await q4.waitForTimeout(60);
+  P.ok('Rekorde gewählt: Grafik und Merker (E.kStat)', (await grafik()) === 'Rekorde pro Monat | zu | Rekorde pro Monat' && (await gespeichert(q4)).E.kStat === 'rek', await grafik());
+  await q4.click('#v-training .pull-k'); await q4.click('#v-training .pull-m [data-v="p"]'); await q4.waitForTimeout(60);
+  P.ok('Verbesserung mit nur einem Monat: der Satz statt einer Kurve', (await grafik()) === 'Verbesserung je Monat | zu | Für eine Kurve braucht es zwei Monate mit Werten.', await grafik());
+  await q4.click('#v-training .pull-k'); await q4.click('#v-training .mnav b'); await q4.waitForTimeout(60);
+  P.ok('Tipp daneben schließt das Menü', (await grafik()).split(' | ')[1] === 'zu', await grafik());
+  await q4.click('#v-training .subtabs [data-v="cardio"]'); await q4.waitForTimeout(60);
+  P.ok('Cardio im Jahr: „Kilometer pro Monat“', (await grafik()).startsWith('Kilometer pro Monat | zu'), await grafik());
+  await q4.click('#v-training .pull-k'); await q4.click('#v-training .pull-m [data-v="pace"]'); await q4.waitForTimeout(60);
+  P.ok('Pace als Kurve über Oktober und November, gemerkt (E.cStat)', (await grafik()) === 'Pace je Monat | zu | Pace je Monat' && (await gespeichert(q4)).E.cStat === 'pace' && !!(await q4.$('#v-training .card.chart .g-trend')), await grafik());
+  await o4.browser.close();
+  await P.ende(null, o.fehler.concat(o2.fehler, o3.fehler, o4.fehler));
   await o2.browser.close();
 });

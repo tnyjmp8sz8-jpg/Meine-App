@@ -1077,13 +1077,20 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .sec-a.solo svg{width:13px;height:13px}
 /* Eingeklappte Listen: eine Zeile mit Name und Anzahl. Mehrere hintereinander rücken zusammen wie die Monate einer langen Liste. */
 .folds{display:flex;flex-direction:column;gap:6px}
-/* Leiste mit zwei Teilen (v148): eine Karte, zwei Hälften mit Haarlinie dazwischen; die offene trägt eine leise Linse */
-.kbar .kb-r{display:flex;padding:0}
-.kbar .kb-r>button{flex:1 1 0;min-width:0}
-.kbar .kb-r>button+button{border-left:.5px solid var(--line)}
-.kbar .kb-r>button[aria-expanded="true"]{background:var(--fill)}
-.entries .kb-r:has(> button:active){background:none}
-.kbar .kb-r>button:active{background:var(--fill)}
+/* Auswahlmenü (v152) */
+.pull{position:relative}
+.pull-k{display:inline-flex;align-items:center;gap:6px;border:0;background:none;padding:4px 0;color:var(--muted);font:inherit;font-size:13px;font-weight:600}
+.pull-k svg{width:12px;height:12px;transition:transform .2s ease}
+.pull-k[aria-expanded="true"] svg{transform:rotate(180deg)}
+.pull-m{position:absolute;left:-6px;top:calc(100% + 6px);z-index:6;min-width:230px;display:flex;flex-direction:column;padding:6px;border-radius:16px;background:var(--schild);box-shadow:var(--rand-a),0 14px 36px rgba(0,0,0,.4)}
+.pull-m[hidden]{display:none}
+.pull-m button{display:flex;align-items:center;gap:9px;min-height:42px;border:0;background:none;padding:0 12px 0 10px;border-radius:10px;color:var(--ink);font:inherit;font-size:15px;text-align:left}
+.pull-m button:active{background:var(--fill)}
+.pull-m svg{flex:none;width:14px;height:14px;color:var(--at);visibility:hidden}
+.pull-m [aria-checked="true"] svg{visibility:visible}
+.card.chart{overflow:visible}
+.o-seg{margin-top:6px}
+.o-seg .dim{font-weight:500}
 /* Was unter einer offenen Klappzeile steht und keine Zeile ist (Monate der Einträge, Kategorien): ein eigener Kasten, damit er auf- und zufahren kann; Abstände wie im Behälter darüber */
 .nach{display:flex;flex-direction:column;gap:inherit}
 .entries button.fo{min-height:42px;align-items:center}
@@ -1534,7 +1541,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v151</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v152</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1614,6 +1621,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     </label>
     <div id="o-items"></div>
     <button type="button" class="ghost center" id="o-add">Einheit hinzufügen</button>
+    <div id="o-mehr"></div>
   </div>
 </dialog>
 
@@ -1775,6 +1783,8 @@ function normE(o) {
     if (o.diskret === 1) out.diskret = 1;
     if (o.kw === 1) out.kw = 1;
     if (o.schnitt === 14) out.schnitt = 14;
+    if (['dur', 'rek', 'bes', 'p'].indexOf(o.kStat) >= 0) out.kStat = o.kStat;   // Statistik im Jahr (v152)
+    if (['n', 'zeit', 'pace', 'eff'].indexOf(o.cStat) >= 0) out.cStat = o.cStat;
   }
   return out;
 }
@@ -1985,7 +1995,6 @@ $('#scroll').addEventListener('click', e => {
   const key = b.dataset.fold, auf = b.getAttribute('aria-expanded') !== 'true', ul = b.closest('ul'), box = b.closest('.view');
   if (ul && ul.dataset.klappt) return;
   const zeichne = () => {
-    if (b.parentNode.classList.contains('kb-r')) b.parentNode.querySelectorAll('[data-fold]').forEach(x => { fo[x.dataset.fold] = false; });   // Leiste (v148): immer nur ein Teil offen
     fo[key] = auf;
     const infos = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
     render();
@@ -2935,14 +2944,25 @@ function runSVG(runs, metric) {
   s += '<text x="' + L + '" y="' + (VH - 6) + '">' + dRow(pts[0].d) + '</text><text text-anchor="end" x="' + (VW - R) + '" y="' + (VH - 6) + '">' + dRow(pts[pts.length - 1].d) + '</text>';
   return s + '</svg>';
 }
-function kmBarsSVG(vals, label, hl) {
+/* Auswahlmenü wie in iOS (v152): ein Knopf mit dem Gewählten und einem Pfeil; ein Tipp klappt darunter eine Liste auf (deckend, weil sie mitscrollt: kein Milchglas),
+   ein Tipp auf eine Zeile wählt (attr und data-v gehen an den Lauscher des Bereichs), ein Tipp daneben schließt. opts: [[Wert, Name], …] */
+const HAKEN = '<svg viewBox="0 0 14 14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.5 7.5l3 3 6-7"/></svg>';
+const menuHTML = (attr, wahl, opts) => '<div class="pull"><button type="button" class="pull-k" aria-haspopup="menu" aria-expanded="false">' + (opts.find(q => q[0] === wahl) || opts[0])[1] + CHEV_D + '</button><div class="pull-m" role="menu" hidden>' +
+  opts.map(q => '<button type="button" role="menuitemradio" aria-checked="' + (q[0] === wahl) + '" ' + attr + ' data-v="' + q[0] + '">' + HAKEN + q[1] + '</button>').join('') + '</div></div>';
+document.addEventListener('click', e => {
+  const k = e.target.closest('.pull-k');
+  document.querySelectorAll('.pull-m:not([hidden])').forEach(m => { if (!k || m !== k.nextElementSibling) { m.hidden = true; m.previousElementSibling.setAttribute('aria-expanded', 'false'); } });
+  if (k) { const m = k.nextElementSibling; m.hidden = !m.hidden; k.setAttribute('aria-expanded', String(!m.hidden)); haptik('wahl'); }
+}, true);
+/* Balken je Monat; fmtV (seit v152) beschriftet den Wert beim Ablesen, sonst Einheiten (mit label) oder km */
+function kmBarsSVG(vals, label, hl, fmtV) {
   const VW = 360, VH = 170, L = 4, R = 40, T0 = 10, B = 22;
   let hi = Math.max.apply(null, vals.concat([5]));
   const step = [2, 5, 10, 20, 25, 50, 100, 200, 500].find(x => x >= hi / 3) || 1000;
   hi = Math.ceil(hi / step - 1e-9) * step;
   const Y = v => T0 + (hi - v) / hi * (VH - T0 - B), slot = (VW - L - R) / 12, bw = slot * 0.62, f = n => n.toFixed(1);
   let s = '<svg viewBox="0 0 ' + VW + ' ' + VH + '" role="img" aria-label="' + (label || 'Kilometer pro Monat') + '"' +
-    scrubAttr(vals.map((v, i) => v > 0 ? [L + slot * (i + 0.5), Y(v), MONTHS[i] + ' · ' + (label ? v + (v === 1 ? ' Einheit' : ' Einheiten') : kg(v, 1) + ' km')] : null).filter(Boolean)) + '>';
+    scrubAttr(vals.map((v, i) => v > 0 ? [L + slot * (i + 0.5), Y(v), MONTHS[i] + ' · ' + (fmtV ? fmtV(v) : label ? v + (v === 1 ? ' Einheit' : ' Einheiten') : kg(v, 1) + ' km')] : null).filter(Boolean)) + '>';
   for (let v = 0; v <= hi + 1e-9; v += step) s += '<line class="' + (v === 0 ? 'g-zero' : 'g-grid') + '" x1="' + L + '" x2="' + (VW - R) + '" y1="' + f(Y(v)) + '" y2="' + f(Y(v)) + '"/><text x="' + (VW - R + 6) + '" y="' + f(Y(v) + 4) + '">' + v + '</text>';
   vals.forEach((v, i) => {
     const cx = L + slot * (i + 0.5);
@@ -2995,7 +3015,7 @@ function tYearHTML(all, curYM) {
   for (let m = 1; m <= 12; m++) per.push(tAgg(list.filter(r => r.d.slice(5, 7) === pad(m))));
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + tHero('Gelaufen ' + y, g);
   if (!g.n) return h;
-  h += tTiles(g) + '<div class="card chart"><p class="note">Kilometer pro Monat</p>' + kmBarsSVG(per.map(p => p.m / 1000), '', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
+  h += tTiles(g) + jahrStatHTML('cstat', cStat(), CSTAT, i => { const q = per[i]; return { km: q.m / 1000, n: q.n, zeit: q.s / 3600, pace: q.n ? q.pace : null, eff: q.eff }; }, tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1, y);
   h += foldHTML('cardioMonate', 'Monate', '', per.filter(p => p.n).length, per.map((p, i) => p.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
     '<span class="l"><span>' + MONTHS[i] + '</span><small>' + p.n + (p.n === 1 ? ' Lauf' : ' Läufe') + ' · ' + fmtPace(p.pace) + ' /km' + (p.eff != null ? ' · Effizienz ' + kg(p.eff, 2) : '') + '</small></span><b>' + kg(p.m / 1000) + ' km</b></button></li>' : '').reverse().join(''));
   return h;
@@ -3026,6 +3046,8 @@ $('#v-training').addEventListener('click', e => {
   if (a === 'mode') { tMode = t.dataset.v; if (tMode === 'year') tYear = +tYM.slice(0, 4); }
   else if (a === 'sub') { tSub = t.dataset.v; paintTop(); }
   else if (a === 'metric') tMetric = t.dataset.v;
+  else if (a === 'cstat') setE({ cStat: t.dataset.v === 'km' ? null : t.dataset.v });
+  else if (a === 'kstat') setE({ kStat: t.dataset.v === 'n' ? null : t.dataset.v });
   else if (a === 'goto') { tYM = t.dataset.ym; tMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') { const d = a === 'prev' ? -1 : 1; if (tMode === 'year') tYear += d; else tYM = ymOfIdx(ymIdx(tYM) + d); }
   renderTraining();
@@ -3306,18 +3328,39 @@ function kPeriod(pre) {
     h.forEach((e, i) => { if (i && e.d.slice(0, pre.length) === pre) { const b = setsBesser(e.sets, h[i - 1].sets); bes += b.n; cmp += b.von; } });
   });
   const pp = ps.length ? ps.reduce((a, b) => a + b, 0) / ps.length : null;
-  return { n: ds.length, bes, cmp, dur, np: ps.length, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
+  return { n: ds.length, bes, cmp, dur, np: ps.length, pv: pp, p: pp == null ? null : Math.abs(pp) < 0.0005 ? { t: 'gleich', c: '' } : { t: (pp > 0 ? '+' : '−') + kg(Math.abs(pp * 100)) + ' %', c: pp > 0 ? 'up' : 'down' } };
 }
 /* Kennzahlen unter der großen Zahl, Monat (pre JJJJ-MM) oder Jahr (JJJJ). Seit v149 frei wählbar (Einstellungen → Gym, höchstens drei; ohne Wahl wie bisher Verbesserung,
    Sätze besser, Trainingszeit). Rekorde: Übungen, die an ihrem Tag einen Rekord hatten (wie in der Liste der Einheiten). Ø Dauer: Mittel der Einheiten mit Dauer.
    Pro Woche: Einheiten geteilt durch die Wochen des Zeitraums, im laufenden Monat oder Jahr nur bis heute. Sätze: alle Sätze aller Einheiten. */
+/* Rekorde im Zeitraum pre: Übungen, die an ihrem Tag einen Rekord hatten (wie in der Liste der Einheiten) */
+const kRek = pre => kDates().filter(d => d.slice(0, pre.length) === pre).reduce((a, d) => a + kDay(d).filter(x => recOf(x.sets, kHist(x.id).filter(q => q.d < d), exBw(x.id, d))).length, 0);
+/* Statistik im Jahr (v152, sein Wort 28.11.: „Möglichkeit geben auf Wechseln der Statistik, z. B. Verbesserung Kurve etc., was Sinn macht“ und „gleiches bei Cardio“):
+   je Monat als Balken, was sich zählen lässt, als Kurve, was ein Mittel ist. Die Wahl bleibt (E.kStat, E.cStat). */
+const KSTAT = [['n', 'Einheiten pro Monat', 'b', v => v + (v === 1 ? ' Einheit' : ' Einheiten')], ['dur', 'Trainingszeit pro Monat', 'b', v => kg(v, 1) + ' h'], ['rek', 'Rekorde pro Monat', 'b', v => v + (v === 1 ? ' Rekord' : ' Rekorde')],
+  ['bes', 'Sätze besser pro Monat', 'b', v => v + (v === 1 ? ' Satz besser' : ' Sätze besser')], ['p', 'Verbesserung je Monat', 'k', v => (v > 0 ? '+' : v < 0 ? '−' : '') + kg(Math.abs(v), 1), [0.5, 1, 2, 5, 10, 20, 50], '%']];
+const CSTAT = [['km', 'Kilometer pro Monat', 'b', v => kg(v, 1) + ' km'], ['n', 'Läufe pro Monat', 'b', v => v + (v === 1 ? ' Lauf' : ' Läufe')], ['zeit', 'Laufzeit pro Monat', 'b', v => kg(v, 1) + ' h'],
+  ['pace', 'Pace je Monat', 'k', v => fmtPace(v), [5, 10, 15, 30, 60, 120], '/km'], ['eff', 'Effizienz je Monat', 'k', v => kg(v, 2), [0.01, 0.02, 0.05, 0.1, 0.2, 0.5], '']];
+const kStat = () => KSTAT.some(q => q[0] === E.kStat) ? E.kStat : 'n';
+const cStat = () => CSTAT.some(q => q[0] === E.cStat) ? E.cStat : 'km';
+function jahrStatHTML(attr, wahl, liste, wert, hl, y) {
+  const st = liste.find(q => q[0] === wahl), w = [];
+  for (let i = 0; i < 12; i++) w.push(wert(i)[wahl]);
+  let g;
+  if (st[2] === 'b') g = kmBarsSVG(w.map(v => v || 0), st[1], hl, st[3]);
+  else {
+    const pts = w.map((v, i) => v == null ? null : { d: y + '-' + pad(i + 1), v }).filter(Boolean);
+    g = pts.length >= 2 ? seriesSVG(pts, st[3], st[4], st[1], st[5], ym => MONTHS[+ym.slice(5) - 1].slice(0, 3)) : '<p class="note">Für eine Kurve braucht es zwei Monate mit Werten.</p>';
+  }
+  return '<div class="card chart"><div class="card-head">' + menuHTML('data-t="' + attr + '"', wahl, liste.map(q => [q[0], q[1]])) + '</div>' + g + '</div>';
+}
 function kTiles(s, pre) {
   const ds = kDates().filter(d => d.slice(0, pre.length) === pre), tk = todayKey();
   const tile = k => {
     if (k === 'p') return fig(s.p ? '<span class="' + s.p.c + '">' + s.p.t + '</span>' : '–', '', 'Verbesserung' + (s.p ? INFO('k-imp') : ''));
     if (k === 'bes') return fig(s.cmp ? String(s.bes) : '–', '', s.bes === 1 ? 'Satz besser' : 'Sätze besser');
     if (k === 'dur') return fig(s.dur >= 60 ? fmtHM(s.dur) : '–', '', 'Trainingszeit');
-    if (k === 'rek') { const n = ds.reduce((a, d) => a + kDay(d).filter(x => recOf(x.sets, kHist(x.id).filter(q => q.d < d), exBw(x.id, d))).length, 0); return fig(String(n), '', n === 1 ? 'Rekord' : 'Rekorde'); }
+    if (k === 'rek') { const n = kRek(pre); return fig(String(n), '', n === 1 ? 'Rekord' : 'Rekorde'); }
     if (k === 'avg') { const m = ds.map(d => ((K.meta || {})[d] || {}).dur || 0).filter(x => x >= 60); return fig(m.length ? Math.round(m.reduce((a, b) => a + b, 0) / m.length / 60) + ' min' : '–', '', 'Ø Dauer'); }
     if (k === 'woche') {
       const y = +pre.slice(0, 4), lang = pre.length === 4 ? (new Date(y, 1, 29).getDate() === 29 ? 366 : 365) : new Date(y, +pre.slice(5), 0).getDate();
@@ -3415,20 +3458,10 @@ function kExListe() {
     return '<li><button type="button" class="two" data-k="ex" data-id="' + esc(o.x.id) + '" aria-label="' + esc(o.x.n) + ' öffnen"><span class="l"><span>' + dotHTML(exTrend(o.hist)) + esc(o.x.n) + '</span><small>' + (o.last ? dRow(o.last.d) + ' · ' + setsText(o.last.sets) : 'noch nicht trainiert') + '</small></span>' +
       (d ? '<span class="r"><b class="' + d.c + '">' + d.t + '</b><small>' + when + '</small></span>' : '') + '</button></li>';
   };
-  if (!fo.uebungen) delete fo.uebungenAlt;   // mit der Liste geht auch ihr älterer Teil wieder zu
   const altAuf = !!fo.uebungenAlt;
   const nach = () => { const mit = jung.some(o => exGruppe(K.ex[o.x.id])); return GRUPPEN.concat([['', 'Sonstige']]).map(g => { const l = jung.filter(o => exGruppe(K.ex[o.x.id]) === g[0]); return l.length ? (mit ? '<li class="grp">' + g[1] + '</li>' : '') + l.map(zeile).join('') : ''; }).join(''); };
   return { n: jung.length, rows: () => (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
     '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') };
-}
-/* Leiste mit zwei Teilen statt zweier Klappzeilen untereinander (v148, sein Wort 28.11.: „bei Gym-Ansicht Einheiten und Übungen zu einer Leiste machen, die Ansicht noch anpassen
-   für mehr Übersichtlichkeit“): je Teil Name und Zahl; ein Tipp klappt seine Liste unter der Leiste auf (der andere Teil geht dabei zu), ein zweiter schließt sie.
-   Es sind Klappzeilen wie alle (data-fold, gemerkt in fo, derselbe Lauscher mit derselben Bewegung); die Leiste ist nur ihre gemeinsame erste Zeile. teile: { key, t, n, rows() } oder null. */
-function leisteHTML(teile) {
-  teile = teile.filter(Boolean); if (!teile.length) return '';
-  const auf = teile.find(x => fo[x.key]);
-  return '<div class="folds"><ul class="entries kbar"><li class="kb-r" role="group">' + teile.map(x => '<button type="button" class="two fo" data-fold="' + x.key + '" aria-expanded="' + (x === auf) + '"><span class="l"><span>' + x.t + '</span></span><b class="dim fold">' + x.n + CHEV_D + '</b></button>').join('') +
-    '</li>' + (auf ? auf.rows() : '') + '</ul></div>';
 }
 /* Weniger unten (v141, sein Bild vom 27.11.: „auf dem Bild ist mir noch zu viel, vor allem der untere Teil“): Die Karte „Stärkste / Schwächste Übung“ (v106) und die Zeile
    „Körpergewicht im …“ unter den Kennzahlen gibt es nicht mehr. Wie jede Übung steht, zeigen die Liste „Übungen“ und der Punkt an der Übung. */
@@ -3438,10 +3471,10 @@ function kYearHTML(curYM) {
   let h = navHTML(y, tYear < +curYM.slice(0, 4), 'Ein Jahr') + kHero('Gym ' + y, s.n, (n => n ? (tYear - 1) + ': ' + n : '')(kDates().filter(d => d.slice(0, 4) === String(tYear - 1)).length));
   if (!s.n) return h;
   h += kTiles(s, y) + kNote(s, y);
-  h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
-  const ex = kExListe();
-  return h + leisteHTML([{ key: 'gymMonate', t: 'Monate', n: per.filter(q => q.n).length, rows: () => per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('') }, ex ? { key: 'uebungen', t: 'Übungen', n: ex.n, rows: ex.rows } : null]);
+  h += jahrStatHTML('kstat', kStat(), KSTAT, i => { const q = per[i], pre = y + '-' + pad(i + 1);
+    return { n: q.n, dur: q.dur / 3600, rek: q.n ? kRek(pre) : 0, bes: q.cmp ? q.bes : 0, p: q.pv == null ? null : q.pv * 100 }; }, tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1, y);
+  return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + '</div>';
 }
 /* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
 const SKIP = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.8v10.4l8-5.2z"/><path d="M15.2 4.8v10.4"/></svg>';
@@ -3462,7 +3495,8 @@ function kraftHTML(curYM) {
      Die Überschrift heißt deshalb „Plan“, gezählt werden Einheiten, und die Liste steht fest in seiner Reihenfolge (von v106 bis v125 rückte nach oben, was dran ist).
      Die Reihenfolge ändert er im Blatt „Plan“ (openO) durch Ziehen; „Anpassen“ in der Überschrift öffnet es. */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
-  h += secHTML(esc(K.pn || 'Plan'), fertig ? fertig + ' von ' + plans.length + ' Einheiten' : '', plans.length ? '<button type="button" class="sec-a" data-k="ordnen">Anpassen</button>' : secAct('data-k="plan"', '', 'Plan anlegen'));
+  /* „Anpassen“ auch ohne Plan, sobald es Übungen oder Einheiten gibt: Im Blatt stehen seit v152 auch ihre Listen */
+  h += secHTML(esc(K.pn || 'Plan'), fertig ? fertig + ' von ' + plans.length + ' Einheiten' : '', plans.length || dates.length || kExs().length ? '<button type="button" class="sec-a" data-k="ordnen">Anpassen</button>' : secAct('data-k="plan"', '', 'Plan anlegen'));
   h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
     const last = planLast(pl.id), ok = runde.done[pl.id], weg = runde.aus[pl.id], dran = i === runde.next;
     return '<li class="row ' + (ok ? 'is-done' : weg ? 'is-skip' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : weg ? ', in dieser Runde übersprungen' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : weg ? SKIP : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
@@ -3470,9 +3504,8 @@ function kraftHTML(curYM) {
       '<div class="side">' + (dran ? '<button type="button" class="more" data-k="skip" data-undo data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' in dieser Runde überspringen">' + SKIP + '</button>' : '') +
       '<button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
-  /* Übungen und Einheiten des gewählten Monats in einer Leiste (v148) */
-  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse(), ex = kExListe();
-  return h + leisteHTML([ex ? { key: 'uebungen', t: 'Übungen', n: ex.n, rows: ex.rows } : null, rev.length ? { key: 'einheiten', t: 'Einheiten', n: rev.length, rows: () => rev.map(kUnitRow).join('') } : null]);
+  /* Übungen und Einheiten stehen seit v152 im Blatt „Plan“ (sein Wort 28.11.: „Übungen und Einheiten wegmachen, irgendwo anders hin, unter Plan-Einstellungen oder so“; v148 bis v151 eine Leiste hier) */
+  return h;
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -4636,7 +4669,17 @@ function paintO() {
   $('#o-items').innerHTML = kPlans().map(pl => '<div class="prow"><span class="griff" aria-hidden="true">' + GRIFF + '</span><button type="button" class="o-go" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten"><b>' + esc(pl.n) +
     '<small>' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + '</small></b>' + CHEV(1) + '</button></div>').join('');
 }
-function openO() { paintO(); $('#o-name').value = K.pn || ''; openDlg(odlg); odlg.scrollTop = 0; }
+/* Übungen und Einheiten im Blatt „Plan“ (v152): ein Umschalter, darunter die Liste; Einheiten des Zeitraums, den Training gerade zeigt (Monat oder Jahr) */
+let oTeil = 'uebungen';
+function paintOMehr() {
+  const ex = kExListe(), pre = tMode === 'year' ? String(tYear) : tYM, rev = kDates().filter(d => d.slice(0, pre.length) === pre).reverse();
+  if (!ex && !rev.length) { $('#o-mehr').innerHTML = ''; return; }
+  if (!ex) oTeil = 'einheiten';
+  const wann = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
+  $('#o-mehr').innerHTML = '<div class="seg2 o-seg" role="group" aria-label="Übungen oder Einheiten">' + [['uebungen', 'Übungen', ex ? ex.n : 0], ['einheiten', 'Einheiten', rev.length]].map(q => '<button type="button" data-o="' + q[0] + '" aria-pressed="' + (oTeil === q[0]) + '">' + q[1] + ' <span class="dim">' + q[2] + '</span></button>').join('') + '</div>' +
+    (oTeil === 'uebungen' ? (ex ? '<ul class="entries">' + ex.rows() + '</ul>' : '') : rev.length ? '<ul class="entries">' + rev.map(kUnitRow).join('') + '</ul>' : '<p class="note">Keine Einheit ' + wann + '.</p>');
+}
+function openO() { delete fo.uebungenAlt; paintO(); paintOMehr(); $('#o-name').value = K.pn || ''; openDlg(odlg); odlg.scrollTop = 0; }
 /* Name des ganzen Plans (v148): gilt sofort beim Tippen, leer heißt er wieder „Plan“; Enter schließt die Tastatur */
 $('#o-name').addEventListener('input', () => { const v = $('#o-name').value.trim(); if (v !== (K.pn || '')) { kdoc.patch({ pn: v || null }); renderTraining(); } });
 $('#o-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#o-name').blur(); } });
@@ -4645,7 +4688,14 @@ ziehListe($('#o-items'), () => true, (von, nach) => {
   paintO();
 });
 $('#os-close').addEventListener('click', () => closeDlg(odlg));
-odlg.addEventListener('click', e => { if (e.target === odlg) return closeDlg(odlg); const b = e.target.closest('.o-go, #o-add'); if (b) openP(b.dataset.id || null); });
+odlg.addEventListener('click', e => {
+  if (e.target === odlg) return closeDlg(odlg);
+  const b = e.target.closest('.o-go, #o-add'); if (b) return openP(b.dataset.id || null);
+  const o = e.target.closest('[data-o]'); if (o) { oTeil = o.dataset.o; haptik('wahl'); return paintOMehr(); }
+  const f = e.target.closest('[data-fold="uebungenAlt"]'); if (f) { fo.uebungenAlt = !fo.uebungenAlt; return paintOMehr(); }   // „Weitere Übungen“ klappt in der Liste auf
+  const k = e.target.closest('[data-k]'); if (!k) return;
+  if (k.dataset.k === 'ex') openX(k.dataset.id); else if (k.dataset.k === 'day') openK(k.dataset.d);
+});
 function openP(id) {
   const pl = id && K.plans ? K.plans[id] : null;
   pS = { id: pl ? id : null, items: pl ? pl.items.filter(it => K.ex[it.id]).map(it => Object.assign({}, it)) : [] }; pArm = false; pMenu = -1; pickG = '';
@@ -5796,7 +5846,7 @@ $('#v-heute').addEventListener('click', e => {
   else if (a === 'termin') openTe(t.dataset.id, +t.dataset.s);
   else bkAct(a);   // die Erinnerung oben: Jetzt sichern, Ordner wählen
 });
-document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); }));
+document.querySelectorAll('dialog').forEach(d => d.addEventListener('close', () => { renderHome(); if (d !== cdlg && cdlg.open) paintCal(true); if (d !== odlg && odlg.open) { paintO(); paintOMehr(); } }));   // offenes Blatt „Plan“ zeigt die Listen neu (v152)
 
 /* ---------- Datensicherung ---------- */
 /* Text und Name der Sicherung: ein Weg für „Sicherung speichern“ und für die Sicherung von selbst in der iPhone-App.

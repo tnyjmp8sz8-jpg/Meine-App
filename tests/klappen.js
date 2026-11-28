@@ -84,7 +84,7 @@ lauf(async () => {
   // --- Teil 1: jede Klappzeile ist zu, geht auf und wieder zu; die Zahl rechts stimmt ---
   /* Gezeichnet sind nach dem Start mindestens: Einträge (Gewicht), Umbuchungen (Vermögen), Übungen (Gym: seit v86 der erste Teil im Training). Die Sicherung ist seit v106 keine Klappzeile mehr (Einstellungen). */
   const start = await page.$$eval('[data-fold]', l => l.map(b => b.dataset.fold + (b.getAttribute('aria-expanded') === 'true' ? ' offen' : '')));
-  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['eintraege', 'umbuchungen', 'uebungen'].every(k => start.includes(k)) && !start.includes('sicherung') && !start.some(k => k.includes('offen')), start.join(', '));
+  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['eintraege', 'umbuchungen'].every(k => start.includes(k)) && !start.includes('sicherung') && !start.some(k => k.includes('offen')), start.join(', '));
 
   /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind. */
   await bereich(page, 'gewicht');
@@ -132,11 +132,10 @@ lauf(async () => {
   /* Gym: vier Übungen (Bankdrücken, Kniebeuge, Klimmzüge, Schulterdrücken); Einheiten des laufenden Monats (am 18.: vor 2, 6, 10, 14 Tagen und heute → 5). */
   const einheiten = Object.keys(d.K.log);
   await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
-  await klappe('Gym „Übungen“', 'uebungen', 4);
-  await klappe('Gym „Einheiten“', 'einheiten', einheiten.filter(imMonat).length);
+  /* Seit v152 stehen „Übungen“ und „Einheiten“ im Blatt „Plan“, nicht mehr als Klappzeilen im Gym; im Jahr bleibt „Monate“ */
+  P.ok('Gym im Monat: keine Klappzeile mehr', !(await page.$('#v-training [data-fold]')));
   await zeit('training', 'year');
   await klappe('Gym im Jahr „Monate“', 'gymMonate', monate(einheiten));
-  await klappe('Gym im Jahr „Übungen“', 'uebungen', 4);
   await zeit('training', 'month');
 
 
@@ -159,19 +158,6 @@ lauf(async () => {
   await bereich(page, 'gewicht'); await bereich(page, 'haushalt'); await kurz();
   P.ok('Budget: nach dem Wechsel in einen anderen Bereich und zurück ist „Fixkosten“ zu', (await stand('fixkosten')).auf === false && (await z('[data-fold][aria-expanded="true"]')) === 0, JSON.stringify(await stand('fixkosten')));
 
-  await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz(); await tipp('uebungen');
-  const ueb = async () => { const s = await stand('uebungen'); return !!s && s.auf && s.zeilen === 4; };
-  await page.click('#v-training .mnav button:first-child'); await kurz();
-  P.ok('Gym: „Übungen“ bleibt beim Blättern zum Vormonat offen', await ueb() && (await text(page, '#v-training .mnav b')).indexOf(MON[+monat(1).slice(5) - 1]) === 0);
-  await page.click('#v-training .mnav button:last-child'); await kurz();
-  await page.click('#v-training .folds [data-k="ex"]'); await kurz();
-  const xAuf = await page.isVisible('#xsheet[open]');
-  await page.click('#xs-close'); await kurz();
-  P.ok('Gym: … und nach dem Blatt der Übung', xAuf && await ueb());
-  await page.click('#v-training .subtabs [data-v="cardio"]'); await kurz(); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
-  P.ok('Gym: … und nach dem Wechsel zu Cardio und zurück (derselbe Bereich)', await ueb());
-  await bereich(page, 'heute'); await bereich(page, 'training'); await kurz();
-  P.ok('Gym: nach dem Wechsel in einen anderen Bereich und zurück ist „Übungen“ zu', (await stand('uebungen')).auf === false);
 
   /* Gewicht: Der jüngste Monat ist ohne Merker offen. Klappt man ihn zu und wechselt den Bereich, gilt wieder der erste Blick: Einträge zu, darin der jüngste Monat offen. */
   await bereich(page, 'gewicht'); await tipp('eintraege'); await page.click(juengster); await page.waitForTimeout(40);
@@ -245,7 +231,7 @@ lauf(async () => {
       await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="cardio"]'); await k(); await passt('Cardio', 1);
       await p.click('#v-training [data-t="mode"][data-v="year"]'); await k(); await passt('Cardio im Jahr', 1);
       await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await passt('Gym im Jahr', 1);   // seit v148 „Monate | Übungen“ in einer Leiste: je Teil eine offene Liste
-      await p.click('#v-training [data-t="mode"][data-v="month"]'); await k(); await passt('Gym', 1);   // seit v148 „Übungen | Einheiten“ in einer Leiste
+      await p.click('#v-training [data-t="mode"][data-v="month"]'); await k(); await passt('Gym', 0);   // seit v152 ohne Klappzeile (Übungen und Einheiten im Blatt „Plan“)
     }
     await o.browser.close(); o.fehler.forEach(f => P.ok(f + b, false));
   }
@@ -297,7 +283,7 @@ lauf(async () => {
   /* Abstand eines Textes unter einer Überschrift: wie bei einer Liste 6 px (Abstand der Spalte 12 px, die Überschrift zieht das Folgende um 6 px heran), darunter die 12 px der Spalte.
      Vorher zog der Text selbst noch einmal 8 px hoch und saß 2 px in der Überschrift. */
   const unterKopf = kopf => page.evaluate(t => { const h = [...document.querySelectorAll('.view:not([hidden]) > h2.sec')].find(x => x.textContent.indexOf(t) === 0), a = h.nextElementSibling, n = a.nextElementSibling, r = e => e.getBoundingClientRect();
-    return { was: a.tagName + '.' + a.className, oben: Math.round((r(a).top - r(h).bottom) * 10) / 10, unten: Math.round((r(n).top - r(a).bottom) * 10) / 10 }; }, kopf);
+    return { was: a.tagName + '.' + a.className, oben: Math.round((r(a).top - r(h).bottom) * 10) / 10, unten: n ? Math.round((r(n).top - r(a).bottom) * 10) / 10 : null }; }, kopf);
   await bereich(page, 'heute'); await page.click('#v-heute [data-h="mode"][data-v="week"]'); await kurz(); await page.click('#v-heute [data-info="ins"]');
   let uk = await unterKopf('Zusammenhänge');
   P.ok('Heute, Woche: die Erklärung unter „Zusammenhänge“ hat 6 px Abstand zur Überschrift und 12 px zur Karte darunter', (await infoAuf('ins')) && uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12, JSON.stringify(uk));
@@ -331,8 +317,9 @@ lauf(async () => {
   const llAuf = (await text(page, '#v-training .kvs')).replace(/\s+/g, ' ');
   P.ok('Cardio „Letzter Lauf“: aufgeklappt stehen Pace, Effizienz und Puls mit Vergleich, darunter womit verglichen wird', ['Pace', '5:00', '24 s pro km schneller', 'Effizienz', 'Puls', 'Vergleich mit dem Lauf davor (Gestern).'].every(t => llAuf.includes(t)) && (await stand('letzterLauf')).auf, llAuf);
   await tipp('letzterLauf');
-  await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
-  await bleibt('Gym „Übungen“', 'k-imp', 'uebungen');
+  await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz(); await page.click('#v-training [data-t="mode"][data-v="year"]'); await kurz(); await page.click('#v-training [data-info="k-imp"]');
+  await bleibt('Gym im Jahr „Monate“', 'k-imp', 'gymMonate');   // seit v152 die einzige Klappzeile im Gym
+  await page.click('#v-training [data-t="mode"][data-v="month"]'); await kurz();
   /* Der Wechsel des Bereichs stellt den ersten Blick her: Klappzeilen zu, Erklärungen verborgen (die im Gewicht stand noch offen) */
   await bereich(page, 'gewicht'); await kurz();
   P.ok('Gewicht: nach dem Wechsel des Bereichs ist die Erklärung wieder verborgen und „Einträge“ zu', !(await page.isVisible('#info-w-leg')) && (await page.getAttribute('#v-gewicht [data-info="w-leg"]', 'aria-expanded')) === 'false' && !(await stand('eintraege')).auf);
@@ -396,7 +383,7 @@ lauf(async () => {
   ({ browser, page, fehler } = await oeffnen({ daten: ohnePlan }));
   await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   uk = await unterKopf('Plan');
-  P.ok('Gym ohne Plan: der Satz unter „Plan“ hat 6 px Abstand zur Überschrift und 12 px zu den Klappzeilen', uk.was === 'P.note' && uk.oben === 6 && uk.unten === 12 && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
+  P.ok('Gym ohne Plan: der Satz unter „Plan“ hat 6 px Abstand zur Überschrift; darunter nichts mehr (seit v152 keine Klappzeilen)', uk.was === 'P.note' && uk.oben === 6 && uk.unten === null && (await text(page, '#v-training h2.sec + .note')).indexOf('Lege einen Plan an') === 0, JSON.stringify(uk));
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   /* Gewicht bei wenigen Einträgen im jüngsten Monat (Monatsanfang, oder wer einmal die Woche wiegt): heute einer, im Vormonat am 28., 21. und 14., davor einer.
@@ -426,10 +413,10 @@ lauf(async () => {
      und mit 300 älteren dazu. Jede Zeile eines Eintrags formatiert ihr Gewicht zweimal; mit dem Fehler wären es 2 × 300 = 600 Aufrufe mehr. Zugeklappt kommt nichts dazu; verlangt wird weniger als ein Aufruf je zusätzlichem Eintrag. */
   const viele = daten(); for (let i = 100; i < 400; i++) viele.W.entries[tag(i)] = 81;
   const formatiert = async dat => {
-    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'training');
+    const o = await oeffnen({ daten: dat }); await bereich(o.page, 'training'); await o.page.click('#v-training [data-t="mode"][data-v="year"]');
     const n = await o.page.evaluate(() => { const echt = Number.prototype.toLocaleString; let k = 0; Number.prototype.toLocaleString = function (...a) { k++; return echt.apply(this, a); };
-      document.querySelector('#v-training [data-fold="uebungen"]').click(); Number.prototype.toLocaleString = echt; return k; });
-    const offen = await o.page.getAttribute('#v-training [data-fold="uebungen"]', 'aria-expanded'), eintr = await o.page.$eval('#v-gewicht [data-fold="eintraege"] .fold', e => e.textContent.trim());
+      document.querySelector('#v-training [data-fold="gymMonate"]').click(); Number.prototype.toLocaleString = echt; return k; });
+    const offen = await o.page.getAttribute('#v-training [data-fold="gymMonate"]', 'aria-expanded'), eintr = await o.page.$eval('#v-gewicht [data-fold="eintraege"] .fold', e => e.textContent.trim());
     await o.browser.close(); o.fehler.forEach(f => P.ok(f, false));
     return { n, offen, eintr };
   };
