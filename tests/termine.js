@@ -366,7 +366,7 @@ lauf(async () => {
     p.ok('Keine Fehler (Kalender wählen)', !fehler.length, fehler.join());
     await browser.close();
   }
-  /* 16. Kalender zum Eintragen (v147, sein Wunsch 28.11.: „Kalender-Kategorien nur Privat, IK und SOPHIAARON“): In den Einstellungen je Kalender ein Schalter; im Blatt und in der
+  /* 16. Kalender zum Eintragen (v147, sein Wunsch 28.11.: „Kalender-Kategorien nur [seine drei]“): In den Einstellungen je Kalender ein Schalter; im Blatt und in der
      Schnelleingabe der iPhone-App (Stand: kals, kal, erZ, erG) stehen nur die eingeschalteten; der letzte lässt sich nicht abschalten. Gewählt in der Schnelleingabe (Eingang „kalwahl“):
      beim nächsten Termin vorbelegt. Ein Termin aus einem abgeschalteten Kalender zeigt beim Ändern seinen eigenen trotzdem. */
   {

@@ -5066,7 +5066,7 @@ function kalMerk() {
   try { localStorage.setItem(KAL_LS, JSON.stringify({ recht: kal.recht, kals: kal.kals, liste: kal.liste.filter(x => !x.neu && x.e >= von && x.s <= bis).slice(0, 600) })); } catch (e) {}
 }
 /* Ein gerade gelöschter Termin steht noch im Kalender, solange „Rückgängig“ angeboten wird (kalWeg); gezeigt wird er schon nicht mehr */
-/* Ausgeschaltete Kalender (v148, sein Wort 28.11.: „entferne alle Kalender bis auf Privat, IK und SOPHIAARON“): ihre Termine fehlen überall in Track. (Heute, Kalender, Suche,
+/* Ausgeschaltete Kalender (v148, sein Wort 28.11.: „entferne alle Kalender bis auf [seine drei]“): ihre Termine fehlen überall in Track. (Heute, Kalender, Suche,
    seit der iPhone-App 1.7 auch im großen Widget) und sie stehen beim Eintragen nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist. */
 const kalAus = x => !!x.ki && (E.kalNein || []).indexOf(x.ki) >= 0;
 const kalListe = () => kal.liste.filter(x => !kalAus(x) && !(kalWeg && x.id === kalWeg.x.id && x.s === kalWeg.x.s));
