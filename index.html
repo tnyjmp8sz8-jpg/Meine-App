@@ -1047,6 +1047,13 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 .sec-a.solo svg{width:13px;height:13px}
 /* Eingeklappte Listen: eine Zeile mit Name und Anzahl. Mehrere hintereinander rücken zusammen wie die Monate einer langen Liste. */
 .folds{display:flex;flex-direction:column;gap:6px}
+/* Leiste mit zwei Teilen (v148): eine Karte, zwei Hälften mit Haarlinie dazwischen; die offene trägt eine leise Linse */
+.kbar .kb-r{display:flex;padding:0}
+.kbar .kb-r>button{flex:1 1 0;min-width:0}
+.kbar .kb-r>button+button{border-left:.5px solid var(--line)}
+.kbar .kb-r>button[aria-expanded="true"]{background:var(--fill)}
+.entries .kb-r:has(> button:active){background:none}
+.kbar .kb-r>button:active{background:var(--fill)}
 /* Was unter einer offenen Klappzeile steht und keine Zeile ist (Monate der Einträge, Kategorien): ein eigener Kasten, damit er auf- und zufahren kann; Abstände wie im Behälter darüber */
 .nach{display:flex;flex-direction:column;gap:inherit}
 .entries button.fo{min-height:42px;align-items:center}
@@ -1496,7 +1503,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v147</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v148</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1570,6 +1577,10 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
       </button>
     </div>
+    <label class="fld" for="o-name">
+      <span>Name des Plans</span>
+      <input id="o-name" type="text" maxlength="40" autocomplete="off" enterkeyhint="done" placeholder="Plan">
+    </label>
     <div id="o-items"></div>
     <button type="button" class="ghost center" id="o-add">Einheit hinzufügen</button>
   </div>
@@ -1713,6 +1724,7 @@ function normE(o) {
     if (typeof o.kalW === 'string' && o.kalW && o.kalW.length <= 200) out.kalW = o.kalW;   // zuletzt gewählter Kalender für neue Termine (v131)
     /* Kalender, die beim Eintragen nicht zur Wahl stehen (v147, sein Wunsch 28.11.: nur seine drei); Kennungen aus Apples Kalender */
     if (Array.isArray(o.kalNein)) { const l = o.kalNein.filter(x => typeof x === 'string' && x && x.length <= 200).slice(0, 60); if (l.length) out.kalNein = l; }
+    if (o.kalVor === 1) out.kalVor = 1;   // die einmalige Vorwahl seiner Kalender ist geschehen (v148)
   }
   return out;
 }
@@ -1921,6 +1933,7 @@ $('#scroll').addEventListener('click', e => {
   const key = b.dataset.fold, auf = b.getAttribute('aria-expanded') !== 'true', ul = b.closest('ul'), box = b.closest('.view');
   if (ul && ul.dataset.klappt) return;
   const zeichne = () => {
+    if (b.parentNode.classList.contains('kb-r')) b.parentNode.querySelectorAll('[data-fold]').forEach(x => { fo[x.dataset.fold] = false; });   // Leiste (v148): immer nur ein Teil offen
     fo[key] = auf;
     const infos = [...document.querySelectorAll('.info[aria-expanded="true"]')].map(i => i.dataset.info);
     render();
@@ -3056,6 +3069,7 @@ function normK(o) {
   if (o && o.uhr && typeof o.uhr === 'object') for (const d in o.uhr) { const u = o.uhr[d]; if (isKey(d) && u && typeof u === 'object' && u.s >= 60 && u.s <= 43200) out.uhr[d] = Object.assign({ s: Math.round(u.s) }, u.hr >= 30 && u.hr <= 250 ? { hr: Math.round(u.hr) } : {}, typeof u.h === 'string' && u.h ? { h: u.h.slice(0, 40) } : {}); }
   if (o && o.emp === 0) out.emp = 0;
   if (o && isKey(o.ab)) out.ab = o.ab;   // Statistik ab (v136)
+  if (o && typeof o.pn === 'string' && o.pn.trim()) out.pn = o.pn.trim().slice(0, 40);   // Name des ganzen Plans (v148, sein Wunsch: „Name des Gym-Plans änderbar“); fehlt = „Plan“
   if (o && o.res === 0) out.res = 0;
   const lv = o && o.live;
   out.live = lv && typeof lv === 'object' && Number.isFinite(lv.start) && isKey(lv.date) && Array.isArray(lv.items) ? Object.assign(lv.re ? { re: 1 } : {}, {
@@ -3312,11 +3326,11 @@ const kUnitRow = d => {
    „Weitere Übungen“, die sich wie ein Monat in der Liste des Gewichts aufklappt (v97; bis v96 eine dritte Klappzeile unter „Einheiten“).
    Ohne Plan gilt die Regel aus v90: „Übungen“ zeigt, was in den vier Wochen bis zur jüngsten Einheit dran war (gemessen an ihr und nicht an heute: Nach einer Pause bliebe die Liste
    sonst leer), der Rest heißt „Ältere Übungen“. Die Zeilen werden erst gebaut, wenn die Zeile offen ist (bei ihm 61 Übungen mit je bis zu 150 Einheiten). */
-function kExFold() {
+function kExListe() {
   const pre = tMode === 'year' ? String(tYear) : tYM, when = tMode === 'year' ? pre : 'im ' + MONTHS[+tYM.slice(5) - 1];
   const rows = kExs().map(x => { const hist = kHist(x.id); return { x, hist, last: hist[hist.length - 1] || null }; })
     .sort((a, b) => (b.last ? b.last.d : '').localeCompare(a.last ? a.last.d : '') || a.x.n.localeCompare(b.x.n, 'de'));
-  if (!rows.length) return '';
+  if (!rows.length) return null;
   const platz = {}; kPlans().forEach(pl => pl.items.forEach(it => { if (!(it.id in platz)) platz[it.id] = Object.keys(platz).length; }));
   const plan = Object.keys(platz).length > 0, ab = rows[0].last ? keyOf(addDays(parseKey(rows[0].last.d), -28)) : '';
   const jung = plan ? rows.filter(o => o.x.id in platz).sort((a, b) => platz[a.x.id] - platz[b.x.id]) : ab ? rows.filter(o => o.last && o.last.d > ab) : rows, alt = rows.filter(o => jung.indexOf(o) < 0);
@@ -3328,8 +3342,17 @@ function kExFold() {
   if (!fo.uebungen) delete fo.uebungenAlt;   // mit der Liste geht auch ihr älterer Teil wieder zu
   const altAuf = !!fo.uebungenAlt;
   const nach = () => { const mit = jung.some(o => exGruppe(K.ex[o.x.id])); return GRUPPEN.concat([['', 'Sonstige']]).map(g => { const l = jung.filter(o => exGruppe(K.ex[o.x.id]) === g[0]); return l.length ? (mit ? '<li class="grp">' + g[1] + '</li>' : '') + l.map(zeile).join('') : ''; }).join(''); };
-  return foldHTML('uebungen', 'Übungen', '', jung.length, fo.uebungen ? (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
-    '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') : '');
+  return { n: jung.length, rows: () => (plan ? nach() : jung.map(zeile).join('')) + (alt.length ? '<li><button type="button" class="two mon alt" data-fold="uebungenAlt" aria-expanded="' + altAuf + '">' +
+    '<span class="l"><span>' + (plan ? 'Weitere' : 'Ältere') + ' Übungen</span></span><b class="dim fold">' + alt.length + CHEV_D + '</b></button></li>' + (altAuf ? alt.map(zeile).join('') : '') : '') };
+}
+/* Leiste mit zwei Teilen statt zweier Klappzeilen untereinander (v148, sein Wort 28.11.: „bei Gym-Ansicht Einheiten und Übungen zu einer Leiste machen, die Ansicht noch anpassen
+   für mehr Übersichtlichkeit“): je Teil Name und Zahl; ein Tipp klappt seine Liste unter der Leiste auf (der andere Teil geht dabei zu), ein zweiter schließt sie.
+   Es sind Klappzeilen wie alle (data-fold, gemerkt in fo, derselbe Lauscher mit derselben Bewegung); die Leiste ist nur ihre gemeinsame erste Zeile. teile: { key, t, n, rows() } oder null. */
+function leisteHTML(teile) {
+  teile = teile.filter(Boolean); if (!teile.length) return '';
+  const auf = teile.find(x => fo[x.key]);
+  return '<div class="folds"><ul class="entries kbar"><li class="kb-r" role="group">' + teile.map(x => '<button type="button" class="two fo" data-fold="' + x.key + '" aria-expanded="' + (x === auf) + '"><span class="l"><span>' + x.t + '</span></span><b class="dim fold">' + x.n + CHEV_D + '</b></button>').join('') +
+    '</li>' + (auf ? auf.rows() : '') + '</ul></div>';
 }
 /* Weniger unten (v141, sein Bild vom 27.11.: „auf dem Bild ist mir noch zu viel, vor allem der untere Teil“): Die Karte „Stärkste / Schwächste Übung“ (v106) und die Zeile
    „Körpergewicht im …“ unter den Kennzahlen gibt es nicht mehr. Wie jede Übung steht, zeigen die Liste „Übungen“ und der Punkt an der Übung. */
@@ -3340,8 +3363,9 @@ function kYearHTML(curYM) {
   if (!s.n) return h;
   h += kTiles(s) + kNote(s, y);
   h += '<div class="card chart"><p class="note">Einheiten pro Monat</p>' + kmBarsSVG(per.map(q => q.n), 'Einheiten pro Monat', tYear === +curYM.slice(0, 4) ? +curYM.slice(5) - 1 : -1) + '</div>';
-  return h + '<div class="folds">' + foldHTML('gymMonate', 'Monate', '', per.filter(q => q.n).length, per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
-    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('')) + kExFold() + '</div>';
+  const ex = kExListe();
+  return h + leisteHTML([{ key: 'gymMonate', t: 'Monate', n: per.filter(q => q.n).length, rows: () => per.map((q, i) => q.n ? '<li><button type="button" class="two" data-t="goto" data-ym="' + y + '-' + pad(i + 1) + '" aria-label="' + MONTHS[i] + ' öffnen">' +
+    '<span class="l"><span>' + MONTHS[i] + '</span><small>' + q.n + (q.n === 1 ? ' Einheit' : ' Einheiten') + (q.dur >= 60 ? ' · ' + fmtHM(q.dur) : '') + '</small></span>' + (q.p ? '<b class="' + q.p.c + '">' + q.p.t + '</b>' : '') + '</button></li>' : '').reverse().join('') }, ex ? { key: 'uebungen', t: 'Übungen', n: ex.n, rows: ex.rows } : null]);
 }
 /* Zeichen fürs Überspringen: Dreieck mit Strich wie „nächster Titel“ */
 const SKIP = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.8v10.4l8-5.2z"/><path d="M15.2 4.8v10.4"/></svg>';
@@ -3362,7 +3386,7 @@ function kraftHTML(curYM) {
      Die Überschrift heißt deshalb „Plan“, gezählt werden Einheiten, und die Liste steht fest in seiner Reihenfolge (von v106 bis v125 rückte nach oben, was dran ist).
      Die Reihenfolge ändert er im Blatt „Plan“ (openO) durch Ziehen; „Anpassen“ in der Überschrift öffnet es. */
   const runde = planRunde(plans), fertig = Object.keys(runde.done).length;
-  h += secHTML('Plan', fertig ? fertig + ' von ' + plans.length + ' Einheiten' : '', plans.length ? '<button type="button" class="sec-a" data-k="ordnen">Anpassen</button>' : secAct('data-k="plan"', '', 'Plan anlegen'));
+  h += secHTML(esc(K.pn || 'Plan'), fertig ? fertig + ' von ' + plans.length + ' Einheiten' : '', plans.length ? '<button type="button" class="sec-a" data-k="ordnen">Anpassen</button>' : secAct('data-k="plan"', '', 'Plan anlegen'));
   h += plans.length ? '<ul class="rows one">' + plans.map((pl, i) => {
     const last = planLast(pl.id), ok = runde.done[pl.id], weg = runde.aus[pl.id], dran = i === runde.next;
     return '<li class="row ' + (ok ? 'is-done' : weg ? 'is-skip' : dran ? 'is-idle' : 'is-wait') + '"><button type="button" class="go" data-k="start" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' starten' + (ok ? ', in dieser Runde schon trainiert' : weg ? ', in dieser Runde übersprungen' : dran ? ', als Nächstes dran' : '') + '"><span class="glyph">' + (ok ? CHECK : weg ? SKIP : i + 1) + '</span><span class="txt"><span class="name">' + esc(pl.n) + '</span>' +
@@ -3370,9 +3394,9 @@ function kraftHTML(curYM) {
       '<div class="side">' + (dran ? '<button type="button" class="more" data-k="skip" data-undo data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' in dieser Runde überspringen">' + SKIP + '</button>' : '') +
       '<button type="button" class="more" data-k="plan" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten">' + ICON.more + '</button></div></li>';
   }).join('') + '</ul>' : '<p class="note">Lege einen Plan an, zum Beispiel Torso, und starte dein Training von hier.</p>';
-  /* Einheiten des gewählten Monats: eingeklappt wie die Übungen, ein Tipp klappt die Liste auf */
-  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse();
-  return h + '<div class="folds">' + kExFold() + (rev.length ? foldHTML('einheiten', 'Einheiten', '', rev.length, rev.map(kUnitRow).join('')) : '') + '</div>';
+  /* Übungen und Einheiten des gewählten Monats in einer Leiste (v148) */
+  const rev = dates.filter(d => d.slice(0, 7) === tYM).reverse(), ex = kExListe();
+  return h + leisteHTML([ex ? { key: 'uebungen', t: 'Übungen', n: ex.n, rows: ex.rows } : null, rev.length ? { key: 'einheiten', t: 'Einheiten', n: rev.length, rows: () => rev.map(kUnitRow).join('') } : null]);
 }
 $('#v-training').addEventListener('click', e => {
   const t = e.target.closest('[data-k]'); if (!t) return;
@@ -4533,7 +4557,10 @@ function paintO() {
   $('#o-items').innerHTML = kPlans().map(pl => '<div class="prow"><span class="griff" aria-hidden="true">' + GRIFF + '</span><button type="button" class="o-go" data-id="' + esc(pl.id) + '" aria-label="' + esc(pl.n) + ' bearbeiten"><b>' + esc(pl.n) +
     '<small>' + pl.items.length + (pl.items.length === 1 ? ' Übung' : ' Übungen') + '</small></b>' + CHEV(1) + '</button></div>').join('');
 }
-function openO() { paintO(); openDlg(odlg); odlg.scrollTop = 0; }
+function openO() { paintO(); $('#o-name').value = K.pn || ''; openDlg(odlg); odlg.scrollTop = 0; }
+/* Name des ganzen Plans (v148): gilt sofort beim Tippen, leer heißt er wieder „Plan“; Enter schließt die Tastatur */
+$('#o-name').addEventListener('input', () => { const v = $('#o-name').value.trim(); if (v !== (K.pn || '')) { kdoc.patch({ pn: v || null }); renderTraining(); } });
+$('#o-name').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); $('#o-name').blur(); } });
 ziehListe($('#o-items'), () => true, (von, nach) => {
   if (von !== nach) { const l = kPlans(), pl = l.splice(von, 1)[0], q = { plans: {} }; l.splice(nach, 0, pl); l.forEach((x, i) => { q.plans[x.id] = { o: i + 1 }; }); kdoc.patch(q); renderTraining(); }
   paintO();
@@ -4983,7 +5010,29 @@ function kalMerk() {
   try { localStorage.setItem(KAL_LS, JSON.stringify({ recht: kal.recht, kals: kal.kals, liste: kal.liste.filter(x => !x.neu && x.e >= von && x.s <= bis).slice(0, 600) })); } catch (e) {}
 }
 /* Ein gerade gelöschter Termin steht noch im Kalender, solange „Rückgängig“ angeboten wird (kalWeg); gezeigt wird er schon nicht mehr */
-const kalListe = () => kalWeg ? kal.liste.filter(x => !(x.id === kalWeg.x.id && x.s === kalWeg.x.s)) : kal.liste;
+/* Ausgeschaltete Kalender (v148, sein Wort 28.11.: „entferne alle Kalender bis auf Privat, IK und SOPHIAARON“): ihre Termine fehlen überall in Track. (Heute, Kalender, Suche,
+   seit der iPhone-App 1.7 auch im großen Widget) und sie stehen beim Eintragen nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist. */
+const kalAus = x => !!x.ki && (E.kalNein || []).indexOf(x.ki) >= 0;
+const kalListe = () => kal.liste.filter(x => !kalAus(x) && !(kalWeg && x.id === kalWeg.x.id && x.s === kalWeg.x.s));
+/* Alle Kalender, die Track. kennt: die beschreibbaren (kals, mit Farbe und Vorwahl) und die übrigen, aus denen Termine kommen (Geburtstage, Feiertage, abonnierte) */
+function kalAlle() {
+  const l = (kal.kals || []).map(k => Object.assign({ w: 1 }, k)), da = {};
+  l.forEach(k => { da[k.id] = 1; });
+  kal.liste.forEach(x => { if (x.ki && !da[x.ki]) { da[x.ki] = 1; l.push(Object.assign({ id: x.ki, n: x.k || 'Kalender' }, x.f ? { f: x.f } : {})); } });
+  return l;
+}
+/* Einmalige Vorwahl für ihn (v148): Er nannte die drei Kalender, die bleiben sollen. Ihre Namen stehen nicht im Code (das Repository ist öffentlich), nur Prüfsummen
+   (FNV-1a über „track:“ und den Namen klein ohne Leer- und Satzzeichen). Passen mindestens zwei seiner Kalender, sind alle übrigen aus; danach entscheidet nur noch er
+   (E.kalVor). Bei jedem anderen passt nichts, und es bleibt alles an. */
+const KAL_VOR = ['yrdfe6', 'xsz1ua', '1dphrv8'];
+const kalPruef = n => { let h = 0x811c9dc5; for (const c of 'track:' + String(n).toLowerCase().replace(/[^a-z0-9äöüß]/g, '')) { h ^= c.codePointAt(0); h = Math.imul(h, 0x01000193) >>> 0; } return h.toString(36); };
+function kalVorwahl() {
+  if (E.kalVor || kal.recht !== 'an' || !(kal.kals || []).length) return false;
+  const alle = kalAlle(), bleibt = alle.filter(k => KAL_VOR.indexOf(kalPruef(k.n)) >= 0);
+  if (bleibt.length < 2) return false;
+  setE({ kalVor: 1, kalNein: alle.filter(k => bleibt.indexOf(k) < 0).map(k => k.id) }); kalMap = null;
+  return true;
+}
 const kalVon = x => keyOf(new Date(x.s));
 const kalBis = x => keyOf(new Date(x.e > x.s ? x.e - 1 : x.e));   // endet ein Termin um Mitternacht, gehört der neue Tag nicht mehr dazu (auch ganztägige: Je nach Kalender enden sie um 23:59:59 oder um 0:00 des Folgetags)
 /* Termine je Tag (ein Termin über mehrere Tage steht an jedem davon, höchstens 62), ganztägige zuerst */
@@ -5080,7 +5129,7 @@ const tedlg = $('#tesheet'); let teE = null;
 const ER_Z = [[15, '15 min'], [60, '1 Std'], [1440, '1 Tag']], ER_G = [[-540, 'Am Tag'], [900, 'Am Vortag']];
 /* Kalender, in den der Termin kommt (v131, sein Wunsch: „beim Eintragen für geteilten Kalender auswählen oder meinen eigenen privaten“): nur mit mindestens zwei, in die er schreiben darf.
    Neu: der zuletzt hier gewählte (E.kalW), sonst der, den iOS für neue Termine nimmt. Vorhanden: sein Kalender; bei einem, der sich wiederholt, keine Wahl (iOS verschiebt ein einzelnes Vorkommen nicht). */
-/* Zur Wahl beim Eintragen (v147): die Kalender, die in den Einstellungen an sind. Sind alle aus oder gibt es keinen davon mehr, alle. Vorbelegt: zuletzt gewählt, sonst der von iOS, sonst der erste. */
+/* Zur Wahl beim Eintragen (v147): die beschreibbaren Kalender, die in den Einstellungen an sind. Sind alle aus oder gibt es keinen davon mehr, alle. Vorbelegt: zuletzt gewählt, sonst der von iOS, sonst der erste. */
 const kalWahl = () => { const ks = kal.kals || [], nein = E.kalNein || [], l = ks.filter(k => nein.indexOf(k.id) < 0); return l.length ? l : ks; };
 const kalStd = () => { const ks = kalWahl(); return (ks.find(k => k.id === E.kalW) || ks.find(k => k.std) || ks[0] || {}).id || ''; };
 function teKals() {
@@ -5485,14 +5534,14 @@ function einstRestHTML() {
     /* Kalender (v130, nur in der iPhone-App ab 1.3): Termine an oder aus; hat iOS den Zugriff abgelehnt, führt die zweite Zeile in die Einstellungen des iPhones */
     (!kalKann() ? '' : secHTML('Kalender' + INFO('kal')) + '<ul class="entries"><li>' + schalter('kal', 'Termine zeigen', kalAn()) + '</li>' +
       actRow('data-h="kalEinst"', 'In den iPhone-Einstellungen erlauben').replace('<li', '<li id="es-kaln"' + (kalAn() && kal.recht === 'nein' ? '' : ' hidden')) +
-      /* Welche Kalender beim Eintragen zur Wahl stehen (v147): je Kalender ein Schalter mit seiner Farbe; der letzte eingeschaltete ist gesperrt */
-      (kalAn() && kal.recht === 'an' && (kal.kals || []).length > 1 ? '<li class="grp">Zum Eintragen anbieten</li>' + kal.kals.map(k => '<li>' + schalter('kalNein', '<i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n), kalWahl().indexOf(k) >= 0, esc(k.id)) + '</li>').join('') : '') + '</ul>' +
-    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Unter „Zum Eintragen anbieten“ wählst du, welche Kalender beim Eintragen zur Wahl stehen; Termine aus allen bleiben zu sehen.</p>');
+      /* Kalender ein und aus (v147 nur fürs Eintragen, seit v148 überall): je Kalender ein Schalter mit seiner Farbe; der letzte beschreibbare, der an ist, ist gesperrt */
+      (kalAn() && kal.recht === 'an' && kalAlle().length > 1 ? '<li class="grp">Kalender</li>' + kalAlle().map(k => '<li>' + schalter('kalNein', '<i class="kf"' + (k.f ? ' style="background:' + k.f + '"' : '') + '></i>' + esc(k.n), (E.kalNein || []).indexOf(k.id) < 0, esc(k.id)).replace('<button', '<button data-w="' + (k.w ? 1 : 0) + '"') + '</li>').join('') : '') + '</ul>' +
+    '<p class="note" id="info-kal" hidden>Track. zeigt die Termine aus dem Kalender deines iPhones auf Heute und in der Übersicht (ein Tipp auf einen Tag der Wochenleiste) und trägt neue dort ein. Gespeichert werden sie nur im Kalender von Apple: iCloud, Einladungen und Erinnerungen laufen weiter wie bisher, auch wenn Track. einmal nicht läuft. Ein Kalender, den du hier ausschaltest, verschwindet aus Track.: seine Termine stehen nicht mehr auf Heute, im Kalender und in der Suche, und beim Eintragen steht er nicht zur Wahl. In Apples Kalender bleibt alles, wie es ist.</p>');
 }
 const schalter = (was, text, an, v) => '<button type="button" class="two sch" role="switch" aria-checked="' + !!an + '" data-h="' + was + '"' + (v ? ' data-v="' + v + '"' : '') + '><span class="l"><span>' + text + '</span></span><span class="sw" aria-hidden="true"></span></button>';
 function openE() { paintE(); openDlg(edlg); edlg.scrollTop = 0; }
-/* Wie berEinzig: Der letzte Kalender zum Eintragen lässt sich nicht abschalten */
-function kalEinzig() { const b = [...document.querySelectorAll('#es-body [data-h="kalNein"]')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
+/* Wie berEinzig: Der letzte beschreibbare Kalender, der an ist, lässt sich nicht abschalten (sonst gäbe es keinen zum Eintragen) */
+function kalEinzig() { const b = [...document.querySelectorAll('#es-body [data-h="kalNein"][data-w="1"]')], on = b.filter(x => x.getAttribute('aria-checked') === 'true'); b.forEach(x => { x.disabled = on.length === 1 && x === on[0]; }); }
 /* Schalter und Wahl in den Einstellungen. Der Schalter wird an Ort und Stelle umgelegt (kein neues Zeichnen: So gleitet er).
    emp: Empfehlung im Training; läuft gerade ein Training, verschwinden Zeile und Bereich sofort, vorbelegt wird ab der nächsten Übung anders. res: die Frage nach der Reserve.
    ov: eine Zeile der Übersicht auf Heute. start: der Bereich, mit dem die App öffnet.
@@ -5511,10 +5560,10 @@ function einstAct(t) {
   else if (a === 'kal') { setE({ kal: an ? null : 0 }); if (an) hPost({ art: kal.recht === 'an' || kal.recht === 'nein' ? 'termine' : 'terminAn' }); $('#es-kaln').hidden = !(an && kal.recht === 'nein'); renderHome(); }
   else if (a === 'kalEinst') return hPost({ art: 'einstellungen' });
   else if (a === 'kalNein') {
-    const nein = (E.kalNein || []).filter(id => id !== v && (kal.kals || []).some(k => k.id === id));   // Kennungen von Kalendern, die es nicht mehr gibt, fallen dabei weg
+    const alle = kalAlle(), nein = (E.kalNein || []).filter(id => id !== v && alle.some(k => k.id === id));   // Kennungen von Kalendern, die es nicht mehr gibt, fallen dabei weg
     if (!an) nein.push(v);
     if (!(kal.kals || []).some(k => nein.indexOf(k.id) < 0)) return;
-    setE({ kalNein: nein }); t.setAttribute('aria-checked', an); kalEinzig(); return;
+    setE({ kalNein: nein }); t.setAttribute('aria-checked', an); kalEinzig(); kalNeu(); return;
   }
   else if (a === 'start') { setE({ start: v }); document.querySelectorAll('#es-body [data-h="start"]').forEach(b => b.setAttribute('aria-pressed', b === t)); return; }
   else return bkAct(a);
@@ -5991,7 +6040,7 @@ function hZahlen() {
    (Minuten vor dem Beginn; fehlt die Angabe, keine). Ohne Zugriff auf den Kalender nichts davon. */
 function hKal() {
   if (kal.recht !== 'an') return {};
-  const o = { kals: kalWahl().map(k => Object.assign({ id: k.id, n: hCut(k.n, 40) }, k.f ? { f: k.f } : {})), kal: kalStd() }, z = E.erZ != null ? E.erZ : 60, g = E.erG;
+  const o = { kals: kalWahl().map(k => Object.assign({ id: k.id, n: hCut(k.n, 40) }, k.f ? { f: k.f } : {})), kal: kalStd(), kalNein: (E.kalNein || []).slice() }, z = E.erZ != null ? E.erZ : 60, g = E.erG;
   if (typeof z === 'number') o.erZ = z;
   if (typeof g === 'number') o.erG = g;
   return o;
@@ -6277,8 +6326,9 @@ if (HUELLE) window.TrackHuelle = {
      Hat er „Termin“ angetippt, bevor iOS gefragt wurde (kalWill), öffnet sich das Blatt jetzt: mit der Erlaubnis zum Eintragen, ohne sie mit dem Weg in die Einstellungen. */
   termine(o) {
     const neu = kalNorm(o), alt = kal; if (!neu.recht) return;
-    const gleich = neu.recht === kal.recht && JSON.stringify(neu.liste) === JSON.stringify(kal.liste);
+    let gleich = neu.recht === kal.recht && JSON.stringify(neu.liste) === JSON.stringify(kal.liste);
     kal = neu; kalMerk();
+    if (kalVorwahl()) gleich = false;
     if (!gleich) { kalNeu(); if (edlg.open) { $('#es-rest').innerHTML = einstRestHTML(); kalEinzig(); } }
     if (JSON.stringify(neu.kals) !== JSON.stringify(alt.kals)) hSoon();   // die Kalender zur Wahl gehen an die Schnelleingabe der iPhone-App
     const t = kalWill; kalWill = '';

@@ -1,6 +1,8 @@
 // Gym: Recap für Monat und Jahr, Verbesserung gesamt und je Übung, laufendes Training mit „Letztes Mal“.
 // Kleiner, von Hand nachgerechneter Datensatz: eine Übung, fünf Einheiten im Vormonat, eine heute.
 const { APP, oeffnen, text, bereich, gespeichert, pruefer, lauf, tag, monat, nachOben, zahlWahl, einstellungen } = require('./lib');
+/* Seit v148 liegen „Übungen“ und „Einheiten“ (im Jahr „Monate“ und „Übungen“) in einer Leiste, von der immer nur ein Teil offen ist: Vor dem Tipp auf eine Übung die Liste öffnen */
+const uebAuf = async pg => { if (!(await pg.$('#v-training .folds [data-k="ex"]'))) { await pg.click('#v-training [data-fold="uebungen"]'); await pg.waitForTimeout(80); } };
 
 lauf(async () => {
   const P = pruefer('Gym'), vm = monat(1), heute = tag();
@@ -66,8 +68,8 @@ lauf(async () => {
   P.ok('Jahresansicht mit Monaten zum Antippen', (await page.$$('#v-training [data-t="goto"]')).length >= 1);
   await page.click('#v-training [data-t="mode"][data-v="month"]');
 
-  // Blatt der Übung aus der Liste: Recap startet beim gewählten Monat
-  await page.click('#v-training .folds [data-k="ex"]'); await page.waitForTimeout(250);
+  // Blatt der Übung aus der Liste: Recap startet beim gewählten Monat. Seit v148 liegen „Monate“ und „Übungen“ im Jahr in einer Leiste: Das Öffnen der Monate hat die Übungen geschlossen
+  await uebAuf(page); await page.click('#v-training .folds [data-k="ex"]'); await page.waitForTimeout(250);
   P.enthaelt('Blatt der Übung: Höchstgewicht 44, bestes Maximum 58,7, 6 Einheiten', await text(page, '#x-stats .fig'), ['44', '58,7', '6']);
   P.enthaelt('Recap der Übung im Vormonat: +14,3 %, 53,3 kg, 5 Einheiten', await text(page, '#x-recap .figs .fig'), ['+14,3 %', '53,3', '5']);
   P.ok('Einheiten des Monats als Karten', (await page.$$('#x-recap .lastx')).length === 5);
@@ -202,7 +204,7 @@ lauf(async () => {
   P.ok('Plan „Probe“ war heute dran: Haken, „1 von 2“, „Zweiter“ ist als Nächstes dran', (await q.$$('#v-training .rows.one .row.is-done')).length === 1 && (await text(q, '#v-training h2.sec')).includes('1 von 2') && (await text(q, '#v-training .rows.one .row.is-idle .name')) === 'Zweiter', await text(q, '#v-training h2.sec'));
   P.ok('seit v141 keine Zeile „Körpergewicht im …“ unter den Kennzahlen (sein Wort: „zu viel“)', !(await q.$('#v-training .kw')) && !(await text(q, '#v-training')).includes('Körpergewicht'));
   // Blatt der Übung: Die Einheit von heute ist der Rekord, 60 / 53,33 − 1 = +12,5 %
-  await q.click('#v-training .folds [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
+  await uebAuf(q); await q.click('#v-training .folds [data-k="ex"]:has-text("Voll")'); await q.waitForTimeout(150);
   P.enthaelt('Blatt der Übung: „Rekord · +12,5 %“ an der Einheit von heute', await text(q, '#x-recap .lastx .note'), ['Rekord · +12,5 %']);
   await q.click('#xs-close'); await q.reload(); await q.waitForTimeout(300);
   P.ok('nach neuem Laden: Der Bereich 8–12 steht noch an der Übung', (await gespeichert(q)).K.ex.v.z === 12 && (await gespeichert(q)).K.ex.v.zu === 8);
@@ -229,8 +231,8 @@ lauf(async () => {
   const zuerst = await kl(); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   const offen = await kl(); await s.click('#v-training [data-fold="uebungenAlt"]'); await s.waitForTimeout(100);
   P.ok('zu: nur „Übungen“ und (wenn im laufenden Monat trainiert wurde) „Einheiten“', zuerst === 'Übungen 1' + eT + ' # ', zuerst);
-  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Weitere Übungen“ vor „Einheiten“', offen === 'Übungen 1 | Weitere Übungen 1' + eT + ' # Rudern', offen);
-  P.ok('„Weitere Übungen“ offen: die Übung ohne Plan steht darunter', (await kl()) === 'Übungen 1 | Weitere Übungen 1' + eT + ' # Rudern | Uralt', await kl());
+  P.ok('„Übungen“ offen: die der letzten vier Wochen, als letzte Zeile „Weitere Übungen“ vor „Einheiten“', offen === 'Übungen 1' + eT + ' | Weitere Übungen 1 # Rudern', offen);   // seit v148 stehen „Übungen“ und „Einheiten“ vorn in einer Leiste
+  P.ok('„Weitere Übungen“ offen: die Übung ohne Plan steht darunter', (await kl()) === 'Übungen 1' + eT + ' | Weitere Übungen 1 # Rudern | Uralt', await kl());
   await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100); await s.click('#v-training [data-fold="uebungen"]'); await s.waitForTimeout(100);
   P.ok('„Übungen“ zu und wieder auf: der ältere Teil ist wieder zu', (await kl()) === offen, await kl());
   await s.click('#v-training [data-fold="uebungen"]');
@@ -309,8 +311,9 @@ lauf(async () => {
   const K5 = { ex: { d: { n: 'Dips', bw: 1, z: 10 }, k: { n: 'Klimmzüge', bw: 1 } }, log: { [tag(10)]: { d: [[10, 11]], k: [[10, 9]] }, [heute]: { d: [[15, 11]], k: [[0, 12]] } },
     plans: { p: { n: 'Körper', items: [{ id: 'd', sets: 1 }], o: 1 } }, meta: { [heute]: { dur: 0, plan: null, n: 'Pull A' } }, live: null };
   const b5 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: K5, W: { entries: { [tag(30)]: 90 } } } }), t = b5.page;
-  await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]'); await t.click('#v-training [data-fold="uebungen"]'); await t.click('#v-training [data-fold="uebungenAlt"]');   // Klimmzüge stehen in keinem Plan: seit v99 hinter „Weitere Übungen“
+  await bereich(t, 'training'); await t.click('#v-training [data-fold="einheiten"]');   // seit v148 in einer Leiste mit „Übungen“: immer nur eines offen
   P.enthaelt('Einheit ohne Plan zeigt ihren Namen', await text(t, '#v-training [data-k="day"][data-d="' + heute + '"]'), ['Pull A', '1 Rekord']);
+  await t.click('#v-training [data-fold="uebungen"]'); await t.click('#v-training [data-fold="uebungenAlt"]');   // Klimmzüge stehen in keinem Plan: seit v99 hinter „Weitere Übungen“
   const blattVon = async name => { await t.click('#v-training .folds [data-k="ex"]:has-text("' + name + '")'); await t.waitForTimeout(150); const x = [await text(t, '#x-stats .fig'), await text(t, '#x-recap .lastx:first-child .note'), await text(t, '#x-recap .lastx:first-child .lt-r')].join(' # '); await t.click('#xs-close'); return x; };
   const dipsK = await blattVon('Dips'), klimm = await blattVon('Klimmzüge');
   P.ok('Dips mit Körpergewicht: Zusatzgewicht 15 kg, 1RM 143,5, „Rekord · +5,0 %“', dipsK.includes('15kg Zusatzgewicht') && dipsK.includes('143,5kg 1RM geschätzt') && dipsK.includes('Pull A Rekord · +5,0 %') && dipsK.endsWith('1 15 11 143,5'), dipsK);
@@ -432,7 +435,7 @@ lauf(async () => {
   await bereich(gp, 'training'); await gp.click('#v-training [data-fold="uebungen"]'); await gp.waitForTimeout(100);
   const gListe = () => gp.evaluate(() => [...document.querySelector('#v-training [data-fold="uebungen"]').closest('ul').children].slice(1).map(li => li.classList.contains('grp') ? '[' + li.textContent + ']' : li.querySelector('[data-fold]') ? li.textContent.trim() : li.querySelector('.l > span').textContent).join(' '));
   P.ok('Übungen: nur die aus den Plänen, in der Reihenfolge der Pläne, unterteilt nach Gruppe; der Rest hinter „Weitere Übungen“', (await gListe()) === '[Rücken] Latzug Rudern mit Brustauflage [Brust] Bankdrücken Dips [Arme] Curls [Beine] Beinpresse [Sonstige] Seitheben Weitere Übungen1' && (await text(gp, '#v-training [data-fold="uebungen"]')) === 'Übungen 7', await gListe());
-  await gp.click('#v-training .folds [data-k="ex"]:has-text("Curls")'); await gp.waitForTimeout(150);
+  await uebAuf(gp); await gp.click('#v-training .folds [data-k="ex"]:has-text("Curls")'); await gp.waitForTimeout(150);
   P.ok('Blatt der Übung: Gruppe aus dem Namen vorgewählt (Arme)', (await text(gp, '#x-grp [aria-pressed="true"]')) === 'Arme' && (await text(gp, '#x-grp .chip')) === 'Rücken | Brust | Arme | Beine');
   await gp.click('#x-grp [data-g="brust"]'); await gp.click('#x-save'); await gp.waitForTimeout(150);
   const gex = (await gespeichert(gp)).K.ex;
@@ -931,7 +934,7 @@ lauf(async () => {
   const abHero = await text(ab, '#v-training .hero');
   P.ok('Statistik ab 25.11.: beide Einheiten zählen im November (2)', /2\s*Einheiten/.test(abHero), abHero);
   await ab.click('#v-training [data-fold="uebungen"]'); await ab.waitForTimeout(150);
-  await ab.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab.waitForTimeout(200);
+  await uebAuf(ab); await ab.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab.waitForTimeout(200);
   const abX = await text(ab, '#xsheet');
   P.ok('Statistik ab 25.11.: im Blatt der Übung nur 80 kg, die 100 kg vom 18.11. zählen nicht', abX.includes('80') && !abX.includes('100'), abX.slice(0, 300));
   P.ok('Statistik ab bleibt nach dem Speichern erhalten', (await gespeichert(ab)).K.ab === '2026-11-25');
@@ -939,8 +942,30 @@ lauf(async () => {
   const o21 = await oeffnen({ uhr: new Date(2026, 10, 27, 12), daten: Object.assign({}, abD, { K: Object.assign({}, abD.K, { ab: undefined }) }) }), ab2 = o21.page;
   await bereich(ab2, 'training'); await ab2.click('#v-training .subtabs [data-v="kraft"]'); await ab2.waitForTimeout(200);
   await ab2.click('#v-training [data-fold="uebungen"]'); await ab2.waitForTimeout(150);
-  await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
+  await uebAuf(ab2); await ab2.click('#v-training .folds [data-k="ex"]:has-text("Bankdrücken")'); await ab2.waitForTimeout(200);
   P.ok('ohne Statistik-Start zählt der 18.11. mit (100 kg im Blatt)', (await text(ab2, '#xsheet')).includes('100'));
   await o21.browser.close();
-  await P.ende(null, fehler.concat(o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, oSk.fehler, oUe.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
+  /* v148: Name des ganzen Plans (sein Wort: „Name des Gym-Plans änderbar“) und die Leiste „Übungen | Einheiten“ (immer nur ein Teil offen) */
+  const o22 = await oeffnen({ daten: { S: { routines: [], running: null }, LY: {}, K: { ex: { a: { n: 'Rudern' } }, log: { [tag(0)]: { a: [[60, 10]] } }, plans: { p: { n: 'Torso', items: [{ id: 'a', sets: 3 }], o: 1 } }, meta: {}, live: null } } }), pn = o22.page;
+  await bereich(pn, 'training');
+  P.ok('Ohne eigenen Namen heißt die Überschrift „Plan“', (await text(pn, '#v-training h2.sec')).startsWith('Plan'));
+  await pn.click('#v-training h2.sec [data-k="ordnen"]'); await pn.waitForTimeout(100);
+  await pn.fill('#o-name', 'Torso & Beine');
+  P.ok('Name des Plans: steht sofort in der Überschrift (als Text) und ist gespeichert', (await text(pn, '#v-training h2.sec')).startsWith('Torso & Beine') && (await gespeichert(pn)).K.pn === 'Torso & Beine');
+  await pn.click('#os-close'); await pn.reload(); await pn.waitForTimeout(300); await bereich(pn, 'training');
+  P.ok('… und nach neuem Laden noch da', (await text(pn, '#v-training h2.sec')).startsWith('Torso & Beine'));
+  await pn.click('#v-training h2.sec [data-k="ordnen"]'); await pn.waitForTimeout(100);
+  P.ok('Im Blatt „Plan“ steht der Name im Feld', (await pn.inputValue('#o-name')) === 'Torso & Beine');
+  await pn.fill('#o-name', ''); await pn.click('#os-close'); await pn.waitForTimeout(100);
+  P.ok('Leer: wieder „Plan“', (await text(pn, '#v-training h2.sec')).startsWith('Plan') && !('pn' in (await gespeichert(pn)).K && (await gespeichert(pn)).K.pn));
+  const leiste = () => pn.evaluate(() => [...document.querySelectorAll('#v-training .kb-r [data-fold]')].map(b => b.textContent.trim() + (b.getAttribute('aria-expanded') === 'true' ? '*' : '')).join(' | ') + ' # ' + document.querySelectorAll('#v-training .kbar > li:not(.kb-r)').length);
+  P.ok('Leiste: „Übungen 1“ und „Einheiten 1“ nebeneinander, beide zu', (await leiste()) === 'Übungen1 | Einheiten1 # 0', await leiste());
+  await pn.click('#v-training [data-fold="uebungen"]');
+  P.ok('Tipp auf „Übungen“: deren Liste unter der Leiste (Überschrift „Rücken“ und Rudern)', (await leiste()) === 'Übungen1* | Einheiten1 # 2', await leiste());
+  await pn.click('#v-training [data-fold="einheiten"]');
+  P.ok('Tipp auf „Einheiten“: „Übungen“ geht zu, die Einheiten stehen darunter', (await leiste()) === 'Übungen1 | Einheiten1* # 1' && !!(await pn.$('#v-training [data-k="day"]')), await leiste());
+  await pn.click('#v-training [data-fold="einheiten"]');
+  P.ok('Zweiter Tipp: zu', (await leiste()) === 'Übungen1 | Einheiten1 # 0', await leiste());
+  await o22.browser.close();
+  await P.ende(null, fehler.concat(o22.fehler, o20.fehler, o21.fehler, o17.fehler, o18.fehler, oKu.fehler, oSk.fehler, oUe.fehler, o19.fehler, o14.fehler, o15.fehler, o16.fehler, w.fehler, g.fehler, r.fehler, e.fehler, b5.fehler, h6.fehler, o7.fehler, o8.fehler, o9.fehler, o10.fehler, o11.fehler, o12.fehler, o13.fehler));
 });

@@ -24,13 +24,15 @@ enum Tagesblick {
         return try? JSONDecoder().decode([WidgetTermin].self, from: daten)
     }
 
-    /// Alle Termine, die heute, morgen oder übermorgen stattfinden, nach Beginn
+    /// Alle Termine, die heute, morgen oder übermorgen stattfinden, nach Beginn (ohne die Kalender, die in Track. aus sind)
     static func ausKalender(_ lager: EKEventStore, _ jetzt: Date) -> [WidgetTermin] {
         let kalender = Calendar.current, von = kalender.startOfDay(for: jetzt)
         let bis = kalender.date(byAdding: .day, value: 3, to: von) ?? von.addingTimeInterval(3 * 86400)
         let gefunden = lager.events(matching: lager.predicateForEvents(withStart: von, end: bis, calendars: nil))
+        // Kalender, die er in Track. ausgeschaltet hat (ab 1.7, v148 der App: kalNein im Stand), zeigt auch das Widget nicht
+        let aus = Set(Ablage.lesen()?.kalNein ?? [])
         var liste: [WidgetTermin] = []
-        for termin in gefunden where termin.status != .canceled {
+        for termin in gefunden where termin.status != .canceled && !aus.contains(termin.calendar?.calendarIdentifier ?? "") {
             guard let beginn = termin.startDate, let ende = termin.endDate else { continue }
             liste.append(WidgetTermin(t: String((termin.title ?? "").prefix(80)), s: beginn.timeIntervalSince1970, e: ende.timeIntervalSince1970,
                                       g: termin.isAllDay, f: farbe(termin.calendar?.cgColor)))

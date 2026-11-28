@@ -376,6 +376,8 @@ lauf(async () => {
     await ruf(page, 'info', { app: '1.6', kalender: 'an' }); await ruf(page, 'termine', { recht: 'an', liste: L3, kals: KALS }); await page.waitForTimeout(400);
     const stand = () => page.evaluate(() => { const s = window.__post.filter(m => m.art === 'stand').pop(); return s ? [(s.kals || []).map(k => k.n + (k.f ? '' : '?')).join(','), s.kal, s.erZ, 'erG' in s ? s.erG : '-'].join(' | ') : 'kein Stand'; });
     p.ok('Stand: alle vier Kalender, vorbelegt Privat (der von iOS), Erinnerung 60 min, ganztägig keine', (await stand()) === 'Arbeit,Geburtstage,Privat,Uni | k3 | 60 | -', await stand());
+    /* Die einmalige Vorwahl (v148) greift nur bei seinen Kalendernamen (Prüfsummen im Code): Hier bleibt alles an, und sie ist nicht als geschehen gemerkt */
+    p.ok('Keine Vorwahl bei anderen Namen', await page.evaluate(() => { const e = (JSON.parse(localStorage.getItem('takt.v1') || '{}') || {}).E || {}; return !e.kalVor && !e.kalNein; }));
     await page.click('#gear');
     const sch = () => page.evaluate(() => [...document.querySelectorAll('#es-body [data-h="kalNein"]')].map(b => b.textContent + (b.getAttribute('aria-checked') === 'true' ? '+' : '-') + (b.disabled ? '!' : '')).join(' '));
     p.ok('Einstellungen: je Kalender ein Schalter, alle an', (await sch()) === 'Arbeit+ Geburtstage+ Privat+ Uni+', await sch());
@@ -390,10 +392,13 @@ lauf(async () => {
     const wahl = () => page.evaluate(() => ({ zu: document.querySelector('#te-kalf').hidden, chips: [...document.querySelectorAll('#te-kal .chip')].map(c => c.textContent + (c.getAttribute('aria-pressed') === 'true' ? '*' : '')).join() }));
     p.ok('Blatt: nur Privat und Uni zur Wahl', (await wahl()).chips === 'Privat*,Uni', JSON.stringify(await wahl()));
     await zu(page);
+    /* Seit v148 ist ein ausgeschalteter Kalender überall weg: „Schicht“ (Arbeit) steht weder auf Heute noch im Tag, „Geburtstag Mama“ (Geburtstage) auch nicht */
+    p.ok('Aus heißt weg: Heute ohne „Geburtstag Mama“', !(await heute(page)).some(z => z.includes('Geburtstag')), JSON.stringify(await heute(page)));
     await page.click('#v-heute .wk .wd[data-d="2026-11-27"]'); await page.waitForTimeout(80);
-    await page.click('.tv[data-slot="0"] .tl-e[data-id="z"]');
-    p.ok('Termin aus „Arbeit“ (abgeschaltet): beim Ändern steht sein Kalender mit dabei', (await wahl()).chips === 'Arbeit*,Privat,Uni', JSON.stringify(await wahl()));
+    p.ok('… und im Tag (27.11.) ohne „Schicht“, „Seminar“ (Uni) bleibt', await page.evaluate(() => !document.querySelector('.tv[data-slot="0"] .tl-e[data-id="z"]') && !!document.querySelector('.tv[data-slot="0"] .tl-e[data-id="d"]')));
     await zu(page);
+    await page.waitForTimeout(400);
+    p.ok('Stand für das große Widget: kalNein mit den zwei ausgeschalteten (Arbeit, Geburtstage)', await page.evaluate(() => JSON.stringify(window.__post.filter(m => m.art === 'stand').pop().kalNein)) === '["k1","k2"]');
     /* Nur noch ein Kalender an: keine Wahl im Blatt, aber der Auftrag nennt ihn, sonst nähme iOS seinen Kalender für neue Termine */
     await page.click('#gear'); await page.click('#es-body [data-h="kalNein"][data-v="k4"]'); await zu(page);
     await page.click('#v-heute [data-v="termin"]');

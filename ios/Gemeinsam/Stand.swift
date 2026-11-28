@@ -45,6 +45,8 @@ struct Stand: Codable {
     var kal: String?
     var erZ: Double?
     var erG: Double?
+    // Kalender, die er in Track. ausgeschaltet hat (ab 1.7, v148): Ihre Termine zeigt auch das große Widget nicht
+    var kalNein: [String]?
 
     static var beispiel: Stand {
         let texte = ["Idee für Kapitel 3", "Milch und Brot", "Rückruf Prof. Weber", "Trainingsplan anpassen", "Geschenk für Mama", "Laufschuhe ansehen", "Folien für Dienstag", "Steuer: Belege suchen", "Fahrrad zur Werkstatt", "Buch zurückgeben"]

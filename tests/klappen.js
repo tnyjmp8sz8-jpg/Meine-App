@@ -41,7 +41,8 @@ const flaechen = () => [...document.querySelectorAll('.view:not([hidden]) .sec-a
 const breiten = () => {
   const s = document.querySelector('#scroll'), v = document.querySelector('.view:not([hidden])'), r = v.getBoundingClientRect();
   const raus = [...v.querySelectorAll('*')].filter(el => { const q = el.getBoundingClientRect(); return q.width > 0 && (q.right > r.right + 0.5 || q.left < r.left - 0.5); }).length;
-  return { auf: v.querySelectorAll('[data-fold][aria-expanded="true"]').length, zu: v.querySelectorAll('[data-fold][aria-expanded="false"]').length,
+  /* Teile einer Leiste (v148, „Übungen | Einheiten“) zählen nicht als zu: Dort ist immer nur einer offen */
+  return { auf: v.querySelectorAll('[data-fold][aria-expanded="true"]').length, zu: v.querySelectorAll('[data-fold][aria-expanded="false"]:not(.kb-r > [data-fold])').length,
     scroll: s.scrollWidth - s.clientWidth, seite: document.documentElement.scrollWidth - innerWidth, view: v.scrollWidth - v.clientWidth, rand: Math.round(r.left), raus };
 };
 const passtHinein = m => m.scroll <= 0 && m.seite <= 0 && m.raus === 0 && m.view <= m.rand;
@@ -225,9 +226,14 @@ lauf(async () => {
     if (breite === 320) {
       /* Jede Ansicht einmal mit allem aufgeklappt (min = so viele Klappzeilen müssen dort mindestens offen sein, damit die Prüfung nicht ins Leere läuft) */
       const passt = async (wo, min) => {
-        for (let i = 0; i < 60 && await p.$('.view:not([hidden]) [data-fold][aria-expanded="false"]'); i++) await p.click('.view:not([hidden]) [data-fold][aria-expanded="false"]');
-        await k(); const m = await p.evaluate(breiten);
-        P.ok('320 px, ' + wo + ': alles aufgeklappt, nichts ragt seitlich hinaus', m.auf >= min && m.zu === 0 && passtHinein(m), JSON.stringify(m));
+        const zu = '.view:not([hidden]) [data-fold][aria-expanded="false"]:not(.kb-r > [data-fold])', teile = await p.$$('.view:not([hidden]) .kb-r > [data-fold]');
+        for (let t = 0; t < Math.max(1, teile.length); t++) {   // eine Leiste: jeden Teil einmal offen
+          const teil = '.view:not([hidden]) .kb-r > [data-fold]:nth-child(' + (t + 1) + ')';
+          if (teile.length && await p.$(teil + '[aria-expanded="false"]')) { await p.click(teil); await k(); }
+          for (let i = 0; i < 60 && await p.$(zu); i++) await p.click(zu);
+          await k(); const m = await p.evaluate(breiten);
+          P.ok('320 px, ' + wo + (teile.length ? ' (Teil ' + (t + 1) + ' der Leiste)' : '') + ': alles aufgeklappt, nichts ragt seitlich hinaus', m.auf >= min && m.zu === 0 && passtHinein(m), JSON.stringify(m));
+        }
       };
       await bereich(p, 'heute'); await passt('Heute', 0);   // seit v106 ohne Klappzeile (die Sicherung liegt in den Einstellungen)
       await bereich(p, 'routinen'); await passt('Notizen', 0);
@@ -238,8 +244,8 @@ lauf(async () => {
       await p.click('#v-haushalt [data-m="mode"][data-v="month"]'); await k(); await passt('Budget', 3);
       await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="cardio"]'); await k(); await passt('Cardio', 1);
       await p.click('#v-training [data-t="mode"][data-v="year"]'); await k(); await passt('Cardio im Jahr', 1);
-      await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await passt('Gym im Jahr', 2);
-      await p.click('#v-training [data-t="mode"][data-v="month"]'); await k(); await passt('Gym', 2);
+      await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await passt('Gym im Jahr', 1);   // seit v148 „Monate | Übungen“ in einer Leiste: je Teil eine offene Liste
+      await p.click('#v-training [data-t="mode"][data-v="month"]'); await k(); await passt('Gym', 1);   // seit v148 „Übungen | Einheiten“ in einer Leiste
     }
     await o.browser.close(); o.fehler.forEach(f => P.ok(f + b, false));
   }

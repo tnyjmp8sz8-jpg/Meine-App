@@ -357,6 +357,8 @@ final class Halter: NSObject, WKNavigationDelegate, WKScriptMessageHandler {
             if let z = (inhalt["erZ"] as? NSNumber)?.doubleValue { widget["erZ"] = z }
             if let g = (inhalt["erG"] as? NSNumber)?.doubleValue { widget["erG"] = g }
         }
+        // Ausgeschaltete Kalender (ab 1.7, v148): nur Kennungen als Text
+        if let nein = inhalt["kalNein"] as? [Any] { widget["kalNein"] = nein.compactMap { $0 as? String } }
         if JSONSerialization.isValidJSONObject(widget), let daten = try? JSONSerialization.data(withJSONObject: widget), Ablage.schreiben(daten) {
             WidgetCenter.shared.reloadAllTimelines()
             // Ist gerade die Schnelleingabe offen, liest sie die Konten neu: Nach einem Kaltstart aus dem Widget kommt der Stand erst jetzt
