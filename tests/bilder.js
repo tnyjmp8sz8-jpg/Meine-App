@@ -27,9 +27,8 @@ lauf(async () => {
     if (voll) {
       await versuch('woche', async () => { await bereich(page, 'heute'); await page.click('[data-h="mode"][data-v="week"]'); });
       await versuch('kalender', async () => { await page.click('[data-h="mode"][data-v="day"]'); await page.click('#v-heute .wd.now'); });
-      await versuch('budget', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); });
+      await versuch('budget', async () => { await bereich(page, 'haushalt'); });
       await versuch('blatt-ausgabe', async () => { await page.click('#v-haushalt [data-m="add"]'); });
-      await versuch('blatt-stand', async () => { await page.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await page.click('#add'); });
       await versuch('gym', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); });
       await versuch('gym-jahr', async () => { await page.click('#v-training [data-t="mode"][data-v="year"]'); });
       await versuch('uebung', async () => { await page.click('#v-training [data-t="mode"][data-v="month"]'); await page.click('#v-training h2.sec [data-k="ordnen"]'); await page.click('#osheet [data-k="ex"]'); });
@@ -40,7 +39,7 @@ lauf(async () => {
       await versuch('blatt-routine', async () => { await bereich(page, 'routinen'); await page.click('#add'); });
       await versuch('blatt-gewicht', async () => { await bereich(page, 'gewicht'); await page.click('#add'); });
       // Aufgeklappte Listen: Die Klappzeile steht oben im Bild, darunter ihre Zeilen
-      await versuch('budget-ausgaben', async () => { await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await auf('ausgaben'); });
+      await versuch('budget-ausgaben', async () => { await bereich(page, 'haushalt'); await auf('ausgaben'); });
       await versuch('cardio-laeufe', async () => { await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="cardio"]'); await auf('laeufe'); });
     }
     await browser.close();

@@ -66,50 +66,33 @@ async function schnelleingabe(p) {
   const stand = async d => { await lade(page, d); return (await letzter(page)) || {}; };
   const zeig = st => JSON.stringify([st.konten, st.konto]);
 
-  /* Ein Konto: Es ist vorbelegt, wie im Blatt */
+  /* Seit v156 (Vermögen ausgebaut) nennt der Stand keine Konten mehr, auch wenn noch welche gespeichert sind: Die Schnelleingabe der iPhone-App bietet dann keines an. */
   let st = await stand(basis([['giro', 'Girokonto', 100000]]));
-  p.ok('Stand mit einem Konto: es ist vorbelegt', JSON.stringify(st.konten) === '[{"id":"giro","n":"Girokonto"}]' && st.konto === 'giro', zeig(st));
-  /* Mehrere Konten, noch nie eines benutzt: nach Namen sortiert (Bargeld, Depot, Girokonto, K…), nichts vorbelegt. Auch ein Konto ohne Stand (Depot) steht in der Liste.
-     Der vierte Name hat 29 Buchstaben, ein Emoji und ein x: Die App kürzt Kontonamen beim Laden auf 30 Einheiten, also mitten im Emoji. Im Stand fällt das halbe Zeichen weg
-     (mit ihm ließe sich der Stand in der iPhone-App nicht als Datei schreiben): Es bleiben die 29 Buchstaben. */
-  st = await stand(basis([['giro', 'Girokonto', 100000], ['bar', 'Bargeld', 5000], ['dep', 'Depot'], ['lang', 'K'.repeat(29) + '😀x']]));
-  const kn = st.konten || [];
-  p.ok('Stand mit mehreren Konten ohne Vorgeschichte: nach Namen sortiert, nichts vorbelegt', kn.map(k => k.id).join() === 'bar,dep,giro,lang' && kn.slice(0, 3).map(k => k.n).join() === 'Bargeld,Depot,Girokonto' && st.konto === '', zeig(st));
-  p.ok('Stand: Kontoname ohne halbes Zeichen', !!kn[3] && kn[3].n === 'K'.repeat(29), zeig(st));
-  /* Mehrere Konten mit Vorgeschichte: vorbelegt ist das zuletzt benutzte, hier Bargeld (siehe zweiKonten) */
+  p.ok('Stand mit einem gespeicherten Konto: keine Konten, nichts vorbelegt', JSON.stringify(st.konten) === '[]' && st.konto === '', zeig(st));
   st = await stand(zweiKonten());
-  p.ok('Stand mit mehreren Konten und Vorgeschichte: das zuletzt benutzte ist vorbelegt', (st.konten || []).map(k => k.id).join() === 'bar,giro' && st.konto === 'bar', zeig(st));
+  p.ok('Stand mit zwei Konten und Vorgeschichte: keine Konten, nichts vorbelegt', JSON.stringify(st.konten) === '[]' && st.konto === '', zeig(st));
 
-  /* Aufträge aus der Schnelleingabe, einer nach dem anderen (der Zeitpunkt ist jeweils „jetzt“ nach der Uhr der Seite, also nach dem Stand von 10 Uhr). */
-  await bereich(page, 'haushalt'); await tipp(page, '#v-haushalt [data-m="sub"][data-v="verm"]');
-  const verm = async () => (await text(page, '#v-haushalt .hero h1')) + ' || ' + (await text(page, '#v-haushalt [data-m="bal"].two'));
+  /* Aufträge aus der Schnelleingabe, einer nach dem anderen (der Zeitpunkt ist jeweils „jetzt“ nach der Uhr der Seite, also nach dem Stand von 10 Uhr).
+     Ein mitgeschicktes Konto zählt seit v156 nicht mehr: Jede Buchung ist ohne Konto. */
+  await bereich(page, 'haushalt');
   /* schickt einen Auftrag und liefert die Buchung, die daraus entstanden ist (die jüngste seit 12 Uhr) */
   const auftrag = async c => { await ruf(page, 'eingang', [c]); await page.waitForTimeout(40); return Object.values((await gespeichert(page)).MY[JM].tx).filter(t => t && t.t >= um(15, 12)).sort((a, b) => a.t - b.t).pop() || {}; };
   const z = t => JSON.stringify(t);
-  p.ok('Ausgangslage: Vermögen 1.050 €', (await verm()) === '1.050 € || Bargeld 50 € | Girokonto 1.000 €', await verm());
-  /* 1. Unbekannte Kennung (das Konto wurde inzwischen gelöscht): Es gilt die Vorbelegung, also Bargeld. 5 € Ausgabe: Bargeld 50 − 5 = 45, Vermögen 1.050 − 5 = 1.045. */
-  let t = await auftrag({ id: 'b1', art: 'ausgabe', a: 500, acc: 'gibtsnicht' }), v = await verm();
-  p.ok('Auftrag mit unbekanntem Konto: Vorbelegung (Bargeld), 5 € gehen dort ab', t.a === 500 && t.k === 'out' && t.acc === 'bar' && v === '1.045 € || Bargeld gerechnet seit Heute 45 € | Girokonto 1.000 €', z(t) + ' · ' + v);
-  /* 2. Ohne die neuen Felder (Kurzbefehl, iPhone-App bis 0.4): wie bisher eine Ausgabe auf die Vorbelegung, „Sonstiges“. 3 €: Bargeld 45 − 3 = 42, Vermögen 1.042. */
-  t = await auftrag({ id: 'b2', art: 'ausgabe', a: 300 }); v = await verm();
-  p.ok('Auftrag ohne k und acc: wie bisher Ausgabe auf die Vorbelegung', t.a === 300 && t.k === 'out' && t.c === 'sonst' && t.acc === 'bar' && v === '1.042 € || Bargeld gerechnet seit Heute 42 € | Girokonto 1.000 €', z(t) + ' · ' + v);
-  /* 3. Einnahme von 250 € auf das Girokonto: Girokonto 1.000 + 250 = 1.250, Vermögen 1.042 + 250 = 1.292. Eine Einnahme hat keine Kategorie: Das Wort „essen“ wird nicht ausgewertet
-     (gespeichert wird wie bei einer Einnahme aus dem Blatt, die App liest das als „sonst“). */
-  t = await auftrag({ id: 'b3', art: 'ausgabe', k: 'in', a: 25000, acc: 'giro', n: 'Erstattung', kat: 'essen' }); v = await verm();
-  p.ok('Einnahme auf ein Konto: als Einnahme gebucht, ohne Kategorie', t.a === 25000 && t.k === 'in' && t.c === 'sonst' && t.acc === 'giro' && t.n === 'Erstattung' && t.d === am(15), z(t));
-  p.ok('Einnahme erhöht den Stand des Kontos und das Vermögen um genau 250 €', v === '1.292 € || Bargeld gerechnet seit Heute 42 € | Girokonto gerechnet seit Heute 1.250 €', v);
-  /* 4. Ausgabe von 40 € vom Girokonto, Kategorie aus dem Wort: Girokonto 1.250 − 40 = 1.210, Vermögen 1.292 − 40 = 1.252. Vorbelegt wäre inzwischen das Girokonto selbst;
-     dass die Wahl zählt und nicht die Vorbelegung, zeigt Auftrag 6. */
-  t = await auftrag({ id: 'b4', art: 'ausgabe', k: 'out', a: 4000, acc: 'giro', kat: 'essen' }); v = await verm();
-  p.ok('Ausgabe von einem Konto senkt dessen Stand und das Vermögen um genau 40 €', t.k === 'out' && t.c === 'essen' && t.acc === 'giro' && v === '1.252 € || Bargeld gerechnet seit Heute 42 € | Girokonto gerechnet seit Heute 1.210 €', z(t) + ' · ' + v);
-  /* 5. Leeres acc heißt ausdrücklich „Kein Konto“: Die Buchung trägt keines, kein Stand ändert sich (obwohl das Girokonto vorbelegt wäre). */
-  t = await auftrag({ id: 'b5', art: 'ausgabe', a: 700, acc: '' }); v = await verm();
-  p.ok('Auftrag mit leerem Konto: ohne Konto gebucht, kein Stand ändert sich', t.a === 700 && !t.acc && v === '1.252 € || Bargeld gerechnet seit Heute 42 € | Girokonto gerechnet seit Heute 1.210 €', z(t) + ' · ' + v);
-  await page.waitForTimeout(450); st = (await letzter(page)) || {};
-  p.ok('Stand danach: vorbelegt ist jetzt das Girokonto (zuletzt benutzt)', st.konto === 'giro', zeig(st));
-  /* 6. Gewähltes Konto gegen die Vorbelegung, und ein unbekanntes k gilt als Ausgabe: 1 € vom Bargeld, obwohl das Girokonto vorbelegt wäre. Bargeld 42 − 1 = 41, Vermögen 1.251. */
-  t = await auftrag({ id: 'b6', art: 'ausgabe', k: 'quatsch', a: 100, acc: 'bar' }); v = await verm();
-  p.ok('gewähltes Konto zählt, nicht die Vorbelegung; unbekanntes k ist eine Ausgabe', t.k === 'out' && t.acc === 'bar' && v === '1.251 € || Bargeld gerechnet seit Heute 41 € | Girokonto gerechnet seit Heute 1.210 €', z(t) + ' · ' + v);
+  /* 1. Mit Konto (ältere Automation mit „Konto“): als Ausgabe gebucht, ohne Konto */
+  let t = await auftrag({ id: 'b1', art: 'ausgabe', a: 500, acc: 'giro' });
+  p.ok('Auftrag mit Konto: Ausgabe über 5 €, ohne Konto gebucht', t.a === 500 && t.k === 'out' && !t.acc, z(t));
+  /* 2. Ohne k und acc: Ausgabe unter „Sonstiges“ */
+  t = await auftrag({ id: 'b2', art: 'ausgabe', a: 300 });
+  p.ok('Auftrag ohne k und acc: Ausgabe unter „Sonstiges“', t.a === 300 && t.k === 'out' && t.c === 'sonst' && !t.acc, z(t));
+  /* 3. Einnahme: keine Kategorie, das Wort „essen“ wird nicht ausgewertet */
+  t = await auftrag({ id: 'b3', art: 'ausgabe', k: 'in', a: 25000, acc: 'giro', n: 'Erstattung', kat: 'essen' });
+  p.ok('Einnahme: als Einnahme gebucht, ohne Kategorie und ohne Konto', t.a === 25000 && t.k === 'in' && t.c === 'sonst' && !t.acc && t.n === 'Erstattung' && t.d === am(15), z(t));
+  /* 4. Kategorie aus dem Wort */
+  t = await auftrag({ id: 'b4', art: 'ausgabe', k: 'out', a: 4000, acc: 'giro', kat: 'essen' });
+  p.ok('Ausgabe mit Wort „essen“: Kategorie Essen', t.k === 'out' && t.c === 'essen' && !t.acc, z(t));
+  /* 5. Unbekanntes k gilt als Ausgabe */
+  t = await auftrag({ id: 'b6', art: 'ausgabe', k: 'quatsch', a: 100, acc: 'bar' });
+  p.ok('unbekanntes k ist eine Ausgabe', t.k === 'out' && t.a === 100 && !t.acc, z(t));
   /* 7. Der Händler merkt sich die Kategorie (v67): „Rewe“ wird einmal mit dem Wort „essen“ gebucht. Die nächste Zahlung bei „rewe“ ohne Wort (so kommt sie aus Apple Pay) landet von selbst unter „essen“.
      Alle ohne Konto, damit sich kein Stand ändert. */
   t = await auftrag({ id: 'b7', art: 'ausgabe', a: 1200, acc: '', n: 'Rewe', kat: 'essen' });

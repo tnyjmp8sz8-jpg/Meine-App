@@ -3,13 +3,12 @@ const fs = require('fs'), os = require('os'), path = require('path');
 const { oeffnen, text, bereich, gespeichert, einstellungen, pruefer, lauf } = require('./lib');
 
 lauf(async () => {
-  const P = pruefer('Speichern'), { browser, page, fehler } = await oeffnen();
+  /* Konten, Stände und ein Sparziel aus der Zeit mit Vermögen (seit v156 ausgebaut): Sie lassen sich nicht mehr anlegen, müssen aber gespeichert bleiben und mit der Sicherung umziehen */
+  const ym = new Date().toISOString().slice(0, 7);
+  const P = pruefer('Speichern'), { browser, page, fehler } = await oeffnen({ daten: { S: { routines: [] }, LY: {},
+    MF: { fixed: {}, acc: { g: { n: 'Giro' }, d: { n: 'Depot' } }, bal: { [ym]: { g: 150000, d: 400000 } }, goals: { z: { n: 'Ziel', amount: 900000, acc: null } } } } });
   await bereich(page, 'haushalt');
-  await page.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '12,34'); await page.click('#m-save'); await page.waitForTimeout(150);
-  await page.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await page.click('#v-haushalt [data-m="bal"]');
-  for (const n of ['Giro', 'Depot']) { await page.fill('#v-new', n); await page.click('#v-new-add'); }
-  const felder = await page.$$('#vsheet [data-acc]'); await felder[0].fill('1500'); await felder[1].fill('4000'); await page.click('#v-save'); await page.waitForTimeout(150);
-  await page.click('#v-haushalt [data-m="newgoal"]'); await page.fill('#g-name', 'Ziel'); await page.fill('#g-amt', '9000'); await page.click('#v-save'); await page.waitForTimeout(150);
+  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '12,34'); await page.click('#m-save'); await page.waitForTimeout(150);
   await bereich(page, 'gewicht'); await page.click('#add'); await page.fill('#w-val', '80'); await page.click('#w-save'); await page.waitForTimeout(150);
 
   const stand = JSON.stringify(await gespeichert(page));
@@ -17,7 +16,8 @@ lauf(async () => {
   for (let i = 0; i < 25; i++) { await page.reload(); await page.waitForTimeout(100); if (JSON.stringify(await gespeichert(page)) !== stand) anders++; }
   P.ok('25-mal neu geladen, Daten jedes Mal unverändert', anders === 0, anders + ' Abweichungen');
   await bereich(page, 'haushalt');
-  P.enthaelt('Anzeige nach dem Neuladen: Vermögen 5.500 €', await text(page, '#v-haushalt .subtabs [aria-pressed="true"], #v-haushalt .hero h1'), ['Vermögen', '5.500']);
+  // Budget: nur die Ausgabe von 12,34 € → im Minus, gerundet 12 €
+  P.enthaelt('Anzeige nach dem Neuladen: Budget mit der Ausgabe (12 € im Minus)', await text(page, '#v-haushalt .hero h1'), ['12']);
 
   // Sicherung speichern und in eine leere App einlesen
   // über die Einstellungen hinter dem Zahnrad auf Heute (v106): Die Erinnerung oben mit demselben Knopf gibt es nicht an jedem Tag (hier erst ab dem 8. des Monats)

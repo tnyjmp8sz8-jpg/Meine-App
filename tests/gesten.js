@@ -21,7 +21,7 @@ lauf(async () => {
   P.ok('Bereich wechseln: nichts blendet ein, auch nicht 0,7 s später', minG === 1 && minP === 1, minG + ' · ' + minP);
 
   // --- Zwischen Monaten wischen (Budget) ---
-  await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]');
+  await bereich(page, 'haushalt');
   P.ok('Start: laufender Monat', (await titel()) === name(monat(0)));
   await wischen(ctx, page, 300, 500, 80, 505);
   P.ok('nach links im laufenden Monat: bleibt (kein Monat in der Zukunft)', (await titel()) === name(monat(0)));
@@ -97,7 +97,7 @@ lauf(async () => {
   await page.touchscreen.tap(195, g.y - 60); await page.waitForTimeout(150);
   P.ok('Tipp daneben blendet es aus', !(await page.$('.g-scrub')));
 
-  // Balken (Finanzen, Jahr) und Linie (Vermögen)
+  // Balken (Finanzen, Jahr)
   await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="mode"][data-v="year"]'); await page.waitForTimeout(200);
   const balken = await page.evaluate(() => JSON.parse(document.querySelector('#v-haushalt svg.scrub').dataset.pts).map(p => p[2]).join(' | '));
   P.ok('Balken tragen Monat und Betrag', /[A-Z][a-zä]+ · [+−][\d.]+ €/.test(balken), balken);

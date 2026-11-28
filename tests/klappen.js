@@ -53,7 +53,6 @@ lauf(async () => {
   let { browser, page, fehler } = await oeffnen({ daten: d });
   const kurz = () => page.waitForTimeout(120);
   const z = sel => page.$$eval(sel, l => l.length);
-  const sub = async v => { await page.click('#v-haushalt [data-m="sub"][data-v="' + v + '"]'); await kurz(); };
   const zeit = async (wo, v) => { await page.click('#v-' + wo + ' [data-' + (wo === 'haushalt' ? 'm' : 't') + '="mode"][data-v="' + v + '"]'); await kurz(); };
   const tipp = async key => { await page.click('.view:not([hidden]) [data-fold="' + key + '"]'); await page.waitForTimeout(60); };
   /* Stand einer Klappzeile im sichtbaren Bereich: offen?, Angabe rechts, Zahl der Zeilen darunter. Gezählt werden die Zeilen derselben Liste
@@ -82,9 +81,9 @@ lauf(async () => {
   const tx = Object.values(d.MY[jahr].tx), monate = l => new Set(l.filter(imJahr).map(k => k.slice(0, 7))).size;
 
   // --- Teil 1: jede Klappzeile ist zu, geht auf und wieder zu; die Zahl rechts stimmt ---
-  /* Gezeichnet sind nach dem Start mindestens: Einträge (Gewicht), Umbuchungen (Vermögen), Übungen (Gym: seit v86 der erste Teil im Training). Die Sicherung ist seit v106 keine Klappzeile mehr (Einstellungen). */
+  /* Gezeichnet sind nach dem Start mindestens: Einträge (Gewicht) und Ausgaben (Finanzen; Vermögen mit „Umbuchungen“ ist seit v156 ausgebaut). Die Sicherung ist seit v106 keine Klappzeile mehr (Einstellungen). */
   const start = await page.$$eval('[data-fold]', l => l.map(b => b.dataset.fold + (b.getAttribute('aria-expanded') === 'true' ? ' offen' : '')));
-  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['eintraege', 'umbuchungen'].every(k => start.includes(k)) && !start.includes('sicherung') && !start.some(k => k.includes('offen')), start.join(', '));
+  P.ok('nach dem Start ist in keinem Bereich etwas aufgeklappt', ['eintraege', 'ausgaben'].every(k => start.includes(k)) && !start.includes('sicherung') && !start.some(k => k.includes('offen')), start.join(', '));
 
   /* Gewicht: 70 Tage (i = 0 … 69), ohne die 14 Tage mit i % 5 = 4 → 56 Einträge. Aufgeklappt sind so viele der jüngsten Monate offen, dass die letzten drei Einträge zu sehen sind. */
   await bereich(page, 'gewicht');
@@ -103,7 +102,7 @@ lauf(async () => {
 
   /* Budget im laufenden Monat. Ausgaben: die Buchungen der Beispieldaten im laufenden Monat ohne Einnahmen und Umbuchungen (am 18.: vor 0, 1, 2, 3, 5, 6, 8, 9, 11 Tagen → 9).
      Einnahmen: Gehalt (fest) und der Flohmarkt vor 12 Tagen, wenn er im laufenden Monat liegt (am 18.: 2). Fixkosten: Miete, Handy, Fitnessstudio → 3. */
-  await bereich(page, 'haushalt'); await sub('budget');
+  await bereich(page, 'haushalt');
   await klappe('Budget „Ausgaben“', 'ausgaben', tx.filter(t => t.k === 'out' && imMonat(t.d)).length);
   await klappe('Budget „Einnahmen“', 'einnahmen', 1 + (imMonat(tag(12)) ? 1 : 0));
   await klappe('Budget „Fixkosten“', 'fixkosten', 3);
@@ -114,12 +113,6 @@ lauf(async () => {
   await klappe('Budget im Jahr „Flexible Kosten nach Kategorie“', 'kategorien', new Set(tx.filter(t => t.k === 'out' && imJahr(t.d)).map(t => t.c)).size);
   await zeit('haushalt', 'month');
 
-  /* Vermögen: eine Umbuchung von heute. Im Jahr: Stände gibt es seit drei Monaten, seitdem hat jeder Monat einen Wert, also höchstens vier Monate (im November: 4). */
-  await sub('verm');
-  await klappe('Vermögen „Umbuchungen“', 'umbuchungen', 1);
-  await zeit('haushalt', 'year');
-  await klappe('Vermögen im Jahr „Monate“', 'vermMonate', Math.min(+ym.slice(5), 4));
-  await zeit('haushalt', 'month');
 
   /* Cardio: die Läufe der Beispieldaten im laufenden Monat (am 18.: vor 1, 4, 8, 12, 17 Tagen) und der von heute → 6. Im Jahr: so viele Monate, wie Läufe haben. */
   const laeufe = Object.values(d.T.runs).map(r => r.d);
@@ -140,7 +133,7 @@ lauf(async () => {
 
 
   // --- Teil 2: Aufgeklapptes bleibt im Bereich offen und klappt beim Wechsel des Bereichs zu ---
-  await bereich(page, 'haushalt'); await sub('budget'); await tipp('fixkosten');
+  await bereich(page, 'haushalt'); await tipp('fixkosten');
   const fix = async () => { const s = await stand('fixkosten'); return !!s && s.auf && s.zeilen === 3; };
   await page.click('#v-haushalt .mnav button:first-child'); await kurz();
   P.ok('Budget: „Fixkosten“ bleibt beim Blättern zum Vormonat offen', await fix() && (await text(page, '#v-haushalt .mnav b')).indexOf(MON[+monat(1).slice(5) - 1]) === 0, await text(page, '#v-haushalt .mnav b'));
@@ -151,10 +144,8 @@ lauf(async () => {
   await page.click('#ms-close'); await kurz();
   P.ok('Budget: … und nach dem Öffnen und Schließen eines Blatts', blattAuf && await fix());
   const vorher = +(await stand('ausgaben')).rechts;
-  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '3'); await page.click('#m-acc .chip:has-text("Kein Konto")'); await page.click('#m-save'); await kurz();
+  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '3'); await page.click('#m-save'); await kurz();
   P.ok('Budget: … und nach dem Speichern einer Ausgabe; die Zeile „Ausgaben“ bleibt zu und zählt eine mehr', await fix() && +(await stand('ausgaben')).rechts === vorher + 1 && !(await stand('ausgaben')).auf, JSON.stringify(await stand('ausgaben')));
-  await sub('verm'); await sub('budget');
-  P.ok('Budget: … und nach dem Wechsel zu Vermögen und zurück (derselbe Bereich)', await fix());
   await bereich(page, 'gewicht'); await bereich(page, 'haushalt'); await kurz();
   P.ok('Budget: nach dem Wechsel in einen anderen Bereich und zurück ist „Fixkosten“ zu', (await stand('fixkosten')).auf === false && (await z('[data-fold][aria-expanded="true"]')) === 0, JSON.stringify(await stand('fixkosten')));
 
@@ -179,7 +170,7 @@ lauf(async () => {
     P.ok(name, offen && t === titel && (!kopf || h.indexOf(kopf) === 0), JSON.stringify({ offen, t, h }));
     await blaetterZu(page); await kurz();
   };
-  await bereich(page, 'haushalt'); await sub('budget');
+  await bereich(page, 'haushalt');
   await blatt('„+ Budget“ steht in der Überschrift „Flexible Kosten“ und öffnet das Blatt „Budget“', '.sec-a[data-m="budget"]', '#msheet', '#ms-title', 'Budget', 'Flexible Kosten');
   await tipp('einnahmen');
   P.ok('„+ Feste Einnahme“ ist die letzte Zeile der aufgeklappten Einnahmen', (await stand('einnahmen')).letzte === 'Feste Einnahme' && (await stand('einnahmen')).aktionen.length === 1, JSON.stringify(await stand('einnahmen')));
@@ -189,9 +180,6 @@ lauf(async () => {
   await blatt('… und öffnet das Blatt „Fixkosten“', '.act[data-m="newfix"]', '#msheet', '#ms-title', 'Fixkosten');
   await tipp('einnahmen'); await tipp('fixkosten');
   P.ok('zugeklappt gibt es die Aktionszeilen nicht', (await z('#v-haushalt .act')) === 0);
-  await sub('verm');
-  await blatt('„+ Umbuchung“ steht in der Überschrift „Konten“ und öffnet das Blatt „Umbuchung“', '.sec-a[data-m="newtr"]', '#msheet', '#ms-title', 'Umbuchung', 'Konten');
-  await blatt('das Plus bei „Sparziele“ öffnet das Blatt „Sparziel“', '.sec-a[data-m="newgoal"]', '#vsheet', '#vs-title', 'Sparziel', 'Sparziele');
   await bereich(page, 'training'); await page.click('#v-training .subtabs [data-v="kraft"]'); await kurz();
   await blatt('„Anpassen“ bei „Plan“ öffnet das Blatt „Plan“ (v126)', '.sec-a[data-k="ordnen"]', '#osheet', '#os-title', 'Plan', 'Plan');
   await browser.close(); fehler.forEach(f => P.ok(f, false));
@@ -205,8 +193,7 @@ lauf(async () => {
   };
   for (const breite of [390, 320]) {
     const o = await oeffnen({ daten: d, breite }), p = o.page, b = ' (' + breite + ' px)', k = () => p.waitForTimeout(100);
-    await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await tippTest(p, 'Vermögen', 'Umbuchung, Sparziel anlegen', b);
-    await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await tippTest(p, 'Budget', 'Budget', b);
+    await bereich(p, 'haushalt'); await k(); await tippTest(p, 'Budget', 'Budget', b);
     await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="kraft"]'); await k(); await tippTest(p, 'Gym', 'Anpassen', b);
 
     if (breite === 320) {
@@ -224,9 +211,7 @@ lauf(async () => {
       await bereich(p, 'heute'); await passt('Heute', 0);   // seit v106 ohne Klappzeile (die Sicherung liegt in den Einstellungen)
       await bereich(p, 'routinen'); await passt('Notizen', 0);
       await bereich(p, 'gewicht'); await passt('Gewicht', 3);
-      await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="sub"][data-v="verm"]'); await k(); await passt('Vermögen', 1);
-      await p.click('#v-haushalt [data-m="mode"][data-v="year"]'); await k(); await passt('Vermögen im Jahr', 1);
-      await p.click('#v-haushalt [data-m="sub"][data-v="budget"]'); await k(); await passt('Budget im Jahr', 2);
+      await bereich(p, 'haushalt'); await p.click('#v-haushalt [data-m="mode"][data-v="year"]'); await k(); await passt('Budget im Jahr', 2);
       await p.click('#v-haushalt [data-m="mode"][data-v="month"]'); await k(); await passt('Budget', 3);
       await bereich(p, 'training'); await p.click('#v-training .subtabs [data-v="cardio"]'); await k(); await passt('Cardio', 1);
       await p.click('#v-training [data-t="mode"][data-v="year"]'); await k(); await passt('Cardio im Jahr', 1);
@@ -337,47 +322,6 @@ lauf(async () => {
   await browser.close(); fehler.forEach(f => P.ok(f, false));
 
   // --- Teil 8: eigene kleine Daten ---
-  /* „Ohne Konto“: Stand im Vormonat (gilt zum Monatsende), heute zwei Ausgaben ohne Konto und eine Umbuchung; dazu Miete ohne Konto, fällig in diesem Monat.
-     Ohne Konto zählen: 2 Ausgaben + 1 fester Posten = 3. Die Umbuchung hat Konten und steht unter „Umbuchungen“ (1). */
-  const g = leer(), jetzt = Date.now();
-  g.MF = { fixed: { f1: { name: 'Miete', amount: 40000, kind: 'fix', every: 1, from: monat(2), to: null } }, budgets: {}, roll: {}, acc: { giro: { n: 'Girokonto' }, bar: { n: 'Bargeld' } }, bal: {}, balT: {}, goals: {} };
-  g.MF.bal[monat(1)] = { giro: 100000, bar: 5000 };
-  g.MY[jahr] = { tx: { a: { d: tag(0), a: 1200, k: 'out', c: 'essen', n: 'Rewe', t: jetzt }, b: { d: tag(0), a: 800, k: 'out', c: 'aus', n: 'Döner', t: jetzt }, u: { d: tag(0), a: 5000, k: 'tr', acc: 'giro', to: 'bar', c: '', n: '', t: jetzt } } };
-  ({ browser, page, fehler } = await oeffnen({ daten: g, breite: 320 }));
-  await bereich(page, 'haushalt'); await sub('verm');
-  await klappe('Vermögen „Ohne Konto“', 'ohneKonto', 3);
-  await klappe('Vermögen „Umbuchungen“ (kleine Daten)', 'umbuchungen', 1);
-  P.ok('„Ohne Konto“ sagt auch zugeklappt, was es bedeutet', (await text(page, '#v-haushalt [data-fold="ohneKonto"]')) === 'Ohne Konto zählt nicht zum Vermögen 3', await text(page, '#v-haushalt [data-fold="ohneKonto"]'));
-  await tipp('ohneKonto'); await tipp('umbuchungen');
-  const og = await page.evaluate(breiten);
-  P.ok('320 px, Vermögen mit „Umbuchungen“ und „Ohne Konto“ offen: nichts ragt seitlich hinaus', og.auf === 2 && passtHinein(og), JSON.stringify(og));
-  /* Ohne Sparziel steht keine Überschrift „Sparziele“ ohne Inhalt da, sondern bei den Klappzeilen als letzte eine Zeile mit Plus (wie „Fixkosten“ im Budget). */
-  const ziele = () => page.evaluate(() => { const v = document.querySelector('#v-haushalt'), f = v.querySelector('.folds');
-    return { kopf: [...v.querySelectorAll('h2.sec')].map(h => (h.classList.contains('has-a') ? h.firstElementChild : h).textContent).join(' | '), reihen: f ? [...f.children].map(u => u.querySelector('.l > span').textContent + (u.querySelector('.fo[data-m="newgoal"] .fold.plus svg') ? ' +' : '')).join(' | ') : '',
-      ziel: [...v.querySelectorAll('.row.goal')].map(r => r.innerText.replace(/\s+/g, ' ').trim()).join(' | '), plusOben: v.querySelectorAll('h2.sec .sec-a[data-m="newgoal"]').length }; });
-  let zl = await ziele();
-  P.ok('Vermögen ohne Sparziel: keine Überschrift „Sparziele“, dafür die letzte Zeile bei den Klappzeilen mit Plus', zl.kopf === 'Konten' && zl.reihen === 'Umbuchungen | Ohne Konto | Sparziele +' && zl.ziel === '' && zl.plusOben === 0, JSON.stringify(zl));
-  const zm = await page.evaluate(breiten);
-  P.ok('320 px, Vermögen ohne Sparziel: nichts ragt seitlich hinaus', passtHinein(zm), JSON.stringify(zm));
-  await blatt('Zeile „Sparziele“ öffnet das Blatt „Sparziel“', '.fo[data-m="newgoal"]', '#vsheet', '#vs-title', 'Sparziel');
-  /* Mit dem ersten Sparziel wird daraus der Abschnitt mit Plus in der Überschrift. Stand im Vormonat: Girokonto 1.000 € + Bargeld 50 € = 1.050 €; die Umbuchung ändert die Summe nicht,
-     die Ausgaben und die Miete haben kein Konto. Ziel 2.000 €: 1.050 / 2.000 = 52,5 % → abgerundet 52 %, noch 950 €. */
-  await page.click('#v-haushalt .fo[data-m="newgoal"]'); await page.fill('#g-name', 'Notgroschen'); await page.fill('#g-amt', '2000'); await page.click('#v-save'); await kurz();
-  zl = await ziele();
-  P.ok('… mit dem ersten Sparziel: Überschrift „Sparziele“ mit Plus, das Ziel darunter, die Zeile ist weg', zl.kopf === 'Konten | Sparziele' && zl.reihen === 'Umbuchungen | Ohne Konto' && zl.plusOben === 1 && zl.ziel === 'Notgroschen · 2.000 € noch 950 € 52 %', JSON.stringify(zl));
-  await browser.close(); fehler.forEach(f => P.ok(f, false));
-  /* Nur ein Konto mit Stand, sonst nichts: Die Zeile „Sparziele“ steht allein bei den Klappzeilen. Mit einem Sparziel gibt es dort nichts mehr, auch keinen leeren Kasten
-     (er bekäme sonst den Abstand einer Karte). Stand 500 €, Ziel 1.000 € → 50 %. */
-  const k1 = leer(); k1.MF = { fixed: {}, acc: { giro: { n: 'Girokonto' } }, bal: {}, balT: {}, goals: {} }; k1.MF.bal[monat(0)] = { giro: 50000 };
-  ({ browser, page, fehler } = await oeffnen({ daten: k1 }));
-  await bereich(page, 'haushalt'); await kurz();
-  zl = await ziele();
-  P.ok('Vermögen mit einem Konto, ohne Sparziel: „Sparziele“ mit Plus ist die einzige Zeile unter den Konten', zl.kopf === 'Konten' && zl.reihen === 'Sparziele +' && (await z('#v-haushalt .folds')) === 1, JSON.stringify(zl));
-  await page.click('#v-haushalt .fo[data-m="newgoal"]'); await page.fill('#g-name', 'Urlaub'); await page.fill('#g-amt', '1000'); await page.click('#v-save'); await kurz();
-  zl = await ziele();
-  P.ok('… mit Sparziel: Abschnitt „Sparziele“, kein leerer Kasten für Klappzeilen', zl.kopf === 'Konten | Sparziele' && zl.ziel === 'Urlaub · 1.000 € noch 500 € 50 %' && (await z('#v-haushalt .folds')) === 0, JSON.stringify(zl));
-  await browser.close(); fehler.forEach(f => P.ok(f, false));
-
   /* Gym ohne Plan: Der Satz unter „Plan“ sitzt wie eine Liste 6 px unter der Überschrift, die Klappzeilen folgen mit 12 px. */
   const ohnePlan = daten(); ohnePlan.K.plans = {};
   ({ browser, page, fehler } = await oeffnen({ daten: ohnePlan }));

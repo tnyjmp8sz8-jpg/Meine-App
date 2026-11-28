@@ -215,7 +215,7 @@ dialog:focus,dialog:focus-visible{outline:none}
 dialog{border:0;padding:0;margin:auto auto calc(var(--kb,0px) + 8px);width:calc(100% - 16px);max-width:464px;max-height:calc(92% - var(--kb,0px) - 8px);transition:margin-bottom .2s ease;border-radius:24px;background:var(--sheet);-webkit-backdrop-filter:blur(30px) saturate(1.6);backdrop-filter:blur(30px) saturate(1.6);box-shadow:var(--rand-a),0 24px 60px -24px rgba(0,0,0,.7);color:var(--ink);overflow:auto}
 dialog::backdrop{background:rgba(0,0,0,.42);-webkit-backdrop-filter:blur(6px) saturate(1);backdrop-filter:blur(6px) saturate(1)}
 @media (min-width:560px){dialog{margin:auto;border-radius:24px}}
-#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#vform,#aform,#nform,#bform,#uform,#teform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
+#form,#wform,#mform,#tform,#kform,#xform,#lform,#pform,#aform,#nform,#bform,#uform,#teform{display:flex;flex-direction:column;gap:16px;padding:20px 16px 22px}
 .sh-head{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .sh-head h2{margin:0;font-family:var(--display);font-size:18px;letter-spacing:-.02em}
 .x{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--fill);display:grid;place-items:center}
@@ -345,7 +345,7 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .seg2 button[aria-pressed="true"]{color:var(--ink)}
 .seg2 button[aria-pressed="true"]::before{content:"";position:absolute;inset:0;z-index:-1;border-radius:inherit;background:var(--sel)}
 /* Monat/Jahr klein rechts neben den Umschaltern eines Bereichs (v80): so steht es in derselben Reihe und kostet keine eigene. Die Tippfläche reicht über das sichtbare Feld hinaus. */
-.seg2.mini{flex:none;grid-template-columns:auto auto;padding:3px;border-radius:999px}
+.seg2.mini{flex:none;margin-left:auto;grid-template-columns:auto auto;padding:3px;border-radius:999px}
 .seg2.mini button{position:relative;padding:4px 12px;font-size:12.5px;border-radius:999px}
 .seg2.mini button::after{content:"";position:absolute;inset:-9px 0}
 .mnav{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:-6px}
@@ -377,7 +377,7 @@ body.solo .toast{bottom:calc(16px + env(safe-area-inset-bottom,0px))}
 .g-neg{fill:var(--danger);opacity:.42}
 .g-pos.jetzt,.g-neg.jetzt{opacity:1}
 .g-zero{stroke:var(--muted);stroke-width:1}
-#mform .stepper input,#tform .stepper input,#vform #g-amt{text-align:left;padding-left:16px}
+#mform .stepper input,#tform .stepper input{text-align:left;padding-left:16px}
 
 /* Training */
 .last{gap:0;padding:12px 16px 4px}
@@ -459,7 +459,7 @@ button.cat{background:none;border:0;padding:0;margin:0;text-align:left;width:100
 .kset input[type="text"]{padding:8px 8px;font-size:16px;font-weight:600;text-align:center}
 .kset button,.x.sm{width:36px;height:36px;border-radius:50%;border:1px solid var(--line);background:transparent;font-size:20px;line-height:1;display:grid;place-items:center;padding:0}
 .x.sm svg{width:12px;height:12px}
-#kform .stepper input,#lform .stepper input,#pform .stepper input,#vform #v-new,#mform #m-accnew{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
+#kform .stepper input,#lform .stepper input,#pform .stepper input{text-align:left;font-family:var(--body);font-weight:400;font-size:16px;letter-spacing:0;padding:11px 14px}
 .entries .xrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:10px 14px;font-size:15px}
 .entries b.up{color:var(--good)}
 .entries b.down{color:var(--danger)}
@@ -932,13 +932,6 @@ button.lastx:active{background:var(--fill)}
 .lastx .lt-r{min-height:22px;font-size:13px;font-weight:500}
 
 .stepper[hidden]{display:none}
-/* Vermögen: Stand je Konto eintragen */
-#v-body{display:flex;flex-direction:column;gap:16px}
-.vrows{display:flex;flex-direction:column;gap:6px}
-.vrow{display:grid;grid-template-columns:minmax(0,1fr) 116px auto 36px;gap:8px;align-items:center}
-.vrow input[type="text"]{text-align:right;padding:9px 12px;font-family:var(--round);font-weight:600}
-.vrow input.vname{text-align:left;padding:9px 0;background:none;box-shadow:none;border-radius:8px;font-family:var(--body);font-weight:500}
-.vrow em{font-style:normal;color:var(--muted);font-size:13px}
 .vrows .err{margin:-2px 0 4px}
 .rows .goal .streak b{font-size:19px}
 
@@ -1125,9 +1118,9 @@ input[type="text"],input[type="number"],input[type="date"],input[type="month"],i
 
 /* Blätter mit Griff wie in iOS */
 dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-radius:3px;background:var(--fill);margin:8px auto 0}
-#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:10px}
+#form,#wform,#mform,#tform,#kform,#xform,#pform,#aform,#nform,#bform,#uform{padding-top:10px}
 .cs-top{padding-top:6px}
-@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#pform,#vform,#aform,#nform,#bform,#uform{padding-top:20px}}
+@media (min-width:560px){dialog::before{display:none}#form,#wform,#mform,#tform,#kform,#xform,#pform,#aform,#nform,#bform,#uform{padding-top:20px}}
 
 @media (prefers-reduced-motion:reduce){
   .view.neu .track i,.view.neu .soll i,.view.neu .goal .fill{animation:none}
@@ -1357,18 +1350,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
         <button type="button" id="m-catnew-add" aria-label="Kategorie anlegen">+</button>
       </div>
     </div>
-    <div class="fld" id="m-acc-fld" hidden>
-      <span id="lbl-m-acc">Konto</span>
-      <div class="chips" id="m-acc" role="group" aria-labelledby="lbl-m-acc"></div>
-      <div class="stepper" id="m-accnew-row" hidden>
-        <input id="m-accnew" type="text" maxlength="30" autocomplete="off" placeholder="Name des Kontos, z. B. PayPal" aria-label="Name des neuen Kontos">
-        <button type="button" id="m-accnew-add" aria-label="Konto anlegen">+</button>
-      </div>
-    </div>
-    <div class="fld" id="m-to-fld" hidden>
-      <span id="lbl-m-to">Nach</span>
-      <div class="chips" id="m-to" role="group" aria-labelledby="lbl-m-to"></div>
-    </div>
     <label class="tog" id="m-roll-fld" hidden>
       <input type="checkbox" id="m-roll">
       <span class="tt"><b>Rest mitnehmen</b><small id="m-roll-s"></small></span>
@@ -1389,10 +1370,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
     <label class="fld" for="m-from" id="m-from-fld">
       <span>Gilt ab Monat</span>
       <input id="m-from" name="from" type="month" placeholder="JJJJ-MM">
-    </label>
-    <label class="fld" for="m-day" id="m-day-fld" hidden>
-      <span>Tag im Monat</span>
-      <input id="m-day" name="day" type="number" inputmode="numeric" min="1" max="28" placeholder="1">
     </label>
     <p class="err" id="m-err" role="alert" hidden></p>
     <button class="primary" type="submit" id="m-save">Speichern</button>
@@ -1542,7 +1519,7 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
       </button>
     </div>
     <div class="es-body" id="es-body"></div>
-    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v155</span><span class="ver" id="h-line" hidden></span></p>
+    <p class="foot" id="foot">Gespeichert auf diesem Gerät<span class="ver">v156</span><span class="ver" id="h-line" hidden></span></p>
   </div>
 </dialog>
 
@@ -1564,20 +1541,6 @@ dialog::before{content:"";display:block;flex:none;width:36px;height:5px;border-r
   </div>
 </dialog>
 
-<dialog tabindex="-1" id="vsheet" aria-labelledby="vs-title">
-  <form id="vform" novalidate>
-    <div class="sh-head">
-      <h2 id="vs-title">Stand eintragen</h2>
-      <button type="button" class="x" id="vs-close" aria-label="Schließen">
-        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M3 3l10 10M13 3L3 13"/></svg>
-      </button>
-    </div>
-    <div id="v-body"></div>
-    <p class="err" id="v-err" role="alert" hidden></p>
-    <button class="primary" type="submit" id="v-save">Speichern</button>
-    <button type="button" class="ghost danger" id="v-del" hidden>Sparziel löschen</button>
-  </form>
-</dialog>
 
 <dialog tabindex="-1" id="psheet" aria-labelledby="ps-title">
   <form id="pform" novalidate>
@@ -1862,7 +1825,7 @@ function renderPlaner() {
   $('#r-subs').innerHTML = subsRHTML();
   $('#n-main').innerHTML = rSub === 'work' ? workHTML() : rSub === 'uni' ? uniHTML() : notesHTML();
 }
-$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') { if (finSub() === 'verm') openV('bal'); else openM('tx'); } else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openN(null); });
+$('#add').addEventListener('click', () => { if (view === 'gewicht') openW('entry'); else if (view === 'haushalt') openM('tx'); else if (view === 'training') { if (tSub === 'kraft') { if (K.live) openL(); else openP(null); } else openT(); } else if (rSub === 'work') openB(null); else if (rSub === 'uni') openU(null); else openN(null); });
 
 /* ---------- Gewicht ---------- */
 function normW(o) {
@@ -2028,7 +1991,7 @@ $('#scroll').addEventListener('click', e => {
   if (na) hoehe(na, na.offsetHeight, 0);
   hoehe(ul, h, h - weg, zeichne);
 });
-/* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets, Sparziele): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
+/* Leere Liste mit Stammdaten (Fixkosten, feste Einnahmen, Budgets): dieselbe Zeile, rechts ein Plus; der Tipp legt gleich den ersten Eintrag an.
    Leere Verläufe (Ausgaben, Läufe, Einheiten) bekommen keine Zeile: Für sie gibt es den Hauptknopf. */
 const addFoldHTML = (attr, title) => '<ul class="entries"><li><button type="button" class="two fo" ' + attr + ' aria-label="' + title + ' hinzufügen"><span class="l"><span>' + title + '</span></span><b class="fold plus">' + PLUS + '</b></button></li></ul>';
 /* Zeile mit einer Aktion in einer aufgeklappten Liste, z. B. „+ Fixkosten“ als letzte Zeile. Mit info (ein INFO()) steht rechts neben der Aktion ein „i“. */
@@ -2262,10 +2225,10 @@ function parseEur(v) {
 
 const fixedIn = ym => Object.keys(MF.fixed).map(id => ({ id, f: MF.fixed[id] })).filter(x => x.f && x.f.from <= ym && (!x.f.to || x.f.to >= ym))
   .map(x => ({ id: x.id, f: x.f, due: (ymIdx(ym) - ymIdx(x.f.from)) % x.f.every === 0 }));
-/* Buchungen eines Monats, neueste zuerst. Umbuchungen zwischen Konten sind weder Einnahme noch Ausgabe und kommen nur mit tr = true */
-function txIn(ym, tr) {
+/* Buchungen eines Monats, neueste zuerst. Umbuchungen zwischen Konten (k 'tr', aus der Zeit mit Vermögen) sind weder Einnahme noch Ausgabe und zählen nicht */
+function txIn(ym) {
   const y = MY[ym.slice(0, 4)], out = [];
-  if (y) for (const id in y.tx) { const t = y.tx[id]; if (t && t.d.slice(0, 7) === ym && (t.k === 'tr') === !!tr) out.push({ id, t }); }
+  if (y) for (const id in y.tx) { const t = y.tx[id]; if (t && t.d.slice(0, 7) === ym && t.k !== 'tr') out.push({ id, t }); }
   return out.sort((a, b) => a.t.d < b.t.d ? 1 : a.t.d > b.t.d ? -1 : a.id < b.id ? 1 : -1);
 }
 function mSum(ym) {
@@ -2327,15 +2290,15 @@ function rateHTML(s, p, label) {
 const heroM = (label, bal, sub) => '<section class="hero w-hero"><p class="date">' + label + '</p><h1' + (minus(bal) ? ' class="neg"' : '') + '><span class="num">' + minus(bal) + eur0(bal) + '</span><span class="unit">€</span></h1>' + (sub ? '<p class="sub">' + sub + '</p>' : '') + '</section>';
 
 const fixedRow = x => '<li><button type="button" class="two" data-m="fixed" data-id="' + esc(x.id) + '" aria-label="' + esc(x.f.name) + ' ändern">' +
-  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + accTag(x.f.acc) + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
+  '<span class="l"><span>' + esc(x.f.name) + '</span><small>' + everyName(x.f.every) + (x.f.kind === 'fix' ? ' · ' + eur0(x.f.amount * 12 / x.f.every) + ' € im Jahr' : '') + (x.due ? '' : ' · nicht in diesem Monat') + '</small></span>' +
   '<b' + (x.due ? '' : ' class="dim"') + '>' + eur(x.f.amount) + '</b></button></li>';
 function txRow(x) {
   const t = x.t, title = (t.k === 'in' ? 'Einnahme' : catName(t.c)) + (t.n ? ' · ' + esc(t.n) : '');
-  return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + accTag(t.acc) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
+  return '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="' + title + ' ändern"><span class="l"><span>' + title + '</span><small>' + dRow(t.d) + '</small></span><b>' + (t.k === 'in' ? '+' : '−') + eur(t.a) + '</b></button></li>';
 }
 /* Einmalige Einnahme des Monats; die festen Einnahmen stehen als fixedRow in derselben Liste */
 const incomeRow = x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Einnahme ändern">' +
-  '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig' + accTag(x.t.acc) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>';
+  '<span class="l"><span>' + (x.t.n ? esc(x.t.n) : 'Einnahme') + '</span><small>' + dRow(x.t.d) + ' · einmalig</small></span><b>' + eur(x.t.a) + '</b></button></li>';
 
 function monthHTML(curYM) {
   const s = mSum(mYM), isCur = mYM === curYM, name = MONTHS[+mYM.slice(5) - 1];
@@ -2410,152 +2373,21 @@ function yearHTML(curYM) {
   return h;
 }
 
-/* ---------- Finanzen: Vermögen und Sparziele ---------- */
-const accList = () => Object.keys(MF.acc || {}).filter(id => MF.acc[id]).map(id => ({ id, n: MF.acc[id].n })).sort((a, b) => a.n.localeCompare(b.n, 'de'));
-/* Monate, in denen mindestens ein Konto einen Stand hat, alt nach neu */
-const balMonths = () => Object.keys(MF.bal || {}).filter(ym => MF.bal[ym] && Object.keys(MF.bal[ym]).some(id => typeof MF.bal[ym][id] === 'number' && (MF.acc || {})[id])).sort();
-const accName = id => id && (MF.acc || {})[id] ? MF.acc[id].n : '';
-const accTag = id => accName(id) ? ' · ' + esc(accName(id)) : '';
-const monthEnd = ym => keyOf(new Date(+ym.slice(0, 4), +ym.slice(5), 0, 12));
-/* Bewegungen eines Kontos nach einem Stichtag (Datum aD, Zeitpunkt aT in ms) bis einschließlich Datum bis:
-   Buchungen und Umbuchungen mit diesem Konto und feste Posten, die ihm zugeordnet sind. Am Stichtag selbst zählt nur, was danach eingetragen wurde. */
-function accFlow(id, aD, aT, bis) {
-  let sum = 0, n = 0;
-  const add = v => { sum += v; n++; };
-  for (let y = +aD.slice(0, 4); y <= +bis.slice(0, 4); y++) {
-    const Y = MY[y]; if (!Y) continue;
-    for (const tid in Y.tx) {
-      const t = Y.tx[tid]; if (!t || t.d > bis || t.d < aD || (t.d === aD && (t.t || 0) <= aT)) continue;
-      if (t.k === 'tr') { if (t.acc === id) add(-t.a); if (t.to === id) add(t.a); }
-      else if (t.acc === id) add(t.k === 'in' ? t.a : -t.a);
-    }
-  }
-  for (const fid in MF.fixed) {
-    const f = MF.fixed[fid]; if (!f || f.acc !== id) continue;
-    for (let i = Math.max(ymIdx(f.from), ymIdx(aD.slice(0, 7))); i <= ymIdx(bis.slice(0, 7)) && (!f.to || i <= ymIdx(f.to)); i++) {
-      if ((i - ymIdx(f.from)) % f.every) continue;
-      const d = ymOfIdx(i) + '-' + pad(f.day || 1); if (d > aD && d <= bis) add(f.kind === 'in' ? f.amount : -f.amount);
-    }
-  }
-  return { sum, n };
-}
-/* Stand eines Kontos in einem Monat (laufender Monat: bis heute, sonst zum Monatsende): der letzte eingetragene Stand bis dahin plus die Bewegungen seitdem.
-   Liefert { v: Stand, aD: Datum und aT: Zeitpunkt des eingetragenen Stands, n: Zahl der Bewegungen } oder null ohne Stand. Ein neuer Stand korrigiert alles, was davor fehlte. */
-function accState(id, ym) {
-  const cur = todayKey(), bis = ym >= cur.slice(0, 7) ? cur : monthEnd(ym);
-  let A = null; balMonths().forEach(m => { if (m <= ym && typeof MF.bal[m][id] === 'number') A = m; });
-  if (!A) return null;
-  const ts = ((MF.balT || {})[A] || {})[id] || 0, aD = ts ? keyOf(new Date(ts)) : monthEnd(A), f = accFlow(id, aD, ts || Infinity, bis);
-  return { v: MF.bal[A][id] + f.sum, aD, aT: ts || Infinity, n: f.n };
-}
-/* Buchungen und fällige feste Posten eines Monats ohne Konto, die mit Konto einen Stand verändern würden, also nach einem eingetragenen Stand liegen.
-   Was vor dem Stand liegt, steckt schon in ihm und fehlt hier bewusst. */
-function noAcc(ym) {
-  const st = accList().map(a => accState(a.id, ym)).filter(Boolean);
-  return { tx: txIn(ym).filter(x => !accName(x.t.acc) && st.some(s => x.t.d > s.aD || (x.t.d === s.aD && (x.t.t || 0) > s.aT))),
-    fx: fixedIn(ym).filter(x => x.due && !accName(x.f.acc) && st.some(s => ym + '-28' > s.aD)) };
-}
-/* Stand des laufenden Monats ohne Zeitpunkt (eingetragen mit v38): Er galt als Stand zum Monatsende, und keine Buchung des Monats zählte.
-   Er bekommt den Zeitpunkt kurz vor der ersten Buchung mit Zeitstempel (die gibt es erst seit v39), sonst jetzt.
-   Das geht nur im selben Monat: Später ist er von einem nachgetragenen Stand zum Monatsende nicht zu unterscheiden. */
-function healBal() {
-  const ym = todayKey().slice(0, 7), b = (MF.bal || {})[ym], bt = (MF.balT || {})[ym] || {}; if (!b) return;
-  let ts = Date.now();
-  for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.t && t.d.slice(0, 7) === ym && t.t <= ts) ts = t.t - 1; }
-  const p = { balT: {} }; p.balT[ym] = {}; let n = 0;
-  for (const id in b) if (typeof b[id] === 'number' && !bt[id]) { p.balT[ym][id] = ts; n++; }
-  if (n) mfdoc.patch(p);
-}
-function accAt(id, ym) { const s = accState(id, ym); return s ? s.v : null; }
-/* Vermögen in einem Monat: Summe aller Konten, mit acc nur dieses Konto. null, solange es keinen Stand gibt */
-function wealthAt(ym, acc) { let t = null; accList().forEach(a => { if (acc && a.id !== acc) return; const v = accAt(a.id, ym); if (v != null) t = (t || 0) + v; }); return t; }
-const hasWealth = () => balMonths().length > 0;
+/* ---------- Finanzen: Haushaltsbuch ----------
+   Vermögen (Konten, Stände, Sparziele, Umbuchungen) ist seit v156 ausgebaut (sein Wort 28.11.: „Abschnitt Vermögen ist mir zu anstrengend und unnötig, mach nur Haushaltsbuch
+   mit Einnahmen, Ausgaben etc. und automatisches Eintragen“). Die Daten bleiben im Speicher und in der Sicherung (MF.acc, MF.bal, MF.goals, acc und to an Buchungen, k 'tr'):
+   normMF und normMY lassen sie stehen, eine Buchung behält beim Ändern ihr Konto. */
 const eurS = c => verdeckt() ? '••• €' : (Math.round(c / 100) > 0 ? '+' : Math.round(c / 100) < 0 ? '−' : '±') + eur0(c) + ' €';
-const signCls = c => Math.round(c / 100) > 0 ? 'up' : Math.round(c / 100) < 0 ? 'down' : '';
-const ymName = ym => MONTHS[+ym.slice(5) - 1];
-/* Veränderung in einem Zeitraum ('YYYY-MM' oder 'YYYY'): Stand am Ende gegenüber dem Stand davor, im ersten Zeitraum gegenüber dem ersten Stand.
-   endYM begrenzt ein Jahr auf einen Monat („seit Jahresbeginn“). Liefert { end, d, p, n } (d in Cent, p als Anteil, n = Monate) oder null ohne Stand; d = null ohne Vergleich. */
-function wealthDelta(pre, acc, endYM) {
-  const cur = todayKey().slice(0, 7), end = endYM || (pre.length === 7 ? pre : pre + '-12' > cur ? cur : pre + '-12'), ev = wealthAt(end, acc);
-  if (ev == null) return null;
-  let from = pre.length === 7 ? ymOfIdx(ymIdx(pre) - 1) : (+pre - 1) + '-12', sv = wealthAt(from, acc);
-  if (sv == null) { from = balMonths().find(m => m.slice(0, pre.length) === pre && m <= end && wealthAt(m, acc) != null); sv = from && from !== end ? wealthAt(from, acc) : null; }
-  return sv == null ? { end: ev, d: null, p: null, n: 0 } : { end: ev, d: ev - sv, p: sv > 0 ? (ev - sv) / sv : null, n: ymIdx(end) - ymIdx(from) };
-}
-const dTile = (w, label) => fig(w && w.d != null ? '<span class="' + signCls(w.d) + '">' + eurS(w.d) + '</span>' : '–', '', label);
-/* Abschnitt „Sparziele“. Ohne Sparziel leer: Dann steht im Vermögen bei den Klappzeilen eine Zeile mit Plus, keine Überschrift ohne Inhalt. */
-function goalsHTML(curYM) {
-  const gs = Object.keys(MF.goals || {}).filter(id => MF.goals[id]).map(id => ({ id, g: MF.goals[id] })).sort((a, b) => a.g.n.localeCompare(b.g.n, 'de'));
-  if (!gs.length) return '';
-  return secHTML('Sparziele', '', secAct('data-m="newgoal"', '', 'Sparziel anlegen')) + '<ul class="rows">' + gs.map(x => {
-    const g = x.g, acc = g.acc && (MF.acc || {})[g.acc] ? g.acc : null, have = wealthAt(curYM, acc) || 0, p = clamp(have / g.amount, 0, 1), reached = have >= g.amount;
-    /* Tempo: Schnitt der letzten drei Monate */
-    const back = wealthAt(ymOfIdx(ymIdx(curYM) - 3), acc), rate = back != null ? (have - back) / 3 : null;
-    let meta = reached ? 'Erreicht' : 'noch ' + eur0(g.amount - have) + ' €';
-    if (!reached && rate > 0) { const n = Math.ceil((g.amount - have) / rate), t = ymOfIdx(ymIdx(curYM) + n); if (n <= 600) meta += ' · bei diesem Tempo etwa ' + ymName(t) + ' ' + t.slice(0, 4); }
-    else if (!reached && rate != null) meta += ' · zuletzt kein Zuwachs';
-    return '<li class="row goal ' + (reached ? 'is-done' : 'is-idle') + '"><div class="fill" style="width:' + (p * 100).toFixed(1) + '%"></div>' +
-      '<button type="button" class="go" data-m="goal" data-id="' + esc(x.id) + '" aria-label="Sparziel ' + esc(g.n) + ' ändern">' +
-        '<span class="glyph">' + (reached ? ICON.check : '<svg viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="9" cy="9" r="6.5"/><circle cx="9" cy="9" r="2" fill="currentColor" stroke="none"/></svg>') + '</span>' +
-        '<span class="txt"><span class="name">' + esc(g.n) + ' · ' + eur0(g.amount) + ' €</span><span class="meta">' + meta + (acc ? ' · ' + esc(MF.acc[acc].n) : '') + '</span></span></button>' +
-      '<div class="side"><span class="streak" style="padding-right:14px"><b>' + Math.floor(clamp(have * 100 / g.amount, 0, 100)) + '</b><span>%</span></span></div></li>';
-  }).join('') + '</ul>';
-}
-function wealthHTML(curYM) {
-  if (!hasWealth()) return emptyHTML('haushalt', 'Noch kein Stand', 'Trag einmal ein, wie viel auf deinen Konten liegt. Danach siehst du, wie dein Vermögen wächst.',
-    '<button type="button" class="primary" data-m="bal">Stand eintragen</button>');
-  const year = mMode === 'year', pre = year ? String(mYear) : mYM, w = wealthDelta(pre), curY = +curYM.slice(0, 4);
-  const end = year ? (pre + '-12' > curYM ? curYM : pre + '-12') : mYM;
-  let h = year ? navHTML(pre, mYear < curY, 'Ein Jahr') : navHTML(ymName(mYM) + ' ' + mYM.slice(0, 4), mYM < curYM, 'Einen Monat');
-  const entered = !year && accList().some(a => typeof ((MF.bal || {})[mYM] || {})[a.id] === 'number');
-  const btn = year ? '' : '<button type="button" class="' + (entered ? 'ghost center' : 'primary') + '" data-m="bal">' + (entered ? 'Stand ändern' : 'Stand eintragen') + '</button>';
-  if (!w) return h + '<section class="hero w-hero"><p class="date">Vermögen</p><h1>Noch kein Stand</h1><p class="sub">' + (year ? 'In diesem Jahr gab es noch keinen Eintrag.' : 'Vor diesem Monat gibt es noch keinen Eintrag.') + '</p></section>' + btn;
-  h += heroM(year ? 'Vermögen ' + pre : 'Vermögen im ' + ymName(mYM), w.end, year || entered ? '' : 'Für diesen Monat ist noch kein Stand eingetragen.') + btn;
-  const pTile = fig(w.p != null ? '<span class="' + signCls(w.d) + '">' + (w.p > 0 ? '+' : w.p < 0 ? '−' : '±') + kg(Math.abs(w.p * 100)) + ' %</span>' : '–', '', 'in Prozent');
-  if (year) h += '<div class="figs on-bg">' + dTile(w, 'im Jahr') + pTile + fig(w.d != null && w.n > 0 ? '<span class="' + signCls(w.d / w.n) + '">' + eurS(w.d / w.n) + '</span>' : '–', '', 'pro Monat') + '</div>';
-  else h += '<div class="figs on-bg">' + dTile(w, 'im Monat') + pTile + dTile(wealthDelta(mYM.slice(0, 4), null, mYM), 'seit Jahresbeginn') + '</div>';
-  /* Verlauf: im Monat die zwölf Monate bis hierher, im Jahr die Monate des Jahres */
-  const pts = [];
-  for (let i = year ? ymIdx(pre + '-01') : ymIdx(mYM) - 11; i <= ymIdx(end); i++) { const ym = ymOfIdx(i), v = wealthAt(ym); if (v != null) pts.push({ d: ym, v: v / 100 }); }
-  if (pts.length > 1) h += '<div class="card chart"><p class="note">Vermögen in €</p>' + seriesSVG(pts, v => Math.round(v).toLocaleString('de-DE'), [100, 250, 500, 1000, 2500, 5000, 10000, 25000, 50000, 100000, 250000, 500000, 1000000, 5000000], 'Verlauf des Vermögens', '€', ym => ymName(ym).slice(0, 3) + ' ' + ym.slice(2, 4)) + '</div>';
-  h += secHTML('Konten', '', !year && accList().length > 1 ? secAct('data-m="newtr"', 'Umbuchung') : '') + '<ul class="entries">' + accList().map(a => {
-    const st = accState(a.id, end), v = st ? st.v : null, d = wealthDelta(pre, a.id);
-    if (v == null) return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' eintragen"><span class="l"><span>' + esc(a.n) + '</span><small>noch kein Stand eingetragen</small></span><b class="dim">–</b></button></li>';
-    return '<li><button type="button" class="two" data-m="bal" aria-label="Stand von ' + esc(a.n) + ' ändern"><span class="l"><span>' + esc(a.n) + '</span>' + (st.n ? '<small>gerechnet seit ' + dRow(st.aD) + '</small>' : '') + '</span><span class="r"><b>' + minus(v) + eur0(v) + ' €</b>' + (d && d.d != null ? '<small class="' + signCls(d.d) + '">' + eurS(d.d) + '</small>' : '') + '</span></button></li>';
-  }).join('') + '</ul>';
-  if (!year) {
-    /* Umbuchungen des Monats, z. B. Geld abheben: vom Girokonto zum Bargeld */
-    const trs = txIn(mYM, true);
-    /* Ohne Konto gebucht: verändert kein Konto. Eingeklappte Zeile; ein Tipp auf einen Eintrag öffnet ihn zum Nachtragen des Kontos. */
-    const na = noAcc(mYM), nn = na.tx.length + na.fx.length, goals = goalsHTML(curYM);
-    const folds =
-      (trs.length ? foldHTML('umbuchungen', 'Umbuchungen', '', trs.length, trs.map(x => '<li><button type="button" class="two" data-m="tx" data-id="' + esc(x.id) + '" aria-label="Umbuchung ändern"><span class="l"><span>' + (esc(accName(x.t.acc)) || 'Konto') + ' → ' + (esc(accName(x.t.to)) || 'Konto') + '</span><small>' + dRow(x.t.d) + '</small></span><b>' + eur(x.t.a) + '</b></button></li>').join('')) : '') +
-      (nn ? foldHTML('ohneKonto', 'Ohne Konto', 'zählt nicht zum Vermögen', nn, na.tx.map(txRow).join('') + na.fx.map(fixedRow).join('')) : '') +
-      (goals ? '' : addFoldHTML('data-m="newgoal"', 'Sparziele'));
-    return h + (folds ? '<div class="folds">' + folds + '</div>' : '') + goals;
-  }
-  /* Jahr: die Monate mit Stand und Veränderung, ein Tipp springt in den Monat */
-  let rows = '', nm = 0;
-  for (let m = +end.slice(5); m >= 1; m--) { const ym = pre + '-' + pad(m), x = wealthDelta(ym); if (!x) continue; nm++;
-    rows += '<li><button type="button" class="two" data-m="goto" data-ym="' + ym + '" aria-label="' + MONTHS[m - 1] + ' öffnen"><span class="l"><span>' + MONTHS[m - 1] + '</span><small>Stand ' + minus(x.end) + eur0(x.end) + ' €</small></span>' + (x.d != null ? '<b class="' + signCls(x.d) + '">' + eurS(x.d) + '</b>' : '') + '</button></li>'; }
-  return h + foldHTML('vermMonate', 'Monate', '', nm, rows);
-}
-
-let fSub = '';   // vom Nutzer gewählter Bereich: 'verm' = Vermögen, 'budget' = Einnahmen und Ausgaben
-/* Ohne Wahl: Budget, wenn es nur Budget-Daten gibt, sonst Vermögen */
-const finSub = () => fSub || (hasMoney() && !hasWealth() ? 'budget' : 'verm');
 function renderMoney() {
   const el = $('#v-haushalt'), curYM = todayKey().slice(0, 7), moved = !!mNow && mNow !== curYM;
   /* Monatswechsel, während die App offen ist: Stand die Wahl auf dem bisher laufenden Monat oder Jahr, geht sie mit.
-     Sonst trüge „Stand eintragen“ den Stand in den alten Monat ein, und neue Buchungen bekämen dessen letzten Tag. */
+     Sonst bekämen neue Buchungen den letzten Tag des alten Monats. */
   if (!isYM(mYM) || (moved && mYM === mNow)) mYM = curYM;
   if (!mYear || (moved && mYear === +mNow.slice(0, 4))) mYear = +curYM.slice(0, 4);
   mNow = curYM;
-  const sub = finSub();
-  /* Kopf: links Vermögen/Budget, rechts klein Monat/Jahr (nur wenn es etwas zu blättern gibt) */
-  const kopf = seg => '<div class="card-head"><div class="subtabs" role="group" aria-label="Bereich">' + [['verm', 'Vermögen'], ['budget', 'Budget']].map(s => '<button type="button" data-m="sub" data-v="' + s[0] + '" aria-pressed="' + (sub === s[0]) + '">' + s[1] + '</button>').join('') + '</div>' + seg + '</div>';
+  /* Kopf: rechts klein Monat/Jahr (nur wenn es etwas zu blättern gibt) */
+  const kopf = seg => seg ? '<div class="card-head">' + seg + '</div>' : '';
   const seg = segMY(mMode === 'year', 'data-m="mode" data-v="month"', 'data-m="mode" data-v="year"', true);
-  if (sub === 'verm') { el.innerHTML = kopf(hasWealth() ? seg : '') + wealthHTML(curYM); return; }
   if (!hasMoney()) {
     el.innerHTML = kopf('') + emptyHTML('haushalt', 'Noch nichts eingetragen', 'Trag Einnahmen und feste Kosten ein. Dann siehst du, was im Monat übrig bleibt.',
       DUO +
@@ -2576,12 +2408,7 @@ $('#v-haushalt').addEventListener('click', e => {
   if (a === 'income') return openM('tx', null, 'in');
   if (a === 'budget') return openM('budget', t.dataset.c || null);
   if (a === 'fixed') return openM('fixed', t.dataset.id);
-  if (a === 'bal') return openV('bal');
-  if (a === 'goal') return openV('goal', t.dataset.id);
-  if (a === 'newgoal') return openV('goal');
-  if (a === 'newtr') return openM('tx', null, 'tr');
-  if (a === 'sub') { fSub = t.dataset.v; paintTop(); }
-  else if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
+  if (a === 'mode') { mMode = t.dataset.v; if (mMode === 'year') mYear = +mYM.slice(0, 4); }
   else if (a === 'goto') { mYM = t.dataset.ym; mMode = 'month'; $('#scroll').scrollTop = 0; }
   else if (a === 'prev' || a === 'next') {
     const d = a === 'prev' ? -1 : 1;
@@ -2591,136 +2418,16 @@ $('#v-haushalt').addEventListener('click', e => {
   renderMoney();
 });
 
-const vdlg = $('#vsheet');
-let vS = { mode: 'bal' };
-/* Eingabe mit optionalem Minus davor in Cent; leer = null, keine Zahl = NaN */
-function parseBal(v) { const s = String(v).trim(); if (!s) return null; const n = parseEur(s); return isFinite(n) ? (/^[-−–]/.test(s) ? -n : n) : NaN; }
-const balText = c => (c < 0 ? '-' : '') + eur(c).replace(' €', '');
-/* Vorbelegung: im laufenden Monat der aktuelle (gerechnete) Stand, in früheren Monaten der dort eingetragene */
-function loadVals(ym) { const o = {}, b = (MF.bal || {})[ym] || {}, now = ym === todayKey().slice(0, 7); accList().forEach(a => { const v = now ? accAt(a.id, ym) : typeof b[a.id] === 'number' ? b[a.id] : null; if (v != null) o[a.id] = balText(v); }); return o; }
-function paintV() {
-  const accs = accList(), cur = todayKey().slice(0, 7);
-  if (vS.mode === 'goal') {
-    $('#v-body').innerHTML = '<label class="fld" for="g-name"><span>Name</span><input id="g-name" type="text" maxlength="30" autocomplete="off" placeholder="z. B. Notgroschen" value="' + esc(vS.name) + '"></label>' +
-      '<div class="fld"><span id="lbl-g-amt">Zielbetrag</span><div class="stepper"><input id="g-amt" type="text" inputmode="decimal" autocomplete="off" placeholder="0" aria-labelledby="lbl-g-amt" value="' + esc(vS.amt) + '"><span class="unit">€</span></div></div>' +
-      '<div class="fld"><span>Gemessen an</span><div class="chips" id="g-acc" role="group" aria-label="Gemessen an">' + [['', 'Gesamtes Vermögen']].concat(accs.map(a => [a.id, a.n])).map(c =>
-        '<button type="button" class="chip" data-gacc="' + esc(c[0]) + '" aria-pressed="' + (vS.acc === c[0]) + '">' + esc(c[1]) + '</button>').join('') + '</div></div>';
-    return;
-  }
-  const prev = ymOfIdx(ymIdx(vS.ym) - 1);
-  $('#v-body').innerHTML = '<label class="fld" for="v-month"><span>Monat</span><input id="v-month" type="month" max="' + cur + '" value="' + vS.ym + '" placeholder="JJJJ-MM"></label>' +
-    (accs.length ? '<div class="fld"><span>Stand je Konto</span><div class="vrows">' + accs.map(a => { const last = accAt(a.id, prev);
-      return '<div class="vrow"><input class="vname" type="text" maxlength="30" autocomplete="off" data-accn="' + esc(a.id) + '" value="' + esc(a.n) + '" aria-label="Name des Kontos"><input type="text" inputmode="decimal" autocomplete="off" data-acc="' + esc(a.id) + '" value="' + esc(vS.vals[a.id] || '') + '" placeholder="' + (last != null ? 'zuletzt ' + minus(last) + eur0(last) : '0') + '" aria-label="Stand ' + esc(a.n) + ' in Euro"><em>€</em>' +
-        '<button type="button" class="x sm" data-vdel="' + esc(a.id) + '" aria-label="' + esc(a.n) + ' löschen">' + XSVG + '</button></div>' +
-        (vS.arm === a.id ? '<p class="err">Noch einmal auf das Kreuz tippen löscht ' + esc(a.n) + ' mit allen Ständen.</p>' : ''); }).join('') + '</div></div>' : '') +
-    '<div class="fld"><span>Konto hinzufügen</span><div class="stepper"><input id="v-new" type="text" maxlength="30" autocomplete="off" placeholder="z. B. Girokonto" aria-label="Name des Kontos"><button type="button" id="v-new-add" aria-label="Konto hinzufügen">+</button></div></div>';
-}
-function openV(mode, id) {
-  const cur = todayKey().slice(0, 7), g = mode === 'goal' && id ? (MF.goals || {})[id] : null;
-  if (mode === 'goal') vS = { mode: 'goal', id: g ? id : null, name: g ? g.n : '', amt: g ? eur(g.amount).replace(' €', '') : '', acc: g && g.acc && (MF.acc || {})[g.acc] ? g.acc : '', arm: false };
-  else { vS = { mode: 'bal', ym: isYM(mYM) && mYM <= cur ? mYM : cur, arm: null }; vS.vals = loadVals(vS.ym); vS.orig = Object.assign({}, vS.vals); }
-  $('#vs-title').textContent = mode === 'goal' ? 'Sparziel' : 'Stand eintragen';
-  $('#v-err').hidden = true; $('#v-del').hidden = !g; $('#v-del').textContent = 'Sparziel löschen';
-  paintV();
-  openDlg(vdlg);
-  vdlg.scrollTop = 0;
-}
-function closeV() { closeDlg(vdlg); }
-/* Konto anlegen oder (mit id) umbenennen. Liefert die id, bei doppeltem Namen null. */
-function saveAcc(name, id) {
-  if (accList().some(a => a.id !== id && a.n.toLowerCase() === name.toLowerCase())) return null;
-  const nid = id || newId(), p = { acc: {} }; p.acc[nid] = { n: name }; mfdoc.patch(p);
-  return nid;
-}
-const ACC_DUP = 'Ein Konto mit diesem Namen gibt es schon.';
-function addAcc() {
-  const i = $('#v-new'), name = i.value.trim().slice(0, 30); if (!name) return i.focus();
-  const id = saveAcc(name);
-  if (!id) { const x = $('#v-err'); x.textContent = ACC_DUP; x.hidden = false; return; }
-  $('#v-err').hidden = true; vS.arm = null; paintV(); renderMoney();
-  const f = vdlg.querySelector('[data-acc="' + CSS.escape(id) + '"]'); if (f) f.focus();
-}
-$('#vs-close').addEventListener('click', closeV);
-vdlg.addEventListener('click', e => {
-  if (e.target === vdlg) return closeV();
-  if (e.target.closest('#v-new-add')) return addAcc();
-  const c = e.target.closest('[data-gacc]');
-  if (c) { vS.acc = c.dataset.gacc; vdlg.querySelectorAll('[data-gacc]').forEach(b => b.setAttribute('aria-pressed', String(b === c))); return; }
-  const d = e.target.closest('[data-vdel]'); if (!d) return;
-  const id = d.dataset.vdel;
-  if (vS.arm !== id) { vS.arm = id; return paintV(); }
-  /* Konto löschen: das Konto und seine Stände in allen Monaten */
-  const p = { acc: {}, bal: {}, balT: {} }; p.acc[id] = null;
-  Object.keys(MF.bal || {}).forEach(ym => { if (MF.bal[ym] && id in MF.bal[ym]) { p.bal[ym] = {}; p.bal[ym][id] = null; p.balT[ym] = {}; p.balT[ym][id] = null; } });
-  mfdoc.patch(p); delete vS.vals[id]; delete vS.orig[id]; vS.arm = null; paintV(); renderMoney();
-});
-$('#vform').addEventListener('input', e => { const t = e.target; if (t.dataset && t.dataset.acc) vS.vals[t.dataset.acc] = t.value; });
-$('#vform').addEventListener('change', e => {
-  /* Konto umbenennen: Name im Feld ändern. Leer oder doppelt wird zurückgesetzt. */
-  if (e.target.dataset && e.target.dataset.accn) {
-    const t = e.target, id = t.dataset.accn, name = t.value.trim().slice(0, 30), x = $('#v-err');
-    if (!name || !saveAcc(name, id)) { t.value = accName(id); x.textContent = name ? ACC_DUP : 'Ein Konto braucht einen Namen.'; x.hidden = false; return; }
-    t.value = name; x.hidden = true; renderMoney(); return;
-  }
-  if (e.target.id !== 'v-month') return;
-  const ym = e.target.value.trim();
-  if (isYM(ym) && ym <= todayKey().slice(0, 7)) { vS.ym = ym; vS.vals = loadVals(ym); vS.orig = Object.assign({}, vS.vals); vS.arm = null; paintV(); }
-});
-$('#vform').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.id === 'v-new') { e.preventDefault(); addAcc(); } });
-$('#vform').addEventListener('submit', e => {
-  e.preventDefault();
-  const err = m => { const x = $('#v-err'); x.textContent = m; x.hidden = false; };
-  if (vS.mode === 'goal') {
-    const name = $('#g-name').value.trim(), a = parseEur($('#g-amt').value);
-    if (!name) return err('Gib dem Sparziel einen Namen.');
-    if (!okCents(a)) return err('Gib einen Zielbetrag über 0 ein, zum Beispiel 3.000.');
-    const p = { goals: {} }; p.goals[vS.id || newId()] = { n: name.slice(0, 30), amount: a, acc: vS.acc || null };
-    mfdoc.patch(p); fSub = 'verm'; closeV(); renderMoney(); return;
-  }
-  const ym = $('#v-month').value.trim(), accs = accList();
-  if (!isYM(ym) || ym > todayKey().slice(0, 7)) return err('Wähle diesen oder einen früheren Monat.');
-  if (!accs.length) return err('Lege zuerst ein Konto an, zum Beispiel Girokonto, und tippe auf das Plus.');
-  /* Nur geänderte Felder speichern: Ein neuer Stand gilt ab jetzt (laufender Monat) bzw. zum Monatsende, alles Spätere rechnet die App weiter */
-  const p = { bal: {}, balT: {} }, now = ym === todayKey().slice(0, 7); p.bal[ym] = {}; p.balT[ym] = {}; let n = 0, any = false;
-  for (const a of accs) {
-    const raw = (vS.vals[a.id] || '').trim(), v = parseBal(raw);
-    if (v !== null) { if (!okBal(v)) return err('Der Stand von ' + a.n + ' ist keine Zahl. Beispiel: 1.250,00'); any = true; }
-    if (raw === (vS.orig[a.id] || '')) continue;
-    p.bal[ym][a.id] = v; p.balT[ym][a.id] = v !== null && now ? Date.now() : null; n++;
-  }
-  if (!any && !n) return err('Trag bei mindestens einem Konto einen Stand ein.');
-  if (n) mfdoc.patch(p);
-  fSub = 'verm'; mYM = ym; closeV(); renderMoney();
-});
-$('#v-del').addEventListener('click', () => {
-  if (vS.mode !== 'goal' || !vS.id) return;
-  if (!vS.arm) { vS.arm = true; $('#v-del').textContent = 'Wirklich löschen? Noch einmal tippen.'; return; }
-  const p = { goals: {} }; p.goals[vS.id] = null; mfdoc.patch(p); closeV(); renderMoney();
-});
-
 const mdlg = $('#msheet');
 let mE = { mode: 'tx', id: null, kind: 'out', cat: 'essen', every: 1 };
 $('#m-every').innerHTML = EVERY.map(c => '<button type="button" class="chip" data-e="' + c[0] + '" aria-pressed="false">' + c[1] + '</button>').join('');
-/* Zuletzt benutztes Konto: Vorbelegung für die nächste Buchung */
-function lastAcc() { let best = null; for (const y in MY) for (const id in MY[y].tx) { const t = MY[y].tx[id]; if (t && t.k !== 'tr' && t.t && accName(t.acc) && (!best || t.t > best.t)) best = t; } return best ? best.acc : ''; }
-/* Konto einer neuen Buchung: das zuletzt benutzte, sonst das einzige. Bei mehreren Konten ohne Vorgeschichte null = noch nicht gewählt;
-   dann fragt das Blatt beim Speichern nach. „Kein Konto“ ('') wird nie still vorbelegt: Die Buchung würde das Vermögen nicht verändern. */
-function defAcc() { const a = accList(); return lastAcc() || (a.length === 1 ? a[0].id : a.length ? null : ''); }
 const findTx = id => { for (const y in MY) if (MY[y].tx[id]) return { y, t: MY[y].tx[id] }; return null; };
 function paintM() {
-  const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget', tr = tx && mE.kind === 'tr', accs = accList();
-  const chip = (attr, id, name, on) => '<button type="button" class="chip" ' + attr + '="' + esc(id) + '" aria-pressed="' + on + '">' + esc(name) + '</button>';
-  $('#m-note-fld').hidden = !tx || tr; $('#m-date-fld').hidden = !tx;
+  const tx = mE.mode === 'tx', fx = mE.mode === 'fixed', bg = mE.mode === 'budget';
+  $('#m-note-fld').hidden = !tx; $('#m-date-fld').hidden = !tx;
   /* Ausgabe oder Einnahme wählt man im Blatt; es öffnet als Ausgabe, weil das der häufige Fall ist */
-  $('#m-kind').hidden = !tx || tr;
+  $('#m-kind').hidden = !tx;
   mdlg.querySelectorAll('#m-kind .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.k === mE.kind)));
-  /* Konto: Die Buchung verändert den Stand dieses Kontos. Das Plus legt ein neues Konto an. */
-  $('#m-acc-fld').hidden = !(tx || fx); $('#m-to-fld').hidden = !tr; $('#m-day-fld').hidden = !(fx && mE.acc);
-  $('#lbl-m-acc').textContent = tr ? 'Von' : 'Konto';
-  $('#m-acc').innerHTML = (tr || !accs.length ? '' : chip('data-a', '', 'Kein Konto', mE.acc === '')) + accs.map(a => chip('data-a', a.id, a.n, mE.acc === a.id)).join('') +
-    (tr ? '' : '<button type="button" class="chip" data-a="__new" aria-expanded="' + !!mE.newAcc + '">' + (mE.newAcc ? 'Abbrechen' : '+ Konto') + '</button>');
-  $('#m-accnew-row').hidden = !mE.newAcc || tr;
-  $('#m-to').innerHTML = accs.filter(a => a.id !== mE.acc).map(a => chip('data-to', a.id, a.n, mE.to === a.id)).join('');
   $('#m-cat-fld').hidden = !(bg || (tx && mE.kind === 'out'));
   $('#m-name-fld').hidden = !fx; $('#m-every-fld').hidden = !fx; $('#m-from-fld').hidden = !fx;
   $('#m-roll-fld').hidden = !bg;
@@ -2737,7 +2444,7 @@ function paintM() {
     const cur = (MF.budgets || {})[mE.cat];
     $('#ms-title').textContent = 'Budget';
     $('#m-del').hidden = !cur; $('#m-del').textContent = 'Budget entfernen';
-  } else if (tx) $('#ms-title').textContent = tr ? 'Umbuchung' + (mE.id ? ' ändern' : '') : (mE.kind === 'in' ? 'Einnahme' : 'Ausgabe') + (mE.id ? ' ändern' : ' eintragen');
+  } else if (tx) $('#ms-title').textContent = (mE.kind === 'in' ? 'Einnahme' : 'Ausgabe') + (mE.id ? ' ändern' : ' eintragen');
   else $('#ms-title').textContent = (mE.kind === 'in' ? 'Feste Einnahme' : 'Fixkosten') + (mE.id ? ' ändern' : '');
 }
 function openM(mode, id, kind, date) {
@@ -2757,9 +2464,9 @@ function openM(mode, id, kind, date) {
   }
   if (mode === 'tx') {
     const hit = id ? findTx(id) : null;
-    const k = hit ? hit.t.k : kind === 'in' || kind === 'tr' ? kind : 'out', accs = accList();
-    mE = { mode: 'tx', id: hit ? id : null, oldY: hit ? hit.y : null, kind: k, cat: hit && hit.t.c ? hit.t.c : 'essen', every: 1, more: false, t: hit ? hit.t.t || 0 : 0,
-      acc: hit ? (accName(hit.t.acc) ? hit.t.acc : '') : k === 'tr' ? (accs[0] || {}).id || '' : defAcc(), to: hit ? (accName(hit.t.to) ? hit.t.to : '') : '' };
+    /* Eine Buchung mit Konto (aus der Zeit mit Vermögen) behält es beim Ändern */
+    const k = hit ? hit.t.k : kind === 'in' ? 'in' : 'out';
+    mE = { mode: 'tx', id: hit ? id : null, oldY: hit ? hit.y : null, kind: k, cat: hit && hit.t.c ? hit.t.c : 'essen', every: 1, more: false, t: hit ? hit.t.t || 0 : 0, acc: hit ? hit.t.acc || null : null };
     $('#m-amt').value = hit ? eur(hit.t.a).replace(' €', '') : '';
     $('#m-note').value = hit ? hit.t.n : '';
     $('#m-date').max = tk;
@@ -2767,8 +2474,7 @@ function openM(mode, id, kind, date) {
     $('#m-del').hidden = !hit; $('#m-del').textContent = 'Eintrag löschen';
   } else {
     const f = id ? MF.fixed[id] : null;
-    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null, acc: f ? (accName(f.acc) ? f.acc : '') : defAcc() };
-    $('#m-day').value = f && f.acc && f.day ? f.day : '';
+    mE = { mode: 'fixed', id: f ? id : null, kind: f ? f.kind : kind === 'in' ? 'in' : 'fix', cat: 'essen', every: f ? f.every : 1, to: f ? f.to : null, acc: f ? f.acc || null : null, day: f ? f.day || null : null };
     $('#m-name').value = f ? f.name : '';
     $('#m-name').placeholder = mE.kind === 'in' ? 'z. B. Gehalt' : 'z. B. Miete';
     $('#m-amt').value = f ? eur(f.amount).replace(' €', '') : '';
@@ -2794,18 +2500,6 @@ $('#m-cat').addEventListener('click', e => {
   if (mE.mode === 'budget' && b.dataset.c !== '__more') { const cur = (MF.budgets || {})[mE.cat]; $('#m-amt').value = cur ? eur(cur).replace(' €', '') : ''; $('#m-roll').checked = !!(cur && (MF.roll || {})[mE.cat]); }
   paintM();
 });
-$('#m-acc').addEventListener('click', e => {
-  const b = e.target.closest('.chip'); if (!b) return;
-  if (b.dataset.a === '__new') { mE.newAcc = !mE.newAcc; paintM(); if (mE.newAcc) $('#m-accnew').focus(); return; }
-  mE.acc = b.dataset.a; if (mE.to === mE.acc) mE.to = ''; paintM();
-});
-/* Neues Konto beim Buchen: anlegen und gleich auswählen. Seinen Stand trägt man später im Bereich Vermögen ein. */
-function addAccM() {
-  const i = $('#m-accnew'), name = i.value.trim().slice(0, 30), x = $('#m-err'); if (!name) return i.focus();
-  const id = saveAcc(name);
-  if (!id) { x.textContent = ACC_DUP; x.hidden = false; return; }
-  x.hidden = true; i.value = ''; mE.acc = id; mE.newAcc = false; paintM(); renderMoney();
-}
 /* Eigene Kategorie anlegen und gleich auswählen */
 function addCatM() {
   const i = $('#m-catnew'), name = i.value.trim().slice(0, 24), x = $('#m-err'); if (!name) return i.focus();
@@ -2817,9 +2511,6 @@ function addCatM() {
 }
 $('#m-catnew-add').addEventListener('click', addCatM);
 $('#m-catnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addCatM(); } });
-$('#m-accnew-add').addEventListener('click', addAccM);
-$('#m-accnew').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); addAccM(); } });
-$('#m-to').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.to = b.dataset.to; paintM(); } });
 $('#m-every').addEventListener('click', e => { const b = e.target.closest('.chip'); if (b) { mE.every = +b.dataset.e; paintM(); } });
 $('#mform').addEventListener('submit', e => {
   e.preventDefault();
@@ -2834,14 +2525,11 @@ $('#mform').addEventListener('submit', e => {
     else if (oldB !== a) p.roll[c] = { from: curYM, base: carryIn(c, curYM) };   // neuer Betrag gilt ab jetzt, das Angesparte bleibt
     mfdoc.patch(p); closeM(); renderMoney(); return;
   }
-  if (mE.acc == null && !(mE.mode === 'tx' && mE.kind === 'tr')) return err('Wähle ein Konto oder „Kein Konto“.');
   if (mE.mode === 'tx') {
     const d = $('#m-date').value;
     if (!isKey(d) || d > todayKey()) return err('Wähle heute oder einen früheren Tag.');
-    const tr = mE.kind === 'tr';
-    if (tr && (!accName(mE.acc) || !accName(mE.to) || mE.acc === mE.to)) return err('Wähle zwei verschiedene Konten: von welchem und auf welches.');
     const id = mE.id || newId(), y = d.slice(0, 4), p = { tx: {} };
-    p.tx[id] = { d, a, k: mE.kind, c: mE.kind === 'out' ? mE.cat : '', n: tr ? '' : $('#m-note').value.trim().slice(0, 60), acc: mE.acc || null, to: tr ? mE.to : null, t: mE.t || Date.now() };
+    p.tx[id] = { d, a, k: mE.kind, c: mE.kind === 'out' ? mE.cat : '', n: $('#m-note').value.trim().slice(0, 60), acc: mE.acc || null, to: null, t: mE.t || Date.now() };
     if (mE.oldY && mE.oldY !== y) { const q = { tx: {} }; q.tx[id] = null; mdoc(mE.oldY).patch(q); }
     mdoc(y).patch(p);
   } else {
@@ -2850,7 +2538,7 @@ $('#mform').addEventListener('submit', e => {
     if (!isYM(from)) return err('Gib den Startmonat als JJJJ-MM an, zum Beispiel ' + todayKey().slice(0, 7) + '.');
     const p = { fixed: {} };
     p.fixed[mE.id || newId()] = { name: name.slice(0, 40), amount: a, kind: mE.kind, every: mE.every, from, to: mE.to && mE.to >= from ? mE.to : null,
-      acc: mE.acc || null, day: mE.acc ? clamp(Math.round(Number($('#m-day').value)) || 1, 1, 28) : null };
+      acc: mE.acc || null, day: mE.acc ? mE.day || null : null };
     mfdoc.patch(p);
   }
   closeM(); renderMoney();
@@ -5499,8 +5187,6 @@ function monthRowsHTML(ym, c) {
     const df = p.wEnd != null ? w.wEnd - p.wEnd : null;
     rows += kvRow('Gewicht', kg(w.wEnd), 'kg im Schnitt', df != null ? signed(df) + ' kg' : '', df != null && W.goal != null && Math.abs(df) >= 0.05 ? (Math.sign(W.goal - p.wEnd) === Math.sign(df) ? 'up' : 'down') : '');
   }
-  const ve = istAn('haushalt') && wealthDelta(ym);
-  if (ve) rows += kvRow('Vermögen', minus(ve.end) + eur0(ve.end), '€', ve.d != null ? eurS(ve.d) : '', ve.d != null ? dir(Math.round(ve.d / 100)) : '');
   /* Sparquote erst, wenn der Monat vorbei ist: Vorher fehlen Einnahmen oder Ausgaben, und die Zahl sagt nichts */
   if (!isCur && istAn('haushalt') && hasMoney()) {
     const s = mSum(ym), ps = mSum(prevYM);
@@ -5583,7 +5269,7 @@ const BK_DAYS = 7;
 /* from: Tag der letzten Sicherung, ohne Sicherung der Tag des ältesten Eintrags (leer, solange nichts eingetragen ist). due: der Tag, an dem die Sicherung fällig wird. */
 function backupDay() {
   let t = 0; try { t = Number(localStorage.getItem('takt.backup')) || 0; } catch (e) {}
-  const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money'), balMonths().length ? balMonths()[0] + '-01' : '']
+  const from = t ? keyOf(new Date(t)) : [calFirst('all'), calFirst('weight'), calFirst('money')]
     .concat(noteList().map(x => x.c ? keyOf(new Date(x.c)) : ''), workList().concat(uniList()).map(x => x.d)).filter(Boolean).sort()[0] || '';   // Notizen zählen ab dem Tag, an dem sie angelegt wurden
   return { saved: !!t, from, due: from ? keyOf(addDays(parseKey(from), BK_DAYS)) : '' };
 }
@@ -5609,13 +5295,6 @@ function homeWerte() {
     const s = mSum(curYM), now = new Date(), left = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate() + 1;
     mv = minus(s.bal) + eur0(s.bal) + ' € ' + (minus(s.bal) ? 'im Minus' : 'übrig'); mc = minus(s.bal) ? 'neg' : '';
     ms = s.bal > 0 ? eur(Math.floor(s.bal / left)) + ' pro Tag bis Monatsende' : eur0(s.flex) + ' € flexible Ausgaben im ' + mName;
-  }
-  /* Mit Vermögen steht dessen Stand vorn, darunter die Veränderung im Monat und, wenn ein Budget geführt wird, was übrig ist */
-  const wNow = wealthDelta(curYM);
-  if (wNow) {
-    const left = hasMoney() ? mSum(curYM).bal : null;
-    mv = minus(wNow.end) + eur0(wNow.end) + ' €'; mc = minus(wNow.end) ? 'neg' : '';
-    ms = [wNow.d != null ? eurS(wNow.d) + ' im ' + mName : '', left != null ? minus(left) + eur0(left) + ' € ' + (minus(left) ? 'im Minus' : 'übrig') : ''].filter(Boolean).join(' · ') || 'Vermögen';
   }
   const runsAll = tRuns(), kdAll = kDates(), g = tAgg(runsAll.filter(x => x.d.slice(0, 7) === curYM)), kn = kdAll.filter(d => d.slice(0, 7) === curYM).length;
   let tv = '', ts = '';
@@ -5969,7 +5648,6 @@ function importData(d) {
   /* Die eingelesene Datei ist selbst eine Sicherung: ihr Stand zählt für die Erinnerung */
   const ex = Date.parse(d.exported);
   try { if (ex && ex <= Date.now() && ex > (Number(localStorage.getItem('takt.backup')) || 0)) localStorage.setItem('takt.backup', String(ex)); } catch (e) {}
-  healBal();
   saveLocal(); bereiche();
 }
 /* Übernahme aus Alpha Progression (v88): „Sicherung einlesen“ nimmt auch dessen Export „Workouts“ (CSV) und macht daraus Einheiten, Übungen und Pläne.
@@ -6066,7 +5744,7 @@ function paintTop() {
   const add = $('#add');
   $('#mark').textContent = view === 'training' ? tName() : TITEL[view] || 'Track';
   if (topEl.classList.contains('klein')) titelMitte();
-  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? (finSub() === 'verm' ? 'Stand eintragen' : 'Ausgabe eintragen') : view === 'training' ? (tSub === 'kraft' ? (kPlans().length ? 'Einheit zum Plan hinzufügen' : 'Plan anlegen') : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
+  add.setAttribute('aria-label', view === 'gewicht' ? 'Gewicht eintragen' : view === 'haushalt' ? 'Ausgabe eintragen' : view === 'training' ? (tSub === 'kraft' ? (kPlans().length ? 'Einheit zum Plan hinzufügen' : 'Plan anlegen') : 'Lauf eintragen') : rSub === 'work' ? 'Arbeitszeit eintragen' : rSub === 'uni' ? 'Termin eintragen' : 'Notiz schreiben');
   add.hidden = view === 'heute'; $('#gear').hidden = view !== (istAn('heute') ? 'heute' : erster());   // auf Heute steht statt des Plus das Zahnrad (v106); ist Heute aus, steht es im ersten Bereich links neben dem Plus
 }
 document.addEventListener('click', e => {
@@ -6217,7 +5895,7 @@ document.addEventListener('click', e => {
 
 /* Umschalter (.seg2): Die Markierung gleitet von der alten zur neuen Seite. Vor dem Tipp wird gemerkt, wo sie steht; nach dem Tipp (die Ansicht ist dann meist neu gezeichnet)
    startet die neue Markierung von dort. Der zweite Lauscher hängt am Dokument und kommt deshalb nach denen der Bereiche, aber noch vor dem nächsten Bild.
-   Dazu: Wechselt oben der Teil eines Bereichs (Cardio/Gym, Vermögen/Budget, Notizen/Arbeit/Uni), wachsen die Balken wie beim Öffnen des Bereichs. */
+   Dazu: Wechselt oben der Teil eines Bereichs (Cardio/Gym, Notizen/Arbeit/Uni), wachsen die Balken wie beim Öffnen des Bereichs. */
 let segVon = null;
 document.addEventListener('click', e => {
   segVon = null;
@@ -6341,9 +6019,7 @@ function hZahlen() {
   if (wl.length) { const rate = weeklyRate(wl, dayNum(tk)); z.push({ k: 'gewicht', b: 'gewicht', t: 'Gewicht', w: kg(wl[wl.length - 1].m) + ' kg', s: rate != null ? signed(rate) + ' kg pro Woche' : '7-Tage-Schnitt' }); }
   const runs = tRuns();
   if (runs.length) { const g = tAgg(runs.filter(x => x.d.slice(0, 7) === curYM)); z.push({ k: 'laufen', b: 'cardio', t: 'Laufen', w: kg(g.m / 1000) + ' km', s: g.n + (g.n === 1 ? ' Lauf' : ' Läufe') + ' im ' + mName }); }
-  const wNow = wealthDelta(curYM);
-  if (wNow) z.push({ k: 'geld', b: 'haushalt', t: 'Vermögen', w: minus(wNow.end) + eur0(wNow.end) + ' €', s: wNow.d != null ? eurS(wNow.d) + ' im ' + mName : mName });
-  else if (hasMoney()) { const b = mSum(curYM).bal; z.push({ k: 'geld', b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
+  if (hasMoney()) { const b = mSum(curYM).bal; z.push({ k: 'geld', b: 'haushalt', t: 'Budget', w: minus(b) + eur0(b) + ' €', s: (minus(b) ? 'im Minus' : 'übrig') + ' im ' + mName }); }
   const wl2 = workList().filter(x => x.d.slice(0, 7) === curYM);
   if (workList().length) z.push({ k: 'arbeit', b: 'routinen', t: 'Arbeit', w: eur0(workSum(wl2)) + ' €', s: wl2.length ? stdT(wMins(wl2)) + ' im ' + mName : 'noch nichts im ' + mName });
   const ul = uniList();
@@ -6366,7 +6042,7 @@ function hStand() {
   }
   /* nz: die ersten zehn Notizen in der Reihenfolge des Planers (die älteste zuerst, seit v133) mit Kennung, damit das Widget sie abhaken kann. notizen (nur Text) bleibt für die iPhone-App 0.2. */
   const nz = notesFolge().map(x => ({ id: x.id, x: hCut(firstLine(x.x), 80) })).filter(n => n.x).slice(0, 10);
-  /* konten und konto: Auswahl und Vorbelegung für die Schnelleingabe der iPhone-App, wie im Blatt (defAcc). Ohne Vorbelegung ist konto leer.
+  /* konten und konto: seit v156 (Vermögen ausgebaut) leer, damit die Schnelleingabe der iPhone-App kein Konto anbietet; die Felder bleiben für ältere Fassungen.
      sicherung: der Tag der Mitteilung „Sicherung fällig“ (hFaellig); was zuletzt hinausging, steht in hFaelligAlt. */
   /* kats und haendler (v82, iPhone-App ab 0.9): Damit fragt „Ausgabe eintragen“ gleich beim Bezahlen nach der Kategorie, aber nur bei einem Händler, der noch nicht einsortiert ist.
      kats: alle Kategorien mit Kennung und Name als reiner Text, die meistbenutzten zuerst, „Sonstiges“ am Ende. haendler: klein geschrieben, die 300 zuletzt benutzten. */
@@ -6374,7 +6050,7 @@ function hStand() {
   for (const y in MY) { const tx = (MY[y] || {}).tx || {}; for (const id in tx) { const t = tx[id]; if (t && t.k === 'out' && t.c) zahl[t.c] = (zahl[t.c] || 0) + 1; } }
   const kats = allCats().map((k, i) => ({ id: k[0], n: hCut(MF.cats && MF.cats[k[0]] ? MF.cats[k[0]].n : k[1], 40), i })).sort((a, b) => (a.id === 'sonst') - (b.id === 'sonst') || (zahl[b.id] || 0) - (zahl[a.id] || 0) || a.i - b.i).map(k => ({ id: k.id, n: k.n }));
   const haendler = [...hk.keys()].sort((a, b) => (hk.get(b).d > hk.get(a).d) - (hk.get(b).d < hk.get(a).d) || (hk.get(b).t || 0) - (hk.get(a).t || 0)).slice(0, 300);
-  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: accList().map(a => ({ id: a.id, n: hCut(a.n, 40) })), konto: defAcc() || '', kats, haendler, muster: katMuster(), zahlen: hZahlen(), ...hKal() };
+  return { art: 'stand', sicherung: (hFaelligAlt = hFaellig()), tage, notizen: nz.slice(0, 4).map(n => n.x), nz, konten: [], konto: '', kats, haendler, muster: katMuster(), zahlen: hZahlen(), ...hKal() };
 }
 /* Läufe aus Health oder aus dem Kurzbefehl: [{ id, t (Beginn in ms), s, dazu entweder m und hr (Health) oder km und pu (Kurzbefehl) }]. Jede Kennung wird nur einmal übernommen.
    km und pu sind Listen von Zahlen, so wie „Health-Messungen suchen“ sie liefert: die Strecke in der Einheit der Aktion (bei uns km), ein Wert je Tag oder viele Einzelwerte, zusammen die Strecke.
@@ -6508,13 +6184,12 @@ function hEingang(list) {
       /* Kategorie: das Wort passt auf die Kennung oder den Anfang des Namens; ohne Wort die, unter der derselbe Händler (Notiz) zuletzt einsortiert wurde (katVon); sonst „Sonstiges“.
          Eine Einnahme (k 'in') hat keine Kategorie.
          Die Namen aus allCats() sind schon für HTML umgeschrieben (& ist dort &amp;): Das Wort wird deshalb genauso umgeschrieben, bevor verglichen wird.
-         Konto: das gewählte (acc), wenn es das Konto gibt; ein leeres acc heißt ausdrücklich „Kein Konto“. Fehlt acc (Kurzbefehl, iPhone-App bis 0.4) oder ist das Konto
-         inzwischen gelöscht, gilt die Vorbelegung des Blatts (zuletzt benutztes oder das einzige), sonst keines. */
+         Konto: seit v156 keines mehr (Vermögen ausgebaut); ein mitgeschicktes acc (ältere Automation mit „Konto“) zählt nicht. */
       const a = Math.round(Number(c.a)), d = keyOf(new Date(t)), ein = c.k === 'in', kat = String(c.kat || '').trim().toLowerCase(), p = { tx: {} };
       const hit = !ein && kat && allCats().find(k => k[0] === kat || k[1].toLowerCase().startsWith(esc(kat)));
-      const acc = c.acc === '' ? null : typeof c.acc === 'string' && accName(c.acc) ? c.acc : defAcc() || null, n = String(c.n || '').trim().slice(0, 60);
+      const n = String(c.n || '').trim().slice(0, 60);
       /* Die Buchung trägt die Kennung des Auftrags: So findet ein Nachtrag ('kat') sie wieder */
-      if (okCents(a)) { p.tx[/^[\w-]{1,64}$/.test(c.id) ? c.id : newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || katRegel(n) || 'sonst', n, acc, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
+      if (okCents(a)) { p.tx[/^[\w-]{1,64}$/.test(c.id) ? c.id : newId()] = { d, a, k: ein ? 'in' : 'out', c: ein ? '' : hit ? hit[0] : katVon(n) || katRegel(n) || 'sonst', n, acc: null, to: null, t }; mdoc(d.slice(0, 4)).patch(p); }
     } else if (c.art === 'kat') {
       /* Nachtrag: Beim Bezahlen wurde nach der Kategorie gefragt, die Ausgabe (Auftrag zu) war da schon gebucht. Gilt nur für eine Ausgabe, die es noch gibt, und eine Kategorie, die es gibt. */
       for (const y in MY) { const alt = ((MY[y] || {}).tx || {})[c.zu];
@@ -6717,7 +6392,6 @@ loadLocal();
   } catch (e) {}
 })();
 if (tBand) saveLocal();   // Läufe vom Laufband wurden beim Laden verworfen: gleich speichern, damit sie auch im Speicher gelöscht sind
-healBal();
 cleanCats();
 leiste();
 show(location.hash.slice(1) || E.start);   // ohne Zusatz in der Adresse: der gewählte Start-Bereich, sonst Heute

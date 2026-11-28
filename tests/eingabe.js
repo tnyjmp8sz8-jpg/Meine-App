@@ -66,7 +66,6 @@ lauf(async () => {
   P.ok('Plus im Planer (Notizen): Textfeld hat sofort den Fokus', (await sofort('#add', 'routinen')) === 'n-text');
   P.ok('Gewicht eintragen: Feld hat sofort den Fokus', (await sofort('#v-gewicht [data-w="add"]', 'gewicht')) === 'w-val');
   await page.keyboard.press('Escape'); await kurz(); await bereich(page, 'haushalt'); await kurz();
-  await page.evaluate(() => { const b = [...document.querySelectorAll('#v-haushalt [data-m="sub"]')].find(x => x.dataset.v === 'budget'); if (b) b.click(); });
   await kurz();
   P.ok('Budget, Knopf „Ausgabe“: Betrag hat sofort den Fokus', (await sofort('#v-haushalt [data-m="add"]')) === 'm-amt');
   // Feld beim Tippen (v95): kein blauer Rahmen mehr, nur eine feine graue Kante; die Einfügemarke ist blau; das Feld ist stark gerundet

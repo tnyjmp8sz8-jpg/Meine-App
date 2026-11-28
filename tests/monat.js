@@ -53,8 +53,8 @@ lauf(async () => {
   // Gewicht: Schnitt am Monatsende 79,0 kg, im Vormonat 80,0 → −1,0 kg; Ziel 75, also in die richtige Richtung (grün)
   P.ok('Gewicht: 79,0 kg, −1,0 kg', z.includes('Gewicht 79,0kg im Schnitt −1,0 kg'), z);
   P.ok('Gewicht Richtung Ziel ist grün', await page.evaluate(() => [...document.querySelectorAll('#v-heute .kv')].find(k => k.textContent.startsWith('Gewicht')).querySelector('.delta').classList.contains('up')));
-  // Vermögen: 1.500 € nach 1.000 € → +500 €
-  P.ok('Vermögen: 1.500 €, +500 €', z.includes('Vermögen 1.500€ +500 €'), z);
+  // Vermögen ist seit v156 ausgebaut: Die gespeicherten Stände (1.000 € → 1.500 €) stehen nicht mehr im Monat
+  P.ok('keine Zeile „Vermögen“ (seit v156 ausgebaut)', !z.includes('Vermögen'), z);
   // Sparquote: (2000 − 800 − 300) / 2000 = 45 %, Vormonat (2000 − 800 − 500) / 2000 = 35 % → +10 Prozentpunkte
   P.ok('Sparquote: 45 %, +10 Prozentpunkte', z.includes('Sparquote 45 % +10 Prozentpunkte'), z);
   // Flexible Ausgaben: 100 + 200 = 300 €, Vormonat 500 € → 200 € weniger

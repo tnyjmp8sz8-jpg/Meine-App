@@ -12,7 +12,7 @@ lauf(async () => {
     const b = ' (' + breite + ' px)';
 
     // Wochenleiste in jedem Bereich (der Planer hat seit v75 keine: Notizen, Arbeit und Uni hatten nie eine); ein Tipp auf einen Tag öffnet den Kalender dieses Bereichs
-    const bereiche = [['heute', null, 'Kalender'], ['gewicht', null, 'Gewicht'], ['haushalt', '[data-m="sub"][data-v="budget"]', 'Ausgaben'],
+    const bereiche = [['heute', null, 'Kalender'], ['gewicht', null, 'Gewicht'], ['haushalt', null, 'Ausgaben'],
       ['training', '.subtabs [data-v="cardio"]', 'Läufe'], ['training', '.subtabs [data-v="kraft"]', 'Gym']];
     for (const [name, sub, titel] of bereiche) {
       await bereich(page, name); if (sub) await page.click('#v-' + name + ' ' + sub); await page.waitForTimeout(200);
@@ -25,9 +25,9 @@ lauf(async () => {
     }
 
     // Zeitraum: Monat/Jahr als eigene Reihe über den Pfeilen; der Titel steht frei zwischen den Pfeilen
-    for (const [name, sub] of [['haushalt', '[data-m="sub"][data-v="budget"]'], ['haushalt', '[data-m="sub"][data-v="verm"]'], ['training', '.subtabs [data-v="cardio"]'], ['training', '.subtabs [data-v="kraft"]']]) {
-      await bereich(page, name); await page.click('#v-' + name + ' ' + sub); await page.waitForTimeout(200);
-      const v = '#v-' + name, titel = (await text(page, v + ' .subtabs [aria-pressed="true"]')) + b;
+    for (const [name, sub] of [['haushalt', null], ['training', '.subtabs [data-v="cardio"]'], ['training', '.subtabs [data-v="kraft"]']]) {
+      await bereich(page, name); if (sub) await page.click('#v-' + name + ' ' + sub); await page.waitForTimeout(200);
+      const v = '#v-' + name, titel = (sub ? await text(page, v + ' .subtabs [aria-pressed="true"]') : 'Finanzen') + b;   // Finanzen seit v156 ohne Umschalter
       const seg = await lage(v + ' .seg2'), nav = await lage(v + ' .mnav'), t = await lage(v + ' .mnav b'), l = await lage(v + ' .mnav button:first-child'), r = await lage(v + ' .mnav button:last-child');
       P.ok(titel + ': Monat/Jahr steht über den Pfeilen', !!seg && !!nav && seg.unten <= nav.oben, JSON.stringify({ seg, nav }));
       P.ok(titel + ': Titel hat Luft zu beiden Pfeilen', !!t && t.links - l.rechts >= 12 && r.links - t.rechts >= 12, JSON.stringify({ l, t, r }));

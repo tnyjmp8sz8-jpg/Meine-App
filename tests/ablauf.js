@@ -20,9 +20,9 @@ lauf(async () => {
   await bereich(page, 'gewicht'); await page.click('#add'); await page.fill('#w-val', '79,9'); await page.click('#w-save'); await page.waitForTimeout(150);
   P.ok('Gewicht 79,9 kg gespeichert', (await gespeichert(page)).W.entries[heute] === 79.9);
 
-  await bereich(page, 'haushalt'); await page.click('#v-haushalt [data-m="sub"][data-v="budget"]');
-  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '12,34'); await page.fill('#m-note', 'Testkauf'); await page.click('#m-acc .chip:has-text("Kein Konto")'); await page.click('#m-save'); await page.waitForTimeout(150);
-  await page.click('#v-haushalt [data-m="income"]'); await page.fill('#m-amt', '50'); await page.click('#m-acc .chip:has-text("Kein Konto")'); await page.click('#m-save'); await page.waitForTimeout(150);
+  await bereich(page, 'haushalt');
+  await page.click('#v-haushalt [data-m="add"]'); await page.fill('#m-amt', '12,34'); await page.fill('#m-note', 'Testkauf'); await page.click('#m-save'); await page.waitForTimeout(150);
+  await page.click('#v-haushalt [data-m="income"]'); await page.fill('#m-amt', '50'); await page.click('#m-save'); await page.waitForTimeout(150);
   d = await gespeichert(page);
   P.ok('Ausgabe 12,34 € gespeichert', txAlle(d).some(t => t.a === 1234 && t.k === 'out' && t.n === 'Testkauf' && t.d === heute));
   P.ok('Einnahme 50 € gespeichert', txAlle(d).some(t => t.a === 5000 && t.k === 'in' && t.d === heute));

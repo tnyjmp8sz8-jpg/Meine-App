@@ -1,7 +1,9 @@
 # Track. – Fortschritt
 
 ## Aktueller Stand
-- App-Inhalt (`index.html`): v155 (28.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v155): alle 20 Reihen. Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine und Einstellungen laufen immer mit fester Uhr.
+- App-Inhalt (`index.html`): v156 (28.11.2026) unter https://tnyjmp8sz8-jpg.github.io/Meine-App/ (Zweig `main`). `node tests/alle.js` (v156): alle 20 Reihen. Mit gestellter Uhr zuletzt geprüft: Bereiche am 1.12., 31.12. und 2.1. (v125), Gym am 1.1.2027 (v114); Termine und Einstellungen laufen immer mit fester Uhr.
+- v156 (28.11., sein Wort: „Abschnitt Vermögen ist mir zu anstrengend und unnötig, mach nur Haushaltsbuch mit Einnahmen, Ausgaben etc. und automatisches Eintragen“): Vermögen ausgebaut (Umschalter, Konten, Stände, Sparziele, Umbuchungen, Konto im Blatt, Zeile auf Heute und im Monat, Widget-Zeile „Vermögen“, Konten im Stand). Daten bleiben gespeichert. Geprüft: alle Reihen, Finanzen neu geschrieben (26), Hülle 163, Klappzeilen 112.
+- Apple Pay „geht wieder nicht mehr, ging vorher mit Kategorie“ (28.11.): Im Code nichts gefunden: Eingang, Kategorie aus dem Händler, Nachfrage mit Nachtrag sind getestet und grün; die Aktion „Ausgabe eintragen“ ist seit 1.5 unverändert, der Stand ist für sie lesbar. Gefragt: Was passiert genau (gar kein Eintrag, Betrag ohne Kategorie, Fehlermeldung)? Welche iPhone-App ist installiert (Einstellungen → Version), wurde zuletzt neu installiert? Bildschirmfoto der aufgeklappten Automation erbeten. Nichts gebaut, bis seine Antwort da ist.
 - v155 (28.11., weiter am Auftrag „Add-ons … nicht aufhören“): Einstellungen → Widget (nur in der iPhone-App): Zeilen des Widgets „Überblick“ an und aus (höchstens vier, das kleine zeigt die ersten zwei) und am Griff ordnen; neu wählbar Arbeit (Verdienst im Monat) und Uni (Punkte). Ohne neue Installation: Die Zeilen baut die App. Am iPhone ungeprüft. Geprüft: Einstellungen 58.
 - v154 (28.11., weiter am Auftrag „Add-ons … nicht aufhören“): Standard-Kalender für neue Termine (Einstellungen → Kalender, „Neue Termine in“; auch für die Schnelleingabe im Widget), Sätze je neuer Übung (Einstellungen → Gym, 1 bis 6, Vorgabe 3), der Messwert im Cardio-Graphen (Effizienz oder Pace) bleibt gewählt. Geprüft: Einstellungen 52, Termine 148.
 - v153 (28.11., weiter an seinem Auftrag „anpassbare Add-ons … nicht aufhören“): Ziele je Monat, nur da, wenn eingestellt: Kilometer im Cardio (neue Seite „Cardio“ in den Einstellungen) und Verdienst bei der Arbeit (Seite Planer). Unter der großen Zahl eine Linie, darunter „Ziel …“ und „noch …“, „erreicht“ in Grün; in früheren Monaten der Anteil. Geprüft: Einstellungen 48.
@@ -77,6 +79,7 @@ Gym-Teil (sein Maßstab seit 24.11.: bei jeder Funktion, die er möchte, besser 
 - v135: Kalender auf Heute nur mit Terminen aus Apples Kalender.
 - v136: Gym „Statistik ab“ (November-Einheiten zählen, aber nicht für Fortschritt); Arbeit mit Umsatz pro Stunde und „Frühere Monate“.
 - v137: Blatt schließt nicht mehr beim Tipp ins Feld; Umsatz mit Monat und Schnitt der früheren Monate; Jahr mit „Frühere Monate“.
+- v156: Vermögen ausgebaut, Finanzen nur noch Haushaltsbuch.
 - v155: Widget „Überblick“ anpassbar (Zeilen, Reihenfolge, neu Arbeit und Uni).
 - v154: Standard-Kalender, Sätze je neuer Übung, Messwert im Cardio gemerkt.
 - v153: Ziele je Monat (Kilometer im Cardio, Verdienst bei der Arbeit).
